@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-08-19T02:01:03.527531+00:00",
+  "nodes": {
+    "packages_web_app_vitrine_vitrine": {
+      "code_fingerprint": "4b5a895a17f0dddfb0330e901c514145114a90ec6068ce98fbf931f5d72bbf9e",
+      "label": "Vitrine()",
+      "last": "2026-08-19T01:54:28.735282+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T01:54:28.735282+00:00",
+          "outcome": "useful",
+          "q": "Quais arquivos e estilos controlam o hero e o banner de produto da home do BizuMiner?"
+        }
+      ],
+      "score": 0.999894431,
+      "source_file": "packages/web/app/vitrine.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_web_app_vitrine_vitrineproduct": {
+      "code_fingerprint": "4b5a895a17f0dddfb0330e901c514145114a90ec6068ce98fbf931f5d72bbf9e",
+      "label": "VitrineProduct",
+      "last": "2026-08-19T01:54:28.735282+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T01:54:28.735282+00:00",
+          "outcome": "useful",
+          "q": "Quais arquivos e estilos controlam o hero e o banner de produto da home do BizuMiner?"
+        }
+      ],
+      "score": 0.999894431,
+      "source_file": "packages/web/app/vitrine.tsx",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}

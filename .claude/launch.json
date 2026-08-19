@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bizuminer-web",
+      "url": "http://localhost:3100",
+      "port": 3100
+    }
+  ]
+}

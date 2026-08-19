@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Executivo — Plataforma de Curadoria de Ofertas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --accent:#E8590C; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; }
+  body{ font-family:'Inter',sans-serif; }
+  .card{ background:#14141a; border:1px solid #26262e; }
+  .card-soft{ background:#101016; border:1px solid #23232b; }
+  .tab-btn{ border-bottom:3px solid transparent; }
+  .tab-btn.active{ border-bottom-color:var(--accent); color:#fff; font-weight:600; }
+  .kicker{ letter-spacing:.14em; }
+  input[type=range]{ accent-color:var(--accent); }
+  .fact{ border-left:3px solid var(--accent); }
+  .caveat{ border-left:3px solid var(--warn); }
+  table{ border-collapse:collapse; width:100%; }
+  th{ text-align:left; font-weight:600; }
+  td,th{ padding:.55rem .7rem; border-bottom:1px solid #23232b; font-size:.82rem; }
+  tbody tr:last-child td{ border-bottom:none; }
+  .src{ font-size:.68rem; color:#6b6b78; font-style:italic; }
+</style>
+</head>
+<body class="bg-[#0a0a0e] text-slate-200 min-h-screen">
+
+<header class="sticky top-0 z-50 border-b border-[#23232b] bg-[#0a0a0e]/95 backdrop-blur px-5 sm:px-8 py-4">
+  <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg" style="background:var(--accent)">
+        <i class="fa-solid fa-tags"></i>
+      </div>
+      <div>
+        <h1 class="text-base sm:text-lg font-bold text-white leading-tight">Plataforma de Curadoria e Distribuição de Ofertas</h1>
+        <p class="text-[11px] text-slate-500">Documento interno · versão pós-pesquisa · julho de 2026</p>
+      </div>
+    </div>
+    <span class="text-[10px] px-2.5 py-1 rounded-full border" style="border-color:#3a2415;background:#1d1109;color:var(--accent)">
+      <i class="fa-solid fa-circle-check mr-1"></i>Revisado após auditoria
+    </span>
+  </div>
+</header>
+
+<nav class="border-b border-[#23232b] bg-[#0d0d12] px-5 sm:px-8 overflow-x-auto">
+  <div class="max-w-7xl mx-auto flex gap-7 min-w-max text-sm">
+    <button onclick="tab('tese')" id="t-tese" class="tab-btn active py-3.5 text-slate-400 hover:text-white flex items-center gap-2"><i class="fa-solid fa-bullseye"></i>1. Tese</button>
+    <button onclick="tab('produto')" id="t-produto" class="tab-btn py-3.5 text-slate-400 hover:text-white flex items-center gap-2"><i class="fa-solid fa-cubes"></i>2. Produto & Arquitetura</button>
+    <button onclick="tab('mercado')" id="t-mercado" class="tab-btn py-3.5 text-slate-400 hover:text-white flex items-center gap-2"><i class="fa-solid fa-chart-simple"></i>3. Mercado & Concorrência</button>
+    <button onclick="tab('numeros')" id="t-numeros" class="tab-btn py-3.5 text-slate-400 hover:text-white flex items-center gap-2"><i class="fa-solid fa-calculator"></i>4. Números</button>
+    <button onclick="tab('execucao')" id="t-execucao" class="tab-btn py-3.5 text-slate-400 hover:text-white flex items-center gap-2"><i class="fa-solid fa-flag-checkered"></i>5. Execução</button>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-5 sm:px-8 py-8">
+
+<!-- ==================== TAB 1 — TESE ==================== -->
+<section id="c-tese" class="space-y-6">
+
+  <div class="card rounded-2xl p-7 sm:p-9">
+    <span class="kicker text-[10px] font-bold uppercase" style="color:var(--accent)">A decisão central</span>
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-3 leading-tight max-w-3xl">
+      Construir dentro do que as plataformas permitem — e transformar isso em posicionamento
+    </h2>
+    <p class="text-slate-400 text-sm mt-4 max-w-3xl leading-relaxed">
+      Não é postura moral, é análise de fragilidade. A funcionalidade central dos onze concorrentes é
+      justamente a que gera litígio. Isso não é vantagem competitiva: é um pavio aceso — e o momento em que
+      uma empresa dessas mais tem a perder é exatamente quando começou a faturar.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card rounded-xl p-5 fact">
+      <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">Afiliados na Shopee BR</p>
+      <p class="text-2xl font-extrabold text-white mt-1">5 milhões+</p>
+      <p class="text-[11px] text-slate-500 mt-1">Dado oficial, reafirmado em jul/2026</p>
+    </div>
+    <div class="card rounded-xl p-5 fact">
+      <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">Concorrentes ativos</p>
+      <p class="text-2xl font-extrabold text-white mt-1">11</p>
+      <p class="text-[11px] text-slate-500 mt-1">Faixa de R$0 a R$497/mês</p>
+    </div>
+    <div class="card rounded-xl p-5 fact">
+      <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">Break-even operacional</p>
+      <p class="text-2xl font-extrabold text-white mt-1">12 clientes</p>
+      <p class="text-[11px] text-slate-500 mt-1">Sem pró-labore, Anexo V</p>
+    </div>
+    <div class="card rounded-xl p-5 fact">
+      <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">Desembolso dos 90 dias</p>
+      <p class="text-2xl font-extrabold text-white mt-1">R$ 7 a 10 mil</p>
+      <p class="text-[11px] text-slate-500 mt-1">Não inclui subsistência dos sócios</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="card rounded-2xl p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:#2a1414;color:var(--bad)"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3 class="font-bold text-white">As duas dores que o mercado não resolve</h3>
+      </div>
+      <div class="space-y-4 text-sm">
+        <div>
+          <p class="font-semibold text-white">Banimento de contas de WhatsApp</p>
+          <p class="text-slate-400 text-[13px] leading-relaxed mt-1">
+            Citada em 4 das 11 ferramentas analisadas. Todas prometem anti-ban; a pesquisa classifica a solução
+            como <strong class="text-amber-400">parcial em todos os casos</strong>. Não é falha de implementação —
+            é consequência de operar o WhatsApp fora da API oficial.
+          </p>
+        </div>
+        <div>
+          <p class="font-semibold text-white">Desconto que não é desconto</p>
+          <p class="text-slate-400 text-[13px] leading-relaxed mt-1">
+            <strong style="color:var(--accent)">Nenhuma ferramenta analisada</strong> valida se a promoção é real.
+            O afiliado publica desconto falso sem saber e queima a credibilidade do próprio canal.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card rounded-2xl p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:#0f2620;color:var(--ok)"><i class="fa-solid fa-check-double"></i></div>
+        <h3 class="font-bold text-white">Nossas três frentes</h3>
+      </div>
+      <ol class="space-y-3.5 text-sm">
+        <li class="flex gap-3">
+          <span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">1</span>
+          <div><p class="font-semibold text-white">Desconto verificado</p>
+          <p class="text-slate-400 text-[13px] leading-relaxed">Histórico de preço próprio por SKU. Ninguém oferece hoje.</p></div>
+        </li>
+        <li class="flex gap-3">
+          <span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">2</span>
+          <div><p class="font-semibold text-white">Curadoria de origem</p>
+          <p class="text-slate-400 text-[13px] leading-relaxed">A maioria espelha os mesmos grupos-fonte e satura os canais com oferta repetida.</p></div>
+        </li>
+        <li class="flex gap-3">
+          <span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">3</span>
+          <div><p class="font-semibold text-white">Operação que não expõe a empresa</p>
+          <p class="text-slate-400 text-[13px] leading-relaxed">Sem sessão conectada, sem QR Code, sem padrão automatizado que dispare detecção.</p></div>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card-soft rounded-2xl p-6 caveat">
+    <p class="text-[10px] uppercase kicker font-bold text-amber-400 mb-3"><i class="fa-solid fa-scale-balanced mr-1"></i>Precisão sobre o que prometemos</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-[13px] leading-relaxed text-slate-400">
+      <p><strong class="text-white">Não podemos dizer "zero risco de ban".</strong> O gestor continuará publicando manualmente
+      em grupos, e a plataforma não define limite numérico formal — o gatilho é o padrão de uso e o volume de bloqueios
+      e denúncias. O que eliminamos é o ban causado por automação e a exposição jurídica da empresa.</p>
+      <p><strong class="text-white">O desconto verificado é fosso temporal, não estrutural.</strong> Qualquer um dos onze
+      replica em algumas semanas. A vantagem real é começar a acumular histórico antes deles — porque dado passado
+      não se compra depois.</p>
+    </div>
+  </div>
+
+  <div class="card rounded-2xl p-6">
+    <p class="text-[10px] uppercase kicker font-bold text-slate-500 mb-3">Evidência que sustenta a decisão</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-[13px] text-slate-400">
+      <p class="flex gap-2"><i class="fa-solid fa-circle-dot text-[6px] mt-2" style="color:var(--accent)"></i>Ferramentas que operam o WhatsApp fora da API oficial têm vida útil relatada de <strong class="text-white">2 a 8 semanas</strong> antes do banimento do número</p>
+      <p class="flex gap-2"><i class="fa-solid fa-circle-dot text-[6px] mt-2" style="color:var(--accent)"></i>O WhatsApp já processou <strong class="text-white">quatro empresas brasileiras</strong> que vendiam disparo em massa: Autland, VB Marketing, SallApp e Yacows</p>
+      <p class="flex gap-2"><i class="fa-solid fa-circle-dot text-[6px] mt-2" style="color:var(--accent)"></i>Desde dez/2019 declara tomar ação legal contra envolvidos em envio automatizado, inclusive com evidência fora da plataforma</p>
+      <p class="flex gap-2"><i class="fa-solid fa-circle-dot text-[6px] mt-2" style="color:var(--accent)"></i>A Groups API oficial da Meta limita grupos a <strong class="text-white">8 membros</strong> — não existe caminho oficial para canal de ofertas <span class="src">(confirmar na fonte primária)</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TAB 2 — PRODUTO ==================== -->
+<section id="c-produto" class="hidden space-y-6">
+
+  <div class="card rounded-2xl p-6">
+    <h2 class="text-xl font-bold text-white">Arquitetura de canais</h2>
+    <p class="text-sm text-slate-500 mt-1">Cada canal com um papel definido. Nenhum operando em zona cinzenta.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+      <div class="card-soft rounded-xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-bold text-white text-sm"><i class="fa-brands fa-telegram mr-2" style="color:var(--ok)"></i>Telegram</span>
+          <span class="text-[10px] px-2 py-0.5 rounded" style="background:#0f2620;color:var(--ok)">custo zero</span>
+        </div>
+        <p class="text-[13px] text-slate-400 leading-relaxed">Bot API oficial. Audiência ilimitada, opt-in por natureza, sem risco de ban. <strong class="text-white">Canal principal.</strong></p>
+      </div>
+      <div class="card-soft rounded-xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-bold text-white text-sm"><i class="fa-brands fa-whatsapp mr-2" style="color:var(--ok)"></i>Grupo de WhatsApp</span>
+          <span class="text-[10px] px-2 py-0.5 rounded" style="background:#0f2620;color:var(--ok)">custo zero</span>
+        </div>
+        <p class="text-[13px] text-slate-400 leading-relaxed">Conteúdo pronto, compartilhamento nativo e link direto. <strong class="text-white">O gestor publica</strong> — nós não enviamos nada.</p>
+      </div>
+      <div class="card-soft rounded-xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-bold text-white text-sm"><i class="fa-solid fa-bell mr-2" style="color:var(--warn)"></i>WhatsApp 1:1</span>
+          <span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a2013;color:var(--warn)">~R$0,35/msg</span>
+        </div>
+        <p class="text-[13px] text-slate-400 leading-relaxed">Cloud API oficial. Inviável para broadcast, <strong class="text-white">excelente para alerta pessoal de preço</strong> — que só nós podemos fazer com dado por trás.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Módulos</h3>
+      <div class="space-y-3 text-[13px]">
+        <div class="flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">1</span><div><p class="font-semibold text-white">Garimpo</p><p class="text-slate-400">Captura via API oficial, histórico de preço por SKU, desconto verificado, deduplicação.</p></div></div>
+        <div class="flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">2</span><div><p class="font-semibold text-white">Afiliação</p><p class="text-slate-400">Tag do próprio cliente, cofre de credenciais cifradas, encurtador com atribuição ponta a ponta.</p></div></div>
+        <div class="flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">3</span><div><p class="font-semibold text-white">Curadoria e disparo</p><p class="text-slate-400">Feed em tempo real, publicação em 1 clique, piloto automático no Telegram.</p></div></div>
+        <div class="flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">4</span><div><p class="font-semibold text-white">Migração de audiência</p><p class="text-slate-400">Leva o público do WhatsApp para o Telegram. Resposta à objeção que mais aparece em vendas — e ninguém oferece.</p></div></div>
+      </div>
+    </div>
+
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Fora do escopo dos 90 dias</h3>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#1a1a20] text-slate-500 border border-[#26262e]">Instagram</span>
+        <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#1a1a20] text-slate-500 border border-[#26262e]">Geração de imagem por IA</span>
+        <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#1a1a20] text-slate-500 border border-[#26262e]">Landing pages e loja</span>
+        <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#1a1a20] text-slate-500 border border-[#26262e]">Matching entre marketplaces</span>
+        <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#1a1a20] text-slate-500 border border-[#26262e]">App mobile nativo</span>
+        <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#1a1a20] text-slate-500 border border-[#26262e]">Amazon</span>
+        <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#1a1a20] text-slate-500 border border-[#26262e]">Multi-sessão de WhatsApp</span>
+      </div>
+      <p class="text-[12px] text-slate-500 mt-4 leading-relaxed">A lista do que <em>não</em> entra vale mais que a do que entra. Sem ela, a Fase 1 não termina.</p>
+    </div>
+  </div>
+
+  <div class="card rounded-2xl p-6">
+    <h3 class="font-bold text-white">Fluxo do sistema</h3>
+    <div class="mt-5 card-soft rounded-xl p-5 sm:p-7">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
+        <div class="rounded-xl p-4 bg-[#17171d] border border-[#2a2a33]">
+          <p class="text-[10px] uppercase kicker text-slate-500 font-bold">Camada 1</p>
+          <p class="font-semibold text-white text-sm mt-2">Painel & API</p>
+          <p class="text-[11px] text-slate-500 mt-1">Next.js · Fastify · Prisma</p>
+        </div>
+        <div class="rounded-xl p-4 bg-[#17171d]" style="border:1px solid #3a2415">
+          <p class="text-[10px] uppercase kicker font-bold" style="color:var(--accent)">Camada 2</p>
+          <p class="font-semibold text-white text-sm mt-2">Fila</p>
+          <p class="text-[11px] text-slate-500 mt-1">Redis · BullMQ · uma fila por marketplace</p>
+        </div>
+        <div class="rounded-xl p-4 bg-[#17171d] border border-[#2a2a33]">
+          <p class="text-[10px] uppercase kicker text-slate-500 font-bold">Camada 3</p>
+          <p class="font-semibold text-white text-sm mt-2">Workers</p>
+          <p class="text-[11px] text-slate-500 mt-1">Captura por API · Publicação</p>
+        </div>
+      </div>
+      <div class="flex justify-center items-center gap-3 text-[11px] text-slate-600 mt-5 flex-wrap">
+        <span>APIs oficiais</span><i class="fa-solid fa-arrow-right"></i>
+        <span>histórico de preço</span><i class="fa-solid fa-arrow-right"></i>
+        <span>desconto verificado</span><i class="fa-solid fa-arrow-right"></i>
+        <span>fila</span><i class="fa-solid fa-arrow-right"></i>
+        <span>Telegram / conteúdo para WhatsApp</span>
+      </div>
+      <div class="mt-5 text-center text-[11px] text-slate-500 border-t border-[#23232b] pt-4">
+        PostgreSQL + Prisma com Row Level Security · credenciais cifradas na aplicação
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Ordem de integração</h3>
+      <table>
+        <thead><tr class="text-slate-500 text-[11px] uppercase"><th>#</th><th>Fonte</th><th>Motivo</th></tr></thead>
+        <tbody class="text-slate-300">
+          <tr><td class="font-bold" style="color:var(--accent)">1</td><td class="font-semibold text-white">Shopee</td><td class="text-slate-400">API completa: preço, desconto, comissão, ofertas flash, shortlink, conversão</td></tr>
+          <tr><td class="font-bold" style="color:var(--accent)">2</td><td class="font-semibold text-white">Awin</td><td class="text-slate-400">Offers API — uma integração dá acesso à rede de anunciantes</td></tr>
+          <tr><td class="font-bold text-slate-500">3</td><td class="text-slate-300">AliExpress</td><td class="text-slate-400">API oficial, ~5.000 requisições/dia</td></tr>
+          <tr><td class="font-bold text-slate-500">4</td><td class="text-slate-300">Lomadee</td><td class="text-slate-400">Rede brasileira, API REST</td></tr>
+          <tr><td class="text-slate-600">—</td><td class="text-slate-500">Mercado Livre · Magalu</td><td class="text-slate-500">Sem API de afiliados. Só scraping, depois da Fase 3</td></tr>
+          <tr><td class="text-slate-600">—</td><td class="text-slate-500">Amazon</td><td class="text-slate-500">PA-API em descontinuação. Aguardar a Creators API</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-1">Quatro fundações não-retrofitáveis</h3>
+      <p class="text-[12px] text-slate-500 mb-4">Baratas agora, caras ou impossíveis depois.</p>
+      <div class="space-y-3 text-[13px]">
+        <div class="flex gap-3"><i class="fa-solid fa-lock mt-1 text-[11px]" style="color:var(--accent)"></i><div><span class="font-semibold text-white">tenant_id em toda tabela + RLS.</span> <span class="text-slate-400">O Prisma não escopa sozinho; um findMany sem where vaza e não quebra nada.</span></div></div>
+        <div class="flex gap-3"><i class="fa-solid fa-clock-rotate-left mt-1 text-[11px]" style="color:var(--accent)"></i><div><span class="font-semibold text-white">Histórico de preço em intervalos.</span> <span class="text-slate-400">Grava quando o preço muda, não a cada leitura. Dado não gravado não se recupera.</span></div></div>
+        <div class="flex gap-3"><i class="fa-solid fa-layer-group mt-1 text-[11px]" style="color:var(--accent)"></i><div><span class="font-semibold text-white">Uma fila por marketplace.</span> <span class="text-slate-400">Rate limit isolado — fila global faz um marketplace lento travar os outros.</span></div></div>
+        <div class="flex gap-3"><i class="fa-solid fa-heart-pulse mt-1 text-[11px]" style="color:var(--accent)"></i><div><span class="font-semibold text-white">Alerta de captura zerada.</span> <span class="text-slate-400">A diferença entre descobrir em uma hora e descobrir pelo cliente.</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TAB 3 — MERCADO ==================== -->
+<section id="c-mercado" class="hidden space-y-6">
+
+  <div class="card rounded-2xl p-6">
+    <h2 class="text-xl font-bold text-white">O mercado</h2>
+    <table class="mt-4">
+      <thead><tr class="text-slate-500 text-[11px] uppercase"><th>Indicador</th><th>Valor</th><th>Natureza do dado</th></tr></thead>
+      <tbody class="text-slate-300">
+        <tr><td>Afiliados cadastrados na Shopee Brasil</td><td class="font-bold text-white">5 milhões+</td><td class="text-slate-500">Oficial, jul/2026</td></tr>
+        <tr><td>Crescimento do programa do Mercado Livre</td><td class="font-bold text-white">+324%</td><td class="text-slate-500">Oficial, Q3/20 a Q3/24</td></tr>
+        <tr><td>Participantes em marketing de afiliados no Brasil</td><td class="font-bold text-white">30 milhões+</td><td class="text-slate-500">Estimativa de terceiros, abr/2026</td></tr>
+        <tr><td>Faturamento do e-commerce brasileiro</td><td class="font-bold text-white">R$ 224 bi</td><td class="text-slate-500">ABComm, projeção 2025</td></tr>
+      </tbody>
+    </table>
+    <div class="card-soft rounded-xl p-5 mt-5 caveat">
+      <p class="text-[13px] text-slate-400 leading-relaxed">
+        <strong class="text-white">Cadastro não é uso, e uso não é disposição a pagar.</strong> Não existe dado público de
+        afiliados ativos, muito menos de quantos pagariam por ferramenta. De "5 milhões de cadastrados" até
+        "quantos assinam por R$97/mês" há várias ordens de grandeza que nenhuma fonte cobre. O tamanho do nosso
+        mercado endereçável é premissa a validar, não fato.
+      </p>
+    </div>
+  </div>
+
+  <div class="card rounded-2xl p-6">
+    <h2 class="text-xl font-bold text-white">Concorrência</h2>
+    <p class="text-sm text-slate-500 mt-1">Onze players ativos, de R$0 a R$497 por mês.</p>
+    <div class="overflow-x-auto mt-4">
+      <table>
+        <thead><tr class="text-slate-500 text-[11px] uppercase"><th>Ferramenta</th><th>Canais</th><th>Preço mensal</th><th>Origem do preço</th></tr></thead>
+        <tbody class="text-slate-300">
+          <tr><td class="font-semibold text-white">FluxoPromo</td><td class="text-slate-400">Telegram, WhatsApp (add-on)</td><td>R$ 37 / 97 / 197 <span class="text-slate-500">+ R$149,90</span></td><td style="color:var(--ok)" class="text-[11px]">Site oficial</td></tr>
+          <tr><td class="font-semibold text-white">Hub do Afiliado</td><td class="text-slate-400">Telegram, WhatsApp</td><td>R$ 97 / 297 / 497 <span class="text-slate-500">+ R$100/sessão</span></td><td style="color:var(--ok)" class="text-[11px]">Site oficial</td></tr>
+          <tr><td class="font-semibold text-white">DivulgaLinks</td><td class="text-slate-400">WhatsApp, Telegram, Instagram</td><td>R$ 69,90 / 129,90 / 169,90</td><td style="color:var(--ok)" class="text-[11px]">Site oficial</td></tr>
+          <tr><td class="text-slate-300">Shozap</td><td class="text-slate-400">WhatsApp, Telegram, Instagram</td><td>~R$ 50 a 150</td><td class="text-slate-500 text-[11px]">Terceiros</td></tr>
+          <tr><td class="text-slate-300">DivulgaNinja</td><td class="text-slate-400">WhatsApp, Telegram, Instagram</td><td>~R$ 39 a 49,90</td><td class="text-amber-500 text-[11px]">Fontes divergentes</td></tr>
+          <tr><td class="text-slate-300">TrocaLink</td><td class="text-slate-400">WhatsApp, Telegram</td><td>~R$ 99</td><td class="text-slate-500 text-[11px]">Terceiros</td></tr>
+          <tr><td class="text-slate-300">Easyfy</td><td class="text-slate-400">WhatsApp, Telegram</td><td>~R$ 39,92</td><td class="text-slate-500 text-[11px]">Terceiros</td></tr>
+          <tr><td class="text-slate-300">IA Divulgadora</td><td class="text-slate-400">Multicanal</td><td>R$ 69,90</td><td class="text-slate-500 text-[11px]">Terceiros</td></tr>
+          <tr><td class="text-slate-300">ProAfiliados</td><td class="text-slate-400">WhatsApp, Telegram</td><td>Grátis · Premium ~R$50</td><td class="text-slate-500 text-[11px]">Terceiros</td></tr>
+          <tr><td class="text-slate-500">Achadinhos Pro · Linqor</td><td class="text-slate-500">Variados</td><td class="text-slate-500">Não divulgado</td><td class="text-slate-600 text-[11px]">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="src mt-3">Os três primeiros vieram das páginas oficiais. Os demais, de comparativos de terceiros — tratar como aproximação.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-1">O que virou commodity</h3>
+      <p class="text-[12px] text-slate-500 mb-4">Piso de entrada, não diferencial.</p>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Captura multi-marketplace</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Tag do próprio cliente</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Disparo WhatsApp e Telegram</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Anti-duplicação</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Encurtador com rastreio</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Agendamento</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Templates</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Dashboard de cliques</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Copy com IA</span>
+        <span class="text-[12px] px-2.5 py-1 rounded bg-[#1a1a20] text-slate-500">Programa de afiliados interno</span>
+      </div>
+    </div>
+
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Dores registradas nas reclamações</h3>
+      <table>
+        <thead><tr class="text-slate-500 text-[11px] uppercase"><th>Dor</th><th>Status</th></tr></thead>
+        <tbody class="text-slate-300">
+          <tr><td>Bloqueios e bans no WhatsApp</td><td class="text-amber-400 font-semibold">Parcial</td></tr>
+          <tr><td>Validação de desconto real</td><td class="font-semibold" style="color:var(--accent)">Ninguém oferece</td></tr>
+          <tr><td>Curadoria própria vs. espelhamento</td><td class="text-amber-400 font-semibold">Parcial</td></tr>
+          <tr><td>Transparência de preço</td><td class="font-semibold" style="color:var(--bad)">Não resolvida</td></tr>
+        </tbody>
+      </table>
+      <p class="text-[12px] text-slate-500 mt-4 leading-relaxed">
+        A dor mais citada é consequência da arquitetura que a categoria adotou. Não se corrige com anti-ban melhor.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TAB 4 — NÚMEROS ==================== -->
+<section id="c-numeros" class="hidden space-y-6">
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white">Unit economics por cliente</h3>
+      <p class="text-[12px] text-slate-500 mt-1">Ticket de R$97. O regime tributário muda oito pontos de margem.</p>
+      <table class="mt-4">
+        <thead><tr class="text-slate-500 text-[11px] uppercase"><th>Item</th><th class="text-right">Com Fator R</th><th class="text-right">Sem Fator R</th></tr></thead>
+        <tbody class="text-slate-300">
+          <tr><td>Receita</td><td class="text-right">R$ 97,00</td><td class="text-right">R$ 97,00</td></tr>
+          <tr><td>Gateway (Stripe)</td><td class="text-right text-slate-400">−R$ 4,17</td><td class="text-right text-slate-400">−R$ 4,17</td></tr>
+          <tr><td>Simples Nacional</td><td class="text-right text-slate-400">−R$ 7,08 <span class="text-[10px]">(7,3%)</span></td><td class="text-right text-slate-400">−R$ 15,04 <span class="text-[10px]">(15,5%)</span></td></tr>
+          <tr><td>Infra variável</td><td class="text-right text-slate-400">−R$ 1,50</td><td class="text-right text-slate-400">−R$ 1,50</td></tr>
+          <tr><td class="font-bold text-white">Margem de contribuição</td><td class="text-right font-bold" style="color:var(--ok)">R$ 84,25</td><td class="text-right font-bold text-amber-400">R$ 76,29</td></tr>
+          <tr><td class="text-slate-400">Margem %</td><td class="text-right text-slate-300">86,9%</td><td class="text-right text-slate-300">78,6%</td></tr>
+        </tbody>
+      </table>
+      <div class="card-soft rounded-lg p-4 mt-4 caveat">
+        <p class="text-[12px] text-slate-400 leading-relaxed">
+          <strong class="text-white">Duas armadilhas do Fator R.</strong> Ele exige folha de pelo menos 28% da receita.
+          Sem pró-labore não há folha — logo, cenário sem remuneração usa o Anexo V. E na escala, pró-labore de R$6.000
+          só sustenta o Fator R até <strong class="text-white">R$21.429/mês</strong> de receita.
+        </p>
+      </div>
+    </div>
+
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white">Sensibilidade do churn</h3>
+      <p class="text-[12px] text-slate-500 mt-1">É a premissa mais frágil do plano. Mova e veja o impacto.</p>
+      <div class="mt-5">
+        <div class="flex justify-between text-[12px] font-semibold text-slate-300 mb-2">
+          <span>Churn mensal</span><span id="v-churn" class="font-bold" style="color:var(--accent)">3,0%</span>
+        </div>
+        <input type="range" id="i-churn" min="2" max="9" step="0.5" value="3" oninput="calcChurn()" class="w-full">
+        <div class="flex justify-between text-[10px] text-slate-600 mt-1"><span>2% — B2B saudável</span><span>4 a 8% — micro-SaaS para criadores</span></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-6">
+        <div class="card-soft rounded-xl p-4 text-center">
+          <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">Permanência</p>
+          <p id="r-meses" class="text-xl font-extrabold text-white mt-1">33 meses</p>
+        </div>
+        <div class="card-soft rounded-xl p-4 text-center">
+          <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">LTV</p>
+          <p id="r-ltv" class="text-xl font-extrabold mt-1" style="color:var(--ok)">R$ 2.808</p>
+        </div>
+        <div class="card-soft rounded-xl p-4 text-center">
+          <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">CAC máximo</p>
+          <p id="r-cac" class="text-xl font-extrabold text-white mt-1">R$ 936</p>
+        </div>
+      </div>
+      <p id="churn-msg" class="text-[12px] mt-4 leading-relaxed text-slate-400"></p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Ponto de equilíbrio</h3>
+      <table>
+        <thead><tr class="text-slate-500 text-[11px] uppercase"><th>Cenário</th><th>Regime</th><th class="text-right">Clientes</th></tr></thead>
+        <tbody class="text-slate-300">
+          <tr><td>Cobrir o custo operacional</td><td class="text-slate-500">Anexo V</td><td class="text-right font-extrabold text-xl" style="color:var(--ok)">12</td></tr>
+          <tr><td>+ pró-labore de R$3.000 × 2</td><td class="text-slate-500">Anexo III</td><td class="text-right font-extrabold text-xl text-white">82</td></tr>
+          <tr><td>+ pró-labore de R$5.000 × 2</td><td class="text-slate-500">Anexo III</td><td class="text-right font-extrabold text-xl text-white">129</td></tr>
+        </tbody>
+      </table>
+      <p class="text-[12px] text-slate-500 mt-4 leading-relaxed">Doze clientes para o negócio se pagar — é o número que sustenta não buscar capital externo para a operação.</p>
+    </div>
+
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Custo mensal e de construção</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="card-soft rounded-xl p-4">
+          <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">Custo fixo mensal</p>
+          <p class="text-2xl font-extrabold text-white mt-1">R$ 850</p>
+          <p class="text-[11px] text-slate-500 mt-1">R$700 nos primeiros meses, sem proxies</p>
+        </div>
+        <div class="card-soft rounded-xl p-4">
+          <p class="text-[10px] uppercase kicker text-slate-500 font-semibold">Construção (90 dias)</p>
+          <p class="text-2xl font-extrabold text-white mt-1">R$ 7 a 10 mil</p>
+          <p class="text-[11px] text-slate-500 mt-1">Jurídico é a maior linha</p>
+        </div>
+      </div>
+      <div class="card-soft rounded-lg p-4 mt-4 caveat">
+        <p class="text-[12px] text-slate-400 leading-relaxed">
+          <strong class="text-white">Duas omissões reconhecidas:</strong> não há linha de produção de conteúdo, e este
+          valor não cobre a subsistência dos sócios nos 90 dias — que é a maior despesa real do período e determina
+          se o projeto é mesmo autofinanciável.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card rounded-2xl p-6">
+    <h3 class="font-bold text-white">Cenários de 12 meses</h3>
+    <p class="text-[12px] text-slate-500 mt-1">Churn de 3%, ticket de R$97. Taxas de aquisição são premissa, não previsão.</p>
+    <div class="overflow-x-auto mt-4">
+      <table>
+        <thead><tr class="text-slate-500 text-[11px] uppercase">
+          <th>Mês</th><th class="text-right">Conservador<br><span class="normal-case font-normal">5 novos/mês</span></th>
+          <th class="text-right">Base<br><span class="normal-case font-normal">15 novos/mês</span></th>
+          <th class="text-right">Otimista<br><span class="normal-case font-normal">35 novos/mês</span></th>
+        </tr></thead>
+        <tbody class="text-slate-300">
+          <tr><td>1</td><td class="text-right">5</td><td class="text-right">15</td><td class="text-right">35</td></tr>
+          <tr><td>3</td><td class="text-right">15</td><td class="text-right">44</td><td class="text-right">102</td></tr>
+          <tr><td>6</td><td class="text-right font-semibold text-white">28</td><td class="text-right font-semibold text-white">84</td><td class="text-right font-semibold text-white">195</td></tr>
+          <tr><td>12</td><td class="text-right font-semibold text-white">51</td><td class="text-right font-semibold text-white">153</td><td class="text-right font-semibold text-white">357</td></tr>
+          <tr><td class="text-slate-500">Receita mês 12</td><td class="text-right" style="color:var(--ok)">R$ 4.950</td><td class="text-right" style="color:var(--ok)">R$ 14.849</td><td class="text-right" style="color:var(--ok)">R$ 34.647</td></tr>
+          <tr><td class="text-slate-500">Break-even operacional</td><td class="text-right">mês 3</td><td class="text-right">mês 1</td><td class="text-right">mês 1</td></tr>
+          <tr><td class="text-slate-500">Break-even com pró-labore</td><td class="text-right text-amber-400">não atinge</td><td class="text-right">mês 6</td><td class="text-right">mês 3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="src mt-3">O modelo não considera período de degustação nem falha de cobrança. Com trial de 7 a 14 dias, todos os prazos escorregam cerca de um mês.</p>
+  </div>
+
+  <!-- CALCULADORA DE VIABILIDADE -->
+  <div class="card rounded-2xl p-6" style="border-color:#3a2415">
+    <div class="flex items-start justify-between flex-wrap gap-3">
+      <div>
+        <h3 class="font-bold text-white"><i class="fa-solid fa-users mr-2" style="color:var(--accent)"></i>Calculadora de viabilidade para o cliente</h3>
+        <p class="text-[12px] text-slate-500 mt-1">Começa pelo tamanho da audiência — que é a variável que decide tudo. Serve como qualificação de lead.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+      <div class="space-y-5">
+        <div>
+          <div class="flex justify-between text-[12px] font-semibold text-slate-300 mb-2">
+            <span>Membros no canal</span><span id="v-membros" style="color:var(--accent)" class="font-bold">500</span>
+          </div>
+          <input type="range" id="i-membros" min="50" max="10000" step="50" value="500" oninput="calcViab()" class="w-full">
+        </div>
+        <div>
+          <div class="flex justify-between text-[12px] font-semibold text-slate-300 mb-2">
+            <span>Ofertas publicadas por dia</span><span id="v-ofertas" style="color:var(--accent)" class="font-bold">15</span>
+          </div>
+          <input type="range" id="i-ofertas" min="3" max="50" value="15" oninput="calcViab()" class="w-full">
+        </div>
+        <div>
+          <div class="flex justify-between text-[12px] font-semibold text-slate-300 mb-2">
+            <span>Taxa de clique por oferta</span><span id="v-ctr" style="color:var(--accent)" class="font-bold">1,0%</span>
+          </div>
+          <input type="range" id="i-ctr" min="0.2" max="5" step="0.1" value="1" oninput="calcViab()" class="w-full">
+        </div>
+        <div>
+          <div class="flex justify-between text-[12px] font-semibold text-slate-300 mb-2">
+            <span>Conversão do clique em venda</span><span id="v-cvr" style="color:var(--accent)" class="font-bold">1,5%</span>
+          </div>
+          <input type="range" id="i-cvr" min="0.3" max="6" step="0.1" value="1.5" oninput="calcViab()" class="w-full">
+        </div>
+        <div>
+          <div class="flex justify-between text-[12px] font-semibold text-slate-300 mb-2">
+            <span>Comissão média por venda</span><span id="v-com" style="color:var(--accent)" class="font-bold">R$ 12,00</span>
+          </div>
+          <input type="range" id="i-com" min="3" max="60" value="12" oninput="calcViab()" class="w-full">
+        </div>
+      </div>
+
+      <div class="card-soft rounded-xl p-6 flex flex-col justify-center">
+        <p class="text-[10px] uppercase kicker text-slate-500 font-semibold text-center">Comissão mensal estimada</p>
+        <p id="r-comissao" class="text-4xl font-extrabold text-center mt-2" style="color:var(--ok)">R$ 405</p>
+        <div class="grid grid-cols-2 gap-3 mt-6 text-center">
+          <div><p class="text-[10px] uppercase text-slate-500">Cliques/mês</p><p id="r-cliques" class="text-lg font-bold text-white">2.250</p></div>
+          <div><p class="text-[10px] uppercase text-slate-500">Vendas/mês</p><p id="r-vendas" class="text-lg font-bold text-white">34</p></div>
+        </div>
+        <div id="r-veredito" class="mt-6 rounded-lg p-4 text-[13px] leading-relaxed"></div>
+      </div>
+    </div>
+    <p class="src mt-4">Estimativa ilustrativa. As taxas de clique e conversão variam muito por nicho, engajamento e qualidade da curadoria.</p>
+  </div>
+</section>
+
+<!-- ==================== TAB 5 — EXECUÇÃO ==================== -->
+<section id="c-execucao" class="hidden space-y-6">
+
+  <div class="card rounded-2xl p-6">
+    <h2 class="text-xl font-bold text-white">Roadmap de 13 semanas</h2>
+    <p class="text-[12px] text-slate-500 mt-1">Sequenciado por dependência externa. Em tempo parcial, o número honesto é 22 a 30 semanas.</p>
+    <div class="relative border-l-2 border-[#26262e] ml-3 space-y-7 pl-6 mt-6">
+      <div class="relative">
+        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full ring-4 ring-[#0a0a0e]" style="background:var(--accent)"></div>
+        <span class="text-[11px] font-bold uppercase kicker" style="color:var(--accent)">Semana 1 · Fundação</span>
+        <p class="text-slate-300 text-[13px] mt-1.5 leading-relaxed">Solicitar credencial da Shopee (aprovação manual, prazo não publicado). Abrir CNPJ com estrutura de Fator R. Fechar acordo societário. Docker, Postgres, Redis e schema multi-tenant com histórico de preço.</p>
+      </div>
+      <div class="relative">
+        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-600 ring-4 ring-[#0a0a0e]"></div>
+        <span class="text-[11px] font-bold uppercase kicker text-slate-400">Semanas 2 a 4 · Pipeline vertical</span>
+        <p class="text-slate-300 text-[13px] mt-1.5 leading-relaxed">Shopee via API → histórico de preço → desconto verificado → fila → publicação no Telegram. Uma fonte, um canal, fluxo completo.</p>
+      </div>
+      <div class="relative">
+        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-600 ring-4 ring-[#0a0a0e]"></div>
+        <span class="text-[11px] font-bold uppercase kicker text-slate-400">Semanas 5 a 7 · Curadoria e WhatsApp</span>
+        <p class="text-slate-300 text-[13px] mt-1.5 leading-relaxed">Painel de curadoria em 1 clique. Conteúdo e links prontos para WhatsApp. Awin como segunda fonte.</p>
+      </div>
+      <div class="relative">
+        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-600 ring-4 ring-[#0a0a0e]"></div>
+        <span class="text-[11px] font-bold uppercase kicker text-slate-400">Semanas 8 a 10 · Automação e alpha</span>
+        <p class="text-slate-300 text-[13px] mt-1.5 leading-relaxed">Piloto automático com filtros. Alerta 1:1 pela Cloud API. Onboarding de credenciais. Alpha com a rede da sócia.</p>
+      </div>
+      <div class="relative">
+        <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-slate-600 ring-4 ring-[#0a0a0e]"></div>
+        <span class="text-[11px] font-bold uppercase kicker text-slate-400">Semanas 11 a 13 · Lançamento</span>
+        <p class="text-slate-300 text-[13px] mt-1.5 leading-relaxed">Billing com Stripe. Ferramenta de migração de audiência. Conteúdo de aquisição publicado. Abertura de vendas.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Retenção — o que fazer desde já</h3>
+      <div class="space-y-4 text-[13px]">
+        <div>
+          <p class="font-semibold text-white">1. Resolver o portão da credencial</p>
+          <p class="text-slate-400 leading-relaxed">A aprovação da Shopee é manual. Se o cliente assina e fica duas semanas sem usar nada, cancela antes de descobrir se o produto é bom. Liberar o feed curado desde o minuto um, sem depender da credencial.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-white">2. Tornar o valor visível todo mês</p>
+          <p class="text-slate-400 leading-relaxed">"Seu canal publicou 240 ofertas, gerou 1.847 cliques e R$312 em comissão." Nenhum concorrente consegue mandar isso — a atribuição deles para no clique.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-white">3. Vender menos, para gente melhor</p>
+          <p class="text-slate-400 leading-relaxed">Cliente com audiência existente retém muito mais que iniciante com zero. Qualificar por tamanho de canal no cadastro.</p>
+        </div>
+        <div class="card-soft rounded-lg p-3.5 fact">
+          <p class="text-slate-300"><strong class="text-white">Indicador antecedente:</strong> dias desde a última publicação. Churn é indicador atrasado — quem não publica há duas semanas já saiu, só não cancelou.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card rounded-2xl p-6">
+      <h3 class="font-bold text-white mb-4">Riscos principais</h3>
+      <table>
+        <thead><tr class="text-slate-500 text-[11px] uppercase"><th>Risco</th><th>Grau</th></tr></thead>
+        <tbody class="text-slate-300">
+          <tr><td>Churn acima de 3% — premissa mais frágil</td><td><span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a1414;color:var(--bad)">Alto</span></td></tr>
+          <tr><td>Mudança nas regras dos programas de afiliados</td><td><span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a1414;color:var(--bad)">Alto</span></td></tr>
+          <tr><td>Aprovação da Shopee atrasar</td><td><span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a1414;color:var(--bad)">Alto</span></td></tr>
+          <tr><td>Sociedade sem acordo escrito</td><td><span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a1414;color:var(--bad)">Alto</span></td></tr>
+          <tr><td>Fricção do WhatsApp gerar churn</td><td><span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a2013;color:var(--warn)">Médio-alto</span></td></tr>
+          <tr><td>Concorrente copiar o desconto verificado</td><td><span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a2013;color:var(--warn)">Médio</span></td></tr>
+          <tr><td>Prazo em tempo parcial</td><td><span class="text-[10px] px-2 py-0.5 rounded" style="background:#2a2013;color:var(--warn)">Médio</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card rounded-2xl p-6">
+    <h3 class="font-bold text-white mb-1">Próximos 14 dias</h3>
+    <p class="text-[12px] text-slate-500 mb-5">Quatro dos seis itens não dependem de código.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="card-soft rounded-xl p-4 flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">1</span><div><p class="font-semibold text-white text-[13px]">Solicitar credencial da Shopee</p><p class="text-[12px] text-slate-400">Maior incerteza do caminho crítico.</p></div></div>
+      <div class="card-soft rounded-xl p-4 flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">2</span><div><p class="font-semibold text-white text-[13px]">Fechar o acordo societário</p><p class="text-[12px] text-slate-400">LTDA + acordo de quotistas, vesting de 4 anos com cliff de 12 meses.</p></div></div>
+      <div class="card-soft rounded-xl p-4 flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">3</span><div><p class="font-semibold text-white text-[13px]">Abrir CNPJ com Fator R</p><p class="text-[12px] text-slate-400">Estruturar pró-labore desde o início; difícil corrigir depois.</p></div></div>
+      <div class="card-soft rounded-xl p-4 flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">4</span><div><p class="font-semibold text-white text-[13px]">Mapeamento com a sócia</p><p class="text-[12px] text-slate-400">Dia de operação minuto a minuto e comissão histórica — a linha de base.</p></div></div>
+      <div class="card-soft rounded-xl p-4 flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">5</span><div><p class="font-semibold text-white text-[13px]">Definir os cinco parâmetros do schema</p><p class="text-[12px] text-slate-400">Dedupe, faixa de preço, mínimo de observações, retenção de cliques, recálculo.</p></div></div>
+      <div class="card-soft rounded-xl p-4 flex gap-3"><span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0" style="background:#1d1109;color:var(--accent)">6</span><div><p class="font-semibold text-white text-[13px]">Cada sócio responder como se sustenta</p><p class="text-[12px] text-slate-400">Nos 90 dias. É a despesa que o orçamento não cobre.</p></div></div>
+    </div>
+  </div>
+
+  <div class="card-soft rounded-2xl p-6 caveat">
+    <p class="text-[10px] uppercase kicker font-bold text-amber-400 mb-3">Premissas frágeis, em ordem de risco</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5 text-[12px] text-slate-400">
+      <p>1. Churn de 3% ao mês — pode ser 4 a 8% no nosso segmento</p>
+      <p>2. Aquisição de 5, 15 ou 35 clientes por mês — estimativa pura</p>
+      <p>3. Mercado endereçável — sem dado de afiliados ativos</p>
+      <p>4. Ticket médio de R$97 — plano Pro como carro-chefe, não validado</p>
+      <p>5. Limite de 8 membros da Groups API — confirmar na fonte primária</p>
+      <p>6. Preço da Cloud API — de agregadores, não da tabela da Meta</p>
+      <p>7. Exigência de 10 vendas da Amazon — originada em fórum</p>
+      <p>8. Prazo de aprovação da Shopee — não publicado pela empresa</p>
+      <p>9. Custo de assessoria jurídica — faixa ampla</p>
+      <p>10. Preços de sete concorrentes — de comparativos de terceiros</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="border-t border-[#23232b] mt-10 px-5 sm:px-8 py-6">
+  <p class="max-w-7xl mx-auto text-[11px] text-slate-600">
+    Documento interno para alinhamento entre sócios. Números conferidos contra o modelo financeiro em planilha.
+    Cada afirmação factual traz a natureza do dado — oficial, estimativa de terceiros ou premissa a validar.
+  </p>
+</footer>
+
+<script>
+function tab(id){
+  ['tese','produto','mercado','numeros','execucao'].forEach(t=>{
+    const b=document.getElementById('t-'+t), c=document.getElementById('c-'+t);
+    if(t===id){ b.classList.add('active'); c.classList.remove('hidden'); }
+    else { b.classList.remove('active'); c.classList.add('hidden'); }
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+const MARGEM = 84.25, MULT = 3;
+function brl(n,d=0){ return 'R$ ' + n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+function calcChurn(){
+  const c = parseFloat(document.getElementById('i-churn').value)/100;
+  const meses = 1/c, ltv = MARGEM/c, cac = ltv/MULT;
+  document.getElementById('v-churn').innerText = (c*100).toFixed(1).replace('.',',')+'%';
+  document.getElementById('r-meses').innerText = Math.round(meses)+' meses';
+  document.getElementById('r-ltv').innerText = brl(ltv);
+  document.getElementById('r-cac').innerText = brl(cac);
+  const msg = document.getElementById('churn-msg');
+  if(c <= 0.03){ msg.innerHTML = 'Faixa do benchmark de <strong class="text-white">SaaS B2B em geral</strong>. É a premissa usada no plano.'; msg.style.color='#94a3b8'; }
+  else if(c <= 0.05){ msg.innerHTML = 'Zona de transição. O CAC máximo já caiu para <strong class="text-white">'+brl(cac)+'</strong> — o que restringe bastante os canais viáveis.'; msg.style.color='#f59e0b'; }
+  else { msg.innerHTML = 'Faixa típica de <strong class="text-white">micro-SaaS de ticket baixo para criadores</strong>, que é o nosso perfil. Com CAC máximo de '+brl(cac)+', só canais orgânicos fecham a conta.'; msg.style.color='#f87171'; }
+}
+
+function calcViab(){
+  const membros = +document.getElementById('i-membros').value;
+  const ofertas = +document.getElementById('i-ofertas').value;
+  const ctr = parseFloat(document.getElementById('i-ctr').value)/100;
+  const cvr = parseFloat(document.getElementById('i-cvr').value)/100;
+  const com = +document.getElementById('i-com').value;
+
+  document.getElementById('v-membros').innerText = membros.toLocaleString('pt-BR');
+  document.getElementById('v-ofertas').innerText = ofertas;
+  document.getElementById('v-ctr').innerText = (ctr*100).toFixed(1).replace('.',',')+'%';
+  document.getElementById('v-cvr').innerText = (cvr*100).toFixed(1).replace('.',',')+'%';
+  document.getElementById('v-com').innerText = brl(com,2);
+
+  const cliques = membros * ctr * ofertas * 30;
+  const vendas = cliques * cvr;
+  const receita = vendas * com;
+
+  document.getElementById('r-cliques').innerText = Math.round(cliques).toLocaleString('pt-BR');
+  document.getElementById('r-vendas').innerText = Math.round(vendas).toLocaleString('pt-BR');
+  document.getElementById('r-comissao').innerText = brl(receita);
+
+  const v = document.getElementById('r-veredito');
+  const plano = 97;
+  if(receita < plano){
+    v.style.background='#2a1414'; v.style.color='#fca5a5';
+    v.innerHTML = '<strong>Com essa audiência a ferramenta ainda não se paga.</strong> A prioridade não é automação — é crescer o canal. Vender agora gera cancelamento em dois meses.';
+  } else if(receita < plano*3){
+    v.style.background='#2a2013'; v.style.color='#fcd34d';
+    v.innerHTML = '<strong>Se paga, mas com margem apertada.</strong> Retorno de '+(receita/plano).toFixed(1).replace('.',',')+'x sobre o plano Pro. Funciona, e o crescimento do canal ainda é a maior alavanca.';
+  } else {
+    v.style.background='#0f2620'; v.style.color='#6ee7b7';
+    v.innerHTML = '<strong>Perfil ideal de cliente.</strong> Retorno de '+(receita/plano).toFixed(1).replace('.',',')+'x sobre o plano Pro. É aqui que o churn é baixo e a ferramenta vira infraestrutura.';
+  }
+}
+
+calcChurn(); calcViab();
+</script>
+</body>
+</html>

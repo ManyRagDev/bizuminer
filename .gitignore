@@ -1,0 +1,62 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Build e caches gerados
+.next/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Ambiente e segredos — NUNCA versionar
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+tokens.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# Artefatos temporários de geração de documentos
+*.tmp
+~$*
+rc/
+rc2/
+slide-*.jpg
+qa*.jpg
+*.pdf.tmp
+
+# Python (scripts de geração)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Supabase CLI
+packages/persistence/supabase/.temp/
+supabase/.temp/
+
+# Generated local artifacts
+graphify-out/cache/
+packages/capture/tmp-*.html
+
+# Legacy prototype is an independent nested Git repository
+packages/site/

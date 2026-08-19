@@ -1,0 +1,63 @@
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { dealDetail } from "../../../lib/db";
+import { freshnessLabel, priceNarrative, priceSignal } from "../../../lib/deal-signal";
+
+export const dynamic = "force-dynamic";
+
+type PageProps = { params: Promise<{ slug: string }> };
+
+const brl = (cents: number) => (cents / 100)
+  .toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 });
+
+function Chart({ points }: { points: Array<{ price_cents: number; observed_at: Date | string }> }) {
+  if (points.length < 2) {
+    return <div className="history-empty">Ainda não há variação suficiente para desenhar uma curva. Mostramos cada registro real conforme ele chega.</div>;
+  }
+  const prices = points.map((point) => point.price_cents);
+  const low = Math.min(...prices);
+  const high = Math.max(...prices);
+  const range = Math.max(high - low, 1);
+  const path = points.map((point, index) => {
+    const x = 5 + (index / (points.length - 1)) * 90;
+    const y = 88 - ((point.price_cents - low) / range) * 72;
+    return `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(" ");
+  return <svg className="price-chart" viewBox="0 0 100 100" role="img" aria-label={`Histórico disponível: mínimo de ${brl(low)} e máximo de ${brl(high)}`} preserveAspectRatio="none"><path className="price-chart-grid" d="M5 88H95 M5 52H95 M5 16H95" /><path className="price-chart-line" d={path} /></svg>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const detail = await dealDetail(slug);
+  if (!detail) return { title: "Achado não encontrado | BizuMiner" };
+  return { title: `${detail.deal.title} | BizuMiner`, description: "Preço monitorado e evidências disponíveis no BizuMiner." };
+}
+
+export default async function DealPage({ params }: PageProps) {
+  const { slug } = await params;
+  const detail = await dealDetail(slug);
+  if (!detail) notFound();
+
+  const { deal, price_history: history } = detail;
+  const signal = priceSignal({ priceCents: deal.price_cents, previousMinPriceCents: deal.previous_min_price_cents, observationCount: deal.observation_count, historyDays: deal.history_days, lowestVerified: deal.lowest_verified });
+  const low = history.length ? Math.min(...history.map((point) => point.price_cents)) : null;
+  const high = history.length ? Math.max(...history.map((point) => point.price_cents)) : null;
+
+  return <main className="deal-page">
+    <header className="detail-header"><a className="brand" href="/"><span className="brand-mark">bm</span><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><a href="/#achados">← voltar aos achados</a></header>
+    <article className="deal-layout">
+      <section className="deal-visual"><div className="deal-image-wrap"><img src={deal.image_url ?? "/og.png"} alt={deal.title} /></div>{deal.category && <span className="deal-category">{deal.category}</span>}</section>
+      <section className="deal-summary">
+        <p className="eyebrow">Preço monitorado · Mercado Livre</p>
+        <span className={`deal-signal ${signal.tone}`}>{signal.label}</span>
+        <h1>{deal.title}</h1>
+        {(deal.rating_star !== null || deal.sales_label) && <p className="deal-evidence">{deal.rating_star !== null && <span>★ {deal.rating_star.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}/5</span>}{deal.rating_star !== null && deal.sales_label && <i>·</i>}{deal.sales_label && <span>{deal.sales_label}</span>}<small>evidências do Mercado Livre</small></p>}
+        <p className="deal-narrative"><b>Histórico do preço:</b> {priceNarrative({ priceCents: deal.price_cents, previousMinPriceCents: deal.previous_min_price_cents, observationCount: deal.observation_count, historyDays: deal.history_days, lowestVerified: deal.lowest_verified }, brl)}</p>
+        <div className="deal-price"><small>{deal.original_price_cents && deal.original_price_cents > deal.price_cents ? brl(deal.original_price_cents) : ""}</small><strong>{brl(deal.price_cents)}</strong>{freshnessLabel(deal.evidence_observed_at) && <em>{freshnessLabel(deal.evidence_observed_at)}</em>}</div>
+        <a className="deal-cta" href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">ver oferta no Mercado Livre <span>↗</span></a>
+        <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
+      </section>
+    </article>
+    <section className="history-section" aria-labelledby="history-title"><div><p className="eyebrow">Histórico disponível</p><h2 id="history-title">Preço com contexto, não só com etiqueta.</h2><p>Há {deal.observation_count} registro{deal.observation_count === 1 ? "" : "s"} em {deal.history_days} dia{deal.history_days === 1 ? "" : "s"} de acompanhamento. O destaque de menor preço só aparece após pelo menos 3 registros distribuídos em 7 dias.</p></div><div className="history-card"><Chart points={history} /><dl><div><dt>menor registro disponível</dt><dd>{low === null ? "—" : brl(low)}</dd></div><div><dt>maior registro disponível</dt><dd>{high === null ? "—" : brl(high)}</dd></div><div><dt>última atualização</dt><dd>{freshnessLabel(deal.evidence_observed_at) ?? "sem data"}</dd></div></dl></div></section>
+  </main>;
+}

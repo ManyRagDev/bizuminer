@@ -1,0 +1,22 @@
+{
+  "name": "@ofertas/persistence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "verify:lowest": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-lowest.ts",
+    "verify:capture-audit": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-capture-audit.ts"
+  },
+  "devDependencies": {
+    "typescript": "5.6"
+  },
+  "dependencies": {
+    "@types/node": "^26.2.0",
+    "postgres": "^3.4.9"
+  }
+}
