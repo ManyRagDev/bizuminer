@@ -1,4 +1,4 @@
-# Garimpa
+# BizuMiner
 
 Plataforma de curadoria e distribuição de ofertas para afiliados.
 
