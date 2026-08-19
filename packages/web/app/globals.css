@@ -25,7 +25,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 .signal-bar { height: 34px; padding: 0 3.5vw; display: flex; align-items: center; justify-content: space-between; background: var(--ink); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
 .site-header { position: relative; z-index: 20; height: 88px; padding: 0 3.5vw; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-bottom: 1px solid var(--line); background: var(--paper); }
-.brand { width: max-content; display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 800; letter-spacing: -.06em; }
+.brand { width: max-content; display: flex; align-items: center; gap: 10px; }
+.brand-logo-desktop { display: block; height: 32px; width: auto; }
+.brand-logo-mobile { display: none; }
+.brand-logo-img { display: block; height: auto; max-height: 32px; width: auto; }
 .brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50% 50% 50% 4px; background: var(--blue); color: #fff; font: italic 800 13px Georgia, serif; letter-spacing: -.12em; transform: rotate(-8deg); }
 .brand-name { display: flex; letter-spacing: -.07em; }
 .brand-name b { font-weight: 800; }
@@ -81,7 +84,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 @keyframes carouselTimer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .hero-tools { min-height: 126px; padding: 26px 3.5vw; display: grid; grid-template-columns: 1fr minmax(360px, 590px) minmax(260px, .65fr); align-items: center; gap: 3vw; border-top: 1px solid var(--line); }
 .hero-tool-copy .eyebrow { margin-bottom: 8px; }
-.hero-tool-copy > p:last-child { max-width: 470px; margin: 0; font: 15px/1.4 Georgia, serif; }
+.hero-tool-lead { max-width: 470px; margin: 0; font: 15px/1.4 Georgia, serif; }
 .hero-bizu { min-height: 58px; padding: 0 0 0 18px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 0; border-bottom: 1px solid var(--ink); background: transparent; cursor: pointer; text-align: left; font: 15px/1.15 Georgia, serif; }
 .hero-bizu small { display: block; margin-bottom: 5px; color: var(--blue); font: 800 8px Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
 .hero-bizu b { width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: var(--acid); font-size: 16px; transition: transform .2s ease; }
@@ -235,7 +238,7 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
   .hero-product-image > span { top: 12px; right: 12px; width: 52px; height: 52px; font-size: 10px; }
   .carousel-bar { padding-inline: 5vw; grid-template-columns: auto 1fr auto; }
   .carousel-dots { display: none; }
-  .hero-tool-copy > p:last-child { font-size: 14px; }
+  .hero-tool-lead { font-size: 14px; }
   .section-heading { align-items: start; }
   .result-count { margin-top: 7px; }
   .product-grid { grid-template-columns: 1fr; gap: 50px; }
@@ -582,7 +585,8 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
 .product-meta { min-height: 28px; margin-top: 13px; align-items: center; color: #555; font-size: 10px; }
 .signal-badge { max-width: 65%; padding: 5px 7px; border: 1px solid currentColor; color: var(--ink); font-size: 9px; line-height: 1; text-align: right; }
 .signal-badge.verified { border-color: var(--blue); background: var(--blue); color: #fff; }
-.signal-badge.forming { border-color: #9c7b00; color: #715800; }
+.signal-badge.forming,
+.signal-badge.monitoring { border-color: #9c7b00; color: #715800; }
 .signal-badge.new { color: #666; }
 .discount { max-width: calc(100% - 24px); font-size: 10px; line-height: 1; }
 .product-card h3 { min-height: 67px; margin: 8px 0 9px; font: 20px/1.12 Georgia, serif; }
@@ -668,7 +672,7 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
 @media (max-width: 560px) {
   .hero-tools { padding-top: 24px; }
   .hero-tool-copy h1 { font-size: 31px; }
-  .hero-tool-copy > p:last-child { font-size: 16px; }
+  .hero-tool-lead { font-size: 16px; }
   .search-box button { min-width: 70px; }
   .category-strip { min-height: 66px; gap: 18px; }
   .filter-controls { gap: 12px; }
@@ -725,6 +729,9 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
 .mobile-catalog,
 .mobile-bottom-nav,
 .mobile-view-panel,
+.header-search,
+.section-help,
+.mobile-result-count,
 .mobile-cta-label { display: none; }
 .image-placeholder { width: 100%; height: 100%; display: grid; place-items: center; background: var(--paper-deep); color: var(--blue); font: italic 900 28px Georgia, serif; }
 
@@ -732,6 +739,8 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
   body:has(.mobile-view-panel) { overflow: hidden; }
   .vitrine-page { padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)); }
   .signal-bar { display: none; }
+  /* Zona de marca (header + hero) numa superfície mais escura que a zona de
+     catálogo. São dois cômodos, então os dois títulos deixam de ser irmãos. */
   .site-header {
     position: sticky;
     z-index: 50;
@@ -740,77 +749,112 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
     padding: 0 var(--mobile-gutter);
     display: flex;
     justify-content: space-between;
-    border-bottom-color: var(--line);
-    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    border-bottom-color: transparent;
+    background: color-mix(in srgb, var(--paper-deep) 94%, transparent);
     backdrop-filter: blur(14px);
   }
-  .site-header .brand { gap: 8px; font-size: 19px; }
+  .hero { background: var(--paper-deep); }
+  .site-header .brand { gap: 8px; flex: 0 0 auto; }
+  .site-header .brand-logo-desktop { display: none; }
+  .site-header .brand-logo-mobile { display: block; height: 30px; width: 30px; }
   .site-header .brand-mark { width: 31px; height: 31px; font-size: 11px; }
   .site-header .brand-name i { font-size: 19px; }
   .site-header .nav-toggle,
   .site-header .saved-button,
+  .site-header .brand-name,
   .site-header nav { display: none; }
 
-  .hero-carousel,
-  .carousel-bar { display: none; }
-  .hero-tools {
-    min-height: 0;
-    padding: 24px var(--mobile-gutter) 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 18px;
-    border-top: 0;
-  }
-  .hero-tool-copy .eyebrow { margin-bottom: 10px; font-size: 10px; }
-  .hero-tool-copy h1 { max-width: 360px; margin: 0 0 10px; font-size: 34px; line-height: 1.02; letter-spacing: -.055em; }
-  .hero-tool-copy > p:last-of-type { max-width: 360px; margin: 0; color: var(--ink-muted); font: 15px/1.45 Georgia, serif; }
-  .hero-tool-copy > a,
-  .hero-bizu { display: none; }
-  .search-box {
-    width: 100%;
+  /* A busca sai do bloco editorial e passa a morar no header: sempre alcançável.
+     Uma lupa só: a do botão. A do campo era ruído duplicado. */
+  .header-search {
+    flex: 1;
+    min-width: 0;
     max-width: none;
-    height: 50px;
-    padding: 0 7px 0 16px;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 9px;
+    height: 40px;
+    padding: 0 5px 0 15px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    border-color: var(--line);
     background: var(--surface);
   }
-  .search-box input { font-size: 14px; }
-  .search-box button { min-width: 72px; height: 38px; padding: 0 12px; border-radius: 100px; font-size: 10px; }
+  .header-search > span { display: none; }
+  .header-search input { min-width: 0; font-size: 14px; }
+  .header-search button { width: 32px; min-width: 0; height: 32px; padding: 0; border-radius: 50%; font-size: 0; }
+  .header-search button::after { content: "⌕"; font-size: 16px; }
 
-  .category-strip { min-height: 58px; padding: 8px var(--mobile-gutter); gap: 0; border-top: 1px solid var(--line); }
+  .hero-carousel,
+  .carousel-bar,
+  .hero-search,
+  .hero-tool-copy .eyebrow,
+  .hero-tool-lead,
+  .hero-tool-copy > a,
+  .hero-bizu { display: none; }
+  .hero-tools {
+    min-height: 0;
+    padding: 18px var(--mobile-gutter) 15px;
+    display: block;
+    border-top: 0;
+  }
+  .hero-tool-copy h1 { max-width: none; margin: 0; font-size: 26px; line-height: 1.04; letter-spacing: -.05em; }
+
+  /* Os chips migraram para a barra sticky do catálogo: uma fileira em vez de duas. */
+  .filter-stack { display: none; }
   .category-label { display: none; }
   .category-list { gap: 8px; }
   .category-list button { height: 38px; padding: 0 15px; font-size: 10px; }
   .filter-controls { display: none; }
 
-  .finds { min-height: 0; padding: 28px var(--mobile-gutter) 72px; }
-  .section-heading { margin-bottom: 14px; display: block; }
-  .section-heading .eyebrow { margin-bottom: 8px; font-size: 9px; }
-  .section-heading h2 { font-size: 27px; line-height: 1.05; }
-  .result-count { display: none; }
-  .catalog-intro { margin: 0 0 20px; font-size: 14px; line-height: 1.45; }
+  .finds { min-height: 0; padding: 18px var(--mobile-gutter) 72px; scroll-margin-top: 56px; }
+  .section-heading { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .section-heading > div { min-width: 0; }
+  /* O h1 é a única voz display da tela. O título de seção é rótulo de
+     navegação, então fala na mesma língua de TECNOLOGIA / 4 REGISTROS HOJE. */
+  .section-heading .eyebrow { display: none; }
+  .section-heading h2 { font-size: 12px; font-weight: 800; line-height: 1.2; letter-spacing: .14em; text-transform: uppercase; }
+  .mobile-result-count { display: block; margin: 6px 0 0; color: var(--ink-muted); font-size: 11px; font-weight: 700; letter-spacing: 0; }
+  /* O texto explicativo saiu da dobra e virou este atalho — que precisa
+     se anunciar como controle (borda em --line dava 1,2:1, reprovado nos 3:1). */
+  .section-help { position: relative; flex: 0 0 auto; width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--ink); border-radius: 50%; background: transparent; color: var(--ink); font-size: 13px; font-weight: 900; }
+  .section-help::before { content: ""; position: absolute; inset: -6px; }
+  .result-count,
+  .catalog-intro { display: none; }
   .catalog-error { margin: 0 0 18px; font-size: 13px; }
+  .guide-legend { margin: 26px 0 0; padding: 0; display: grid; gap: 18px; list-style: none; }
+  .guide-legend li { display: grid; gap: 8px; justify-items: start; }
+  .guide-legend p { margin: 0; color: var(--ink-muted); font: 14px/1.45 Georgia, serif; }
+  .guide-legend .signal-badge { max-width: none; text-align: left; }
+  .guide-discount { padding: 6px 8px; background: var(--acid); font-size: 10px; font-weight: 900; }
   .desktop-catalog { display: none; }
   .mobile-catalog { display: block; }
   .mobile-catalog-toolbar {
     position: sticky;
     z-index: 15;
     top: 56px;
-    margin: 0 calc(var(--mobile-gutter) * -1) 16px;
-    padding: 10px var(--mobile-gutter);
+    margin: 0 calc(var(--mobile-gutter) * -1) 14px;
+    padding: 7px var(--mobile-gutter);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 8px;
     border-block: 1px solid var(--line);
     background: color-mix(in srgb, var(--paper) 94%, transparent);
     backdrop-filter: blur(14px);
   }
-  .mobile-catalog-toolbar p { margin: 0; color: var(--ink-muted); font-size: 11px; font-weight: 800; }
-  .mobile-catalog-toolbar > div { display: flex; gap: 6px; }
-  .mobile-catalog-toolbar button { min-height: 36px; padding: 0 11px; border: 1px solid var(--ink); border-radius: 100px; background: transparent; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+  /* Os chips viajam com o scroll: navegar continua sendo a ação principal,
+     e o filtro recua para um ícone para não competir com eles nem com o CTA. */
+  .toolbar-chips {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  }
+  .toolbar-chips::-webkit-scrollbar { display: none; }
+  .toolbar-chips button { flex: 0 0 auto; }
+  .toolbar-filters { position: relative; flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--ink); border-radius: 50%; background: transparent; font-size: 15px; }
+  .toolbar-filters em { position: absolute; top: 1px; right: 1px; width: 9px; height: 9px; border: 1px solid var(--paper); border-radius: 50%; background: var(--blue); }
 
   .mobile-product-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; align-items: stretch; }
   .mobile-product-grid .product-card {
@@ -836,6 +880,9 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
   .mobile-product-grid .signal-badge { max-width: 100%; padding: 4px 5px; font-size: 8px; text-align: left; }
   .mobile-product-grid .product-card h3 { min-height: 54px; margin: 6px 9px 7px; font: 15px/18px Georgia, serif; }
   .mobile-product-grid .mobile-featured-card h3 { min-height: 0; font-size: 20px; line-height: 1.2; }
+  .mobile-product-grid .mobile-featured-card .product-meta > span:first-child { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mobile-product-grid .mobile-featured-card .product-meta { min-height: 0; }
+  .mobile-product-grid .mobile-featured-card .product-evidence { min-height: 0; margin-bottom: 6px; }
   .mobile-product-grid .product-card h3 a { -webkit-line-clamp: 3; }
   .mobile-product-grid .product-evidence { min-height: 28px; margin: 0 9px 8px; display: block; overflow: hidden; color: var(--ink); font-size: 11px; line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; }
   .mobile-product-grid .product-evidence span { margin-right: 4px; }
@@ -966,6 +1013,8 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
 @media (max-width: 820px) {
   .deal-page { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .detail-header { position: sticky; z-index: 40; top: 0; min-height: 56px; padding: 0 var(--mobile-gutter); background: rgba(243,240,232,.96); backdrop-filter: blur(14px); }
+  .detail-header .brand-logo-desktop { display: none; }
+  .detail-header .brand-logo-mobile { display: block; height: 30px; width: 30px; }
   .detail-header .brand-name { display: none; }
   .detail-header .brand-mark { width: 31px; height: 31px; }
   .detail-header-actions { gap: 6px; }

@@ -13,19 +13,27 @@ export function priceDifferencePercent(input: DealSignalInput) {
   return Math.round(((input.priceCents - input.previousMinPriceCents) / input.previousMinPriceCents) * 100);
 }
 
+// Acompanhamento que começou hoje tem zero dias de janela. Dizer "0 dias" faz o
+// selo parecer defeito; o período ainda não existe, então falamos do que existe.
+export function historyWindow(days: number) {
+  if (days < 1) return "hoje";
+  return `${days} dia${days === 1 ? "" : "s"}`;
+}
+
 export function priceSignal(input: DealSignalInput) {
   if (input.lowestVerified) {
     return { tone: "verified", label: "menor preço no período monitorado" } as const;
   }
   if (input.observationCount > 1) {
-    return { tone: "monitoring", label: `${input.observationCount} registros · ${input.historyDays} dia${input.historyDays === 1 ? "" : "s"}` } as const;
+    const window = input.historyDays < 1 ? "hoje" : `· ${historyWindow(input.historyDays)}`;
+    return { tone: "monitoring", label: `${input.observationCount} registros ${window}` } as const;
   }
   return { tone: "new", label: "primeiro registro de preço" } as const;
 }
 
 export function priceNarrative(input: DealSignalInput, formatCurrency: (cents: number) => string) {
   if (input.lowestVerified) {
-    return `Menor preço entre ${input.observationCount} registros coletados em ${input.historyDays} dias.`;
+    return `Menor preço entre ${input.observationCount} registros coletados em ${historyWindow(input.historyDays)}.`;
   }
   const gap = priceDifferencePercent(input);
   if (gap !== null && gap > 0) {
@@ -38,7 +46,8 @@ export function priceNarrative(input: DealSignalInput, formatCurrency: (cents: n
     return `Preço igual ao menor registro anterior (${formatCurrency(input.previousMinPriceCents!)}).`;
   }
   if (input.observationCount > 1) {
-    return `Temos ${input.observationCount} registros de preço em ${input.historyDays} dia${input.historyDays === 1 ? "" : "s"} de acompanhamento.`;
+    if (input.historyDays < 1) return `Temos ${input.observationCount} registros de preço coletados hoje; o acompanhamento acabou de começar.`;
+    return `Temos ${input.observationCount} registros de preço em ${historyWindow(input.historyDays)} de acompanhamento.`;
   }
   return "Primeiro preço registrado; ainda não há comparação histórica.";
 }
