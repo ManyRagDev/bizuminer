@@ -192,6 +192,13 @@ Enquanto um contrato não existe, a UI **degrada explicitamente** (esconde o sel
 - Conferência automatizada em desktop: carrossel inicial e slide de produto renderizados, 24 cards na página, 183 ofertas no total, nenhuma rolagem horizontal e nenhum overlay/erro do Next.
 - Pendente para ✅: julgamento dos sócios sobre proporção, ritmo e copy, além de conferência visual em aparelhos móveis reais. As regras responsivas foram implementadas, mas não substituem esse veredito humano.
 
+## Ajuste responsivo e área clicável do destaque — 19/08/2026 (🟡 aguardando conferência humana)
+
+- A altura do carrossel deixou de depender apenas da largura da tela. Em monitores com pouca altura útil, ela agora é limitada pelo viewport descontando barra superior, cabeçalho e controles; o conteúdo interno reduz espaçamentos e escala tipográfica sem alterar a composição em telas grandes.
+- A imagem de cada produto em destaque passou a ser um link interno para `/bizu/[slug]`, com cursor, resposta visual no hover, foco de teclado explícito e nome acessível contendo o produto.
+- O link textual “ver detalhes” continua disponível. Ambos os acessos registram `hero_detail_click`, enquanto um gesto horizontal acima de 48 px troca o slide e bloqueia a navegação acidental da imagem.
+- Pendente para ✅: conferir a proporção em um notebook 1366×768 (ou equivalente), validar a legibilidade dos títulos reais e testar clique, teclado e gesto horizontal em dispositivo físico.
+
 ## Escada de verificação da instância web
 
 1. `npm run typecheck` (tudo)

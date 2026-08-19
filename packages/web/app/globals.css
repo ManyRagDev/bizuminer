@@ -449,6 +449,7 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
   place-items: center;
   padding: clamp(42px, 5vw, 86px);
   background: #fff;
+  cursor: pointer;
 }
 .hero-product-image::after { display: none; }
 .hero-product-image img {
@@ -456,8 +457,11 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
   height: 100%;
   max-height: 100%;
   object-fit: contain;
-  transform: none !important;
+  transform: scale(1);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1);
 }
+.hero-product-image:hover img { transform: scale(1.025); }
+.hero-product-image:focus-visible { outline-color: var(--blue); outline-offset: -5px; }
 .hero-product-number {
   position: absolute;
   z-index: 3;
@@ -680,7 +684,33 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid r
   .history-card dl { grid-template-columns: 1fr; gap: 13px; }
 }
 
-/* Mantém a largura editorial mesmo após os ajustes incrementais da vitrine. */
-.hero-carousel { max-width: none; max-height: none; height: clamp(590px, 43vw, 720px); aspect-ratio: auto; }
+/* Mantém a presença editorial sem ultrapassar a altura útil de notebooks. */
+.hero-carousel {
+  max-width: none;
+  max-height: none;
+  min-height: 420px;
+  height: min(clamp(520px, 43vw, 720px), calc(100vh - 178px));
+  aspect-ratio: auto;
+}
+@supports (height: 100svh) {
+  .hero-carousel { height: min(clamp(520px, 43vw, 720px), calc(100svh - 178px)); }
+}
 @media (max-width: 900px) { .hero-carousel { height: 760px; } }
 @media (max-width: 560px) { .hero-carousel { height: 780px; aspect-ratio: auto; } }
+
+@media (min-width: 901px) and (max-height: 760px) {
+  .hero-editorial-copy { padding-block: clamp(28px, 4vh, 44px); }
+  .hero-kicker { margin-bottom: 14px; }
+  .hero-editorial-copy h2 { font-size: clamp(42px, 5vw, 72px); }
+  .hero-editorial-copy > p:not(.hero-kicker) { margin-top: 18px; font-size: 16px; }
+  .hero-editorial-copy > a { margin-top: 18px; }
+  .hero-product-copy { padding-block: clamp(24px, 4vh, 42px); }
+  .hero-product-copy > p:first-child { margin-bottom: 10px; }
+  .hero-history-label { margin-bottom: 10px; }
+  .hero-product-copy h2 { font-size: clamp(32px, 3.2vw, 50px); -webkit-line-clamp: 2; }
+  .hero-product-reason { margin-top: 13px; font-size: 15px; }
+  .hero-product-facts { margin-top: 15px; }
+  .hero-product-facts strong { font-size: clamp(17px, 1.5vw, 23px); }
+  .hero-product-copy > a { margin-top: 14px; }
+  .hero-product-image { padding: clamp(28px, 4vw, 52px); }
+}

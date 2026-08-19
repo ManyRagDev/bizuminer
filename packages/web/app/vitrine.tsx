@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CATALOG_PAGE_SIZE, catalogStateFromSearchParams, catalogStateToDealQuery, catalogStateToSearchParams } from "../lib/deal-query";
 import type { CatalogState, DealSort, PriceBand } from "../lib/deal-query";
 import { freshnessLabel, priceNarrative, priceSignal } from "../lib/deal-signal";
@@ -45,7 +45,7 @@ function EditorialSlide({ products, hidden }: { products: VitrineProduct[]; hidd
       <p className="hero-kicker">Curadoria de ponta a ponta</p>
       <h2>Menos tempo procurando.<br /><em>Mais clareza</em> para decidir.</h2>
       <p>O BizuMiner reúne ofertas, acompanha preços e organiza as evidências que ajudam você a comparar sem abrir dezenas de abas.</p>
-      <a href="#achados">ver ofertas selecionadas <b>↓</b></a>
+      <a href="#achados" tabIndex={hidden ? -1 : undefined}>ver ofertas selecionadas <b>↓</b></a>
     </div>
     <div className="hero-editorial-board" aria-hidden="true">
       <span className="hero-edition">EDIÇÃO<br /><b>01</b></span>
@@ -58,7 +58,7 @@ function EditorialSlide({ products, hidden }: { products: VitrineProduct[]; hidd
   </article>;
 }
 
-function ProductHeroSlide({ product, index, hidden }: { product: VitrineProduct; index: number; hidden: boolean }) {
+function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: VitrineProduct; index: number; hidden: boolean; onImageClick: (event: MouseEvent<HTMLAnchorElement>, productId: string) => void }) {
   const status = priceSignal(historyInput(product));
   return <article className={`hero-slide hero-product-slide hero-product-${index + 1}`} aria-hidden={hidden}>
     <div className="hero-product-copy">
@@ -71,13 +71,13 @@ function ProductHeroSlide({ product, index, hidden }: { product: VitrineProduct;
         {product.ratingStar !== null && <span><small>avaliação no ML</small><strong>★ {product.ratingStar.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}</strong></span>}
         {product.salesLabel && <span><small>vendas informadas</small><strong>{product.salesLabel}</strong></span>}
       </div>
-      <a href={`/bizu/${product.slug}`}>ver detalhes <b>↗</b></a>
+      <a href={`/bizu/${product.slug}`} tabIndex={hidden ? -1 : undefined} onClick={() => trackInteraction("hero_detail_click", product.id)}>ver detalhes <b>↗</b></a>
     </div>
-    <div className="hero-product-image">
+    <a className="hero-product-image" href={`/bizu/${product.slug}`} tabIndex={hidden ? -1 : undefined} aria-label={`Ver detalhes de ${product.title}`} onClick={(event) => onImageClick(event, product.id)}>
       <span className="hero-product-number">0{index + 2}</span>
       <img src={product.imageUrl!} alt={product.title} />
       {discountLabel(product) && <span className="hero-discount">{discountLabel(product)}</span>}
-    </div>
+    </a>
   </article>;
 }
 
@@ -95,6 +95,7 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
   const [loadError, setLoadError] = useState("");
   const [navOpen, setNavOpen] = useState(false);
   const pointerStart = useRef<number | null>(null);
+  const carouselDragged = useRef(false);
   const requestVersion = useRef(0);
   const heroProducts = useMemo(() => initialProducts.filter((product) => product.imageUrl).slice(0, 2), [initialProducts]);
   const savedProducts = useMemo(() => products.filter((product) => favorites.includes(product.id)), [favorites, products]);
@@ -199,6 +200,23 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
     }
   }
   const changeSlide = (direction: number) => setCurrentSlide((slide) => (slide + direction + slideCount) % slideCount);
+  function handleHeroImageClick(event: MouseEvent<HTMLAnchorElement>, productId: string) {
+    if (carouselDragged.current) {
+      event.preventDefault();
+      return;
+    }
+    trackInteraction("hero_detail_click", productId);
+  }
+  function finishCarouselGesture(clientX: number) {
+    if (pointerStart.current === null) return;
+    const distance = clientX - pointerStart.current;
+    if (Math.abs(distance) > 48) {
+      carouselDragged.current = true;
+      changeSlide(distance > 0 ? -1 : 1);
+      window.setTimeout(() => { carouselDragged.current = false; }, 0);
+    }
+    pointerStart.current = null;
+  }
 
   return <main>
     <div className="signal-bar"><span>Bizu bom não espera.</span><span>Curadoria de ponta a ponta · links de afiliado</span></div>
@@ -210,10 +228,10 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
     </header>
 
     <section className="hero" id="topo">
-      <div className="hero-carousel" role="region" aria-roledescription="carrossel" aria-label="Destaques BizuMiner" onMouseEnter={() => setCarouselPaused(true)} onMouseLeave={() => setCarouselPaused(false)} onPointerDown={(event) => { pointerStart.current = event.clientX; }} onPointerUp={(event) => { if (pointerStart.current !== null && Math.abs(event.clientX - pointerStart.current) > 48) changeSlide(event.clientX > pointerStart.current ? -1 : 1); pointerStart.current = null; }}>
+      <div className="hero-carousel" role="region" aria-roledescription="carrossel" aria-label="Destaques BizuMiner" onMouseEnter={() => setCarouselPaused(true)} onMouseLeave={() => setCarouselPaused(false)} onPointerDown={(event) => { pointerStart.current = event.clientX; carouselDragged.current = false; }} onPointerUp={(event) => finishCarouselGesture(event.clientX)} onPointerCancel={() => { pointerStart.current = null; carouselDragged.current = false; }}>
         <div className="hero-track" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
           <EditorialSlide products={heroProducts} hidden={currentSlide !== 0} />
-          {heroProducts.map((product, index) => <ProductHeroSlide key={product.id} product={product} index={index} hidden={currentSlide !== index + 1} />)}
+          {heroProducts.map((product, index) => <ProductHeroSlide key={product.id} product={product} index={index} hidden={currentSlide !== index + 1} onImageClick={handleHeroImageClick} />)}
         </div>
       </div>
       <div className="carousel-bar">
