@@ -1,7 +1,10 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { dealDetail } from "../../../lib/db";
+import { dealDetail, topDeals } from "../../../lib/db";
 import { freshnessLabel, priceNarrative, priceSignal } from "../../../lib/deal-signal";
+import { toVitrineProduct } from "../../../lib/deal-view";
+import SaveDealButton from "./save-deal-button";
 
 export const dynamic = "force-dynamic";
 
@@ -42,11 +45,14 @@ export default async function DealPage({ params }: PageProps) {
   const signal = priceSignal({ priceCents: deal.price_cents, previousMinPriceCents: deal.previous_min_price_cents, observationCount: deal.observation_count, historyDays: deal.history_days, lowestVerified: deal.lowest_verified });
   const low = history.length ? Math.min(...history.map((point) => point.price_cents)) : null;
   const high = history.length ? Math.max(...history.map((point) => point.price_cents)) : null;
+  const product = toVitrineProduct(deal);
+  const relatedPage = deal.category ? await topDeals({ category: deal.category, limit: 6, sort: "signal" }) : null;
+  const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
-    <header className="detail-header"><a className="brand" href="/"><span className="brand-mark">bm</span><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><a href="/#achados">← voltar aos achados</a></header>
+    <header className="detail-header"><a className="brand" href="/"><span className="brand-mark">bm</span><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><div className="detail-header-actions"><a href="/#achados">← voltar aos achados</a><SaveDealButton product={product} /></div></header>
     <article className="deal-layout">
-      <section className="deal-visual"><div className="deal-image-wrap"><img src={deal.image_url ?? "/og.png"} alt={deal.title} /></div>{deal.category && <span className="deal-category">{deal.category}</span>}</section>
+      <section className="deal-visual"><div className="deal-image-wrap">{deal.image_url ? <Image src={deal.image_url} alt={deal.title} fill priority sizes="(max-width: 820px) 100vw, 52vw" /> : <span className="image-placeholder">bm</span>}</div>{deal.category && <span className="deal-category">{deal.category}</span>}</section>
       <section className="deal-summary">
         <p className="eyebrow">Preço monitorado · Mercado Livre</p>
         <span className={`deal-signal ${signal.tone}`}>{signal.label}</span>
@@ -59,5 +65,7 @@ export default async function DealPage({ params }: PageProps) {
       </section>
     </article>
     <section className="history-section" aria-labelledby="history-title"><div><p className="eyebrow">Histórico disponível</p><h2 id="history-title">Preço com contexto, não só com etiqueta.</h2><p>Há {deal.observation_count} registro{deal.observation_count === 1 ? "" : "s"} em {deal.history_days} dia{deal.history_days === 1 ? "" : "s"} de acompanhamento. O destaque de menor preço só aparece após pelo menos 3 registros distribuídos em 7 dias.</p></div><div className="history-card"><Chart points={history} /><dl><div><dt>menor registro disponível</dt><dd>{low === null ? "—" : brl(low)}</dd></div><div><dt>maior registro disponível</dt><dd>{high === null ? "—" : brl(high)}</dd></div><div><dt>última atualização</dt><dd>{freshnessLabel(deal.evidence_observed_at) ?? "sem data"}</dd></div></dl></div></section>
+    {related.length > 0 && <section className="related-section" aria-labelledby="related-title"><div className="related-heading"><p className="eyebrow">Continue descobrindo</p><h2 id="related-title">Mais em {deal.category}</h2></div><div className="related-rail">{related.map((item) => <article key={item.id} className="related-card"><a className="related-image" href={`/bizu/${item.slug}`}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill sizes="(max-width: 820px) 68vw, 22vw" /> : <span className="image-placeholder">bm</span>}</a><p>{item.category}</p><h3><a href={`/bizu/${item.slug}`}>{item.title}</a></h3><strong>{brl(item.priceCents)}</strong><a className="related-link" href={`/bizu/${item.slug}`}>ver detalhes <span>→</span></a></article>)}</div></section>}
+    <div className="deal-sticky-cta"><a href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">ver no Mercado Livre <span>↗</span></a></div>
   </main>;
 }

@@ -199,6 +199,18 @@ Enquanto um contrato não existe, a UI **degrada explicitamente** (esconde o sel
 - O link textual “ver detalhes” continua disponível. Ambos os acessos registram `hero_detail_click`, enquanto um gesto horizontal acima de 48 px troca o slide e bloqueia a navegação acidental da imagem.
 - Pendente para ✅: conferir a proporção em um notebook 1366×768 (ou equivalente), validar a legibilidade dos títulos reais e testar clique, teclado e gesto horizontal em dispositivo físico.
 
+## Experiência mobile-first de garimpo — 19/08/2026 (🟡 aguardando conferência humana)
+
+- A referência produzida no Google Stitch foi tratada como direção de produto, não como especificação literal. A identidade editorial existente, a origem real dos dados e os contratos atuais da vitrine foram preservados.
+- A home abaixo de 820px agora tem composição própria: abertura compacta, busca prioritária, categorias roláveis, barra de ordenação/filtro e grade simétrica de duas colunas. O primeiro produto ocupa a largura completa para criar hierarquia; depois do sexto item, um intervalo editorial sugere três categorias reais sem interromper o fluxo.
+- A paginação numerada continua no desktop. No mobile, “carregar mais 24” acrescenta os próximos produtos à grade, remove duplicidades e registra a última página carregada na URL — durante a sessão de navegação, a pessoa continua garimpando sem substituir os itens anteriores.
+- A navegação inferior oferece Início, Categorias, Salvos e Menu, com estado atual exposto também por `aria-current`. Categorias, filtros e salvos abrem superfícies móveis dedicadas, devolvem foco ao título e deixam a ação principal ao alcance do polegar.
+- Favoritos guardam IDs e uma cópia normalizada dos produtos no navegador. Isso permite reencontrar o item no painel “Seus salvos” mesmo fora da página onde ele apareceu; ainda não existe sincronização entre aparelhos ou conta de usuário.
+- A página `/bizu/[slug]` recebeu ação de salvar, CTA afiliado fixo no rodapé mobile e uma faixa horizontal de até quatro produtos reais da mesma categoria. Nenhuma recomendação, imagem ou preço é simulado.
+- Imagens de catálogo, detalhe e relacionados usam `next/image`, `sizes` por breakpoint e domínios remotos explicitamente permitidos. O desktop mantém carrossel, filtros completos, paginação e grade de quatro colunas.
+- Verificação automatizada: `npm run typecheck`, 10 testes e `npm run build` passaram. No navegador real, a grade foi conferida em 360, 390 e 768 px sem overflow horizontal; 24 → 48 itens foram anexados; salvar → contador → painel de salvos funcionou; o detalhe exibiu CTA fixo e quatro relacionados; no breakpoint desktop, a navegação mobile ficou oculta e quatro cards permaneceram alinhados.
+- Pendente para ✅: os sócios precisam conferir ritmo, densidade, copy e conforto de toque em aparelhos físicos; validar especialmente sessões longas de rolagem, áreas seguras de iPhone/Android e se o destaque de largura dupla deve continuar sempre no primeiro item.
+
 ## Escada de verificação da instância web
 
 1. `npm run typecheck` (tudo)
