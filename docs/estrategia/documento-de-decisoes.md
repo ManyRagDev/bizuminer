@@ -1,5 +1,10 @@
 # Documento de Decisões
 
+> 📁 **Documento histórico — suplantado (marcado em 20/08/2026).**
+> Decide sobre o SaaS B2B (OfertaFlow), não sobre o BizuMiner. Congelado como registro; o estado vigente está em `docs/estado-do-projeto.md`.
+>
+> **Duas conclusões daqui foram absorvidas e continuam valendo**, agora registradas no documento mestre: nunca automatizar WhatsApp (A1 — hoje cumprida por publicar manualmente, o que **elimina** o risco em vez de mitigá-lo) e nunca fazer scraping na Shopee (A2). O restante — preços, planos, custo de VPS por sessão, gateway, Fator R — pertence a um modelo de negócio que não está sendo executado.
+
 **Triagem das oito pesquisas — julho de 2026**
 
 Cada item abaixo é uma decisão, não um resumo. Três baldes: o que muda o produto, o que muda o roadmap, o que apenas confirma.

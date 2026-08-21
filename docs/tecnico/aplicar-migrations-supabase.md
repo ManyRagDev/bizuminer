@@ -24,3 +24,9 @@ npx supabase db push --db-url <DATABASE_URL_OWNER_PERCENT_ENCODED>
 ```
 
 Não use a `DATABASE_URL` da aplicação (`garimpa_app`) para DDL; ela não é proprietária da tabela.
+
+## Histórico de aplicações remotas via MCP
+
+- `20260818213323_marketplace_evidence` (M1-A)
+- `garimpa_subscriber_repair` (19/08/2026) — cria `garimpa.subscriber`, que existia só como arquivo local desde 17/08; corresponde a `20260819180000_garimpa_subscriber_repair.sql`
+- `garimpa_member_area` (19/08/2026) — `app_user`, `favorite`, `price_watch`, `buyer_profile`; corresponde a `20260819181000_garimpa_member_area.sql`

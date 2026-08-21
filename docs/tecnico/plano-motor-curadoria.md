@@ -80,12 +80,18 @@ Status: ✅ feito e conferido · 🟡 parcial · ⬜ não iniciado
 
 **Objetivo:** transformar capturas manuais em histórico útil e fornecer a fronteira necessária para páginas de produto e alertas.
 
-- Varredura agendada de `sweep()` a cada 2–4h por GitHub Actions ou host próprio; a escolha de infraestrutura é registrada antes de codar.
+- Varredura agendada de `sweep()` a cada 2–4h. **Infraestrutura decidida em 20/08/2026: GitHub Actions.**
+
+  Motivo: a varredura leva ~20s e cresce com o número de páginas, o que a torna arriscada em função serverless com limite de tempo; o Actions não tem esse teto, é gratuito no volume do projeto, e roda o CLI que já existe (`bin/sweep.ts`) sem adaptação. Requer `DATABASE_URL` como secret do repositório.
+
+  **Consequência que resolve outro problema:** o mesmo workflow aceita `workflow_dispatch`, então o botão "nova rodagem" do painel passa a pedir uma execução ao GitHub em vez de dar `spawn` num processo local — que **não funcionaria na Vercel** (sistema de arquivos somente-leitura, sem processo longo, e o `packages/persistence` não vai no pacote de deploy). Um mecanismo, dois gatilhos.
+
+  **Efeito colateral bom:** com o disparo via GitHub, publicar ou não o `/admin` deixa de bloquear qualquer coisa — o painel funciona igual rodando local ou hospedado. A decisão pode esperar.
 - Alerta explícito quando `capture_run` registra zero itens ou falha repetida.
 - `dealDetail(slug)` resolve `ml-<external_id>` e retorna produto + histórico de até 90 dias + evidência mais recente do marketplace.
 - Revalidate on-demand da web somente quando houver mudança relevante, com token de ambiente.
 
-**Fica de FORA:** categoria, alertas de usuário, curadoria editorial e Shopee.
+**Fica de FORA:** categoria, alertas de usuário, curadoria editorial e Shopee/Amazon (ambas pendentes de credencial de afiliado — voltam como entrega própria quando as credenciais chegarem).
 
 **Critério de saída:** pelo menos 48h de execuções automáticas verificadas, `dealDetail` coberto por teste e a home deixa de abrir uma conexão nova por request após a entrega web correspondente.
 
@@ -93,6 +99,7 @@ Status: ✅ feito e conferido · 🟡 parcial · ⬜ não iniciado
 
 - `dealDetail(slug)` foi entregue em `packages/web/lib/db.ts`: resolve o slug Mercado Livre, retorna fatos atuais e até 90 dias de observações reais.
 - Ainda não existe agendamento recorrente nem revalidação on-demand. Eles dependem da escolha e configuração de uma infraestrutura de execução (GitHub Actions ou host) e de um segredo de revalidação. Sem isso, a home continua dinâmica por segurança de dados.
+- **20/08/2026:** infraestrutura decidida — GitHub Actions, `workflow_dispatch` incluso (botão do painel passa a pedir execução ao GitHub). O workflow `.github/workflows/sweep.yml` e o secret `DATABASE_URL` do repositório **ainda não foram criados**.
 
 ### Registro de captura auditável — 18/08/2026 (🟡 aguardando conferência independente)
 
@@ -130,7 +137,7 @@ Status: ✅ feito e conferido · 🟡 parcial · ⬜ não iniciado
 
 - Migration: `garimpa.product_alert` (id, tenant_id, product_id FK, email, consented_at, unsubscribe_token, notified_at nullable, created_at). LGPD igual ao `subscriber`: só e-mail + consentimento, sem IP.
 - Route handler `POST /api/alerta` (rate-limit simples por hash de IP, como o `/go` já faz).
-- Job pós-sweep: para cada alerta ativo, se preço atual < preço no momento da inscrição (ou < alvo), envia e-mail e marca `notified_at`. Provedor de e-mail a decidir na entrega (Resend é o candidato; registrar custo).
+- Job pós-sweep: para cada alerta ativo, se preço atual < preço no momento da inscrição (ou < alvo), envia e-mail e marca `notified_at`. **Provedor decidido em 20/08/2026: SMTP da Hostinger** — ativa quando o domínio existir (verificação de DNS); checar o limite de envio por hora do plano antes de contar com volume.
 - Link de descadastro por token (obrigatório antes do primeiro envio real).
 
 **Depende de:** M1-C (varredura recorrente — alerta sem varredura é promessa vazia).

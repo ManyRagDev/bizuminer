@@ -23,6 +23,12 @@ export default function SaveDealButton({ product }: { product: VitrineProduct })
       : mergeSavedProducts(ids, state.products, [product]);
     writeSavedState(window.localStorage, { ids, products });
     setSaved(!isSaved);
+    // Espelha no servidor (área do comprador); o localStorage segue como cache local.
+    void fetch("/api/minha/favoritos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: product.id, saved: !isSaved }),
+    }).catch(() => {});
   }
 
   return <button className={saved ? "detail-save-button active" : "detail-save-button"} type="button" aria-label={`${saved ? "Remover" : "Salvar"} ${product.title}`} aria-pressed={saved} disabled={!ready} onClick={toggle}><span aria-hidden="true">{saved ? "♥" : "♡"}</span><b>{saved ? "salvo" : "salvar"}</b></button>;

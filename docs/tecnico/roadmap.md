@@ -1,5 +1,7 @@
 # Roadmap de Implementação
 
+> **Régua de 20/08/2026:** o documento mestre do projeto passou a ser [`docs/estado-do-projeto.md`](../estado-do-projeto.md). Este roadmap continua sendo o registro de fases e de execução; o estado consolidado e o modelo de distribuição vivem lá.
+
 **Documento vivo — decidido em 18/08/2026.** Detalha as fases até a página web pública, mantendo o horizonte sem pular etapas de validação.
 
 Contexto: ML affiliation 🟢 provado em campo (4 cliques no painel), captura /ofertas 🟢 (`MercadoLivreDealsAdapter`, 70/70), Shopee 🟡 (bloqueio externo), persistência/worker/publicação 🔴.
@@ -54,6 +56,16 @@ Contexto: ML affiliation 🟢 provado em campo (4 cliques no painel), captura /o
 - A home lê a execução bem-sucedida mais recente que tenha observações vinculadas, preservando as linhas antigas para auditoria e mantendo fallback para o legado sem proveniência reconstruível.
 - Busca e paginação continuam server-side: 24 produtos por página, 183 ofertas atuais e 8 páginas na execução verificada.
 - Ainda ficam fora desta entrega: agendamento recorrente, prazo de retenção `X`, inferência de indisponibilidade, revalidação on-demand e decisão de RLS antes do deploy público.
+
+### Atualização: área do comprador + painel administrativo — 19/08/2026 (🟡 aguardando conferência)
+
+Plano próprio criado: `plano-area-logada.md` (decisão do dono: sem autenticação nesta fase; identidade pré-auth por cookie `bm_uid` + `app_user.auth_user_id` nulo para o merge futuro).
+
+- **Reparo:** `garimpa.subscriber` não existia no banco (migration de 17/08 nunca aplicada) — `/api/newsletter` respondia 500 em silêncio. Migration aplicada e endpoint validado ao vivo (`ok:true`).
+- **AL-0/AL-1/AL-2:** tabelas `app_user`, `favorite`, `price_watch`, `buyer_profile` criadas (migrations versionadas + aplicadas via MCP); `/minha-area` com salvos sincronizados (coração da vitrine e do detalhe agora espelham no servidor; botão de migração do localStorage), acompanhamento de preço com baseline e ticker de movimento derivado, recomendações v1 com o porquê declarado por item e perfil do comprador validado contra categorias reais.
+- **AD-1:** `/admin` com telemetria (produtos, observações, cliques 7d, publicações, assinantes, área do comprador), tabela de rodagens com destaque para vazia/erro e acionamento de rodagem real por `spawn` do `sweep.ts` (trava de execução simultânea; o registro continua nascendo no próprio robô).
+- **Validação real 19/08:** favorito → banco (user `b4685925…`), watch com baseline `R$ 437,46` = observação real, perfil gravado, rodagem acionada pelo painel completou `ok` (38 itens, 11 novos, 12 mudanças, 38 observações vinculadas). `verify:member-area`: todos os checks. Web: typecheck, 23 testes, build ok; mobile 375px sem overflow.
+- **Fora desta entrega:** autenticação (AL-3), alerta por e-mail (AL-4/M3), gate do admin. **Admin sem autenticação e RLS desabilitada continuam bloqueios duros pré-deploy público.**
 
 **Depende de:** Phase 2 (sem histórico de preço a página é volátil e sem diferencial).
 

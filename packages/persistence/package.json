@@ -10,7 +10,8 @@
     "test": "node --test --experimental-strip-types test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "verify:lowest": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-lowest.ts",
-    "verify:capture-audit": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-capture-audit.ts"
+    "verify:capture-audit": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-capture-audit.ts",
+    "verify:member-area": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-member-area.ts"
   },
   "devDependencies": {
     "typescript": "5.6"

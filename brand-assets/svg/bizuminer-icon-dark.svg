@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" fill="none">
+        
+    <g transform="translate(18, 5) scale(0.95)">
+      <!-- Haste sólida e curvas externas do 'B' fechado -->
+      <path d="M0 6C0 2.68629 2.68629 0 6 0H36C52.5685 0 66 13.4315 66 30C66 36.2163 64.108 42.0163 60.854 46.855C64.632 51.815 67 58.043 67 65C67 81.5685 53.5685 95 37 95H6C2.68629 95 0 92.3137 0 89V6Z" fill="#3B82F6"/>
+      
+      <!-- Olho Superior -->
+      <circle cx="25" cy="22" r="12" fill="#0B132B"/>
+      <circle cx="28" cy="19.5" r="6" fill="#FFFFFF"/>
+      <circle cx="30.5" cy="17" r="2.2" fill="#D9F99D"/>
+
+      <!-- Olho Inferior -->
+      <circle cx="25" cy="48" r="12" fill="#0B132B"/>
+      <circle cx="28" cy="45.5" r="6" fill="#FFFFFF"/>
+      <circle cx="30.5" cy="43" r="2.2" fill="#D9F99D"/>
+    </g>
+  
+      </svg>

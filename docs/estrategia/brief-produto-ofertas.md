@@ -1,5 +1,9 @@
 # Brief: OfertaFlow (nome de trabalho)
 
+> 📁 **Documento histórico — suplantado (marcado em 20/08/2026).**
+> Este é o brief inicial do projeto, de julho/2026. Ele descreve o **OfertaFlow**, um SaaS B2B vendido a afiliados. O produto que existe é o **BizuMiner**: site B2C de curadoria com a comissão de afiliado da casa.
+> As decisões tomadas entre 17/08 e 20/08 substituíram este brief. Ele fica congelado como registro de onde o projeto começou — **não se atualiza e não se usa para decidir**. O estado vigente está em `docs/estado-do-projeto.md`.
+
 > **v2** — atualizado após confirmação de que existe sócia com rede de afiliados ativa (validadora real) e que o fundador construirá a própria operação em paralelo.
 
 ---

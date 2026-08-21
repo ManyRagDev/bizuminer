@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+        <rect width="512" height="512" rx="115" fill="#2563EB"/>
+        <g transform="translate(145, 80) scale(4.4)">
+          <!-- Haste do B em branco/contraste com fundo azul -->
+          <circle cx="25" cy="22" r="12" fill="#FFFFFF"/>
+          <circle cx="28" cy="19.5" r="6" fill="#0F172A"/>
+          <circle cx="30.5" cy="17" r="2.2" fill="#D9F99D"/>
+
+          <circle cx="25" cy="48" r="12" fill="#FFFFFF"/>
+          <circle cx="28" cy="45.5" r="6" fill="#0F172A"/>
+          <circle cx="30.5" cy="43" r="2.2" fill="#D9F99D"/>
+        </g>
+      </svg>

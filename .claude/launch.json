@@ -3,6 +3,8 @@
   "configurations": [
     {
       "name": "bizuminer-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "packages/web"],
       "url": "http://localhost:3100",
       "port": 3100
     }

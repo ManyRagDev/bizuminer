@@ -173,6 +173,31 @@ export async function dealCategories(tenantId = "local"): Promise<string[]> {
   }
 }
 
+/**
+ * Todas as categorias já vistas no catálogo, independente da varredura mais
+ * recente. O perfil do comprador usa esta lista; a vitrine usa `dealCategories`.
+ *
+ * A distinção não é cosmética: na vitrine o recorte por execução atual está
+ * certo (filtra o que está à venda agora), mas no perfil ele apagava intenção
+ * declarada — uma varredura de 1 página bastava para "Moda" sumir da tela e
+ * ser descartada no próximo salvamento.
+ */
+export async function catalogCategories(tenantId = "local"): Promise<string[]> {
+  const sql = db();
+  try {
+    const rows = await sql<{ category: string }[]>`
+      select distinct p.category as category
+      from garimpa.product p
+      where p.tenant_id = ${tenantId}
+        and p.category is not null
+      order by category asc
+    `;
+    return rows.map((row) => row.category);
+  } finally {
+    await sql.end();
+  }
+}
+
 /** Produto individual e seus fatos de preço para a página compartilhável. */
 export async function dealDetail(slug: string, tenantId = "local"): Promise<DealDetail | null> {
   const externalId = slug.match(/^ml-(.+)$/)?.[1];

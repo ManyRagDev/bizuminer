@@ -1,5 +1,7 @@
 # Plano de Negócio — 90 dias até o lançamento
 
+> 📁 **Documento histórico — suplantado (marcado em 20/08/2026).** Este é o plano de julho/2026 do **OfertaFlow**, SaaS B2B vendido a afiliados. O produto que existe é o **BizuMiner**: site B2C de curadoria com a comissão de afiliado da casa, WhatsApp manual e Telegram por Bot API oficial — sem Docker, sem WAHA, sem sessões não-oficiais. Este plano fica congelado como registro histórico: **não se atualiza e não se usa para decidir**. O estado vigente está em `docs/estado-do-projeto.md`.
+
 **Plataforma de curadoria e distribuição de ofertas para afiliados**
 Documento interno · julho de 2026 · versão 2, revisada após auditoria
 

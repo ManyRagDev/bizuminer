@@ -33,7 +33,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const detail = await dealDetail(slug);
   if (!detail) return { title: "Achado não encontrado | BizuMiner" };
-  return { title: `${detail.deal.title} | BizuMiner`, description: "Preço monitorado e evidências disponíveis no BizuMiner." };
+  const title = `${detail.deal.title} | BizuMiner`;
+  const description = "Preço monitorado e evidências disponíveis no BizuMiner.";
+  return {
+    title,
+    description,
+    // Sem isto, o preview no WhatsApp/Telegram mostrava o título genérico do
+    // site (herdado do layout raiz) ao lado da foto do produto — o card fica
+    // com a foto certa mas o texto errado. og:image continua vindo sozinho
+    // da convenção opengraph-image.tsx; aqui só título/descrição/url.
+    openGraph: { title, description, url: `/bizu/${slug}` },
+    twitter: { title, description },
+  };
 }
 
 export default async function DealPage({ params }: PageProps) {
@@ -50,7 +61,7 @@ export default async function DealPage({ params }: PageProps) {
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
-    <header className="detail-header"><a className="brand" href="/"><Image src="/brand/bizuminer-logo-horizontal-light.svg" alt="BizuMiner" width={140} height={32} priority className="brand-logo-desktop" /><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} priority className="brand-logo-mobile" /></a><div className="detail-header-actions"><a href="/#achados">← voltar aos achados</a><SaveDealButton product={product} /></div></header>
+    <header className="detail-header"><a className="brand" href="/" aria-label="BizuMiner, início"><Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" /><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><div className="detail-header-actions"><a href="/#achados">← voltar aos achados</a><SaveDealButton product={product} /></div></header>
     <article className="deal-layout">
       <section className="deal-visual"><div className="deal-image-wrap">{deal.image_url ? <Image src={deal.image_url} alt={deal.title} fill priority sizes="(max-width: 820px) 100vw, 52vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={48} height={48} /></div>}</div>{deal.category && <span className="deal-category">{deal.category}</span>}</section>
       <section className="deal-summary">

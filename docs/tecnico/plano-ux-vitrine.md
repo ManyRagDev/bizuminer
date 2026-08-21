@@ -19,7 +19,7 @@ Fatos observados, não inferências:
 6. **Acessibilidade já boa** (focus-visible, aria-pressed, aria-live, reduced-motion, pausa de carrossel) — preservar. Gaps: modal sem `Esc`/focus-trap, nav some no mobile <820px sem hambúrguer, fontes de 8–10px em meta/disclosure/contador.
 7. **`<img>` cru, sem `next/image`** — 24 imagens do ML sem lazy/srcset; hero é PNG com texto rasterizado.
 8. **Botão "mandar um bizu" só mostra toast "em breve"** — CTA de seção inteira sem função.
-9. **Existem duas superfícies visuais com objetivos diferentes.** `packages/web` é a vitrine ligada ao Supabase e ao redirect afiliado; `packages/site` ainda contém um protótipo estático do starter. Toda entrega visual precisa declarar `packages/web` como alvo e manter `packages/site` fora, salvo decisão explícita de migração.
+9. **Existem duas superfícies visuais com objetivos diferentes.** `packages/web` é a vitrine ligada ao Supabase e ao redirect afiliado; `packages/site` era um protótipo estático do starter. **Arquivado em 20/08/2026 para `archive/site/`** — a ambiguidade deixou de existir; toda entrega visual mira `packages/web`.
 10. **A avaliação do Mercado Livre está na fonte, mas não chega à UI.** Até M1-A, a frase “comparamos ... avaliação” está à frente da capacidade real e deve ser tratada como promessa pendente, não como fato implementado.
 11. **Filtros misturam conceitos.** “Menor preço” é um estado/ordenação, enquanto “até R$100” e outras opções são faixas; a mesma linha faz papéis diferentes sem explicá-los.
 12. **A direção editorial tem dois públicos.** “Não perca tempo procurando ofertas” resolve a dor do comprador e pertence ao primeiro viewport. “Automação de ofertas ... público qualificado” fala com marcas/afiliados e deve ficar na área de vendedores ou em rota própria; no hero ela confundiria a vitrine B2C.
@@ -47,13 +47,15 @@ Enquanto um contrato não existe, a UI **degrada explicitamente** (esconde o sel
 
 **Objetivo:** decidir o que a página promete antes de alterar o visual e impedir trabalho na cópia errada.
 
-- Superfície canônica: `packages/web`. `packages/site` recebe aviso explícito de protótipo/starter ou é arquivado em entrega própria; não sincronizar duas vitrines manualmente.
+- Superfície canônica: `packages/web`. `packages/site` foi arquivado em 20/08/2026 (`archive/site/`); não existe mais segunda vitrine para sincronizar.
 - Promessa B2C: economia de tempo + decisão confiável. Proposta-base: **“Você não perde tempo caçando ofertas. A BizuMiner cruza preço, histórico e avaliações do Mercado Livre para mostrar só o que merece atenção.”**
 - Assinatura de marca preservada: “Um bizu bom vale ouro.” continua como frase memorável; a nova linha explica o serviço em linguagem funcional.
 - Barra superior: preferir **“Curadoria do sinal à escolha · links de afiliado”**. “Ponta a ponta” só entra sem qualificador se o dono aceitar que esse percurso termina na recomendação, não na entrega do produto.
 - Mensagem B2B fica fora do hero. Proposta para a área de vendedores: **“Automatizar ofertas é fácil. Conquistar público qualificado é outro jogo.”** A frase só é publicada junto de um canal real de contato e da declaração de independência editorial.
 
-**Decisão do dono necessária:** BizuMiner é somente marca de curadoria para compradores ou também será a marca do produto B2B de automação? Até a resposta, a home permanece inequivocamente B2C.
+~~**Decisão do dono necessária:** BizuMiner é somente marca de curadoria para compradores ou também será a marca do produto B2B de automação?~~
+
+> ✅ **Resolvido em 20/08/2026.** O BizuMiner é marca de curadoria para compradores, e é o produto. O brief B2B de julho foi suplantado pelas decisões tomadas desde 17/08 e virou registro histórico. A home é B2C sem ressalva. Ver [`docs/estado-do-projeto.md`](../estado-do-projeto.md), seções 2 e 3.
 
 **Critério de saída:** mapa de copy por seção aprovado por ambos os sócios; nenhuma frase promete dado ou serviço inexistente.
 
@@ -88,7 +90,7 @@ Enquanto um contrato não existe, a UI **degrada explicitamente** (esconde o sel
 **Depende de:** M1-C (`dealDetail` + histórico).
 
 - Rota `/bizu/[slug]` com ISR (revalidate curto): título, imagem, preço/âncora, **sparkline SVG do histórico** (server-rendered, sem lib de chart), blurb (M4, com fallback), CTA único para `/go/[slug]`, disclosure.
-- OG image gerada (`next/og`): foto + preço + mini-gráfico + selo — o card de WhatsApp é o produto.
+- OG image gerada (`next/og`): foto + preço + selo em texto — o card de WhatsApp é o produto. **Entregue em 20/08/2026 via plano-distribuicao.md (D-1)**; o mini-gráfico no card fica para quando o histórico for denso (decisão do dono).
 - Modal da vitrine é **substituído** por navegação à página (intercepting route se quisermos manter a sensação de overlay; decisão na entrega).
 - `sitemap.xml` + `robots.txt` (pendência já registrada no roadmap) incluindo `/bizu/*`.
 - Vitrine `/` sai de `force-dynamic` para ISR + revalidate on-demand no hook da varredura (contrato com M1-C; resolve o achado nº 1).
@@ -160,7 +162,7 @@ Enquanto um contrato não existe, a UI **degrada explicitamente** (esconde o sel
 
 - Criada a rota compartilhável `/bizu/[slug]`, com produto, preço, evidências da fonte, disclosure, CTA afiliado e gráfico SVG gerado somente de observações existentes.
 - A página informa literalmente quantos registros existem e qual período foi monitorado, sem inferir tendência nem nomear um estado abstrato de “formação”.
-- Ainda faltam OG image, `sitemap.xml`/`robots.txt` e ISR/revalidate on-demand; dependem do fechamento de M1-C e de uma decisão de infraestrutura.
+- Ainda faltam `sitemap.xml`/`robots.txt` e ISR/revalidate on-demand; dependem do fechamento de M1-C e de uma decisão de infraestrutura. **A OG image saiu desta pendência em 20/08/2026** — entregue como D-1 do `plano-distribuicao.md`.
 
 ### Verificações executadas
 

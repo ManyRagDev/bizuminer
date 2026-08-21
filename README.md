@@ -1,8 +1,10 @@
 # BizuMiner
 
-Plataforma de curadoria e distribuição de ofertas para afiliados.
+Site de curadoria de ofertas. Detecta promoções, **verifica se o desconto é real** usando histórico de preço próprio, e publica o que merece atenção. Hoje opera o Mercado Livre; Shopee e Amazon entram quando as credenciais de afiliado chegarem.
 
-Detecta ofertas de e-commerce, **verifica se o desconto é real** usando histórico de preço próprio, e distribui em canais que a audiência do cliente escolheu seguir.
+A comissão de afiliado é da casa: o BizuMiner publica, o comprador decide, o link de saída é rastreado de ponta a ponta.
+
+> **Comece por aqui:** [`docs/estado-do-projeto.md`](docs/estado-do-projeto.md) — a régua oficial: o que o produto é, as decisões que não se reabrem, o estado atual e os bloqueios.
 
 ---
 
@@ -10,35 +12,44 @@ Detecta ofertas de e-commerce, **verifica se o desconto é real** usando histór
 
 ```
 docs/
-  estrategia/        plano de negócio, decisões, brief do produto
-  pesquisa/          análise competitiva, prompts de pesquisa
-  tecnico/           modelo de dados
-  apresentacoes/     dashboard interativo e decks
-  modelo-financeiro.xlsx
+  estado-do-projeto.md   documento mestre oficial — leia primeiro
+  pendencias.md          mapa do que fazer a seguir e por quê (sessão 19–20/08)
+  tecnico/               roadmap, planos de execução, modelo de dados
+  estrategia/            brief antigo OfertaFlow — histórico, não usar para decidir
 
 packages/
-  capture/           camada de captura de ofertas (Shopee, Mercado Livre)
+  capture/               captura de ofertas (Mercado Livre ativo; Shopee pronta, pendente de credencial)
+  persistence/           schema, ingestão, migrations e scripts de verificação
+  web/                   Next.js: vitrine, página de produto, área do cliente, painel do dono
 
-tools/               scripts que geram o xlsx e o pptx
+archive/
+  site/                  protótipo estático anterior — arquivado, não é superfície
 ```
 
 ---
 
-## Por onde começar
+## Rodar
 
-**Entender o projeto:** `docs/estrategia/plano-de-negocio-90-dias.md`
-
-**Ver o resumo visual:** abrir `docs/apresentacoes/dashboard-executivo.html` no navegador
-
-**Entender as decisões técnicas:** `packages/capture/README.md`
-
-**Rodar o código:**
+O banco é Supabase (schema `garimpa`). A `DATABASE_URL` fica em `packages/web/.env.local`.
 
 ```bash
-cd packages/capture
-npm install
-npm test          # 51 testes, nenhum toca a rede
-npm run typecheck
+npm run dev --prefix packages/web
+```
+
+Rotas: `/` (vitrine), `/bizu/[slug]` (produto + card OG), `/minha-area` (área do cliente), `/admin` (painel do dono — o oráculo).
+
+**Só um `next dev` por vez nesta pasta.** Porta diferente não cria um `.next` diferente — dois servidores se atropelam e produzem erros que parecem bug de código.
+
+Uma varredura ao vivo do Mercado Livre:
+
+```bash
+node --env-file=../web/.env.local --experimental-strip-types bin/sweep.ts --pages 1
+```
+
+Verificação derivada do banco (nunca confie em relatório narrado):
+
+```bash
+npm run verify:member-area --prefix packages/persistence
 ```
 
 ---
@@ -47,40 +58,35 @@ npm run typecheck
 
 Construir **dentro do que as plataformas permitem**, e usar isso como posicionamento.
 
-A dor número um da categoria — banimento de contas de WhatsApp — é consequência da arquitetura que todos os onze concorrentes adotaram. Não se corrige com anti-ban melhor; corrige-se não precisando de anti-ban.
+Na prática: publicação no WhatsApp é **manual**, feita por uma pessoa, sem nenhuma automação — os termos do WhatsApp não distinguem grupo, canal e comunidade, e há precedente judicial no Brasil contra fornecedores de disparo em massa. O Telegram entra por Bot API oficial, gratuita. **Docker, WAHA, Puppeteer e sessões não-oficiais: fora — nunca existiram neste código e não serão construídos.** Não existe anti-ban no projeto porque não existe nada para banir.
 
-Três canais, cada um com um papel, nenhum em zona cinzenta:
-
-| Canal | Mecanismo | Custo |
-|---|---|---|
-| Telegram | Bot API oficial | zero |
-| Grupo de WhatsApp | conteúdo pronto, o gestor publica | zero |
-| WhatsApp 1:1 | Cloud API oficial, alerta de preço | ~R$0,35/msg |
+A plataforma gera a mensagem pronta (copy + link) no painel; o envio no WhatsApp é seu, como pessoa.
 
 ---
 
 ## Estado atual
 
-**Pronto:** camada de captura com contrato de adapter, Shopee (API oficial) e Mercado Livre (OAuth 2.0), mais o `link-lab` para o experimento de atribuição.
+**Funciona e foi validado em campo:** captura do Mercado Livre com execução auditável, histórico de preço próprio, vitrine pública, página de produto compartilhável e redirect afiliado gravando clique.
 
-**Bloqueado:** credencial da Shopee Open API — aprovação manual, sem prazo publicado.
+**Feito, aguardando conferência:** área do cliente (salvos, acompanhamento de preço, recomendações, perfil), painel do dono (telemetria e acionamento do robô) e card de compartilhamento OG.
 
-**Em teste:** atribuição de link do Mercado Livre. Ver `packages/capture/bin/link-lab.ts`.
+**Não existe ainda:** varredura recorrente (cron decidido: GitHub Actions — falta configurar), autenticação, alerta de preço, composer, publicação no Telegram, `sitemap.xml`.
 
-**Próximo:** endpoint de callback OAuth, persistência de ofertas com histórico de preço, worker BullMQ.
+**Bloqueios duros antes de qualquer deploy público de peso:** RLS desabilitada em todo o schema, painel `/admin` sem autenticação, área do cliente identificada só por cookie.
+
+O detalhamento de cada item está em [`docs/estado-do-projeto.md`](docs/estado-do-projeto.md).
 
 ---
 
-## Pendências que não dependem de código
+## Regras de operação
 
-1. Solicitar App ID e Secret da Shopee — caminho crítico
-2. Acordo societário por escrito, antes da primeira linha de código de produção
-3. Abrir CNPJ com estrutura de Fator R
-4. Sessão de mapeamento com a sócia, levantando a comissão histórica como linha de base
-5. Definir os cinco parâmetros do schema (ver `docs/tecnico/modelo-de-dados.md`)
+- **Edição de arquivo sempre por editor UTF-8, nunca por PowerShell.** `Set-Content` corrompe acentuação — já aconteceu.
+- **Migration versionada não é migration aplicada.** Conferir no banco; a tabela `subscriber` existiu só como arquivo por três dias, com a newsletter quebrada em silêncio.
+- **Afirmação sobre execução real sai de script, não de narrativa.** Os `bin/verify-*.ts` existem para isso.
+- **Toda entrega termina com pedido de conferência** antes de virar ✅. Quem implementa não aprova.
 
 ---
 
 ## Segurança
 
-Credenciais de afiliado e tokens OAuth **nunca** entram em log, resposta de API ou controle de versão. Ver `.gitignore` e a seção de credenciais em `packages/capture/README.md`.
+Credenciais de afiliado e tokens **nunca** entram em log, resposta de API ou controle de versão. O IP de quem clica é gravado apenas como hash com sal (LGPD). A área do cliente não coleta e-mail sem consentimento explícito.

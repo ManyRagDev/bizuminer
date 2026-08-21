@@ -1,24 +1,162 @@
 {
-  "generated_at": "2026-08-19T02:01:03.527531+00:00",
+  "generated_at": "2026-08-19T11:55:47.791253+00:00",
   "nodes": {
-    "packages_web_app_vitrine_vitrine": {
-      "code_fingerprint": "4b5a895a17f0dddfb0330e901c514145114a90ec6068ce98fbf931f5d72bbf9e",
-      "label": "Vitrine()",
-      "last": "2026-08-19T01:54:28.735282+00:00",
+    "docs_tecnico_modelo_de_dados_capture_run": {
+      "code_fingerprint": "227e422b111247e4254aa50a79244e358828f201f4350ff7e5a99b64cdb964a7",
+      "label": "capture_run",
+      "last": "2026-08-19T02:11:59.680745+00:00",
       "provenance": [
+        {
+          "date": "2026-08-19T02:11:59.680745+00:00",
+          "outcome": "useful",
+          "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
+        }
+      ],
+      "score": 0.990676591,
+      "source_file": "docs/tecnico/modelo-de-dados.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_tecnico_modelo_de_dados_price_observation": {
+      "code_fingerprint": "227e422b111247e4254aa50a79244e358828f201f4350ff7e5a99b64cdb964a7",
+      "label": "price_observation por intervalos",
+      "last": "2026-08-19T02:11:59.680745+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T02:11:59.680745+00:00",
+          "outcome": "useful",
+          "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
+        }
+      ],
+      "score": 0.990676591,
+      "source_file": "docs/tecnico/modelo-de-dados.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_tecnico_modelo_de_dados_product": {
+      "code_fingerprint": "227e422b111247e4254aa50a79244e358828f201f4350ff7e5a99b64cdb964a7",
+      "label": "product",
+      "last": "2026-08-19T02:11:59.680745+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T02:11:59.680745+00:00",
+          "outcome": "useful",
+          "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
+        }
+      ],
+      "score": 0.990676591,
+      "source_file": "docs/tecnico/modelo-de-dados.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_tecnico_plano_motor_curadoria_ranking_por_valor": {
+      "code_fingerprint": "93be136ecc61d4b6c37bb7a4b1cc55cdfb6f47a44ceffc38dfb1e87a156abfb7",
+      "label": "Ranking por sinal de valor",
+      "last": "2026-08-19T02:01:57.485783+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T02:01:57.485783+00:00",
+          "outcome": "useful",
+          "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
+        }
+      ],
+      "score": 0.990517068,
+      "source_file": "docs/tecnico/plano-motor-curadoria.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_tecnico_plano_ux_vitrine_ux3_mina_navegavel": {
+      "code_fingerprint": "57bbea5baf17d9ecf54b13ebdbfcb3c21983dd59dd090e77a782ad3986c90077",
+      "label": "UX-3 — Mina navegável e retenção",
+      "last": "2026-08-19T02:01:57.485783+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T02:01:57.485783+00:00",
+          "outcome": "useful",
+          "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
+        }
+      ],
+      "score": 0.990517068,
+      "source_file": "docs/tecnico/plano-ux-vitrine.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_persistence_readme_supabase_garimpa_schema": {
+      "code_fingerprint": "bd8d7875a7174cf1dfaaeb62d110b8ace3a8b54d9e1ef021c660f9fd7ffbc68b",
+      "label": "Schema garimpa no Supabase Postgres",
+      "last": "2026-08-19T03:17:10.871533+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:17:10.871533+00:00",
+          "outcome": "useful",
+          "q": "Como configurar o root directory e demais informações no Vercel?"
+        }
+      ],
+      "score": 0.991713304,
+      "source_file": "packages/persistence/README.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_persistence_src_store_priceobservationrecord": {
+      "code_fingerprint": "3bdb3199c0a3534143bb5b6251c604158d5c10a6dede23f4d545fc3cfa3b60b1",
+      "label": "PriceObservationRecord",
+      "last": "2026-08-19T02:11:59.680745+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T02:11:59.680745+00:00",
+          "outcome": "useful",
+          "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
+        }
+      ],
+      "score": 0.990676591,
+      "source_file": "packages/persistence/src/store.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_web_app_vitrine": {
+      "code_fingerprint": "006195df7a2b5998290832d42fb1b389d24ad85684d40b59ddf857eebcba3c5f",
+      "label": "vitrine.tsx",
+      "last": "2026-08-19T03:39:28.046613+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:39:28.046613+00:00",
+          "outcome": "useful",
+          "q": "Agora temos uma questão: em monitores grandes, ficou bom, mas em monitor menor, a hero está maior do que a tela comporta. E um detalhe: não da pra clicar nos cards de destaque. Tem o \"ver detalhes\" mas é pouco. Pode ter um link na propria imagem em si."
+        }
+      ],
+      "score": 0.992067989,
+      "source_file": "packages/web/app/vitrine.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_web_app_vitrine_vitrine": {
+      "code_fingerprint": "006195df7a2b5998290832d42fb1b389d24ad85684d40b59ddf857eebcba3c5f",
+      "label": "Vitrine()",
+      "last": "2026-08-19T03:39:28.046613+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:39:28.046613+00:00",
+          "outcome": "useful",
+          "q": "Agora temos uma questão: em monitores grandes, ficou bom, mas em monitor menor, a hero está maior do que a tela comporta. E um detalhe: não da pra clicar nos cards de destaque. Tem o \"ver detalhes\" mas é pouco. Pode ter um link na propria imagem em si."
+        },
+        {
+          "date": "2026-08-19T02:01:57.485783+00:00",
+          "outcome": "useful",
+          "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
+        },
         {
           "date": "2026-08-19T01:54:28.735282+00:00",
           "outcome": "useful",
           "q": "Quais arquivos e estilos controlam o hero e o banner de produto da home do BizuMiner?"
         }
       ],
-      "score": 0.999894431,
+      "score": 2.972983266,
       "source_file": "packages/web/app/vitrine.tsx",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 3
     },
     "packages_web_app_vitrine_vitrineproduct": {
-      "code_fingerprint": "4b5a895a17f0dddfb0330e901c514145114a90ec6068ce98fbf931f5d72bbf9e",
+      "code_fingerprint": "006195df7a2b5998290832d42fb1b389d24ad85684d40b59ddf857eebcba3c5f",
       "label": "VitrineProduct",
       "last": "2026-08-19T01:54:28.735282+00:00",
       "provenance": [
@@ -28,8 +166,40 @@
           "q": "Quais arquivos e estilos controlam o hero e o banner de produto da home do BizuMiner?"
         }
       ],
-      "score": 0.999894431,
+      "score": 0.990398209,
       "source_file": "packages/web/app/vitrine.tsx",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_web_next_config": {
+      "code_fingerprint": "fb0459d3ada453c04f5aeb986128ead5d2822d6aa54e641a876d715aae154604",
+      "label": "web/next.config.ts",
+      "last": "2026-08-19T03:17:10.871533+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:17:10.871533+00:00",
+          "outcome": "useful",
+          "q": "Como configurar o root directory e demais informações no Vercel?"
+        }
+      ],
+      "score": 0.991713304,
+      "source_file": "packages/web/next.config.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_web_package": {
+      "code_fingerprint": "fda97e49956cae75dd66a910f9e94e84bbe24bc47bf3b9f71ac76638794098e7",
+      "label": "web/package.json",
+      "last": "2026-08-19T03:17:10.871533+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:17:10.871533+00:00",
+          "outcome": "useful",
+          "q": "Como configurar o root directory e demais informações no Vercel?"
+        }
+      ],
+      "score": 0.991713304,
+      "source_file": "packages/web/package.json",
       "status": "tentative",
       "uses": 1
     }

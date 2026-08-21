@@ -1,5 +1,7 @@
 # Modelo de Dados
 
+> 📁 **Documento histórico — congelado em 20/08/2026 (redação oficial).** Os *princípios* deste documento continuam valendo e foram absorvidos pelo documento mestre: append-only em histórico de preço, `tenant_id` em toda tabela de negócio, e identidade de produto modelada desde o início. O **corpo** abaixo descreve o modelo B2B suplantado (18 tabelas, `connection` de WhatsApp, piloto automático, Prisma) e **não se atualiza mais** — não o use para decidir. O estado vigente está em [`docs/estado-do-projeto.md`](../estado-do-projeto.md).
+
 **Documento estrutural — entidades, relações e justificativa de cada decisão**
 
 Escopo: PostgreSQL + Prisma. Nomes de tabela em inglês (convenção de código), explicação em português.

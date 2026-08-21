@@ -31,6 +31,24 @@ export function priceSignal(input: DealSignalInput) {
   return { tone: "new", label: "primeiro registro de preço" } as const;
 }
 
+export type PriceHighlight = { tone: "verified" | "drop" | "unproven"; label: string };
+
+// No card, o selo só fala quando o comprador não conseguiria deduzir aquilo
+// sozinho olhando o anúncio. "Está sendo monitorado" vale para 100% do catálogo,
+// então não distingue nada — é premissa do produto, dita uma vez no topo da página.
+// O silêncio é o padrão, e é ele que faz o selo raro ser lido quando aparece.
+//
+// Os rótulos carregam o próprio escopo ("que já vimos") de propósito: um selo
+// raro e vago seria mais perigoso que o atual, porque teria toda a atenção que
+// o atual não tem — e seria lido como aval sobre o mercado, não sobre nosso histórico.
+export function priceHighlight(input: DealSignalInput): PriceHighlight | null {
+  if (input.lowestVerified) return { tone: "verified", label: "menor preço que já vimos" };
+  const gap = priceDifferencePercent(input);
+  if (gap !== null && gap < 0) return { tone: "drop", label: `caiu ${Math.abs(gap)}% desde o menor que vimos` };
+  if (input.observationCount <= 1) return { tone: "unproven", label: "ainda sem histórico" };
+  return null;
+}
+
 export function priceNarrative(input: DealSignalInput, formatCurrency: (cents: number) => string) {
   if (input.lowestVerified) {
     return `Menor preço entre ${input.observationCount} registros coletados em ${historyWindow(input.historyDays)}.`;
