@@ -5,10 +5,11 @@ import { dealDetail, topDeals } from "../../../lib/db";
 import { freshnessLabel, priceNarrative, priceSignal } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
 import SaveDealButton from "./save-deal-button";
+import RedirectBanner from "./redirect-banner";
 
 export const dynamic = "force-dynamic";
 
-type PageProps = { params: Promise<{ slug: string }> };
+type PageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ direto?: string }> };
 
 const brl = (cents: number) => (cents / 100)
   .toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 });
@@ -47,8 +48,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function DealPage({ params }: PageProps) {
+export default async function DealPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { direto } = await searchParams;
   const detail = await dealDetail(slug);
   if (!detail) notFound();
 
@@ -61,6 +63,7 @@ export default async function DealPage({ params }: PageProps) {
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
+    {direto === "1" && <RedirectBanner slug={deal.slug} />}
     <header className="detail-header"><a className="brand" href="/" aria-label="BizuMiner, início"><Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" /><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><div className="detail-header-actions"><a href="/#achados">← voltar aos achados</a><SaveDealButton product={product} /></div></header>
     <article className="deal-layout">
       <section className="deal-visual"><div className="deal-image-wrap">{deal.image_url ? <Image src={deal.image_url} alt={deal.title} fill priority sizes="(max-width: 820px) 100vw, 52vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={48} height={48} /></div>}</div>{deal.category && <span className="deal-category">{deal.category}</span>}</section>

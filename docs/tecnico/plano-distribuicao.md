@@ -185,6 +185,34 @@ Conferência independente desta entrega e veredito do dono sobre a copy gerada (
 
 ---
 
+## Registro de implementação — D-2b, 20/08/2026: link direto com página de passagem (🟡 aguardando conferência independente)
+
+**Decisão do dono nesta sessão:** o link do composer vai para a versão "direto" — quem se interessou pelo card não precisa passar pelo site para decidir, já quer comprar.
+
+**Por que não apontar o link direto para `/go/[slug]`:** a `/go` é um redirect puro (302) sem HTML nem meta tags; o WhatsApp/Telegram não renderiza card nenhum, e o investimento do D-1 (o card é o produto no feed) morre. Solução: **a mesma página do card** (`/bizu/[slug]`) com o parâmetro `?direto=1`.
+
+### O que foi entregue
+
+- `lib/direct-flow.ts` (novo, puro): contador de 3s (`DIRECT_COUNTDOWN_SECONDS`), `nextCountdown`, `shouldFire` e `flagKey(slug)` — flag de sessão por produto.
+- `app/bizu/[slug]/redirect-banner.tsx` (novo, client): banner ácido no topo — "Redirecionando para o Mercado Livre em 3…" + botão **"quero ficar aqui"** com foco inicial. **Qualquer interação** (toque, tecla, rolagem) cancela e mantém a página normal. Aos 0s, grava a flag na sessão e navega para `/go/[slug]` (que registra o clique afiliado como sempre).
+- **Anti-loop do botão voltar:** se a flag de sessão já existe, o banner não redireciona de novo — mostra "este dispositivo já foi redirecionado" com "ir de novo ↗" e "continuar no BizuMiner". Sem isso, voltar do ML recairia no contador e viraria loop de sequestro.
+- `app/bizu/[slug]/page.tsx`: lê `searchParams.direto` e monta o banner só quando `direto=1`. Busca orgânica e links normais continuam sem banner.
+- `lib/composer.ts`: `directLink(baseUrl, slug)` = `…/bizu/<slug>?direto=1`, usado na mensagem única e no lote.
+- Sem animação de contagem (números trocados por estado) — `prefers-reduced-motion` não exige tratamento especial.
+
+### Verificação executada (contra a fonte de verdade)
+
+- `npm run typecheck`: limpo. `npm test`: **44/44** (39 + 4 de `direct-flow` + 1 de `directLink`).
+- `npm run build`: limpo, com o dev server parado antes.
+- Smoke test com dev server e slug real do banco (`ml-MLB45553868`): `/bizu/<slug>` **sem** banner; `/bizu/<slug>?direto=1` **com** banner no HTML; `/go/<slug>` → **HTTP 302**.
+- **Não verificado nesta entrega (depende de navegador humano):** o comportamento em navegador real — o contador regredir 3→2→1, o clique em "quero ficar aqui" cancelar, e o loop do voltar (redirect → voltar → banner estático). A lógica está coberta por testes do módulo puro, mas a cena real precisa de verificação manual.
+
+### Pendente para ✅
+
+Conferência humana do fluxo em navegador (contador, cancelamento, voltar) e veredito do dono.
+
+---
+
 ## Registro de implementação — D-1, 20/08/2026 (🟡 aguardando conferência independente)
 
 Handoff de origem: `handoff-d1-card.md`. Executado de ponta a ponta pelo mesmo agente que escreveu o handoff, em sessão separada.

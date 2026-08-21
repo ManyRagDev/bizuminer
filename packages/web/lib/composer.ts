@@ -87,14 +87,21 @@ export function composeOpener(product: ComposerProduct): string {
   return pickVariant(OPENERS[tone], product.slug);
 }
 
+/** Link de compartilhamento do composer: passa pela página com o card e o
+ *  contador de redirecionamento direto (`?direto=1`) — quem quer comprar chega
+ *  ao Mercado Livre sem fricção; quem quer conferir fica na página. */
+export function directLink(baseUrl: string, slug: string): string {
+  return `${baseUrl}/bizu/${slug}?direto=1`;
+}
+
 export function composeSingle(product: ComposerProduct, baseUrl: string): string {
-  const link = `${baseUrl}/bizu/${product.slug}`;
+  const link = directLink(baseUrl, product.slug);
   return [composeOpener(product), product.title, formatBRL(product.priceCents), link, FOOTER].join("\n");
 }
 
 export function composeLot(products: ComposerProduct[], baseUrl: string): string {
   const lines = products.map(
-    (product, index) => `${index + 1}. ${product.title} — ${formatBRL(product.priceCents)} — ${baseUrl}/bizu/${product.slug}`,
+    (product, index) => `${index + 1}. ${product.title} — ${formatBRL(product.priceCents)} — ${directLink(baseUrl, product.slug)}`,
   );
   return ["bizus de hoje:", ...lines, FOOTER].join("\n");
 }

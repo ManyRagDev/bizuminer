@@ -57,7 +57,7 @@ Regra de ouro do projeto: **nunca construir permalink do zero; sempre usar o hre
 
 1. **Varredura** — `bin/sweep.ts` captura `/ofertas`, grava produto + uma observação de preço por execução, fecha `capture_run` como ok/erro/vazio. Hoje é manual/CLI + botão no painel. **Cron decidido: GitHub Actions (2–4h)** — o mesmo workflow aceita `workflow_dispatch`, então o botão do painel passa a pedir execução ao GitHub em vez de `spawn` local (que não funciona na Vercel). É a "rodagem pela plataforma, sem entrar no código" que o dono quer.
 2. **Vitrine** — `/` dinâmica (`force-dynamic`): 24 ofertas por página, busca, categorias, faixa de preço, ordenação, carrossel editorial, newsletter.
-3. **Produto** — `/bizu/[slug]` com histórico real (até 90 dias), evidências do ML, CTA afiliado e **card OG** para compartilhamento (WhatsApp/Telegram).
+3. **Produto** — `/bizu/[slug]` com histórico real (até 90 dias), evidências do ML, CTA afiliado e **card OG** para compartilhamento (WhatsApp/Telegram). Com `?direto=1` (link do composer), vira **página de passagem**: contador de 3s redireciona ao ML (via `/go`, registrando o clique), com "quero ficar aqui" e anti-loop do botão voltar — decidido em 20/08 (D-2b).
 4. **Clique afiliado** — `/go/[slug]` upserta `publication`, grava `click_event` (IP só como hash salgado — LGPD), redireciona com `matt_word` + `subId`.
 5. **Área do cliente** — `/minha-area`: salvos sincronizados com o servidor, "de olho no preço" com baseline e ticker de movimento, recomendações com o motivo declarado, perfil com categorias e faixa de preço. Identidade hoje é cookie `bm_uid` (httpOnly, 1 ano) — **não é login**. Auth real é a fase AL-3.
 6. **Distribuição** — WhatsApp é **manual, para sempre** (você publica como pessoa; zero automação, zero risco jurídico). Telegram entra por Bot API oficial (botão inline apontando para `/go/[slug]?via=tg`). A plataforma gera a mensagem pronta: é o **composer** do painel (D-2).
@@ -189,6 +189,7 @@ Nenhum impede o uso atual (baixo risco, sem tráfego). Todos impedem escalar. Qu
 5. **Correções factuais**: README dizia que o card de compartilhamento não existia (existe desde 20/08, aguardando conferência); UX-2 citava mini-gráfico no card (decidido para depois).
 
 **D-2 entregue no mesmo dia:** composer no painel (seleção de produtos, destino, mensagem pronta com copy pelo sinal real e link, botão copiar) — 11 testes novos, 39/39, build limpo, smoke test HTTP 200. Registro e verificação em `plano-distribuicao.md`; aguardando conferência independente.
+**D-2b entregue no mesmo dia:** link direto com página de passagem (`?direto=1`) — contador 3s → ML via `/go`, "quero ficar aqui", anti-loop do voltar; composer passou a gerar esse link. 44/44 testes, build limpo, smoke test com slug real. Aguardando conferência.
 
 **PEDIDO DE CONFERÊNCIA — redação oficial (parcial)**
 

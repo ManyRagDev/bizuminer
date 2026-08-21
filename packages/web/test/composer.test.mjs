@@ -6,6 +6,7 @@ import {
   composeMessage,
   composeOpener,
   composeSingle,
+  directLink,
   formatBRL,
 } from "../lib/composer.ts";
 
@@ -46,8 +47,12 @@ test("mensagem única contém abertura, título, preço, link e rodapé", () => 
   assert.ok(message.includes("menor preço"));
   assert.ok(message.includes("Lavadora De Alta Pressão Wap 4100"));
   assert.ok(message.includes("R$ 1.489"));
-  assert.ok(message.includes(`${BASE}/bizu/ml-MLB11111111`));
+  assert.ok(message.includes(`${BASE}/bizu/ml-MLB11111111?direto=1`));
   assert.ok(message.includes("link de afiliado"));
+});
+
+test("directLink aponta para a página de passagem com direto=1", () => {
+  assert.equal(directLink(BASE, "ml-MLB11111111"), `${BASE}/bizu/ml-MLB11111111?direto=1`);
 });
 
 test("tom de queda usa o percentual real do histórico", () => {
@@ -73,8 +78,8 @@ test("lote numera os produtos e inclui os links", () => {
   assert.ok(message.startsWith("bizus de hoje:"));
   assert.ok(message.includes("1. Lavadora De Alta Pressão Wap 4100"));
   assert.ok(message.includes("2. Monitor LG UltraGear 27"));
-  assert.ok(message.includes(`${BASE}/bizu/ml-MLB11111111`));
-  assert.ok(message.includes(`${BASE}/bizu/ml-MLB00000001`));
+  assert.ok(message.includes(`${BASE}/bizu/ml-MLB11111111?direto=1`));
+  assert.ok(message.includes(`${BASE}/bizu/ml-MLB00000001?direto=1`));
   assert.ok(message.includes("link de afiliado"));
 });
 

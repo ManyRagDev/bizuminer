@@ -35,7 +35,7 @@ Decisões fechadas nesta sessão:
 | Fase | O quê | Status |
 |---|---|---|
 | D-1 | Card OG em `/bizu/[slug]` | 🟡 feito, aguardando conferência |
-| D-2 | Composer no painel (escolher produto/destino, gerar mensagem) | 🟡 entregue 20/08, aguardando conferência |
+| D-2 | Composer no painel (escolher produto/destino, gerar mensagem) | 🟡 entregue 20/08, aguardando conferência — inclui o link direto `?direto=1` com página de passagem e contador (D-2b) |
 | D-3 | Atribuição por destino (`via` no clique e no subId) | ⬜ depende de D-2 |
 | D-4 | Comparação de preço na chegada | ⬜ depende de D-3 |
 | D-5 | Publicação no canal do Telegram com botão inline | ⬜ depende de D-2 |
