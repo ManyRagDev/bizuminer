@@ -7,8 +7,13 @@ export const dynamic = "force-dynamic";
 
 /**
  * Retorno do Google OAuth (PKCE). Troca o código pela sessão, roda o merge
- * bm_uid → conta e redireciona para onde a pessoa ia. `next` é sanitizado:
- * só caminho interno (anti open-redirect).
+ * bm_uid → conta e redireciona para onde a pessoa ia.
+ *
+ * O destino (`next`) vem do cookie bm_auth_next escrito pelo botão de login —
+ * a query do redirectTo saiu de propósito: o GoTrue casa a URL do redirectTo
+ * com a lista de Redirect URLs, e query extra derrubava a correspondência
+ * exata para o fallback (Site URL). O cookie é sanitizado aqui (anti
+ * open-redirect) e apagado na resposta.
  *
  * A origem do redirect é a do próprio request: o redirectTo do login foi
  * montado com window.location.origin, então o callback devolve para o mesmo
@@ -17,13 +22,18 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
   const code = request.nextUrl.searchParams.get("code");
-  const next = sanitizeNext(request.nextUrl.searchParams.get("next"), "/minha-area");
+  const next = sanitizeNext(
+    request.cookies.get("bm_auth_next")?.value ?? request.nextUrl.searchParams.get("next"),
+    "/minha-area",
+  );
 
   if (!code) {
     return NextResponse.redirect(new URL("/entrar?erro=1", origin));
   }
 
   const response = NextResponse.redirect(new URL(next, origin));
+  // O cookie cumpriu o papel dele no login; apaga para não carregar dado morto.
+  response.cookies.set("bm_auth_next", "", { path: "/", maxAge: 0 });
   const supabase = createRouteSupabase(request, response);
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {

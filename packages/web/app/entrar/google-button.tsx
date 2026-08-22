@@ -22,7 +22,12 @@ export default function GoogleButton() {
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
       );
       const next = new URLSearchParams(window.location.search).get("next") ?? "/minha-area";
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+      // O `next` viaja em cookie, NÃO na query do redirectTo: o GoTrue casa a
+      // URL do redirectTo com a lista de Redirect URLs do projeto — query extra
+      // quebrava a correspondência exata e o fluxo caía no fallback (Site URL).
+      // Cookie: 5 min, SameSite=Lax; o /auth/callback lê, sanitiza e apaga.
+      document.cookie = `bm_auth_next=${encodeURIComponent(next)}; path=/; SameSite=Lax; max-age=300`;
+      const redirectTo = `${window.location.origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },
