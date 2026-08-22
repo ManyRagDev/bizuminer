@@ -59,7 +59,7 @@ Todos os três mascarados pelo **mesmo erro minificado e inútil** (`TypeError: 
 
 - **Cron da varredura: GitHub Actions**, decidido nesta sessão. Falta configurar o secret `DATABASE_URL` no repositório e escrever o workflow (`.github/workflows/sweep.yml`) — ninguém fez isso ainda, só a decisão foi tomada.
 - **Bot do Telegram**: criar no BotFather, guardar o token. Cinco minutos, ninguém fez ainda.
-- **Domínio `bizuminer.com.br`**: dono disse que compra "hoje ainda" (20/08). Quando comprar, só apontar o DNS — o código já resolve o endereço-base sozinho (`lib/site-url.ts`), não precisa mexer em nada.
+- **Domínio `bizuminer.com.br`**: **comprado e no ar (20/08)** — `www.bizuminer.com.br` canônico (CNAME Vercel) e apex apontado. Falta só: redirecionar o apex → `www` no painel de domínios da Vercel e setar `NEXT_PUBLIC_SITE_URL=https://www.bizuminer.com.br` no ambiente Production (no `.env.local` local já está). Nenhuma mudança de código é necessária — `lib/site-url.ts` resolve sozinho.
 - **Provedor de e-mail**: SMTP da Hostinger, decidido. Só ativa depois que o domínio existir (verificação de DNS). Vale checar o limite de envio por hora do plano antes de contar com ele em volume.
 - **`/admin` publicado ou só local**: parou de ser bloqueante. Como o acionamento de rodagem vai passar a pedir execução ao GitHub Actions (não mais `spawn` de processo local, que não funcionaria na Vercel), o painel funciona igual hospedado ou rodando na sua máquina. Decide quando quiser.
 
@@ -77,7 +77,7 @@ Nenhum dos três impede o uso atual (baixo risco, deploy provisório sem tráfeg
 
 1. Configurar o cron (GitHub Actions + secret) — destrava histórico denso, que destrava quase tudo o resto
 2. Comprar o domínio (já em andamento) e apontar o DNS
-3. Conferir visualmente os 4 PNGs do card D-1 (estão em `%TEMP%\og-final-*.png` nesta máquina) e testar colar um link real no WhatsApp/Telegram assim que o domínio resolver
+3. Conferir visualmente os 4 PNGs do card D-1 (estão em `%TEMP%\og-final-*.png`) e testar colar um link real no WhatsApp/Telegram — **agora dá**: o domínio está no ar
 4. D-2: entregue (20/08) — conferir o composer e validar a copy gerada em chat real após o domínio
 5. D-3/D-5 em paralelo, D-4 na sequência de D-3
 6. Autenticação + RLS + gate do admin, quando o volume justificar

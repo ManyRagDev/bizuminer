@@ -64,6 +64,12 @@ console.log(`novos:          ${summary.itemsNew}`);
 console.log(`mudanças preço: ${summary.priceChanges}`);
 console.log(`duração:        ${summary.durationMs}ms`);
 
+const activity = await store.productActivity("local", summary.runId);
+console.log("\n=== Estado de vida do catálogo (derivado, nunca gravado) ===");
+console.log(`ativos (rodagem atual):   ${activity.ativo}`);
+console.log(`recentes (últimos 14d):   ${activity.recente}`);
+console.log(`dormentes (histórico):    ${activity.dormente}`);
+
 console.log("\n=== Top 10 por desconto ===");
 if (pg) {
   const top = await pg.topByClaimedDiscount("local", 10);

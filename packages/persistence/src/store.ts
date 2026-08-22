@@ -6,6 +6,9 @@
  * Supabase/Postgres sem acoplar o serviço de ingestão ao driver SQL.
  */
 
+import { classifyActivity } from "./activity.ts";
+import type { ActivityCounts } from "./activity.ts";
+
 export interface ProductRecord {
   readonly id: string;
   readonly tenantId: string;
@@ -99,7 +102,16 @@ export interface OfferStore {
 
   /** Última observação — desconto declarado para ranking na primeira varredura. */
   latestObservation(productId: string): Promise<PriceObservationRecord | null>;
+
+  /**
+   * Resumo do estado de vida derivado (ativo/recente/dormente) do catálogo.
+   * `currentRunId` = rodagem que acabou de rodar; produtos vistos nela são
+   * ativos. Nunca grava estado — é leitura pura (ver activity.ts).
+   */
+  productActivity(tenantId: string, currentRunId: string | null, now?: Date): Promise<ActivityCounts>;
 }
+
+export type { ActivityCounts } from "./activity.ts";
 
 /** Implementação em memória — testes, CLI local e bootstrap sem banco. */
 export class InMemoryStore implements OfferStore {
@@ -216,6 +228,23 @@ export class InMemoryStore implements OfferStore {
   async latestObservation(productId: string): Promise<PriceObservationRecord | null> {
     const obs = this.observations.get(productId);
     return obs && obs.length > 0 ? obs[obs.length - 1]! : null;
+  }
+
+  async productActivity(
+    tenantId: string,
+    currentRunId: string | null,
+    now: Date = new Date(),
+  ): Promise<ActivityCounts> {
+    const counts = { ativo: 0, recente: 0, dormente: 0 };
+    for (const product of this.products.values()) {
+      if (product.tenantId !== tenantId) continue;
+      const level = classifyActivity({
+        seenInCurrentRun: currentRunId != null && product.lastCaptureRunId === currentRunId,
+        daysSinceLastSeen: Math.max(0, Math.floor((now.getTime() - product.lastSeenAt.getTime()) / 86_400_000)),
+      });
+      counts[level] += 1;
+    }
+    return counts;
   }
 
   /** Exposto para inspeção em CLI/teste. */

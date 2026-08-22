@@ -81,6 +81,8 @@ Status: ✅ feito e conferido · 🟡 parcial · ⬜ não iniciado
 **Objetivo:** transformar capturas manuais em histórico útil e fornecer a fronteira necessária para páginas de produto e alertas.
 
 - Varredura agendada de `sweep()` a cada 2–4h. **Infraestrutura decidida em 20/08/2026: GitHub Actions.**
+- **Duas missões da varredura (decidido 20/08):** descoberta (feed `/ofertas`) + retenção (re-observar o que importa — "de olho no preço" e vitrine). **Restrição da plataforma:** página de produto do ML responde 302 → anti-bot (regra de ouro §2 do adapter), então a retenção individual por scrape é **bloqueada no ML**; no feed, quem volta retoma a história automaticamente. Re-visita individual só com API oficial (Shopee/Amazon). Acompanhar quando as credenciais chegarem.
+- **Estado de vida derivado (aplicado 20/08):** ativo = rodagem atual; recente = últimos 14 dias; dormente = além. Nunca gravado — `src/activity.ts` (classificador puro) + `productActivity()` no store + resumo impresso pelo `sweep.ts`.
 
   Motivo: a varredura leva ~20s e cresce com o número de páginas, o que a torna arriscada em função serverless com limite de tempo; o Actions não tem esse teto, é gratuito no volume do projeto, e roda o CLI que já existe (`bin/sweep.ts`) sem adaptação. Requer `DATABASE_URL` como secret do repositório.
 
@@ -100,6 +102,7 @@ Status: ✅ feito e conferido · 🟡 parcial · ⬜ não iniciado
 - `dealDetail(slug)` foi entregue em `packages/web/lib/db.ts`: resolve o slug Mercado Livre, retorna fatos atuais e até 90 dias de observações reais.
 - Ainda não existe agendamento recorrente nem revalidação on-demand. Eles dependem da escolha e configuração de uma infraestrutura de execução (GitHub Actions ou host) e de um segredo de revalidação. Sem isso, a home continua dinâmica por segurança de dados.
 - **20/08/2026:** infraestrutura decidida — GitHub Actions, `workflow_dispatch` incluso (botão do painel passa a pedir execução ao GitHub). O workflow `.github/workflows/sweep.yml` e o secret `DATABASE_URL` do repositório **ainda não foram criados**.
+- **20/08/2026 — coleta/curadoria aplicada:** `src/activity.ts` (classificador puro, janela de 14 dias), `productActivity()` na interface `OfferStore` + `InMemoryStore` + `PostgresStore`, resumo de estado de vida impresso pelo `sweep.ts` e 4 testes novos (11/11 em persistence). Verificação real contra o banco: 41 ativos / 295 recentes / 0 dormentes. **Pendente:** aplicar a mesma derivação na UI (vitrine "recentes", recomendações da área logada) quando houver entrega que a consuma.
 
 ### Registro de captura auditável — 18/08/2026 (🟡 aguardando conferência independente)
 

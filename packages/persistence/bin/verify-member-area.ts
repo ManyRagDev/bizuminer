@@ -74,6 +74,7 @@ const [counts] = await sql<Array<Record<string, number>>>`
     (select count(*)::int from garimpa.buyer_profile) as profiles,
     (select count(*)::int from garimpa.subscriber) as subscribers
 `;
+if (!counts) throw new Error("consulta de contagens não retornou linha");
 console.log("\n=== Contagens (fonte: banco) ===");
 console.log(`app_user:      ${counts.users}`);
 console.log(`favorite:      ${counts.favorites}`);
@@ -114,6 +115,7 @@ const [orphans] = await sql<Array<{ bad: number }>>`
     where o.product_id = w.product_id and o.price_cents = w.baseline_price_cents
   )
 `;
+if (!orphans) throw new Error("consulta de órfãos não retornou linha");
 check(orphans.bad === 0, `baseline de todo acompanhamento existe como observação real (violações: ${orphans.bad})`);
 
 await sql.end();

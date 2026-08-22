@@ -9,6 +9,7 @@
  */
 
 import postgres, { type Sql } from "postgres";
+import type { ActivityCounts } from "./activity.ts";
 import type {
   FinishCaptureRunInput,
   OfferStore,
@@ -193,6 +194,28 @@ export class PostgresStore implements OfferStore {
           categorySnapshot: row.category_snapshot ?? undefined,
         }
       : null;
+  }
+
+  async productActivity(
+    tenantId: string,
+    currentRunId: string | null,
+    now: Date = new Date(),
+  ): Promise<ActivityCounts> {
+    const rows = await this.sql<{ level: string; n: string }[]>`
+      select
+        case
+          when last_capture_run_id = ${currentRunId} then 'ativo'
+          when last_seen_at >= ${now} - interval '14 days' then 'recente'
+          else 'dormente'
+        end as level,
+        count(*)::text as n
+      from ${this.sql(this.s)}.product
+      where tenant_id = ${tenantId}
+      group by 1
+    `;
+    const counts = { ativo: 0, recente: 0, dormente: 0 };
+    for (const row of rows) counts[row.level as keyof typeof counts] = Number(row.n);
+    return counts;
   }
 
   async close(): Promise<void> {

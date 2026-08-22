@@ -37,7 +37,7 @@ Monorepo com três pacotes canônicos (o quarto foi arquivado em 20/08):
 
 **Web:** Next.js App Router, CSS próprio (tokens BizuMiner em `globals.css`), sem Tailwind, sem framework de UI. Rotas: `/` (vitrine), `/bizu/[slug]` (+ card OG), `/go/[slug]` (saída afiliada), `/minha-area`, `/admin`, e as APIs `/api/deals`, `/api/newsletter`, `/api/minha/*`, `/api/admin/*`.
 
-**Deploy:** Vercel, URL provisória (desatualizada — não tem as rotas novas). Domínio `bizuminer.com.br` em processo de compra; quando resolver, o código já aponta sozinho (`lib/site-url.ts`: `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → localhost).
+**Deploy:** Vercel, com os domínios próprios **ao vivo desde 20/08/2026**: `www.bizuminer.com.br` (canônico, CNAME para a Vercel) e `bizuminer.com.br` (apex apontado; redirecionar para o `www` no painel de domínios). O código resolve a base sozinho (`lib/site-url.ts`: `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → localhost) — `NEXT_PUBLIC_SITE_URL=https://www.bizuminer.com.br` está no `.env.local` e precisa estar no ambiente **Production** da Vercel para o composer e o card OG apontarem para o domínio real no ar.
 
 ---
 
@@ -56,6 +56,9 @@ Regra de ouro do projeto: **nunca construir permalink do zero; sempre usar o hre
 ## 4. Os fluxos de negócio
 
 1. **Varredura** — `bin/sweep.ts` captura `/ofertas`, grava produto + uma observação de preço por execução, fecha `capture_run` como ok/erro/vazio. Hoje é manual/CLI + botão no painel. **Cron decidido: GitHub Actions (2–4h)** — o mesmo workflow aceita `workflow_dispatch`, então o botão do painel passa a pedir execução ao GitHub em vez de `spawn` local (que não funciona na Vercel). É a "rodagem pela plataforma, sem entrar no código" que o dono quer.
+   - **Coleta/curadoria (decidido e aplicado em 20/08):** a varredura tem duas missões — **descoberta** (ler o feed, produtos novos entram) e **retenção** (re-observar o que importa). Fato duro: a página de produto do ML responde 302 → anti-bot (`mercadolivre-engenharia-reversa.md`, regra de ouro §2), então **re-visita individual por scrape é bloqueada pela plataforma**; no ML a retenção é via feed (produto que volta ao feed retoma a história automaticamente — comportamento confirmado, ver abaixo). Re-visita individual só será possível com API oficial (Shopee/Amazon quando as credenciais chegarem).
+   - **Estado de vida derivado, nunca gravado** (`packages/persistence/src/activity.ts`): **ativo** = rodagem atual (vitrine) · **recente** = últimos 14 dias (superfícies secundárias) · **dormente** = além (fora das superfícies, histórico preservado, re-ativa sozinho). O `sweep.ts` imprime o resumo ao fim de cada rodagem. Verificado contra o banco em 20/08: 41 ativos / 295 recentes / 0 dormentes (o projeto tem 3 dias).
+   - **Comportamento confirmado ("voltou com histórico"):** produto fora do feed ontem e de volta hoje **não perde nada** — o upsert por `external_id` reencontra o mesmo produto e a nova observação se soma ao histórico append-only; o gap fica honesto (ausência ≠ indisponível, regra registrada). O selo/ranking recalculam sozinhos.
 2. **Vitrine** — `/` dinâmica (`force-dynamic`): 24 ofertas por página, busca, categorias, faixa de preço, ordenação, carrossel editorial, newsletter.
 3. **Produto** — `/bizu/[slug]` com histórico real (até 90 dias), evidências do ML, CTA afiliado e **card OG** para compartilhamento (WhatsApp/Telegram). Com `?direto=1` (link do composer), vira **página de passagem**: contador de 3s redireciona ao ML (via `/go`, registrando o clique), com "quero ficar aqui" e anti-loop do botão voltar — decidido em 20/08 (D-2b).
 4. **Clique afiliado** — `/go/[slug]` upserta `publication`, grava `click_event` (IP só como hash salgado — LGPD), redireciona com `matt_word` + `subId`.
@@ -190,6 +193,8 @@ Nenhum impede o uso atual (baixo risco, sem tráfego). Todos impedem escalar. Qu
 
 **D-2 entregue no mesmo dia:** composer no painel (seleção de produtos, destino, mensagem pronta com copy pelo sinal real e link, botão copiar) — 11 testes novos, 39/39, build limpo, smoke test HTTP 200. Registro e verificação em `plano-distribuicao.md`; aguardando conferência independente.
 **D-2b entregue no mesmo dia:** link direto com página de passagem (`?direto=1`) — contador 3s → ML via `/go`, "quero ficar aqui", anti-loop do voltar; composer passou a gerar esse link. 44/44 testes, build limpo, smoke test com slug real. Aguardando conferência.
+
+**Coleta/curadoria aplicada no mesmo dia:** estado de vida derivado (ativo/recente/dormente) em `persistence/src/activity.ts` + resumo na varredura + testes; comportamento "voltou com histórico" confirmado no código e registrado; re-visita individual documentada como bloqueada pelo anti-bot do ML (retomável via API oficial). 11/11 testes em persistence, typecheck limpo, verificado contra o banco real.
 
 **PEDIDO DE CONFERÊNCIA — redação oficial (parcial)**
 
