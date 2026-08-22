@@ -1,6 +1,10 @@
+import { cookies } from "next/headers";
+import { getPageSession } from "../lib/auth";
 import { dealCategories, topDeals } from "../lib/db";
 import { catalogStateFromSearchParams, catalogStateToDealQuery } from "../lib/deal-query";
 import { toVitrineProduct } from "../lib/deal-view";
+import { validUserId } from "../lib/member-contract";
+import { savedProductIds } from "../lib/member-db";
 import Vitrine from "./vitrine";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +27,13 @@ export default async function Home({ searchParams }: HomeProps) {
   }
   const products = page.deals.map(toVitrineProduct);
 
+  // Bancada em qualquer aparelho: quem está logado já vê os corações da conta.
+  // Anônimo continua só no localStorage — comportamento intacto.
+  const uid = (await cookies()).get("bm_uid")?.value;
+  const session = await getPageSession(validUserId(uid) ? uid : null);
+  const initialSavedIds = session ? await savedProductIds(session.appUserId) : [];
+
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date());
 
-  return <Vitrine initialProducts={products} initialTotal={page.total} initialState={initialState} categories={categories} dateLabel={dateLabel} />;
+  return <Vitrine initialProducts={products} initialTotal={page.total} initialState={initialState} categories={categories} dateLabel={dateLabel} initialSavedIds={initialSavedIds} />;
 }

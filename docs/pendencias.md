@@ -10,6 +10,8 @@ Não é spec. É o resumo prático de tudo que essa conversa decidiu, construiu 
 
 **Painel do dono** (`/admin`) — telemetria (produtos, observações, rodagens, cliques, assinantes, dados da área do cliente), tabela de rodagens com destaque pra vazia/erro, botão de acionar rodagem nova.
 
+**Autenticação (22/08)** — `/minha-area` atrás de login com Google (`/entrar`); identidade anônima (cookie `bm_uid`) fundida na conta no primeiro login — salvos/acompanhamentos de quem nunca logou não se perdem. `/admin` exclusivo do dono (`emanuel.adm10@gmail.com`); outra conta leva 403. Merge verificado contra o banco nos 4 casos; vitrine e página de produto já pintam os corações da conta em qualquer aparelho logado. **Falta só a conferência em navegador com a conta real e adicionar as redirect URLs no dashboard Supabase.** Aguardando conferência.
+
 **Dois bugs achados e corrigidos no caminho:**
 - `garimpa.subscriber` existia só como arquivo, nunca tinha sido aplicada no banco — newsletter respondia 500 em silêncio desde 17/08. Corrigido.
 - O perfil do cliente validava categorias contra a última varredura, não o catálogo inteiro — uma rodagem curta apagava preferência salva sem avisar. Corrigido com teste que reproduz o defeito exato.
@@ -65,11 +67,9 @@ Todos os três mascarados pelo **mesmo erro minificado e inútil** (`TypeError: 
 
 ## Bloqueios duros que continuam de pé (pré qualquer deploy público de peso)
 
-- RLS desabilitada em todo o schema `garimpa`
-- `/admin` sem autenticação
-- Área do cliente identificada só por cookie (perde tudo se limpar)
+- RLS desabilitada em todo o schema `garimpa` — o único que resta: defesa em profundidade (o app acessa o banco só via servidor, role `garimpa_app`; nunca PostgREST/anon). Decisão de 22/08: mantida adiada.
 
-Nenhum dos três impede o uso atual (baixo risco, deploy provisório sem tráfego). Todos impedem escalar.
+**Resolvidos em 22/08 (AL-3):** `/admin` sem autenticação (agora exclusivo do dono) e área do cliente por cookie (agora com login + merge).
 
 ---
 

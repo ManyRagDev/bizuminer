@@ -36,7 +36,7 @@ O banco é Supabase (schema `garimpa`). A `DATABASE_URL` fica em `packages/web/.
 npm run dev --prefix packages/web
 ```
 
-Rotas: `/` (vitrine), `/bizu/[slug]` (produto + card OG), `/minha-area` (área do cliente), `/admin` (painel do dono — o oráculo).
+Rotas: `/` (vitrine), `/bizu/[slug]` (produto + card OG), `/minha-area` (área do cliente — requer login com Google), `/entrar` (login), `/admin` (painel do dono — exclusivo do e-mail admin), `/go/[slug]` (saída afiliada).
 
 **Só um `next dev` por vez nesta pasta.** Porta diferente não cria um `.next` diferente — dois servidores se atropelam e produzem erros que parecem bug de código.
 
@@ -68,11 +68,11 @@ A plataforma gera a mensagem pronta (copy + link) no painel; o envio no WhatsApp
 
 **Funciona e foi validado em campo:** captura do Mercado Livre com execução auditável, histórico de preço próprio, vitrine pública, página de produto compartilhável e redirect afiliado gravando clique.
 
-**Feito, aguardando conferência:** área do cliente (salvos, acompanhamento de preço, recomendações, perfil), painel do dono (telemetria e acionamento do robô) e card de compartilhamento OG.
+**Feito, aguardando conferência:** área do cliente (salvos, acompanhamento de preço, recomendações, perfil), painel do dono (telemetria e acionamento do robô), card de compartilhamento OG e **autenticação com Google (login em `/entrar`, admin exclusivo do dono)**.
 
-**Não existe ainda:** varredura recorrente (cron decidido: GitHub Actions — falta configurar), autenticação, alerta de preço, composer, publicação no Telegram, `sitemap.xml`.
+**Não existe ainda:** varredura recorrente (cron decidido: GitHub Actions — falta configurar), alerta de preço, composer, publicação no Telegram, `sitemap.xml`.
 
-**Bloqueios duros antes de qualquer deploy público de peso:** RLS desabilitada em todo o schema, painel `/admin` sem autenticação, área do cliente identificada só por cookie.
+**Bloqueio duro antes de qualquer deploy público de peso:** RLS desabilitada em todo o schema (defesa em profundidade — o acesso ao banco é só server-side; decisão de 22/08).
 
 O detalhamento de cada item está em [`docs/estado-do-projeto.md`](docs/estado-do-projeto.md).
 

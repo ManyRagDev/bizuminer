@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import type { DealQuery } from "./deal-query";
-import { priceRangeForBand } from "./deal-query";
+import { priceRangeForBand } from "./deal-query.ts";
 
 /**
  * Acesso de leitura/escrita do web ao schema garimpa (role garimpa_app).

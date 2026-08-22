@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mergeSavedProducts, normalizeSavedState, readSavedState, writeSavedState } from "../lib/saved-products.ts";
+import { mergeSavedProducts, normalizeSavedState, readSavedState, unionSavedIds, writeSavedState } from "../lib/saved-products.ts";
 
 const product = (id, priceCents = 1000) => ({
   id,
@@ -44,4 +44,13 @@ test("leitura corrompida degrada para estado vazio e escrita preserva somente ID
   assert.deepEqual(readSavedState(storage), { ids: [], products: [] });
   writeSavedState(storage, { ids: ["a"], products: [product("a"), product("b")] });
   assert.deepEqual(readSavedState(storage), { ids: ["a"], products: [product("a")] });
+});
+
+test("unionSavedIds deduplica local + conta preservando a ordem e descartando inválidos", () => {
+  assert.deepEqual(unionSavedIds(["a", "b"], ["b", "c"]), ["a", "b", "c"]);
+  assert.deepEqual(unionSavedIds([], ["c"]), ["c"]);
+  assert.deepEqual(unionSavedIds(["a"], []), ["a"]);
+  assert.deepEqual(unionSavedIds(["a", "", 3, "a"], ["b"]), ["a", "b"]);
+  assert.deepEqual(unionSavedIds(["b"], ["a", "b"]), ["b", "a"]);
+  assert.deepEqual(unionSavedIds(), []);
 });

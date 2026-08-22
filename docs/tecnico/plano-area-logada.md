@@ -144,9 +144,14 @@ Não é dashboard genérico de SaaS (sem sombras suaves, sem cinza-azulado, sem 
 - Telemetria: produtos, observações, cliques 7d, publicações, assinantes, usuários/favoritos/acompanhamentos/perfis.
 - **Sem autenticação, por decisão do dono.** Mitigação mínima nesta entrega: `noindex`, aviso permanente no topo do painel, e o acionamento de rodagem limitado a 1 processo por vez. **Gate de acesso é bloqueio duro antes de qualquer deploy público** (junto com RLS).
 
-### AL-3 — Autenticação real (⬜ próxima, por decisão do dono)
+### AL-3 — Autenticação real (🟡 entregue em 22/08/2026, aguardando conferência)
 
-- Supabase Auth (magic link/OAuth); merge `bm_uid` → conta via `auth_user_id`; RLS desenhada junto.
+- Supabase Auth com **Google OAuth (PKCE)**: `/entrar` com botão "Continuar com Google", `/auth/callback` server-side (troca do código → sessão → **merge transacional** `bm_uid` → conta via `auth_user_id`), `/auth/sair`.
+- Merge em 4 casos: cookie vira conta (A), conta já vinculada idempotente (B), conta + cookie com dados → reatribuição e órfão apagado (C), conta nova (D). Índice único parcial `app_user_auth_unique_idx` (migration `garimpa_auth_link`).
+- **Modelo híbrido**: APIs `/api/minha/*` resolvem sessão → `bm_uid`; o coração anônimo da vitrine não muda.
+- **Gate do admin**: e-mail normalizado === `ADMIN_EMAIL` (env, fallback `emanuel.adm10@gmail.com`). Página e APIs revalidam no servidor; middleware só redireciona. Outra conta → 403. RLS continua desenhada junto em fase própria.
+- `email`/`display_name` gravados no `app_user` no login (o e-mail do Google é a credencial escolhida — o consentimento de marketing continua separado, AL-4).
+- Registro completo e verificação em `estado-do-projeto.md` §12 (pedido de conferência AL-3).
 
 ### AL-4 — Retenção ativa (⬜ depende de M1-C/M3)
 

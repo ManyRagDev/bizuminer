@@ -4,15 +4,17 @@ import { useEffect, useState } from "react";
 import { mergeSavedProducts, readSavedState, writeSavedState } from "../../../lib/saved-products";
 import type { VitrineProduct } from "../../../lib/deal-view";
 
-export default function SaveDealButton({ product }: { product: VitrineProduct }) {
+export default function SaveDealButton({ product, initialSaved = false }: { product: VitrineProduct; initialSaved?: boolean }) {
   const [saved, setSaved] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const state = readSavedState(window.localStorage);
-    setSaved(state.ids.includes(product.id));
+    // O estado da conta (servidor) vale quando o localStorage não tem a verdade
+    // (aparelho novo, cookies limpos); o localStorage continua sendo o cache.
+    setSaved(initialSaved || state.ids.includes(product.id));
     setReady(true);
-  }, [product.id]);
+  }, [initialSaved, product.id]);
 
   function toggle() {
     const state = readSavedState(window.localStorage);

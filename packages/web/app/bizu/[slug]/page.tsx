@@ -1,9 +1,13 @@
 import { Metadata } from "next";
+import { cookies } from "next/headers";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getPageSession } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
 import { freshnessLabel, priceNarrative, priceSignal } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
+import { validUserId } from "../../../lib/member-contract";
+import { savedProductIds } from "../../../lib/member-db";
 import SaveDealButton from "./save-deal-button";
 import RedirectBanner from "./redirect-banner";
 
@@ -59,12 +63,15 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   const low = history.length ? Math.min(...history.map((point) => point.price_cents)) : null;
   const high = history.length ? Math.max(...history.map((point) => point.price_cents)) : null;
   const product = toVitrineProduct(deal);
+  const uid = (await cookies()).get("bm_uid")?.value;
+  const session = await getPageSession(validUserId(uid) ? uid : null);
+  const savedInAccount = session ? (await savedProductIds(session.appUserId)).includes(deal.id) : false;
   const relatedPage = deal.category ? await topDeals({ category: deal.category, limit: 6, sort: "signal" }) : null;
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
     {direto === "1" && <RedirectBanner slug={deal.slug} />}
-    <header className="detail-header"><a className="brand" href="/" aria-label="BizuMiner, início"><Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" /><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><div className="detail-header-actions"><a href="/#achados">← voltar aos achados</a><SaveDealButton product={product} /></div></header>
+    <header className="detail-header"><a className="brand" href="/" aria-label="BizuMiner, início"><Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" /><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><div className="detail-header-actions"><a href="/#achados">← voltar aos achados</a><SaveDealButton product={product} initialSaved={savedInAccount} /></div></header>
     <article className="deal-layout">
       <section className="deal-visual"><div className="deal-image-wrap">{deal.image_url ? <Image src={deal.image_url} alt={deal.title} fill priority sizes="(max-width: 820px) 100vw, 52vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={48} height={48} /></div>}</div>{deal.category && <span className="deal-category">{deal.category}</span>}</section>
       <section className="deal-summary">

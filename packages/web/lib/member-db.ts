@@ -198,8 +198,24 @@ export async function saveProfile(userId: string, profile: BuyerProfile, tenantI
   }
 }
 
-export async function savedDeals(userId: string, tenantId = "local"): Promise<SavedDealRow[]> {
+/** Só os ids salvos — para a vitrine e o botão de produto pintarem os corações
+ *  da conta sem carregar o catálogo inteiro (estado da bancada em qualquer aparelho). */
+export async function savedProductIds(userId: string, tenantId = "local"): Promise<string[]> {
   const sql = db();
+  try {
+    const rows = await sql<{ product_id: string }[]>`
+      select product_id
+      from garimpa.favorite
+      where tenant_id = ${tenantId} and user_id = ${userId}
+      order by created_at desc
+    `;
+    return rows.map((row) => row.product_id);
+  } finally {
+    await sql.end();
+  }
+}
+
+export async function savedDeals(userId: string, tenantId = "local"): Promise<SavedDealRow[]> {  const sql = db();
   try {
     return await sql<SavedDealRow[]>`
       with fav as (

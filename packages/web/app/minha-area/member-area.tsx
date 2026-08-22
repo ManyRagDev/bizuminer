@@ -110,6 +110,8 @@ function MoreCard({ label, hint, href }: { label: string; hint: string; href: st
 
 export default function MemberArea({
   identified,
+  userName,
+  userEmail,
   categories,
   initialSaved,
   initialWatches,
@@ -117,6 +119,8 @@ export default function MemberArea({
   initialProfile,
 }: {
   identified: boolean;
+  userName?: string;
+  userEmail?: string;
   categories: string[];
   initialSaved: MemberSaved[];
   initialWatches: MemberWatch[];
@@ -258,6 +262,7 @@ export default function MemberArea({
         </a>
         <div className="detail-header-actions">
           <ThemeToggle />
+          <form action="/auth/sair" method="post"><button className="auth-signout" type="submit">sair</button></form>
           <a href="/#achados">← voltar aos achados</a>
         </div>
       </header>
@@ -270,8 +275,9 @@ export default function MemberArea({
             O que você salvou, o que está de olho e o que encontramos parecido — tudo num lugar só.
           </p>
           <p className="member-honesty">
-            Sua área fica <b>neste navegador</b>: ainda não existe conta com login, então trocar de aparelho não
-            leva os dados junto. Quando o login chegar, tudo daqui migra automaticamente.
+            Logado como <b>{userName ?? "você"}</b>
+            {userEmail && <> ({userEmail})</>} — sua bancada viaja com você: entre com o mesmo Google em outro
+            aparelho e ela está exatamente aqui.
           </p>
           {pendingLocalIds.length > 0 && (
             <button className="member-sync" type="button" disabled={syncing} onClick={() => void syncLocal()}>

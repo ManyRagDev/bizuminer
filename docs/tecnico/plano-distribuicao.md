@@ -211,6 +211,10 @@ Conferência independente desta entrega e veredito do dono sobre a copy gerada (
 
 Conferência humana do fluxo em navegador (contador, cancelamento, voltar) e veredito do dono.
 
+### Correção — 20/08/2026: link de compartilhamento sempre canônico
+
+O composer estava gerando o link com a URL provisória da Vercel (`VERCEL_URL`) quando `NEXT_PUBLIC_SITE_URL` não estava definida no ambiente. Correção: `lib/site-url.ts` ganhou `shareBaseUrl()` (canônico `https://www.bizuminer.com.br`, sem cair em preview/localhost) e o `/admin` passou a usá-la no composer; `siteUrl()` continua para `metadataBase`/card OG (cada ambiente aponta para si mesmo, para testar preview). 46/46 testes, typecheck limpo.
+
 ---
 
 ## Registro de implementação — D-1, 20/08/2026 (🟡 aguardando conferência independente)

@@ -58,3 +58,22 @@ export function mergeSavedProducts(ids: string[], cached: VitrineProduct[], visi
   return ids.flatMap((id) => byId.get(id) ?? []);
 }
 
+/**
+ * União de listas de ids salvos (localStorage + conta do servidor).
+ * Deduplica, descarta não-string/vazios e preserva a ordem das listas —
+ * a local vem primeiro, a da conta completa o que faltava.
+ */
+export function unionSavedIds(...lists: string[][]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue;
+    for (const id of list) {
+      if (typeof id !== "string" || id.length === 0 || seen.has(id)) continue;
+      seen.add(id);
+      out.push(id);
+    }
+  }
+  return out;
+}
+

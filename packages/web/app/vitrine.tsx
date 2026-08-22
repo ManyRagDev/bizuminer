@@ -5,7 +5,7 @@ import { Fragment, FormEvent, type MouseEvent, useEffect, useMemo, useRef, useSt
 import { CATALOG_PAGE_SIZE, catalogStateFromSearchParams, catalogStateToDealQuery, catalogStateToSearchParams } from "../lib/deal-query";
 import type { CatalogState, DealSort, PriceBand } from "../lib/deal-query";
 import { freshnessLabel, priceHighlight, priceNarrative, priceSignal } from "../lib/deal-signal";
-import { mergeSavedProducts, readSavedState, writeSavedState } from "../lib/saved-products";
+import { mergeSavedProducts, readSavedState, unionSavedIds, writeSavedState } from "../lib/saved-products";
 import type { VitrineProduct } from "../lib/deal-view";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -104,7 +104,7 @@ function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: V
   </article>;
 }
 
-export default function Vitrine({ initialProducts, initialTotal, initialState, categories, dateLabel }: { initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string }) {
+export default function Vitrine({ initialProducts, initialTotal, initialState, categories, dateLabel, initialSavedIds = [] }: { initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string; initialSavedIds?: string[] }) {
   const [products, setProducts] = useState(initialProducts);
   const [mobileProducts, setMobileProducts] = useState(initialProducts);
   const [total, setTotal] = useState(initialTotal);
@@ -140,10 +140,12 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
 
   useEffect(() => {
     const saved = readSavedState(window.localStorage);
-    setFavorites(saved.ids);
+    // O localStorage continua a régua local (cache); os ids da conta (servidor)
+    // entram na união para a bancada aparecer em qualquer aparelho logado.
+    setFavorites(unionSavedIds(saved.ids, initialSavedIds));
     setFavoriteProducts(saved.products);
     setFavoritesReady(true);
-  }, []);
+  }, [initialSavedIds]);
   useEffect(() => {
     if (!favoritesReady) return;
     writeSavedState(window.localStorage, { ids: favorites, products: favoriteProducts });

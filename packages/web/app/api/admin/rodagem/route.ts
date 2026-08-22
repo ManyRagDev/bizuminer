@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { NextRequest } from "next/server";
 import { runningRun } from "../../../../lib/admin-db";
+import { checkAdminUser, sinkJson } from "../../../../lib/api-auth";
 
 export const runtime = "nodejs";
 
@@ -14,10 +15,13 @@ const MAX_PAGES = 3;
  * auditável de 18/08). Esta rota não inventa registro nenhum: se o processo
  * morrer antes do primeiro insert, nenhuma linha aparece e o painel avisa.
  *
- * Sem autenticação por decisão registrada (plano-area-logada.md, AD-1):
- * uso local apenas; gate de acesso é bloqueio duro antes do deploy público.
+ * Só o dono (ADMIN_EMAIL) aciona — o painel é exclusivo dele (AL-3, 22/08).
  */
 export async function POST(request: NextRequest) {
+  const check = await checkAdminUser(request);
+  if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
+  if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+
   let pages = 1;
   try {
     const body = (await request.json()) as { pages?: number };
@@ -31,17 +35,18 @@ export async function POST(request: NextRequest) {
   try {
     const active = await runningRun();
     if (active) {
-      return Response.json(
+      return sinkJson(
+        check.sink,
         { ok: false, error: "run_in_progress", runId: active.id },
         { status: 409 },
       );
     }
   } catch {
-    return Response.json({ ok: false, error: "server_error" }, { status: 500 });
+    return sinkJson(check.sink, { ok: false, error: "server_error" }, { status: 500 });
   }
 
   if (!process.env.DATABASE_URL) {
-    return Response.json({ ok: false, error: "no_database_url" }, { status: 500 });
+    return sinkJson(check.sink, { ok: false, error: "no_database_url" }, { status: 500 });
   }
 
   const persistenceDir = path.resolve(process.cwd(), "..", "persistence");
@@ -59,8 +64,8 @@ export async function POST(request: NextRequest) {
     );
     child.unref();
   } catch {
-    return Response.json({ ok: false, error: "spawn_failed" }, { status: 500 });
+    return sinkJson(check.sink, { ok: false, error: "spawn_failed" }, { status: 500 });
   }
 
-  return Response.json({ ok: true, pages }, { status: 202 });
+  return sinkJson(check.sink, { ok: true, pages }, { status: 202 });
 }

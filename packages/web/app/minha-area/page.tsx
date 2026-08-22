@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getPageSession } from "../../lib/auth";
 import { catalogCategories } from "../../lib/db";
 import { toVitrineProduct } from "../../lib/deal-view";
 import { allowedProfileCategories, validUserId } from "../../lib/member-contract";
@@ -44,26 +46,22 @@ function serializeSnapshot(snapshot: MemberSnapshot) {
 
 export default async function MinhaAreaPage() {
   const uid = (await cookies()).get("bm_uid")?.value;
-  const identified = validUserId(uid);
+  const session = await getPageSession(validUserId(uid) ? uid : null);
+  if (!session) redirect("/entrar?next=/minha-area");
+  const { authUser: user, appUserId } = session;
+
   const [snapshot, categories] = await Promise.all([
-    identified
-      ? memberSnapshot(uid)
-      : Promise.resolve<MemberSnapshot>({
-          saved: [],
-          watches: [],
-          recommended: [],
-          profile: { preferredCategories: [], priceBand: "all" },
-        }),
+    memberSnapshot(appUserId),
     catalogCategories(),
   ]);
   const data = serializeSnapshot(snapshot);
-  // Uma categoria já escolhida continua visível mesmo que tenha saído do
-  // catálogo — senão a pessoa não conseguiria nem desmarcá-la.
   const profileCategories = allowedProfileCategories(categories, snapshot.profile.preferredCategories);
 
   return (
     <MemberArea
-      identified={identified}
+      identified
+      userName={user.name ?? undefined}
+      userEmail={user.email ?? undefined}
       categories={profileCategories}
       initialSaved={data.saved}
       initialWatches={data.watches}

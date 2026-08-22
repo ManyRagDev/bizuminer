@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { siteUrl } from "../lib/site-url.ts";
+import { CANONICAL_SITE_URL, shareBaseUrl, siteUrl } from "../lib/site-url.ts";
 
 function withEnv(vars, fn) {
   const previous = {};
@@ -40,4 +40,20 @@ test("siteUrl cai para localhost sem nenhuma variável definida", () => {
     if (previousSite !== undefined) process.env.NEXT_PUBLIC_SITE_URL = previousSite;
     if (previousVercel !== undefined) process.env.VERCEL_URL = previousVercel;
   }
+});
+
+test("shareBaseUrl nunca cai para VERCEL_URL ou localhost: link de compartilhar é sempre o domínio canônico", () => {
+  withEnv(
+    { NEXT_PUBLIC_SITE_URL: undefined, VERCEL_URL: "web-jhvu1txgh-emanuels-projects-aa92a126.vercel.app" },
+    () => {
+      delete process.env.NEXT_PUBLIC_SITE_URL;
+      assert.equal(shareBaseUrl(), CANONICAL_SITE_URL);
+    },
+  );
+});
+
+test("shareBaseUrl respeita NEXT_PUBLIC_SITE_URL quando definida", () => {
+  withEnv({ NEXT_PUBLIC_SITE_URL: "https://outro.dominio.com.br" }, () => {
+    assert.equal(shareBaseUrl(), "https://outro.dominio.com.br");
+  });
 });

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { adminOverview, captureRuns, runningRun, topClicked } from "../../lib/admin-db";
-import { siteUrl } from "../../lib/site-url";
+import { getPageAuth, isAdmin } from "../../lib/auth";
+import { shareBaseUrl } from "../../lib/site-url";
 import AdminPanel, { type AdminRun } from "./admin-panel";
 import Composer from "./composer";
 
@@ -16,6 +18,33 @@ const iso = (value: Date | string | null): string | null =>
   value === null ? null : new Date(value).toISOString();
 
 export default async function AdminPage() {
+  const user = await getPageAuth();
+  if (!user) redirect("/entrar?next=/admin");
+
+  // O painel é exclusivo do dono: qualquer outra conta autenticada leva 403
+  // aqui, no servidor — o middleware só redireciona, não autoriza.
+  if (!isAdmin(user)) {
+    return (
+      <main className="admin-page">
+        <header className="detail-header">
+          <a className="brand" href="/" aria-label="BizuMiner, início">
+            <Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" />
+            <span className="brand-name"><b>Bizu</b><i>Miner</i></span>
+          </a>
+          <div className="detail-header-actions">
+            <a href="/">← ver o site</a>
+          </div>
+        </header>
+        <section className="admin-deny" role="alert">
+          <p className="eyebrow">Painel do administrador</p>
+          <h1>Sem acesso</h1>
+          <p>Este painel é exclusivo do dono do BizuMiner. Se você acha que deveria estar aqui, entre com a conta correta.</p>
+          <form action="/auth/sair" method="post"><button className="auth-signout" type="submit">trocar de conta</button></form>
+        </section>
+      </main>
+    );
+  }
+
   const [overview, runs, running, clicked] = await Promise.all([
     adminOverview(),
     captureRuns(20),
@@ -45,14 +74,10 @@ export default async function AdminPage() {
         </a>
         <span className="admin-tag">painel do administrador</span>
         <div className="detail-header-actions">
+          <form action="/auth/sair" method="post"><button className="auth-signout" type="submit">sair</button></form>
           <a href="/">← ver o site</a>
         </div>
       </header>
-
-      <p className="admin-warning" role="note">
-        Painel sem autenticação — uso local apenas. Gate de acesso e RLS são bloqueios obrigatórios antes de
-        qualquer deploy público (registrado em plano-area-logada.md).
-      </p>
 
       <section className="admin-section" aria-label="Visão geral">
         <div className="metric-row">
@@ -67,7 +92,7 @@ export default async function AdminPage() {
 
       <AdminPanel initialRuns={serializedRuns} initialRunningId={running?.id ?? null} />
 
-      <Composer baseUrl={siteUrl()} />
+      <Composer baseUrl={shareBaseUrl()} />
 
       <section className="admin-columns">
         <section className="admin-section" aria-labelledby="clicked-title">

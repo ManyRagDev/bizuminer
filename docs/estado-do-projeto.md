@@ -37,7 +37,7 @@ Monorepo com três pacotes canônicos (o quarto foi arquivado em 20/08):
 
 **Web:** Next.js App Router, CSS próprio (tokens BizuMiner em `globals.css`), sem Tailwind, sem framework de UI. Rotas: `/` (vitrine), `/bizu/[slug]` (+ card OG), `/go/[slug]` (saída afiliada), `/minha-area`, `/admin`, e as APIs `/api/deals`, `/api/newsletter`, `/api/minha/*`, `/api/admin/*`.
 
-**Deploy:** Vercel, com os domínios próprios **ao vivo desde 20/08/2026**: `www.bizuminer.com.br` (canônico, CNAME para a Vercel) e `bizuminer.com.br` (apex apontado; redirecionar para o `www` no painel de domínios). O código resolve a base sozinho (`lib/site-url.ts`: `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → localhost) — `NEXT_PUBLIC_SITE_URL=https://www.bizuminer.com.br` está no `.env.local` e precisa estar no ambiente **Production** da Vercel para o composer e o card OG apontarem para o domínio real no ar.
+**Deploy:** Vercel, com os domínios próprios **ao vivo desde 20/08/2026**: `www.bizuminer.com.br` (canônico, CNAME para a Vercel) e `bizuminer.com.br` (apex apontado; redirecionar para o `www` no painel de domínios). O código resolve a base sozinho: **links de compartilhamento (composer) usam `shareBaseUrl()` — sempre o domínio canônico**, nunca preview/localhost (corrigido em 20/08: o link estava saindo com a URL provisória da Vercel); `metadataBase`/card OG usam `siteUrl()` (cada ambiente aponta para si mesmo). Ainda assim, setar `NEXT_PUBLIC_SITE_URL=https://www.bizuminer.com.br` no ambiente **Production** da Vercel faz o card OG resolver o domínio real no ar.
 
 ---
 
@@ -62,7 +62,7 @@ Regra de ouro do projeto: **nunca construir permalink do zero; sempre usar o hre
 2. **Vitrine** — `/` dinâmica (`force-dynamic`): 24 ofertas por página, busca, categorias, faixa de preço, ordenação, carrossel editorial, newsletter.
 3. **Produto** — `/bizu/[slug]` com histórico real (até 90 dias), evidências do ML, CTA afiliado e **card OG** para compartilhamento (WhatsApp/Telegram). Com `?direto=1` (link do composer), vira **página de passagem**: contador de 3s redireciona ao ML (via `/go`, registrando o clique), com "quero ficar aqui" e anti-loop do botão voltar — decidido em 20/08 (D-2b).
 4. **Clique afiliado** — `/go/[slug]` upserta `publication`, grava `click_event` (IP só como hash salgado — LGPD), redireciona com `matt_word` + `subId`.
-5. **Área do cliente** — `/minha-area`: salvos sincronizados com o servidor, "de olho no preço" com baseline e ticker de movimento, recomendações com o motivo declarado, perfil com categorias e faixa de preço. Identidade hoje é cookie `bm_uid` (httpOnly, 1 ano) — **não é login**. Auth real é a fase AL-3.
+5. **Área do cliente** — `/minha-area`: salvos sincronizados com o servidor, "de olho no preço" com baseline e ticker de movimento, recomendações com o motivo declarado, perfil com categorias e faixa de preço. **Autenticação desde 22/08 (AL-3):** login com Google (Supabase Auth), `/minha-area` atrás de `/entrar`, identidade anônima (cookie `bm_uid`) preservada e fundida na conta no primeiro login via `app_user.auth_user_id` — dados de quem nunca logou continuam funcionando e entram na conta automaticamente.
 6. **Distribuição** — WhatsApp é **manual, para sempre** (você publica como pessoa; zero automação, zero risco jurídico). Telegram entra por Bot API oficial (botão inline apontando para `/go/[slug]?via=tg`). A plataforma gera a mensagem pronta: é o **composer** do painel (D-2).
 7. **Aviso de queda de preço** — **individual, nunca broadcast**: quem marcou "de olho" recebe o aviso daquele produto. Ordem de canal: painel sempre → e-mail (padrão) → Telegram opcional (deep link) → WhatsApp só com autorização explícita e registrada, por último.
 
@@ -113,6 +113,7 @@ O painel é ferramenta interna de vocês dois: específico e cru, não precisa n
 | Redirect afiliado com telemetria própria | ✅ (validado em campo) |
 | Área do cliente (salvos, acompanhamento, recomendações, perfil) | 🟡 |
 | Painel do dono (telemetria + acionar robô) | 🟡 |
+| **Autenticação (Google OAuth) + gate do admin por e-mail** | 🟡 entregue 22/08, aguardando conferência |
 | Card de compartilhamento (OG) | 🟡 (entregue; falta veredito visual do dono e teste real pós-domínio) |
 | **Varredura recorrente (cron GitHub Actions)** | ⬜ **decidido, não configurado — bloqueia alerta e histórico denso** |
 | Composer (D-2) | 🟡 (entregue 20/08, aguardando conferência) |
@@ -120,7 +121,7 @@ O painel é ferramenta interna de vocês dois: específico e cru, não precisa n
 | Comparação de preço na chegada (D-4) | ⬜ depende de D-3 |
 | Publicação no Telegram (D-5) | ⬜ depende de D-2 |
 | Alerta individual por Telegram (D-6) | ⬜ depende do cron |
-| Autenticação (cliente e dono) + RLS + gate do admin | ⬜ |
+| **RLS nas 10 tabelas do schema** | ⬜ adiada (decisão 22/08: gate de app é a fronteira real — ver §8) |
 | Alerta de e-mail | ⬜ depende do cron |
 | `sitemap.xml` / `robots.txt` | ⬜ |
 | Shopee / Amazon | ⬜ pendente de credencial (nenhum bloqueio interno) |
@@ -129,11 +130,13 @@ O painel é ferramenta interna de vocês dois: específico e cru, não precisa n
 
 ## 8. Bloqueios duros antes de qualquer deploy público de peso
 
-1. **RLS desabilitada** nas 10 tabelas do schema `garimpa` (0 policies). Há dado de usuário no banco.
-2. **Painel `/admin` sem autenticação** — quem descobrir a URL aciona o robô.
-3. **Área do cliente sem autenticação** — identidade é cookie; limpar cookies perde tudo.
+1. **RLS desabilitada** nas 10 tabelas do schema `garimpa` (0 policies). Há dado de usuário no banco. Continua bloqueio — mas é defesa em profundidade, não a fronteira: o app acessa o banco só via servidor (role `garimpa_app` + `DATABASE_URL`), nunca via PostgREST/anon key. Decisão de 22/08: manter adiada.
 
-Nenhum impede o uso atual (baixo risco, sem tráfego). Todos impedem escalar. Quando o auth entrar: **cliente e dono usam modelos separados** (tabelas distintas, não campo `role`), e a rodagem passa a registrar quem acionou.
+**Resolvidos em 22/08/2026 (AL-3):**
+- ~~Painel `/admin` sem autenticação~~ — `/admin` e `/api/admin/*` exigem sessão + e-mail do dono (`ADMIN_EMAIL`). Qualquer outra conta leva 403.
+- ~~Área do cliente sem autenticação~~ — `/minha-area` atrás de `/entrar` (Google OAuth). Anônimos continuam com identidade por cookie e a **fundem na conta no primeiro login** — nada se perde ao limpar cookies depois do login.
+
+Nenhum impede o uso atual. O painel sem gate e a área por cookie deixaram de existir; o que resta é a RLS, que só importa quando um caminho público ao PostgREST existir.
 
 ---
 
@@ -194,6 +197,16 @@ Nenhum impede o uso atual (baixo risco, sem tráfego). Todos impedem escalar. Qu
 **D-2 entregue no mesmo dia:** composer no painel (seleção de produtos, destino, mensagem pronta com copy pelo sinal real e link, botão copiar) — 11 testes novos, 39/39, build limpo, smoke test HTTP 200. Registro e verificação em `plano-distribuicao.md`; aguardando conferência independente.
 **D-2b entregue no mesmo dia:** link direto com página de passagem (`?direto=1`) — contador 3s → ML via `/go`, "quero ficar aqui", anti-loop do voltar; composer passou a gerar esse link. 44/44 testes, build limpo, smoke test com slug real. Aguardando conferência.
 
+**AL-3 entregue em 22/08 — autenticação com Google OAuth (Supabase Auth) + gate do admin:**
+
+- **Login:** página `/entrar` (botão "Continuar com Google", design manifesto aprovado), `/auth/callback` (PKCE → sessão → **merge** `bm_uid` → conta em transação: cookie vira conta, conta absorve dados do cookie, ou conta nasce nova), `/auth/sair`.
+- **Modelo híbrido preservado:** APIs `/api/minha/*` resolvem sessão primeiro e caem no `bm_uid` se não houver sessão — o coração anônimo da vitrine continua funcionando, e o merge traz tudo para a conta no login.
+- **Admin exclusivo do dono:** `isAdmin` = e-mail normalizado === `ADMIN_EMAIL` (env, fallback `emanuel.adm10@gmail.com`). Página e APIs revalidam no servidor (middleware só redireciona). Outra conta → 403 com "trocar de conta". Aviso "painel sem autenticação" removido.
+- **Banco:** migration `garimpa_auth_link` (índice único parcial em `app_user.auth_user_id`) aplicada via MCP e versionada. `email`/`display_name` passam a ser gravados no login (o e-mail do Google é a credencial escolhida; consentimento de marketing continua separado).
+- **Ambiente:** chave publishable (`SUPABASE_PUBLISHABLE_KEY`) + `NEXT_PUBLIC_SUPABASE_*` no browser só para iniciar o OAuth; `ADMIN_EMAIL` no `.env.local`. Redirect URLs do projeto compartilhado: **adicionar** `https://www.bizuminer.com.br/auth/callback` e `http://localhost:3100/auth/callback` no dashboard (sem tocar na Site URL).
+- **Verificação:** 49/49 testes (3 novos em `auth-contract.test.mjs`: gate do admin, sanitização do `next`, régua do UUID), typecheck limpo, build limpo, smoke HTTP (rotas protegidas redirecionam/401, híbrido preservado, caminhos de erro do callback), merge exercitado contra o banco real nos 4 casos (D/A/B/C) com limpeza conferida (0 linhas de teste restantes). Aguardando conferência.
+- **Follow-up no mesmo dia (corações da conta na vitrine):** vitrine e página de produto passam a receber os ids salvos da conta (`initialSavedIds`) e fundem com o localStorage (`unionSavedIds` — local primeiro, conta completa). Logado em aparelho novo, os corações já nascem pintados. Middleware passou a rodar o Proxy em todas as rotas (token fresco para a personalização das páginas públicas). **50/50 testes** (+1 para `unionSavedIds`), typecheck e build limpos, smoke HTTP conferido.
+
 **Coleta/curadoria aplicada no mesmo dia:** estado de vida derivado (ativo/recente/dormente) em `persistence/src/activity.ts` + resumo na varredura + testes; comportamento "voltou com histórico" confirmado no código e registrado; re-visita individual documentada como bloqueada pelo anti-bot do ML (retomável via API oficial). 11/11 testes em persistence, typecheck limpo, verificado contra o banco real.
 
 **PEDIDO DE CONFERÊNCIA — redação oficial (parcial)**
@@ -205,5 +218,17 @@ Conferente: verifique contra a fonte de verdade, não contra este relato.
 3. **Testes**: `npm test` em `packages/web` = 28 pass / 0 fail; `npm run typecheck` limpo.
 4. **Decisões registradas nas seções 1, 5 e 6**: conferir com o dono que Amazon/Shopee pendentes, oráculo como centro de comando e WhatsApp manual/WAHA fora correspondem ao que foi decidido em conversa.
 5. **Julgamento humano (degrau 5)**: o dono aprova este texto como a régua oficial do projeto — nenhum ✅ sem isso.
+
+**PEDIDO DE CONFERÊNCIA — AL-3 (autenticação, 22/08/2026)**
+
+Conferente: verifique contra a fonte de verdade, não contra este relato.
+
+1. **Testes**: `npm test` em `packages/web` = **49 pass / 0 fail** (3 novos em `test/auth-contract.test.mjs`); `npm run typecheck` limpo; `npm run build` limpo.
+2. **Rotas protegidas** (dev server): `/minha-area` e `/admin` sem sessão → 307 para `/entrar?next=...`; `POST /api/admin/rodagens` sem sessão → 401; `GET /api/minha/perfil` com `bm_uid` → 200 (híbrido preservado); `/auth/callback` sem código → `/entrar?erro=1` (mesma origem do request, localhost em dev); `/entrar` renderiza o botão Google.
+3. **Merge contra o banco real**: os 4 casos (D conta nova, A cookie vira conta, B idempotente, C favorito migra e anônimo some) executados com sucesso e limpeza conferida (0 linhas `teste-merge-*` restantes).
+4. **Índice**: `app_user_auth_unique_idx` existe em `garimpa.app_user` (unique partial em `auth_user_id`).
+5. **Fluxo completo em navegador (só humano)**: login Google real com `emanuel.adm10@gmail.com` → volta para a minha área com dados fundidos; `/admin` abre; com outra conta Google → 403 "trocar de conta"; sair → volta para a vitrine.
+6. **Dashboard (só humano, uma vez)**: adicionar redirect URLs `https://www.bizuminer.com.br/auth/callback` e `http://localhost:3100/auth/callback` no projeto `spbuwcwmxlycchuwhfir` (Authentication → URL Configuration). **Não tocar na Site URL** (compartilhada com outros apps).
+7. **Julgamento do dono (degrau 5)**: copy/visual de `/entrar` e a decisão do admin exclusivo por e-mail. Nenhum ✅ antes disso.
 
 **Veredito do dono — 20/08/2026: APROVADO.** Este documento passa a valer como a régua oficial do projeto.
