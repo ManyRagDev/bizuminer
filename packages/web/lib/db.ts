@@ -55,6 +55,21 @@ export function db() {
  * A observação mais recente é excluída do mínimo anterior para que um produto
  * novo nunca seja chamado de "menor preço" por acidente.
  */
+/**
+ * Vitrine: preço histórico primeiro, desconto declarado apenas como desempate.
+ * A observação mais recente é excluída do mínimo anterior para que um produto
+ * novo nunca seja chamado de "menor preço" por acidente.
+ *
+ * Estado de vida derivado (decisão 20/08, activity.ts):
+ * - ativo   = visto na rodagem atual → vitrine (prioridade na ordenação)
+ * - recente = visto nos últimos 14 dias → vitrine (depois dos ativos)
+ * - dormente= além → fora da vitrine, histórico preservado
+ *
+ * Antes desta correção, a vitrine filtrava estritamente pela rodagem atual
+ * (capture_run_id = current_run) — uma rodagem nova com produtos diferentes
+ * apagava os anteriores da vitrine mesmo tendo histórico. Agora a janela é
+ * de 14 dias (last_seen_at), e a ordenação empurra os ativos para o topo.
+ */
 export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promise<DealsPage> {
   const limit = Math.min(Math.max(query.limit ?? 12, 1), 24);
   const offset = Math.max(query.offset ?? 0, 0);
@@ -64,7 +79,7 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
   const { min: minPriceCents, max: maxPriceCents } = priceRangeForBand(query.priceBand ?? "all");
   const sql = db();
   try {
-    const rows = await sql<(DealRow & { total_count: number })[]>`
+    const rows = await sql<(DealRow & { total_count: number; in_current_run: boolean })[]>`
       with current_run as (
         select cr.id
         from garimpa.capture_run cr
@@ -79,14 +94,10 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
         limit 1
       ), latest as (
         select distinct on (product_id)
-          id, product_id, price_cents, original_price_cents, claimed_discount_rate,
+          id, product_id, capture_run_id, price_cents, original_price_cents, claimed_discount_rate,
           rating_star, sales_label, sales_count, observed_at
         from garimpa.price_observation
         where tenant_id = ${tenantId}
-          and (
-            not exists (select 1 from current_run)
-            or capture_run_id = (select id from current_run)
-          )
         order by product_id, observed_at desc, id desc
       ), stats as (
         select l.product_id,
@@ -112,17 +123,20 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
               s.observation_count,
               s.history_days,
               (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified,
+              (l.capture_run_id = (select id from current_run)) as in_current_run,
               count(*) over()::int as total_count
       from garimpa.product p
       join latest l on l.product_id = p.id
       join stats s on s.product_id = p.id
       where p.tenant_id = ${tenantId}
+        and p.last_seen_at >= now() - interval '14 days'
         and (${category}::text is null or p.category = ${category})
         and (${search}::text is null or p.title ilike '%' || ${search} || '%')
         and (${minPriceCents}::integer is null or l.price_cents >= ${minPriceCents})
         and (${maxPriceCents}::integer is null or l.price_cents <= ${maxPriceCents})
       
       order by
+        (l.capture_run_id = (select id from current_run)) desc,
         case when ${sort} = 'signal' then (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) end desc nulls last,
         case when ${sort} = 'signal' then ((s.previous_min_price_cents - l.price_cents)::numeric / nullif(s.previous_min_price_cents, 0)) end desc nulls last,
         case when ${sort} = 'signal' then l.claimed_discount_rate end desc nulls last,
@@ -139,32 +153,20 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
   }
 }
 
-/** Categorias existentes, para que o filtro não invente corredores vazios. */
+/**
+ * Categorias existentes na vitrine: produtos vistos nos últimos 14 dias
+ * (estado ativo + recente). Antes filtrava pela rodagem atual — uma rodagem
+ * curta fazia categorias sumirem.
+ */
 export async function dealCategories(tenantId = "local"): Promise<string[]> {
   const sql = db();
   try {
     const rows = await sql<{ category: string }[]>`
-      with current_run as (
-        select cr.id
-        from garimpa.capture_run cr
-        where cr.tenant_id = ${tenantId}
-          and cr.marketplace = 'mercadolivre'
-          and cr.status = 'ok'
-          and exists (
-            select 1 from garimpa.price_observation observed
-            where observed.capture_run_id = cr.id
-          )
-        order by cr.finished_at desc nulls last, cr.started_at desc
-        limit 1
-      )
       select distinct p.category as category
       from garimpa.product p
       where p.tenant_id = ${tenantId}
         and p.category is not null
-        and (
-          not exists (select 1 from current_run)
-          or p.last_capture_run_id = (select id from current_run)
-        )
+        and p.last_seen_at >= now() - interval '14 days'
       order by category asc
     `;
     return rows.map((row) => row.category);

@@ -339,28 +339,12 @@ export async function recommendedDeals(userId: string, limit = 8, tenantId = "lo
   const sql = db();
   try {
     const rows = await sql<DealRow[]>`
-      with current_run as (
-        select cr.id
-        from garimpa.capture_run cr
-        where cr.tenant_id = ${tenantId}
-          and cr.marketplace = 'mercadolivre'
-          and cr.status = 'ok'
-          and exists (
-            select 1 from garimpa.price_observation observed
-            where observed.capture_run_id = cr.id
-          )
-        order by cr.finished_at desc nulls last, cr.started_at desc
-        limit 1
-      ), latest as (
+      with latest as (
         select distinct on (product_id)
           id, product_id, price_cents, original_price_cents, claimed_discount_rate,
           rating_star, sales_label, sales_count, observed_at
         from garimpa.price_observation
         where tenant_id = ${tenantId}
-          and (
-            not exists (select 1 from current_run)
-            or capture_run_id = (select id from current_run)
-          )
         order by product_id, observed_at desc, id desc
       ), stats as (
         select l.product_id,
@@ -384,6 +368,7 @@ export async function recommendedDeals(userId: string, limit = 8, tenantId = "lo
       join latest l on l.product_id = p.id
       join stats s on s.product_id = p.id
       where p.tenant_id = ${tenantId}
+        and p.last_seen_at >= now() - interval '14 days'
         and p.category = any(${categories})
         and p.id not in (
           select product_id from garimpa.favorite
