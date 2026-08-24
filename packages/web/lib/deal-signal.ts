@@ -81,3 +81,33 @@ export function freshnessLabel(value: Date | string | null, now = new Date()) {
   const days = Math.round(hours / 24);
   return `atualizado há ${days} dia${days === 1 ? "" : "s"}`;
 }
+
+/**
+ * Um preço só pode ser apresentado como "atual" enquanto a observação que o
+ * sustenta é recente. Passado esse limite ele vira referência ("visto por R$X
+ * há N dias"); além da janela de presença (RECENT_WINDOW_DAYS) some da vitrine.
+ * Dois limiares, não um: a severidade da promessa acompanha a idade do dado.
+ * Parâmetro registrado; trocar exige o dono.
+ */
+export const PRICE_CURRENT_WINDOW_HOURS = 48;
+
+export type PriceFreshness = "current" | "stale";
+
+export function priceFreshness(value: Date | string | null, now = new Date()): PriceFreshness {
+  if (!value) return "stale";
+  const ageHours = (now.getTime() - new Date(value).getTime()) / 3_600_000;
+  return ageHours <= PRICE_CURRENT_WINDOW_HOURS ? "current" : "stale";
+}
+
+/** Sufixo temporal para referência: "agora", "há 5 min", "há 3 h", "há 2 dias". */
+export function seenAgo(value: Date | string | null, now = new Date()): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  const minutes = Math.max(0, Math.round((now.getTime() - date.getTime()) / 60_000));
+  if (minutes < 2) return "agora";
+  if (minutes < 60) return `há ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `há ${hours} h`;
+  const days = Math.round(hours / 24);
+  return `há ${days} dia${days === 1 ? "" : "s"}`;
+}

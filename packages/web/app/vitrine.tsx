@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Fragment, FormEvent, type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CATALOG_PAGE_SIZE, catalogStateFromSearchParams, catalogStateToDealQuery, catalogStateToSearchParams } from "../lib/deal-query";
 import type { CatalogState, DealSort, PriceBand } from "../lib/deal-query";
-import { freshnessLabel, priceHighlight, priceNarrative, priceSignal } from "../lib/deal-signal";
+import { freshnessLabel, priceFreshness, priceHighlight, priceNarrative, priceSignal, seenAgo } from "../lib/deal-signal";
 import { mergeSavedProducts, readSavedState, unionSavedIds, writeSavedState } from "../lib/saved-products";
 import type { VitrineProduct } from "../lib/deal-view";
 import { ThemeToggle } from "./theme-toggle";
@@ -82,7 +82,8 @@ function EditorialSlide({ products, hidden }: { products: VitrineProduct[]; hidd
 }
 
 function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: VitrineProduct; index: number; hidden: boolean; onImageClick: (event: MouseEvent<HTMLAnchorElement>, productId: string) => void }) {
-  const status = priceSignal(historyInput(product));
+  const fresh = priceFreshness(product.evidenceObservedAt);
+  const status = fresh === "current" ? priceSignal(historyInput(product)) : { tone: "monitoring" as const, label: `última vez visto ${seenAgo(product.evidenceObservedAt)}` };
   return <article className={`hero-slide hero-product-slide hero-product-${index + 1}`} aria-hidden={hidden}>
     <div className="hero-product-copy">
       <p>Destaque {String(index + 2).padStart(2, "0")} · seleção BizuMiner</p>
@@ -90,7 +91,7 @@ function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: V
       <h2>{product.title}</h2>
       <p className="hero-product-reason">{priceNarrative(historyInput(product), brl)}</p>
       <div className="hero-product-facts">
-        <span><small>preço atual</small><strong>{brl(product.priceCents)}</strong></span>
+        <span><small>{fresh === "current" ? "preço atual" : "última vez visto"}</small><strong>{brl(product.priceCents)}</strong></span>
         {product.ratingStar !== null && <span><small>avaliação no ML</small><strong>★ {product.ratingStar.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}</strong></span>}
         {product.salesLabel && <span><small>vendas informadas</small><strong>{product.salesLabel}</strong></span>}
       </div>
@@ -99,7 +100,7 @@ function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: V
     <a className="hero-product-image" href={`/bizu/${product.slug}`} tabIndex={hidden ? -1 : undefined} aria-label={`Ver detalhes de ${product.title}`} onClick={(event) => onImageClick(event, product.id)}>
       <span className="hero-product-number">0{index + 2}</span>
       {product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes="(max-width: 900px) 100vw, 55vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}
-      {discountLabel(product) && <span className="hero-discount">{discountLabel(product)}</span>}
+      {fresh === "current" && discountLabel(product) && <span className="hero-discount">{discountLabel(product)}</span>}
     </a>
   </article>;
 }
@@ -348,8 +349,10 @@ function CatalogPagination({ current, total, disabled, onChange }: { current: nu
 }
 
 function ProductCard({ product, index, favorite, onFavorite, featured = false }: { product: VitrineProduct; index: number; favorite: boolean; onFavorite: (product: VitrineProduct) => void; featured?: boolean }) {
-  const highlight = priceHighlight(historyInput(product));
-  const discount = discountLabel(product);
-  const freshness = freshnessLabel(product.evidenceObservedAt);
-  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`}><div className="product-image"><a href={`/bizu/${product.slug}`} aria-label={`Abrir detalhes de ${product.title}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</a><span className="index">{String(index + 1).padStart(2, "0")}</span>{discount && <span className="discount">{discount}</span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${product.title}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}><span>{product.category ?? "Mercado Livre"}</span>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><a href={`/bizu/${product.slug}`}>{product.title}</a></h3><MarketplaceEvidence product={product} /><p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div><small>{product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{brl(product.priceCents)}</strong>{freshness && <em>{freshness}</em>}</div><a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><span className="desktop-cta-label">ver no Mercado Livre</span><span className="mobile-cta-label">ver oferta</span><b>↗</b></a></div></article>;
+  const fresh = priceFreshness(product.evidenceObservedAt);
+  const highlight = fresh === "current" ? priceHighlight(historyInput(product)) : null;
+  const discount = fresh === "current" ? discountLabel(product) : null;
+  const freshness = fresh === "current" ? freshnessLabel(product.evidenceObservedAt) : null;
+  const seen = fresh === "stale" ? seenAgo(product.evidenceObservedAt) : null;
+  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`}><div className="product-image"><a href={`/bizu/${product.slug}`} aria-label={`Abrir detalhes de ${product.title}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</a><span className="index">{String(index + 1).padStart(2, "0")}</span>{discount && <span className="discount">{discount}</span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${product.title}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}><span>{product.category ?? "Mercado Livre"}</span>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><a href={`/bizu/${product.slug}`}>{product.title}</a></h3><MarketplaceEvidence product={product} /><p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div>{fresh === "current" ? <><small>{product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{brl(product.priceCents)}</strong>{freshness && <em>{freshness}</em>}</> : <span className="stale-price"><strong>{brl(product.priceCents)}</strong><em>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><span className="desktop-cta-label">ver no Mercado Livre</span><span className="mobile-cta-label">ver oferta</span><b>↗</b></a></div></article>;
 }

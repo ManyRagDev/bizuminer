@@ -750,6 +750,9 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 .product-price em { color: var(--ink-tertiary); font-size: 10px; font-style: normal; }
 .product-price a { min-height: 42px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--blue); color: var(--on-accent); font-size: 10px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase; }
 .product-price a:hover { background: var(--ink-block); }
+.product-price .stale-price { display: flex; flex-direction: column; gap: 2px; }
+.product-price .stale-price strong { font-size: 16px; letter-spacing: -.02em; color: var(--ink-body); }
+.product-price .stale-price em { color: var(--ink-tertiary); font-size: 10px; font-style: normal; }
 .catalog-pagination { margin-top: 64px; padding-top: 24px; display: grid; grid-template-columns: minmax(112px, auto) 1fr minmax(112px, auto); align-items: center; gap: 24px; border-top: 1px solid var(--line); }
 .pagination-numbers { display: flex; align-items: center; justify-content: center; gap: 7px; }
 .pagination-numbers button { width: 44px; height: 44px; border: 1px solid transparent; background: transparent; color: var(--ink); cursor: pointer; font: 900 12px Arial, sans-serif; }
@@ -789,6 +792,7 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 .deal-price small { min-height: 16px; color: var(--ink-quiet); font-size: 12px; text-decoration: line-through; }
 .deal-price strong { font-size: clamp(36px, 4vw, 54px); letter-spacing: -.06em; }
 .deal-price em { margin-top: 4px; color: var(--ink-tertiary); font-size: 11px; font-style: normal; }
+.deal-price-stale strong { font-size: clamp(20px, 2.6vw, 30px); letter-spacing: -.02em; color: var(--ink-body); }
 .deal-cta { min-height: 58px; padding: 0 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--blue); color: var(--on-accent); font-size: 12px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
 .deal-cta:hover { background: var(--ink-block); }
 .affiliate-disclosure { margin: 12px 0 0; color: var(--ink-tertiary); font-size: 10px; line-height: 1.4; }
@@ -1049,6 +1053,8 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
   .mobile-product-grid .product-price small { min-height: 12px; font-size: 9px; }
   .mobile-product-grid .product-price strong { font-size: 20px; line-height: 1; }
   .mobile-product-grid .product-price em { display: none; }
+  .mobile-product-grid .product-price .stale-price strong { font-size: 16px; }
+  .mobile-product-grid .product-price .stale-price em { display: block; }
   .mobile-product-grid .product-price a { min-width: 0; min-height: 44px; width: 100%; padding: 0 10px; justify-content: space-between; border-radius: 8px; font-size: 10px; }
   .desktop-cta-label { display: none; }
   .mobile-cta-label { display: inline; }

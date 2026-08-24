@@ -4,7 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getPageSession } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
-import { freshnessLabel, priceNarrative, priceSignal } from "../../../lib/deal-signal";
+import { freshnessLabel, priceFreshness, priceNarrative, priceSignal, seenAgo } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
 import { validUserId } from "../../../lib/member-contract";
 import { savedProductIds } from "../../../lib/member-db";
@@ -59,7 +59,8 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   if (!detail) notFound();
 
   const { deal, price_history: history } = detail;
-  const signal = priceSignal({ priceCents: deal.price_cents, previousMinPriceCents: deal.previous_min_price_cents, observationCount: deal.observation_count, historyDays: deal.history_days, lowestVerified: deal.lowest_verified });
+  const fresh = priceFreshness(deal.evidence_observed_at);
+  const signal = fresh === "current" ? priceSignal({ priceCents: deal.price_cents, previousMinPriceCents: deal.previous_min_price_cents, observationCount: deal.observation_count, historyDays: deal.history_days, lowestVerified: deal.lowest_verified }) : { tone: "monitoring" as const, label: `última vez visto ${seenAgo(deal.evidence_observed_at)}` };
   const low = history.length ? Math.min(...history.map((point) => point.price_cents)) : null;
   const high = history.length ? Math.max(...history.map((point) => point.price_cents)) : null;
   const product = toVitrineProduct(deal);
@@ -80,7 +81,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
         <h1>{deal.title}</h1>
         {(deal.rating_star !== null || deal.sales_label) && <p className="deal-evidence">{deal.rating_star !== null && <span>★ {deal.rating_star.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}/5</span>}{deal.rating_star !== null && deal.sales_label && <i>·</i>}{deal.sales_label && <span>{deal.sales_label}</span>}<small>evidências do Mercado Livre</small></p>}
         <p className="deal-narrative"><b>Histórico do preço:</b> {priceNarrative({ priceCents: deal.price_cents, previousMinPriceCents: deal.previous_min_price_cents, observationCount: deal.observation_count, historyDays: deal.history_days, lowestVerified: deal.lowest_verified }, brl)}</p>
-        <div className="deal-price"><small>{deal.original_price_cents && deal.original_price_cents > deal.price_cents ? brl(deal.original_price_cents) : ""}</small><strong>{brl(deal.price_cents)}</strong>{freshnessLabel(deal.evidence_observed_at) && <em>{freshnessLabel(deal.evidence_observed_at)}</em>}</div>
+        {fresh === "current" ? <div className="deal-price"><small>{deal.original_price_cents && deal.original_price_cents > deal.price_cents ? brl(deal.original_price_cents) : ""}</small><strong>{brl(deal.price_cents)}</strong>{freshnessLabel(deal.evidence_observed_at) && <em>{freshnessLabel(deal.evidence_observed_at)}</em>}</div> : <div className="deal-price deal-price-stale"><strong>preço atual não confirmado</strong><em>última captura: {brl(deal.price_cents)} · {seenAgo(deal.evidence_observed_at)}</em></div>}
         <a className="deal-cta" href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">ver oferta no Mercado Livre <span>↗</span></a>
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       </section>
