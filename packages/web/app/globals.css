@@ -168,7 +168,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .hero-bizu b,
 .radar-orbit i,
 .modal-image > span,
-.hero-product-2 .hero-product-image > span { color: var(--on-acid); }
+.hero-product-2 .hero-product-image > span,
+.hero-product-4 .hero-product-image > span,
+.hero-product-6 .hero-product-image > span { color: var(--on-acid); }
 
 .header-actions { justify-self: end; display: flex; align-items: center; gap: 10px; }
 .theme-toggle { min-width: 42px; height: 42px; padding: 0 11px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--ink); border-radius: 100px; background: transparent; cursor: pointer; }
@@ -200,6 +202,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .hero-product-slide { display: grid; grid-template-columns: .9fr 1.1fr; }
 .hero-product-1 { background: var(--acid); }
 .hero-product-2 { background: var(--blue); color: var(--on-accent); }
+.hero-product-3 { background: var(--ink-block); color: var(--on-accent); }
+.hero-product-4 { background: var(--acid); }
+.hero-product-5 { background: var(--blue); color: var(--on-accent); }
+.hero-product-6 { background: var(--ink-block); color: var(--on-accent); }
 .hero-product-copy { position: relative; z-index: 2; padding: 2vh 4vw; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
 .hero-product-copy > p { margin: 0 0 1.6vh; font-size: clamp(8px, 1.1vh, 10px); font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
 .hero-product-copy h2 { max-width: 650px; margin: 0; font-size: clamp(24px, 5.2vh, 60px); line-height: .98; letter-spacing: -.065em; }
@@ -566,6 +572,10 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 }
 .hero-product-1 { background: var(--acid); color: var(--ink); }
 .hero-product-2 { background: var(--paper-deep); color: var(--ink); }
+.hero-product-3 { background: var(--blue); color: var(--on-accent); }
+.hero-product-4 { background: var(--acid); color: var(--ink); }
+.hero-product-5 { background: var(--paper-deep); color: var(--ink); }
+.hero-product-6 { background: var(--blue); color: var(--on-accent); }
 .hero-product-copy {
   padding: clamp(48px, 5vw, 92px) 5vw;
   justify-content: center;

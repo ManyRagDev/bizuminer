@@ -36,6 +36,59 @@ const discountLabel = (product: VitrineProduct) => {
 };
 const trackInteraction = (event: string, productId?: string) => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("bizuminer:interaction", { detail: { event, productId } })); };
 
+const HERO_MAX = 6;
+const HERO_MIN_SCORE = 7;
+
+/**
+ * Score de desejo da categoria: ln(vendas) × √ln(ticket_médio).
+ * Calculado em memória sobre os produtos da página — barato o bastante para
+ * rodar a cada render sem query extra. Quando materializarmos na rodagem,
+ * este cálculo sai do componente.
+ */
+function categoryDesirability(products: VitrineProduct[]): Map<string, number> {
+  const groups = new Map<string, { count: number; totalSales: number; sumPrice: number }>();
+  for (const p of products) {
+    if (!p.category) continue;
+    const g = groups.get(p.category) ?? { count: 0, totalSales: 0, sumPrice: 0 };
+    g.count++;
+    g.totalSales += p.salesCount ?? 0;
+    g.sumPrice += p.priceCents;
+    groups.set(p.category, g);
+  }
+  let maxRaw = 0;
+  const raw = new Map<string, number>();
+  for (const [cat, g] of groups) {
+    if (g.count < 2 || g.sumPrice <= 0) continue;
+    const avgPrice = g.sumPrice / g.count;
+    const r = Math.log(g.count) * Math.sqrt(Math.log(avgPrice));
+    raw.set(cat, r);
+    if (r > maxRaw) maxRaw = r;
+  }
+  const scores = new Map<string, number>();
+  for (const [cat, r] of raw) scores.set(cat, maxRaw > 0 ? r / maxRaw : 0);
+  return scores;
+}
+
+/**
+ * Score do hero: combina sinais de preço, histórico, social e desejo.
+ * Retorna o score numérico; o componente decide o limiar e a quantidade.
+ */
+function heroScore(product: VitrineProduct, desirability: Map<string, number>): number {
+  const h = historyInput(product);
+  const fresh = priceFreshness(product.evidenceObservedAt);
+  const dropPct = h.previousMinPriceCents && h.previousMinPriceCents > 0
+    ? (h.previousMinPriceCents - h.priceCents) / h.previousMinPriceCents
+    : 0;
+  const catScore = desirability.get(product.category ?? "") ?? 0;
+  return (h.lowestVerified ? 5 : 0)
+    + (h.observationCount >= 3 && h.historyDays >= 7 ? 3 : 0)
+    + (product.ratingStar !== null && product.ratingStar >= 4 ? 2 : 0)
+    + ((product.salesCount ?? 0) >= 100 ? 2 : 0)
+    + (dropPct >= 0.15 ? 2 : 0)
+    + (fresh === "current" ? 1 : 0)
+    + (catScore >= 0.85 ? 3 : 0);
+}
+
 function paginationItems(current: number, total: number): Array<number | "ellipsis-left" | "ellipsis-right"> {
   if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
   const pages = new Set([1, total, current - 1, current, current + 1]);
@@ -160,7 +213,7 @@ function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: V
       <a href={`/bizu/${product.slug}`} tabIndex={hidden ? -1 : undefined} onClick={() => trackInteraction("hero_detail_click", product.id)}>ver detalhes <b>↗</b></a>
     </div>
     <a className="hero-product-image" href={`/bizu/${product.slug}`} tabIndex={hidden ? -1 : undefined} aria-label={`Ver detalhes de ${product.title}`} onClick={(event) => onImageClick(event, product.id)}>
-      <span className="hero-product-number">0{index + 2}</span>
+      <span className="hero-product-number">{String(index + 2).padStart(2, "0")}</span>
       {product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes="(max-width: 900px) 100vw, 55vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}
       {fresh === "current" && discountLabel(product) && <span className="hero-discount">{discountLabel(product)}</span>}
     </a>
@@ -189,7 +242,16 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
   const pointerStart = useRef<number | null>(null);
   const carouselDragged = useRef(false);
   const requestVersion = useRef(0);
-  const heroProducts = useMemo(() => initialProducts.filter((product) => product.imageUrl).slice(0, 2), [initialProducts]);
+  const heroProducts = useMemo(() => {
+    const withImage = initialProducts.filter((p) => p.imageUrl);
+    const desirability = categoryDesirability(withImage);
+    return withImage
+      .map((p) => ({ product: p, score: heroScore(p, desirability) }))
+      .filter((entry) => entry.score >= HERO_MIN_SCORE)
+      .sort((a, b) => b.score - a.score || a.product.priceCents - b.product.priceCents)
+      .slice(0, HERO_MAX)
+      .map((entry) => entry.product);
+  }, [initialProducts]);
   const savedProducts = useMemo(() => mergeSavedProducts(favorites, favoriteProducts, [...mobileProducts, ...products]), [favoriteProducts, favorites, mobileProducts, products]);
   const shownProducts = showSaved ? savedProducts : products;
   const totalPages = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
