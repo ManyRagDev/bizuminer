@@ -15,7 +15,11 @@
  *    de produto responde 302 → /gz/account-verification (anti-bot). Este
  *    adapter lê apenas a listagem, sem seguir links.
  *
- * Cadência: varrer a cada 30–60 min é comportamento de usuário normal.
+ * Conformidade E0 (25/08/2026): o acesso automatizado à listagem NÃO é mais
+ * pilar operacional. A execução de rede é controlada pelo kill switch em
+ * `automated-capture.ts` (`ML_AUTOMATED_CAPTURE_ENABLED`, desligado por
+ * default, só development). O parser puro (`parseDealsHtml`) e as fixtures
+ * continuam disponíveis e testados para investigação offline — sem rede.
  */
 
 import { CaptureError } from "../../errors.ts";

@@ -5,7 +5,7 @@ export type VitrineProduct = {
   previousMinPriceCents: number | null; discountPercent: number | null; imageUrl: string | null;
   ratingStar: number | null; salesLabel: string | null; salesCount: number | null;
   evidenceObservedAt: Date | string | null; observationCount: number; historyDays: number;
-  lowestVerified: boolean; category: string | null;
+  lowestVerified: boolean; category: string | null; marketplace: string;
 };
 
 export function toVitrineProduct(deal: DealRow): VitrineProduct {
@@ -16,6 +16,6 @@ export function toVitrineProduct(deal: DealRow): VitrineProduct {
     imageUrl: deal.image_url, ratingStar: deal.rating_star, salesLabel: deal.sales_label,
     salesCount: deal.sales_count, evidenceObservedAt: deal.evidence_observed_at,
     observationCount: deal.observation_count, historyDays: deal.history_days,
-    lowestVerified: deal.lowest_verified, category: deal.category,
+    lowestVerified: deal.lowest_verified, category: deal.category, marketplace: deal.marketplace,
   };
 }

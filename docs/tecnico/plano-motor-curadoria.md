@@ -3,6 +3,8 @@
 **Documento vivo — criado em 17/08/2026.**
 Escopo: `packages/persistence`, `packages/capture`, schema `garimpa` (Supabase), queries em `packages/web/lib/db.ts` (a camada de leitura vive no web, mas o **contrato** é definido aqui). O plano da interface é `plano-ux-vitrine.md`.
 
+> **Aviso de atualização (25/08/2026):** a fase M1-C abaixo (cron + GitHub Actions para scraping do ML) foi **suplantada**. Não configurar o cron de scraping do Mercado Livre: o acesso automatizado foi contido em E0 de [`plano-extensao-captura.md`](./plano-extensao-captura.md) (kill switch `ML_AUTOMATED_CAPTURE_ENABLED`, desligado por default). O caminho vigente de descoberta/captura do ML é humano (bookmarklet/extensão). O restante deste documento (menor preço honesto, categoria, evidências, atividade) segue válido.
+
 Status: ✅ feito e conferido · 🟡 parcial · ⬜ não iniciado
 
 ---

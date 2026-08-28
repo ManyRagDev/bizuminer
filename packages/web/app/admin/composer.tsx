@@ -13,6 +13,7 @@ type SearchProduct = {
   observationCount: number;
   historyDays: number;
   lowestVerified: boolean;
+  marketplace: string;
 };
 
 type Destination = "whatsapp" | "telegram";

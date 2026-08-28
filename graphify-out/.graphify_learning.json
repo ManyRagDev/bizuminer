@@ -1,8 +1,24 @@
 {
-  "generated_at": "2026-08-19T11:55:47.791253+00:00",
+  "generated_at": "2026-08-27T15:33:57.829691+00:00",
   "nodes": {
+    "docs_apresentacoes_dashboard_executivo_multitenant_rls_foundation": {
+      "code_fingerprint": "3f998ecf4da55f34deb7a5399013771442a45ad039bebd8e41c6d325a957333a",
+      "label": "tenant_id em toda tabela com RLS",
+      "last": "2026-08-27T15:27:50.715587+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T15:27:50.715587+00:00",
+          "outcome": "useful",
+          "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
+        }
+      ],
+      "score": 0.999901832,
+      "source_file": "docs/apresentacoes/dashboard-executivo.html",
+      "status": "tentative",
+      "uses": 1
+    },
     "docs_tecnico_modelo_de_dados_capture_run": {
-      "code_fingerprint": "227e422b111247e4254aa50a79244e358828f201f4350ff7e5a99b64cdb964a7",
+      "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
       "label": "capture_run",
       "last": "2026-08-19T02:11:59.680745+00:00",
       "provenance": [
@@ -12,45 +28,101 @@
           "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
         }
       ],
-      "score": 0.990676591,
+      "score": 0.820610337,
       "source_file": "docs/tecnico/modelo-de-dados.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_tecnico_modelo_de_dados_price_observation": {
-      "code_fingerprint": "227e422b111247e4254aa50a79244e358828f201f4350ff7e5a99b64cdb964a7",
+      "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
       "label": "price_observation por intervalos",
-      "last": "2026-08-19T02:11:59.680745+00:00",
+      "last": "2026-08-27T13:33:12.360004+00:00",
       "provenance": [
+        {
+          "date": "2026-08-27T13:33:12.360004+00:00",
+          "outcome": "useful",
+          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+        },
         {
           "date": "2026-08-19T02:11:59.680745+00:00",
           "outcome": "useful",
           "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
         }
       ],
-      "score": 0.990676591,
+      "score": 1.818674645,
       "source_file": "docs/tecnico/modelo-de-dados.md",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 2
     },
     "docs_tecnico_modelo_de_dados_product": {
-      "code_fingerprint": "227e422b111247e4254aa50a79244e358828f201f4350ff7e5a99b64cdb964a7",
+      "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
       "label": "product",
-      "last": "2026-08-19T02:11:59.680745+00:00",
+      "last": "2026-08-27T13:33:12.360004+00:00",
       "provenance": [
         {
-          "date": "2026-08-19T02:11:59.680745+00:00",
+          "date": "2026-08-27T13:33:12.360004+00:00",
           "outcome": "useful",
-          "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
+          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+        },
+        {
+          "date": "2026-08-26T22:24:25.479629+00:00",
+          "outcome": "useful",
+          "q": "me explique o que esse plano vai fazer"
+        },
+        {
+          "date": "2026-08-26T02:15:47.495935+00:00",
+          "outcome": "useful",
+          "q": "perfeito! Gere o plano de implementação completo, considerando que vou deixar uma outra sessão aqui no codex com o modelo Terra (médio) rodando fazendo a implementação."
+        },
+        {
+          "date": "2026-08-26T01:52:52.088632+00:00",
+          "outcome": "useful",
+          "q": "Já temos o necessário para gerar o plano de implementação?"
+        },
+        {
+          "date": "2026-08-26T01:29:08.234669+00:00",
+          "outcome": "useful",
+          "q": "E com relação ao comportamento esperado ao clicar, ele vai direto via token para o supabase, ou os links capturados ficam na extensão?"
         }
       ],
-      "score": 0.990676591,
+      "score": 7.62307731,
       "source_file": "docs/tecnico/modelo-de-dados.md",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 8
+    },
+    "docs_tecnico_modelo_de_dados_publication": {
+      "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
+      "label": "publication",
+      "last": "2026-08-27T13:33:12.360004+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T13:33:12.360004+00:00",
+          "outcome": "useful",
+          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+        },
+        {
+          "date": "2026-08-26T22:24:25.479629+00:00",
+          "outcome": "useful",
+          "q": "me explique o que esse plano vai fazer"
+        },
+        {
+          "date": "2026-08-26T02:15:47.495935+00:00",
+          "outcome": "useful",
+          "q": "perfeito! Gere o plano de implementação completo, considerando que vou deixar uma outra sessão aqui no codex com o modelo Terra (médio) rodando fazendo a implementação."
+        },
+        {
+          "date": "2026-08-26T01:52:52.088632+00:00",
+          "outcome": "useful",
+          "q": "Já temos o necessário para gerar o plano de implementação?"
+        }
+      ],
+      "score": 3.910777267,
+      "source_file": "docs/tecnico/modelo-de-dados.md",
+      "status": "preferred",
+      "uses": 4
     },
     "docs_tecnico_plano_motor_curadoria_ranking_por_valor": {
-      "code_fingerprint": "93be136ecc61d4b6c37bb7a4b1cc55cdfb6f47a44ceffc38dfb1e87a156abfb7",
+      "code_fingerprint": "d07d86de69a544774ef06d2d2810838ce6c00d431352b333bf52362ddc201954",
       "label": "Ranking por sinal de valor",
       "last": "2026-08-19T02:01:57.485783+00:00",
       "provenance": [
@@ -60,13 +132,13 @@
           "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
         }
       ],
-      "score": 0.990517068,
+      "score": 0.820478198,
       "source_file": "docs/tecnico/plano-motor-curadoria.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_tecnico_plano_ux_vitrine_ux3_mina_navegavel": {
-      "code_fingerprint": "57bbea5baf17d9ecf54b13ebdbfcb3c21983dd59dd090e77a782ad3986c90077",
+      "code_fingerprint": "60e3a7e876e425053c5990e2b3429bd7771ba847c0303fa2d940ce5f395218e7",
       "label": "UX-3 — Mina navegável e retenção",
       "last": "2026-08-19T02:01:57.485783+00:00",
       "provenance": [
@@ -76,29 +148,239 @@
           "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
         }
       ],
-      "score": 0.990517068,
+      "score": 0.820478198,
       "source_file": "docs/tecnico/plano-ux-vitrine.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_tecnico_roadmap_documento": {
+      "code_fingerprint": "89f7c0d355ffd3d4d3f70d10eb1d68b14ea2dad48273d56428929fdb99520b0b",
+      "label": "Roadmap de Implementação",
+      "last": "2026-08-26T01:52:52.088632+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-26T01:52:52.088632+00:00",
+          "outcome": "useful",
+          "q": "Já temos o necessário para gerar o plano de implementação?"
+        }
+      ],
+      "score": 0.964370766,
+      "source_file": "docs/tecnico/roadmap.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_capture_src_adapters_mercadolivre_affiliate_link": {
+      "code_fingerprint": "75fcf0da59018b2a9b4e3bb7fc6fb962a81b4e4ae935574dd3c5eecf56410fab",
+      "label": "affiliate-link.ts",
+      "last": "2026-08-26T22:24:25.479629+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-26T22:24:25.479629+00:00",
+          "outcome": "useful",
+          "q": "me explique o que esse plano vai fazer"
+        },
+        {
+          "date": "2026-08-26T02:15:47.495935+00:00",
+          "outcome": "useful",
+          "q": "perfeito! Gere o plano de implementação completo, considerando que vou deixar uma outra sessão aqui no codex com o modelo Terra (médio) rodando fazendo a implementação."
+        },
+        {
+          "date": "2026-08-26T01:14:41.653230+00:00",
+          "outcome": "useful",
+          "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
+        }
+      ],
+      "score": 2.91212246,
+      "source_file": "packages/capture/src/adapters/mercadolivre/affiliate-link.ts",
+      "status": "preferred",
+      "uses": 3
+    },
+    "packages_capture_src_adapters_mercadolivre_deals": {
+      "code_fingerprint": "8b0194749fffdac18e2f744edd69c4e73f750c496b3993f7668ada85b008721f",
+      "label": "deals.ts",
+      "last": "2026-08-26T01:22:48.700770+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-26T01:22:48.700770+00:00",
+          "outcome": "useful",
+          "q": "em vez de abrir o produto, o botão da extensão adicionar ao BizuMiner pode ser exibido no proprio catálogo? isso aceleraria os resultados para o usuário"
+        }
+      ],
+      "score": 0.963905802,
+      "source_file": "packages/capture/src/adapters/mercadolivre/deals.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_capture_src_adapters_shopee_mapper_mapproductnode": {
+      "code_fingerprint": "fecbc1c4e804a37f678a9cb8142e28e3d790ddf203cafb560631251652951479",
+      "label": "mapProductNode()",
+      "last": "2026-08-27T13:33:12.360004+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T13:33:12.360004+00:00",
+          "outcome": "useful",
+          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+        }
+      ],
+      "score": 0.998064308,
+      "source_file": "packages/capture/src/adapters/shopee/mapper.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_capture_src_adapters_shopee_mapper_shopeeproductofferresponse": {
+      "code_fingerprint": "fecbc1c4e804a37f678a9cb8142e28e3d790ddf203cafb560631251652951479",
+      "label": "ShopeeProductOfferResponse",
+      "last": "2026-08-27T13:33:12.360004+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T13:33:12.360004+00:00",
+          "outcome": "useful",
+          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+        }
+      ],
+      "score": 0.998064308,
+      "source_file": "packages/capture/src/adapters/shopee/mapper.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_capture_src_rate_limit_tokenbucket": {
+      "code_fingerprint": "6b209ba9d76157da48226852b71d19ebee114be45c40a35369cc3c93e22d57fc",
+      "label": "TokenBucket",
+      "last": "2026-08-26T01:14:41.653230+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-26T01:14:41.653230+00:00",
+          "outcome": "useful",
+          "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
+        }
+      ],
+      "score": 0.963780266,
+      "source_file": "packages/capture/src/rate-limit.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_capture_src_types_capturecontext": {
+      "code_fingerprint": "56ede0146efa26292e0d955805089550c428a210003ed1d79411d1c3a419d30d",
+      "label": "CaptureContext",
+      "last": "2026-08-26T01:52:52.088632+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-26T01:52:52.088632+00:00",
+          "outcome": "useful",
+          "q": "Já temos o necessário para gerar o plano de implementação?"
+        },
+        {
+          "date": "2026-08-26T01:29:08.234669+00:00",
+          "outcome": "useful",
+          "q": "E com relação ao comportamento esperado ao clicar, ele vai direto via token para o supabase, ou os links capturados ficam na extensão?"
+        },
+        {
+          "date": "2026-08-26T01:22:48.700770+00:00",
+          "outcome": "useful",
+          "q": "em vez de abrir o produto, o botão da extensão adicionar ao BizuMiner pode ser exibido no proprio catálogo? isso aceleraria os resultados para o usuário"
+        },
+        {
+          "date": "2026-08-26T01:14:41.653230+00:00",
+          "outcome": "useful",
+          "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
+        }
+      ],
+      "score": 3.856060471,
+      "source_file": "packages/capture/src/types.ts",
+      "status": "preferred",
+      "uses": 4
+    },
+    "packages_capture_src_types_rawoffer": {
+      "code_fingerprint": "56ede0146efa26292e0d955805089550c428a210003ed1d79411d1c3a419d30d",
+      "label": "RawOffer",
+      "last": "2026-08-27T13:33:12.360004+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T13:33:12.360004+00:00",
+          "outcome": "useful",
+          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+        }
+      ],
+      "score": 0.998064308,
+      "source_file": "packages/capture/src/types.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_capture_test_fixtures_ofertas_sample_offer_cards": {
+      "code_fingerprint": "1208f81ae0ee6cf3f8b1a25c1d2d7bb4f571f64c8f402d1911a4cdb0545cefb2",
+      "label": "Amostra de cards de ofertas do Mercado Livre",
+      "last": "2026-08-26T01:22:48.700770+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-26T01:22:48.700770+00:00",
+          "outcome": "useful",
+          "q": "em vez de abrir o produto, o botão da extensão adicionar ao BizuMiner pode ser exibido no proprio catálogo? isso aceleraria os resultados para o usuário"
+        }
+      ],
+      "score": 0.963905802,
+      "source_file": "packages/capture/test/fixtures/ofertas-sample.html",
       "status": "tentative",
       "uses": 1
     },
     "packages_persistence_readme_supabase_garimpa_schema": {
       "code_fingerprint": "bd8d7875a7174cf1dfaaeb62d110b8ace3a8b54d9e1ef021c660f9fd7ffbc68b",
       "label": "Schema garimpa no Supabase Postgres",
-      "last": "2026-08-19T03:17:10.871533+00:00",
+      "last": "2026-08-26T22:24:25.479629+00:00",
       "provenance": [
+        {
+          "date": "2026-08-26T22:24:25.479629+00:00",
+          "outcome": "useful",
+          "q": "me explique o que esse plano vai fazer"
+        },
+        {
+          "date": "2026-08-26T02:15:47.495935+00:00",
+          "outcome": "useful",
+          "q": "perfeito! Gere o plano de implementação completo, considerando que vou deixar uma outra sessão aqui no codex com o modelo Terra (médio) rodando fazendo a implementação."
+        },
+        {
+          "date": "2026-08-26T01:52:52.088632+00:00",
+          "outcome": "useful",
+          "q": "Já temos o necessário para gerar o plano de implementação?"
+        },
+        {
+          "date": "2026-08-26T01:29:08.234669+00:00",
+          "outcome": "useful",
+          "q": "E com relação ao comportamento esperado ao clicar, ele vai direto via token para o supabase, ou os links capturados ficam na extensão?"
+        },
         {
           "date": "2026-08-19T03:17:10.871533+00:00",
           "outcome": "useful",
           "q": "Como configurar o root directory e demais informações no Vercel?"
         }
       ],
-      "score": 0.991713304,
+      "score": 4.698185678,
       "source_file": "packages/persistence/README.md",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 5
+    },
+    "packages_persistence_src_store": {
+      "code_fingerprint": "3a3c9e6240cbb79f05a6f04e10d8240997e1acae17c66ed07379a04e56c327e1",
+      "label": "store.ts",
+      "last": "2026-08-27T15:27:50.715587+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T15:27:50.715587+00:00",
+          "outcome": "useful",
+          "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
+        },
+        {
+          "date": "2026-08-26T01:29:08.234669+00:00",
+          "outcome": "useful",
+          "q": "E com relação ao comportamento esperado ao clicar, ele vai direto via token para o supabase, ou os links capturados ficam na extensão?"
+        }
+      ],
+      "score": 1.96390547,
+      "source_file": "packages/persistence/src/store.ts",
+      "status": "preferred",
+      "uses": 2
     },
     "packages_persistence_src_store_priceobservationrecord": {
-      "code_fingerprint": "3bdb3199c0a3534143bb5b6251c604158d5c10a6dede23f4d545fc3cfa3b60b1",
+      "code_fingerprint": "3a3c9e6240cbb79f05a6f04e10d8240997e1acae17c66ed07379a04e56c327e1",
       "label": "PriceObservationRecord",
       "last": "2026-08-19T02:11:59.680745+00:00",
       "provenance": [
@@ -108,32 +390,84 @@
           "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
         }
       ],
-      "score": 0.990676591,
+      "score": 0.820610337,
       "source_file": "packages/persistence/src/store.ts",
       "status": "tentative",
       "uses": 1
     },
-    "packages_web_app_vitrine": {
-      "code_fingerprint": "006195df7a2b5998290832d42fb1b389d24ad85684d40b59ddf857eebcba3c5f",
-      "label": "vitrine.tsx",
-      "last": "2026-08-19T03:39:28.046613+00:00",
+    "packages_site_public_hero_bizuminer_bizuminer_brand_wordmark": {
+      "code_fingerprint": "",
+      "label": "BizuMiner Brand Wordmark",
+      "last": "2026-08-27T15:27:50.715587+00:00",
       "provenance": [
+        {
+          "date": "2026-08-27T15:27:50.715587+00:00",
+          "outcome": "useful",
+          "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
+        }
+      ],
+      "score": 0.999901832,
+      "source_file": "packages/site/public/hero-bizuminer.png",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_web_app_go_slug_route": {
+      "code_fingerprint": "c85f8a224351b003227d0d468c238337b1c8751ed7e587a9b19cd23dd56f9058",
+      "label": "[slug]/route.ts",
+      "last": "2026-08-27T15:27:50.715587+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T15:27:50.715587+00:00",
+          "outcome": "useful",
+          "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
+        }
+      ],
+      "score": 0.999901832,
+      "source_file": "packages/web/app/go/[slug]/route.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_web_app_vitrine": {
+      "code_fingerprint": "94866ed823221e6d61ef7c6920d6394bf162d9bbd05359bbf9d6cb2d9ba4f428",
+      "label": "vitrine.tsx",
+      "last": "2026-08-19T12:25:27.034715+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T12:25:27.034715+00:00",
+          "outcome": "useful",
+          "q": "Qual superficie da vitrine deve receber a experiencia mobile-first e como o catalogo se conecta aos cards, categorias e detalhes?"
+        },
         {
           "date": "2026-08-19T03:39:28.046613+00:00",
           "outcome": "useful",
           "q": "Agora temos uma questão: em monitores grandes, ficou bom, mas em monitor menor, a hero está maior do que a tela comporta. E um detalhe: não da pra clicar nos cards de destaque. Tem o \"ver detalhes\" mas é pouco. Pode ter um link na propria imagem em si."
         }
       ],
-      "score": 0.992067989,
+      "score": 1.65049032,
       "source_file": "packages/web/app/vitrine.tsx",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 2
     },
     "packages_web_app_vitrine_vitrine": {
-      "code_fingerprint": "006195df7a2b5998290832d42fb1b389d24ad85684d40b59ddf857eebcba3c5f",
+      "code_fingerprint": "94866ed823221e6d61ef7c6920d6394bf162d9bbd05359bbf9d6cb2d9ba4f428",
       "label": "Vitrine()",
-      "last": "2026-08-19T03:39:28.046613+00:00",
+      "last": "2026-08-27T15:27:50.715587+00:00",
       "provenance": [
+        {
+          "date": "2026-08-27T15:27:50.715587+00:00",
+          "outcome": "useful",
+          "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
+        },
+        {
+          "date": "2026-08-27T13:33:12.360004+00:00",
+          "outcome": "useful",
+          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+        },
+        {
+          "date": "2026-08-19T12:25:27.034715+00:00",
+          "outcome": "useful",
+          "q": "Qual superficie da vitrine deve receber a experiencia mobile-first e como o catalogo se conecta aos cards, categorias e detalhes?"
+        },
         {
           "date": "2026-08-19T03:39:28.046613+00:00",
           "outcome": "useful",
@@ -143,6 +477,22 @@
           "date": "2026-08-19T02:01:57.485783+00:00",
           "outcome": "useful",
           "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
+        }
+      ],
+      "score": 5.289314402,
+      "source_file": "packages/web/app/vitrine.tsx",
+      "status": "preferred",
+      "uses": 6
+    },
+    "packages_web_app_vitrine_vitrineproduct": {
+      "code_fingerprint": "94866ed823221e6d61ef7c6920d6394bf162d9bbd05359bbf9d6cb2d9ba4f428",
+      "label": "VitrineProduct",
+      "last": "2026-08-19T12:25:27.034715+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T12:25:27.034715+00:00",
+          "outcome": "useful",
+          "q": "Qual superficie da vitrine deve receber a experiencia mobile-first e como o catalogo se conecta aos cards, categorias e detalhes?"
         },
         {
           "date": "2026-08-19T01:54:28.735282+00:00",
@@ -150,29 +500,29 @@
           "q": "Quais arquivos e estilos controlam o hero e o banner de produto da home do BizuMiner?"
         }
       ],
-      "score": 2.972983266,
+      "score": 1.649107186,
       "source_file": "packages/web/app/vitrine.tsx",
       "status": "preferred",
-      "uses": 3
+      "uses": 2
     },
-    "packages_web_app_vitrine_vitrineproduct": {
-      "code_fingerprint": "006195df7a2b5998290832d42fb1b389d24ad85684d40b59ddf857eebcba3c5f",
-      "label": "VitrineProduct",
-      "last": "2026-08-19T01:54:28.735282+00:00",
+    "packages_web_lib_db_affiliatelink": {
+      "code_fingerprint": "7fe10cc367b02d122a3c82455280180afbd2ff6987cc2a10519e63779d811c2f",
+      "label": "affiliateLink()",
+      "last": "2026-08-26T01:14:41.653230+00:00",
       "provenance": [
         {
-          "date": "2026-08-19T01:54:28.735282+00:00",
+          "date": "2026-08-26T01:14:41.653230+00:00",
           "outcome": "useful",
-          "q": "Quais arquivos e estilos controlam o hero e o banner de produto da home do BizuMiner?"
+          "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
         }
       ],
-      "score": 0.990398209,
-      "source_file": "packages/web/app/vitrine.tsx",
+      "score": 0.963780266,
+      "source_file": "packages/web/lib/db.ts",
       "status": "tentative",
       "uses": 1
     },
     "packages_web_next_config": {
-      "code_fingerprint": "fb0459d3ada453c04f5aeb986128ead5d2822d6aa54e641a876d715aae154604",
+      "code_fingerprint": "a75cb892e615d9a6995a64ce6fc88080b9ed0cd286a8cca4bc0249b768be0242",
       "label": "web/next.config.ts",
       "last": "2026-08-19T03:17:10.871533+00:00",
       "provenance": [
@@ -182,13 +532,13 @@
           "q": "Como configurar o root directory e demais informações no Vercel?"
         }
       ],
-      "score": 0.991713304,
+      "score": 0.821469081,
       "source_file": "packages/web/next.config.ts",
       "status": "tentative",
       "uses": 1
     },
     "packages_web_package": {
-      "code_fingerprint": "fda97e49956cae75dd66a910f9e94e84bbe24bc47bf3b9f71ac76638794098e7",
+      "code_fingerprint": "053fafd812b19e042f3689c7acb78d314ccae4d7cccf80c19f847bdec08a5253",
       "label": "web/package.json",
       "last": "2026-08-19T03:17:10.871533+00:00",
       "provenance": [
@@ -198,7 +548,7 @@
           "q": "Como configurar o root directory e demais informações no Vercel?"
         }
       ],
-      "score": 0.991713304,
+      "score": 0.821469081,
       "source_file": "packages/web/package.json",
       "status": "tentative",
       "uses": 1

@@ -3,11 +3,18 @@
  *
  * Uso: node --experimental-strip-types bin/sweep.ts [--pages N] [--min-discount 0.3]
  *
+ * Desde E0 (25/08/2026) o acesso automatizado ao Mercado Livre é controlado
+ * por kill switch: a varredura só executa quando `ML_AUTOMATED_CAPTURE_ENABLED
+ * = true` E `NODE_ENV = development`. Sem isso, o processo aborta ANTES de
+ * criar `capture_run` e ANTES de qualquer requisição de rede — sem registro
+ * falso e sem scrape. O parser puro e as fixtures continuam em outro caminho.
+ *
  * Sem banco configurado, o store é em memória (o dado desta execução é
  * descartado). Serve para validar o pipeline ponta a ponta contra o site real.
  */
 
 import { MercadoLivreDealsAdapter } from "../../capture/src/adapters/mercadolivre/deals.ts";
+import { mlAutomatedCaptureEnabled } from "../../capture/src/automated-capture.ts";
 import { sweep } from "../src/ingest.ts";
 import { InMemoryStore } from "../src/store.ts";
 import { PostgresStore } from "../src/pg-store.ts";
@@ -22,6 +29,17 @@ const flag = (name: string): string | undefined => {
 
 const pages = Number(flag("pages") ?? 1);
 const minDiscount = flag("min-discount") ? Number(flag("min-discount")) : undefined;
+
+// Kill switch E0: aborta antes de instanciar adapter/store e de qualquer rede.
+if (!mlAutomatedCaptureEnabled()) {
+  console.error(
+    "[bloqueado] A varredura automatizada do Mercado Livre está desligada (ML_AUTOMATED_CAPTURE_ENABLED).\n" +
+      "Nenhuma requisição foi feita e nenhuma rodagem foi registrada.\n" +
+      "Para liberar explicitamente em desenvolvimento: ML_AUTOMATED_CAPTURE_ENABLED=true NODE_ENV=development node --experimental-strip-types bin/sweep.ts\n" +
+      "O caminho vigente de captura é o manual (bookmarklet/extensão no painel).",
+  );
+  process.exit(1);
+}
 
 const ctx: CaptureContext = {
   runId: `sweep-${Date.now()}`,

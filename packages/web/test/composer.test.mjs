@@ -20,6 +20,7 @@ const verified = {
   observationCount: 6,
   historyDays: 9,
   lowestVerified: true,
+  marketplace: "mercadolivre",
 };
 
 const drop = {
@@ -30,6 +31,7 @@ const drop = {
   observationCount: 4,
   historyDays: 8,
   lowestVerified: false,
+  marketplace: "shopee",
 };
 
 const fresh = {
@@ -40,6 +42,7 @@ const fresh = {
   observationCount: 1,
   historyDays: 0,
   lowestVerified: false,
+  marketplace: "mercadolivre",
 };
 
 test("mensagem única contém abertura, título, preço, link e rodapé", () => {
@@ -126,4 +129,37 @@ test("composeOpener com queda zero não fabrica percentual", () => {
   };
   const opener = composeOpener(flat);
   assert.ok(!opener.includes("caiu 0%"));
+});
+
+test("mensagem nomeia a loja junto do preço (duas lojas no ar)", () => {
+  assert.match(composeSingle(verified, BASE), /R\$ 1\.489 · Mercado Livre/);
+  assert.match(composeSingle(drop, BASE), /· Shopee/);
+});
+
+test("lote nomeia a loja de cada item", () => {
+  const message = composeMessage([verified, drop], "whatsapp", BASE);
+  assert.match(message, /· Mercado Livre/);
+  assert.match(message, /· Shopee/);
+});
+
+test("marketplace ausente OMITE a loja — nunca imprime 'undefined'", () => {
+  // Modo de falha real: a mensagem vai para um grupo de WhatsApp assinada
+  // pelo BizuMiner. Os testes antigos usavam includes() e não pegavam isto.
+  const semLoja = { ...verified, marketplace: undefined };
+  const message = composeSingle(semLoja, BASE);
+  assert.doesNotMatch(message, /undefined/);
+  assert.match(message, /R\$ 1\.489\n/);
+});
+
+test("marketplace fora do registro usa o próprio slug, sem quebrar", () => {
+  const message = composeSingle({ ...verified, marketplace: "amazon" }, BASE);
+  assert.match(message, /· amazon/);
+  assert.doesNotMatch(message, /undefined/);
+});
+
+test("desconto declarado NÃO entra na mensagem compartilhada", () => {
+  // É alegação do vendedor (veio um "100% off" da Shopee em 27/08). O que o
+  // BizuMiner assina é o próprio sinal, não o número da loja.
+  const message = composeSingle(drop, BASE);
+  assert.doesNotMatch(message, /%\s*(OFF|off|de desconto|no anúncio)/);
 });

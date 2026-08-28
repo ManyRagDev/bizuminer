@@ -1,4 +1,5 @@
 import { priceDifferencePercent, priceHighlight } from "./deal-signal.ts";
+import { marketplaceDef } from "./marketplaces.ts";
 
 export type ComposerDestination = "whatsapp" | "telegram";
 
@@ -10,6 +11,8 @@ export interface ComposerProduct {
   observationCount: number;
   historyDays: number;
   lowestVerified: boolean;
+  /** Loja de origem. Com duas lojas no ar, a mensagem compartilhada precisa dizer qual. */
+  marketplace: string;
 }
 
 export const COMPOSER_MAX_SELECTION = 5;
@@ -94,14 +97,36 @@ export function directLink(baseUrl: string, slug: string): string {
   return `${baseUrl}/bizu/${slug}?direto=1`;
 }
 
+/**
+ * Preço + loja na mesma linha: com duas lojas no ar, "R$ 93,90" sozinho não
+ * diz se o frete é do Mercado Livre ou da Shopee — e isso muda a decisão de
+ * quem recebe. A loja fica colada no preço porque é ali que a pessoa decide.
+ *
+ * Deliberadamente NÃO entra o desconto declarado: ele é alegação do vendedor
+ * (um item veio da Shopee com "100% off" em 27/08), e repassá-lo numa mensagem
+ * assinada pelo BizuMiner seria endossar número que não verificamos. As
+ * aberturas já falam do nosso sinal, que é o que sustentamos.
+ */
+export function priceLine(product: ComposerProduct): string {
+  const price = formatBRL(product.priceCents);
+  // Degrada em silêncio: marketplace ausente OMITE o segmento, nunca imprime
+  // "undefined". Esta mensagem é colada num grupo de WhatsApp com a assinatura
+  // do BizuMiner — texto quebrado ali custa credibilidade, e o modo de falha
+  // passava despercebido porque os testes usavam includes(), não igualdade.
+  const raw = typeof product.marketplace === "string" ? product.marketplace.trim() : "";
+  if (!raw) return price;
+  const store = marketplaceDef(raw)?.label ?? raw;
+  return `${price} · ${store}`;
+}
+
 export function composeSingle(product: ComposerProduct, baseUrl: string): string {
   const link = directLink(baseUrl, product.slug);
-  return [composeOpener(product), product.title, formatBRL(product.priceCents), link, FOOTER].join("\n");
+  return [composeOpener(product), product.title, priceLine(product), link, FOOTER].join("\n");
 }
 
 export function composeLot(products: ComposerProduct[], baseUrl: string): string {
   const lines = products.map(
-    (product, index) => `${index + 1}. ${product.title} — ${formatBRL(product.priceCents)} — ${directLink(baseUrl, product.slug)}`,
+    (product, index) => `${index + 1}. ${product.title} — ${priceLine(product)} — ${directLink(baseUrl, product.slug)}`,
   );
   return ["bizus de hoje:", ...lines, FOOTER].join("\n");
 }

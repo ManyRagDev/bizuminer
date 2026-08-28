@@ -1,5 +1,6 @@
 import { db, type DealRow } from "./db";
 import type { PriceBand } from "./deal-query";
+import { slugCaseSql } from "./marketplaces.ts";
 
 /**
  * Área do comprador: leitura/escrita sobre app_user, favorite, price_watch e
@@ -239,8 +240,8 @@ export async function savedDeals(userId: string, tenantId = "local"): Promise<Sa
           on o.product_id = l.product_id and o.tenant_id = ${tenantId}
         group by l.product_id, l.id, l.observed_at
       )
-      select p.id, p.title, p.image_url, p.category,
-             'ml-' || p.external_id as slug,
+      select p.id, p.title, p.image_url, p.category, p.marketplace,
+             ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
              l.price_cents, l.original_price_cents, l.claimed_discount_rate,
              l.rating_star, l.sales_label, l.sales_count,
              l.observed_at as evidence_observed_at,
@@ -275,7 +276,7 @@ export async function watchedDeals(userId: string, tenantId = "local"): Promise<
       )
       select w.id as watch_id, w.product_id, w.baseline_price_cents, w.target_price_cents,
              w.created_at as watched_at,
-             p.title, 'ml-' || p.external_id as slug, p.image_url, p.category,
+             p.title, ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug, p.image_url, p.category,
              l.price_cents as current_price_cents, l.observed_at as current_observed_at
       from watching w
       join garimpa.product p on p.id = w.product_id and p.tenant_id = ${tenantId}
@@ -356,8 +357,8 @@ export async function recommendedDeals(userId: string, limit = 8, tenantId = "lo
           on o.product_id = l.product_id and o.tenant_id = ${tenantId}
         group by l.product_id, l.id, l.observed_at
       )
-      select p.id, p.title, p.image_url, p.category,
-             'ml-' || p.external_id as slug,
+      select p.id, p.title, p.image_url, p.category, p.marketplace,
+             ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
              l.price_cents, l.original_price_cents, l.claimed_discount_rate,
              l.rating_star, l.sales_label, l.sales_count,
              l.observed_at as evidence_observed_at,

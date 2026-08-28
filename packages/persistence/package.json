@@ -11,7 +11,13 @@
     "typecheck": "tsc --noEmit",
     "verify:lowest": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-lowest.ts",
     "verify:capture-audit": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-capture-audit.ts",
-    "verify:member-area": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-member-area.ts"
+    "verify:member-area": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-member-area.ts",
+    "verify:affiliates": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-affiliates.ts",
+    "verify:tenant-isolation": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-tenant-isolation.ts",
+    "verify:extension-e2e": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-extension-e2e.ts",
+    "verify:shopee-links": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-shopee-links.ts",
+    "bootstrap:affiliate-house": "node --env-file=../web/.env.local --experimental-strip-types bin/bootstrap-affiliate-house.ts",
+    "seed:house-config": "node --env-file=../web/.env.local --experimental-strip-types bin/seed-house-marketplace-config.ts"
   },
   "devDependencies": {
     "typescript": "5.6"

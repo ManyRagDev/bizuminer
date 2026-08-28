@@ -62,7 +62,7 @@ GET .../ofertas?page=2                              (paginação funciona)
 
 - Renderizado no servidor: **fetch simples resolve**, sem navegador/headless.
 - Cards usam componentes `poly-card` / `poly-component__*` (padrão Andes do ML).
-- Cadência respeitosa planejada: varredura a cada 30–60 min com cache (comportamento de usuário normal, não raspagem em massa).
+- **Conformidade E0 (25/08/2026):** o acesso automatizado a esta página está **desligado por default** (kill switch `ML_AUTOMATED_CAPTURE_ENABLED`, só development). O texto original desta seção planejava "varredura a cada 30–60 min" como cadência aceitável — essa recomendação foi **suplantada**: a captura vigente é humana (bookmarklet/extensão). O parser/fixtures permanecem como ferramenta offline.
 
 ## 4. A regra de ouro: nunca construir permalink do zero
 
@@ -121,11 +121,58 @@ Scripts `tmp-*.mjs` descartados após promoção a código testado; `tmp-ofertas
 1. [x] ~~Experimento do visitante externo / contador~~ — resolvido em 18/08: era delay do painel, não dedup (§6)
 2. [x] ~~Promover parser de Ofertas a `DealsAdapter` testado~~ — feito 18/08 (`deals.ts`, 70/70)
 3. [x] ~~`linkGeneration: true`~~ — no `MercadoLivreDealsAdapter` (a fonte correta). O `MercadoLivreAdapter` de API oficial permanece `false` de propósito: lá não há como gerar link (API de afiliados não existe)
-4. [ ] Solicitar certificação da app no DevCenter (desbloqueia `/search`)
+4. [ ] Solicitar certificação da app no DevCenter (desbloqueia `/search` e `/items`) — app nova `BizuMiner` (id `8327388871751867`) criada 24/08/2026 com scopes corretos mas `certification_status: not_certified`; ver mapa de capacidades na seção 10
 5. [ ] **Rotacionar client secret e refresh token** — decidido: só antes da subida pra produção (testes rodam só na máquina local até lá)
 6. [ ] Teste final: comissão real (compra através de link gerado)
 
 ## 9. Roadmap
 
 Ver [`roadmap.md`](./roadmap.md) — fases de implementação até a página web pública.
+
+## 10. Mapa de capacidades da API oficial (verificado em 24/08/2026)
+
+Teste ponta a ponta com a app `BizuMiner` (id `8327388871751867`, criada 24/08/2026), token OAuth recém-gerado via `oauth-login.ts` com PKCE. Scopes da app: `urn:ml:mktp:publish-sync:/read-only`, `urn:ml:mktp:offers:/read-only`, `read`, `offline_access`. Status crítico da app: **`certification_status: not_certified`**.
+
+### O que a API oficial retorna (HTTP 200)
+
+| Recurso | Endpoint | Observação |
+|---|---|---|
+| Perfil do usuário autenticado | `GET /users/me` | valida o token; nickname, CPF, reputação do dono |
+| Site | `GET /sites/MLB` | moeda, métodos de pagamento |
+| Árvore de categorias | `GET /sites/MLB/categories` | IDs e nomes de todas as categorias |
+| Best-sellers por categoria | `GET /highlights/MLB/category/{category_id}` | 20 IDs de **produto do catálogo** (tipo `PRODUCT`, não anúncio) |
+| Tendências de busca | `GET /trends/MLB` | keywords em alta + URL de lista correspondente |
+| Catálogo do produto | `GET /products/{id}` | nome canônico, atributos, variantes (`pickers`), fotos, domínio, família |
+| Itens do próprio vendedor | `GET /users/{id}/items/search` | só anúncios da conta autenticada; sem anúncios = lista vazia |
+
+### O que continua bloqueado (HTTP 403)
+
+| Recurso | Endpoint | Motivo |
+|---|---|---|
+| Busca por palavra-chave | `GET /sites/MLB/search?q=` | certificação exigida |
+| Detalhe do anúncio | `GET /items/{id}` | certificação exigida |
+| Multiget de anúncios | `GET /items?ids=` | certificação exigida |
+| Promoções | `GET /seller-promotions/...` | certificação exigida |
+| Buy box (preço ativo) | campo `buy_box_winner` em `GET /products/{id}` | vem **vazio** por depender de `/items` |
+
+### Erros observados — como diferenciar a causa
+
+| Erro | Significado |
+|---|---|
+| `403` com `PA_UNAUTHORIZED_RESULT_FROM_POLICIES` | **Permissão funcional** (scope) não habilitada ou sem o escopo no token. Problema de configuração do DevCenter. |
+| `403` genérico `{"error":"forbidden"}` ou `access_denied` ("Access to the requested resource is forbidden") | **Certificação**: scopes certos, mas app não certificada. É o caso atual. |
+| `/products/{id}` com `buy_box_winner: null` | Consequência do `/items` bloqueado — o preço vivo do catálogo não é entregue. |
+
+### Conclusão operacional
+
+Com a app não certificada, a API oficial **não substitui** o scraping de `/ofertas`:
+
+- **Descoberta + preço** continuam no `MercadoLivreDealsAdapter` (scraping da listagem `/ofertas`).
+- A API oficial é fonte **complementar** de metadados: categorias, tendências, best-sellers e catálogo.
+- O catálogo (`/products/{id}`) serve para **enriquecer** o produto já descoberto pelo scraping — nome canônico, atributos, variantes, fotos de alta resolução — sem tocar em preço.
+- Qualquer uso de preço oficial depende de certificação; até lá, o preço vem só do parser de `/ofertas` (com histórico próprio via `price_observation`).
+
+### Caminho para destravar `/search` e `/items`
+
+Certificação da app (Developer Partner Program). Enquanto `certification_status` for `not_certified`, os endpoints de anúncio ficam fechados. Status consultável em `GET /applications/{app_id}` → campo `certification_status` (também `blocked`, `disabled` e `scopes` — útil para debug de 403).
 

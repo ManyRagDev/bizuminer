@@ -1,6 +1,7 @@
 import postgres from "postgres";
 import type { DealQuery } from "./deal-query";
-import { priceRangeForBand } from "./deal-query.ts";
+import { freshnessDays, priceRangeForBand, shouldInterleaveMarketplaces } from "./deal-query.ts";
+import { parseProductSlug, slugCaseSql } from "./marketplaces.ts";
 
 /**
  * Acesso de leitura/escrita do web ao schema garimpa (role garimpa_app).
@@ -11,6 +12,7 @@ export interface DealRow {
   id: string;
   title: string;
   slug: string;
+  marketplace: string;
   price_cents: number;
   original_price_cents: number | null;
   claimed_discount_rate: number | null;
@@ -69,6 +71,29 @@ export function db() {
  * (capture_run_id = current_run) — uma rodagem nova com produtos diferentes
  * apagava os anteriores da vitrine mesmo tendo histórico. Agora a janela é
  * de 14 dias (last_seen_at), e a ordenação empurra os ativos para o topo.
+ *
+ * DIVERSIDADE DE LOJA NA VITRINE (decisão do dono, 27/08/2026)
+ *
+ * A home é o chamariz e precisa **sempre mostrar as duas lojas** misturadas.
+ * Medido antes da mudança: os 24 primeiros eram 24/24 Mercado Livre e a
+ * Shopee só aparecia na página 2 — ou seja, invisível para quem abre o site.
+ *
+ * A causa não era preferência por loja, era o critério de sinal: produto
+ * recém-capturado tem UMA observação, então `previous_min_price_cents` é nulo,
+ * `lowest_verified` é falso e a queda percentual é nula. Ele perde todos os
+ * desempates para produto com histórico. Como a Shopee entrou agora, o
+ * catálogo inteiro dela era "novo" — e nenhuma loja nova jamais apareceria.
+ *
+ * Solução: `marketplace_rank` (row_number particionado por marketplace, com
+ * os MESMOS critérios de sinal) e ordenação pelo rank. O resultado é
+ * ML#1, SH#1, ML#2, SH#2… — cada loja entra com os seus melhores, ninguém é
+ * promovido por ser de loja nenhuma. Generaliza sozinho para N lojas: quando
+ * a AliExpress entrar, vira ML/SH/ALI sem tocar nesta query (M-R5).
+ * Quando uma loja acaba (50 Shopee vs 347 ML), a outra segue sozinha.
+ *
+ * Só vale para `sort = 'signal'` (a vitrine curada) e sem filtro de loja.
+ * Em "menor preço" a pessoa pediu preço: intercalar poria um item de R$500
+ * acima de um de R$100, quebrando a promessa explícita do controle.
  */
 export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promise<DealsPage> {
   const limit = Math.min(Math.max(query.limit ?? 12, 1), 24);
@@ -76,22 +101,34 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
   const sort = query.sort ?? "signal";
   const category = query.category?.trim() || null;
   const search = query.search?.trim() || null;
+  const marketplace = query.marketplace?.trim() || null;
+  const freshness = query.freshness ?? "14d";
+  const minRating = query.minRating ?? null;
+  const minDiscount = query.minDiscount ?? null;
+  const lowestOnly = query.lowestOnly ?? false;
+  const hasHistory = query.hasHistory ?? false;
+  // Regra (pura e testada) em deal-query.ts — ver o cabeçalho desta função.
+  const interleaveMarketplaces = shouldInterleaveMarketplaces({ sort, marketplace });
   const { min: minPriceCents, max: maxPriceCents } = priceRangeForBand(query.priceBand ?? "all");
+  // "all" expande para além dos 14 dias — remove a janela base; qualquer
+  // outro valor restringe para capturas dentro da janela escolhida.
+  const freshnessDaysValue = freshnessDays(freshness);
+  const includeDormant = freshness === "all";
   const sql = db();
   try {
     const rows = await sql<(DealRow & { total_count: number; in_current_run: boolean })[]>`
       with current_run as (
-        select cr.id
+        -- Uma rodagem "atual" por marketplace, não uma global filtrada no ML.
+        -- Cada plataforma tem sua própria noção de "visto agora".
+        select distinct on (cr.marketplace) cr.marketplace, cr.id
         from garimpa.capture_run cr
         where cr.tenant_id = ${tenantId}
-          and cr.marketplace = 'mercadolivre'
           and cr.status = 'ok'
           and exists (
             select 1 from garimpa.price_observation observed
             where observed.capture_run_id = cr.id
           )
-        order by cr.finished_at desc nulls last, cr.started_at desc
-        limit 1
+        order by cr.marketplace, cr.finished_at desc nulls last, cr.started_at desc
       ), latest as (
         select distinct on (product_id)
           id, product_id, capture_run_id, price_cents, original_price_cents, claimed_discount_rate,
@@ -108,42 +145,77 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
         join garimpa.price_observation o
           on o.product_id = l.product_id and o.tenant_id = ${tenantId}
         group by l.product_id, l.id, l.observed_at
+      ), ranked as (
+        -- CTE separada por necessidade do Postgres, não por gosto: alias de
+        -- select (marketplace_rank) não é resolvível dentro de uma EXPRESSÃO
+        -- no order by — só numa referência nua. Materializando aqui, o rank
+        -- vira coluna de verdade e pode entrar no case-when lá embaixo.
+        select p.id, p.title, p.image_url, p.category, p.marketplace,
+               ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
+               l.price_cents,
+               l.original_price_cents,
+               l.claimed_discount_rate,
+               l.rating_star,
+               l.sales_label,
+               l.sales_count,
+               l.observed_at as evidence_observed_at,
+               s.previous_min_price_cents as min_price_cents,
+               s.previous_min_price_cents,
+               s.observation_count,
+               s.history_days,
+               (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified,
+               (cr.id is not null) as in_current_run,
+               -- Posição do produto DENTRO da sua própria loja, pelos mesmos
+               -- critérios de sinal. É o que permite intercalar sem inventar
+               -- ordenação: rank 1 de cada loja disputa as primeiras posições.
+               row_number() over (
+                 partition by p.marketplace
+                 order by
+                   (cr.id is not null) desc,
+                   (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) desc nulls last,
+                   ((s.previous_min_price_cents - l.price_cents)::numeric / nullif(s.previous_min_price_cents, 0)) desc nulls last,
+                   l.claimed_discount_rate desc nulls last,
+                   p.id asc
+               ) as marketplace_rank,
+               count(*) over()::int as total_count
+        from garimpa.product p
+        join latest l on l.product_id = p.id
+        join stats s on s.product_id = p.id
+        left join current_run cr
+          on cr.marketplace = p.marketplace and cr.id = l.capture_run_id
+        where p.tenant_id = ${tenantId}
+          and (${includeDormant}::boolean or p.last_seen_at >= now() - interval '14 days')
+          and (${freshnessDaysValue}::integer is null or l.observed_at >= now() - (${freshnessDaysValue} || ' days')::interval)
+          and (${category}::text is null or p.category = ${category})
+          and (${search}::text is null or p.title ilike '%' || ${search} || '%')
+          and (${minPriceCents}::integer is null or l.price_cents >= ${minPriceCents})
+          and (${maxPriceCents}::integer is null or l.price_cents <= ${maxPriceCents})
+          and (${marketplace}::text is null or p.marketplace = ${marketplace})
+          and (${minRating}::numeric is null or l.rating_star >= ${minRating})
+          and (${minDiscount}::numeric is null or l.claimed_discount_rate >= (${minDiscount}::numeric / 100))
+          and (${lowestOnly}::boolean is false or (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents))
+          and (${hasHistory}::boolean is false or (s.observation_count >= 3 and s.history_days >= 7))
       )
-      select p.id, p.title, p.image_url, p.category,
-             'ml-' || p.external_id as slug,
-             l.price_cents,
-             l.original_price_cents,
-             l.claimed_discount_rate,
-             l.rating_star,
-             l.sales_label,
-             l.sales_count,
-             l.observed_at as evidence_observed_at,
-             s.previous_min_price_cents as min_price_cents,
-              s.previous_min_price_cents,
-              s.observation_count,
-              s.history_days,
-              (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified,
-              (l.capture_run_id = (select id from current_run)) as in_current_run,
-              count(*) over()::int as total_count
-      from garimpa.product p
-      join latest l on l.product_id = p.id
-      join stats s on s.product_id = p.id
-      where p.tenant_id = ${tenantId}
-        and p.last_seen_at >= now() - interval '14 days'
-        and (${category}::text is null or p.category = ${category})
-        and (${search}::text is null or p.title ilike '%' || ${search} || '%')
-        and (${minPriceCents}::integer is null or l.price_cents >= ${minPriceCents})
-        and (${maxPriceCents}::integer is null or l.price_cents <= ${maxPriceCents})
-      
+      select id, title, image_url, category, marketplace, slug,
+             price_cents, original_price_cents, claimed_discount_rate,
+             rating_star, sales_label, sales_count, evidence_observed_at,
+             min_price_cents, previous_min_price_cents,
+             observation_count, history_days, lowest_verified,
+             in_current_run, total_count
+      from ranked
       order by
-        (l.capture_run_id = (select id from current_run)) desc,
-        case when ${sort} = 'signal' then (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) end desc nulls last,
-        case when ${sort} = 'signal' then ((s.previous_min_price_cents - l.price_cents)::numeric / nullif(s.previous_min_price_cents, 0)) end desc nulls last,
-        case when ${sort} = 'signal' then l.claimed_discount_rate end desc nulls last,
-        case when ${sort} = 'price' then l.price_cents end asc nulls last,
-        case when ${sort} = 'popularity' then l.sales_count end desc nulls last,
-        case when ${sort} = 'recent' then l.observed_at end desc nulls last,
-        p.id asc
+        -- Vitrine (sinal, sem filtro de loja): intercala as lojas.
+        -- Ordenação explícita pedida pela pessoa (preço/popularidade/recentes)
+        -- NUNCA é intercalada — ver comentário do cabeçalho da função.
+        case when ${interleaveMarketplaces}::boolean then marketplace_rank end asc nulls last,
+        in_current_run desc,
+        case when ${sort} = 'signal' then lowest_verified end desc nulls last,
+        case when ${sort} = 'signal' then ((previous_min_price_cents - price_cents)::numeric / nullif(previous_min_price_cents, 0)) end desc nulls last,
+        case when ${sort} = 'signal' then claimed_discount_rate end desc nulls last,
+        case when ${sort} = 'price' then price_cents end asc nulls last,
+        case when ${sort} = 'popularity' then sales_count end desc nulls last,
+        case when ${sort} = 'recent' then evidence_observed_at end desc nulls last,
+        id asc
       limit ${limit}
       offset ${offset}
     `;
@@ -176,6 +248,26 @@ export async function dealCategories(tenantId = "local"): Promise<string[]> {
 }
 
 /**
+ * Contagem de produtos por marketplace, na mesma janela de 14 dias da
+ * vitrine — alimenta o filtro de plataforma ("Mercado Livre (41)").
+ */
+export async function marketplaceCounts(tenantId = "local"): Promise<Record<string, number>> {
+  const sql = db();
+  try {
+    const rows = await sql<{ marketplace: string; count: number }[]>`
+      select p.marketplace, count(*)::int as count
+      from garimpa.product p
+      where p.tenant_id = ${tenantId}
+        and p.last_seen_at >= now() - interval '14 days'
+      group by p.marketplace
+    `;
+    return Object.fromEntries(rows.map((row) => [row.marketplace, row.count]));
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
  * Todas as categorias já vistas no catálogo, independente da varredura mais
  * recente. O perfil do comprador usa esta lista; a vitrine usa `dealCategories`.
  *
@@ -202,8 +294,9 @@ export async function catalogCategories(tenantId = "local"): Promise<string[]> {
 
 /** Produto individual e seus fatos de preço para a página compartilhável. */
 export async function dealDetail(slug: string, tenantId = "local"): Promise<DealDetail | null> {
-  const externalId = slug.match(/^ml-(.+)$/)?.[1];
-  if (!externalId) return null;
+  const parsed = parseProductSlug(slug);
+  if (!parsed) return null;
+  const { marketplace, externalId } = parsed;
 
   const sql = db();
   try {
@@ -225,8 +318,8 @@ export async function dealDetail(slug: string, tenantId = "local"): Promise<Deal
           on o.product_id = l.product_id and o.tenant_id = ${tenantId}
         group by l.product_id, l.id, l.observed_at
       )
-      select p.id, p.title, p.image_url, p.category,
-             'ml-' || p.external_id as slug,
+      select p.id, p.title, p.image_url, p.category, p.marketplace,
+             ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
              l.price_cents, l.original_price_cents, l.claimed_discount_rate,
              l.rating_star, l.sales_label, l.sales_count, l.observed_at as evidence_observed_at,
              s.previous_min_price_cents as min_price_cents,
@@ -236,7 +329,7 @@ export async function dealDetail(slug: string, tenantId = "local"): Promise<Deal
       join latest l on l.product_id = p.id
       join stats s on s.product_id = p.id
       where p.tenant_id = ${tenantId}
-        and p.marketplace = 'mercadolivre'
+        and p.marketplace = ${marketplace}
         and p.external_id = ${externalId}
       limit 1
     `;
@@ -260,13 +353,135 @@ export async function dealDetail(slug: string, tenantId = "local"): Promise<Deal
 /**
  * Link afiliado (estratégia matt_full, provada em campo 17–18/08):
  * permalink + matt_word={trackingId}_{subId} + matt_tool + forceInApp.
+ *
+ * Desde E3, a credencial é EXPLÍCITA (vem do afiliado dono da publicação),
+ * nunca lida de `process.env` global. A função não tem fallback para a tag da
+ * casa — config ausente/inválida falha fechada no chamador.
  */
-export function affiliateLink(productUrl: string, subId: string): string {
-  const trackingId = process.env.ML_TRACKING_ID!;
-  const toolId = process.env.ML_TOOL_ID!;
+export interface AffiliateLinkConfig {
+  trackingId: string;
+  toolId: string;
+}
+
+export function affiliateLink(productUrl: string, subId: string, config: AffiliateLinkConfig): string {
   const u = new URL(productUrl);
-  u.searchParams.set("matt_word", `${trackingId}_${subId}`);
-  u.searchParams.set("matt_tool", toolId);
+  u.searchParams.set("matt_word", `${config.trackingId}_${subId}`);
+  u.searchParams.set("matt_tool", config.toolId);
   u.searchParams.set("forceInApp", "true");
   return u.toString();
+}
+
+/**
+ * Resolução de comissão por afiliado (E3): publication → produto →
+ * affiliate_account → affiliate_marketplace_config. Devolve a credencial do
+ * afiliado dono da publicação (config ativa) ou null (não encontrado / config
+ * ausente/suspensa). O chamador falha fechado — nunca cai na tag global.
+ */
+export interface AffiliatePublicationResolution {
+  publicationId: string;
+  tenantId: string;
+  productUrl: string;
+  trackingId: string;
+  toolId: string;
+}
+
+/**
+ * Resolução do link Shopee (M3): busca a publication já persistida do
+ * produto — nunca o `product_url` cru. `affiliateUrl: null` significa "ainda
+ * não gerado" e é tratado pelo chamador como falha fechada (nunca cai no
+ * fallback do link cru, que perderia a comissão em silêncio).
+ */
+export interface ShopeePublicationResolution {
+  publicationId: string;
+  tenantId: string;
+  affiliateUrl: string | null;
+}
+
+/**
+ * Resolve a publicação de um marketplace de link PRÉ-GERADO (Shopee,
+ * AliExpress). Recebe o marketplace em vez de fixá-lo: antes esta função era
+ * `resolveShopeePublicationForLink` com `'shopee'` embutido, e quando a
+ * AliExpress entrou todo produto dela virou 404 no `/go` — o link morria e o
+ * clique não gerava comissão. Generalizar aqui é o que impede a próxima loja
+ * de repetir o mesmo bug (M-R5).
+ */
+export async function resolvePreGeneratedLink(
+  externalId: string,
+  marketplace: string,
+  tenantId = "local",
+): Promise<ShopeePublicationResolution | null> {
+  const sql = db();
+  try {
+    const rows = await sql<{ publication_id: string; tenant_id: string; affiliate_url: string | null }[]>`
+      select pub.id as publication_id, pub.tenant_id, pub.affiliate_url
+      from garimpa.publication pub
+      join garimpa.product p on p.id = pub.product_id
+      where p.tenant_id = ${tenantId}
+        and p.marketplace = ${marketplace}
+        and p.external_id = ${externalId}
+      order by pub.published_at desc
+      limit 1
+    `;
+    const row = rows[0];
+    if (!row) return null;
+    return { publicationId: row.publication_id, tenantId: row.tenant_id, affiliateUrl: row.affiliate_url };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Decisão pura de redirect do /go para Shopee — separada da consulta ao banco
+ * para ser testável sem DATABASE_URL. Estruturalmente não pode vazar
+ * `product_url`: o tipo de entrada nem carrega esse campo, só `affiliateUrl`.
+ */
+export type ShopeeRedirectDecision =
+  | { kind: "redirect"; url: string; publicationId: string; tenantId: string }
+  | { kind: "not_found"; reason: string };
+
+export function shopeeRedirectTarget(resolution: ShopeePublicationResolution | null): ShopeeRedirectDecision {
+  if (!resolution) return { kind: "not_found", reason: "produto não encontrado" };
+  if (!resolution.affiliateUrl) return { kind: "not_found", reason: "link de afiliado ainda não gerado" };
+  return {
+    kind: "redirect",
+    url: resolution.affiliateUrl,
+    publicationId: resolution.publicationId,
+    tenantId: resolution.tenantId,
+  };
+}
+
+export async function resolvePublicationForLink(slug: string): Promise<AffiliatePublicationResolution | null> {
+  const sql = db();
+  try {
+    const rows = await sql<{
+      publication_id: string;
+      tenant_id: string;
+      product_url: string;
+      tracking_id: string;
+      tool_id: string;
+    }[]>`
+      select pub.id as publication_id, pub.tenant_id, p.product_url,
+             c.tracking_id, c.tool_id
+      from garimpa.publication pub
+      join garimpa.product p on p.id = pub.product_id
+      join garimpa.affiliate_account a on a.id = pub.affiliate_id
+      join garimpa.affiliate_marketplace_config c
+        on c.affiliate_id = a.id and c.marketplace = 'mercadolivre'
+      where pub.slug = ${slug}
+        and a.status = 'active'
+        and c.status = 'active'
+      limit 1
+    `;
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      publicationId: row.publication_id,
+      tenantId: row.tenant_id,
+      productUrl: row.product_url,
+      trackingId: row.tracking_id,
+      toolId: row.tool_id,
+    };
+  } finally {
+    await sql.end();
+  }
 }

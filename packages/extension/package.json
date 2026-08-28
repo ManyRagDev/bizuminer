@@ -1,0 +1,23 @@
+{
+  "name": "@bizuminer/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "build:dev": "node scripts/build.mjs --dev",
+    "verify:manifest": "node scripts/verify-manifest.mjs",
+    "package": "node scripts/package.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.270",
+    "@types/node": "^26.2.0",
+    "esbuild": "^0.25.0",
+    "typescript": "5.6"
+  }
+}

@@ -3,6 +3,7 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import { dealDetail } from "../../../lib/db";
 import { priceHighlight } from "../../../lib/deal-signal";
+import { marketplaceDef } from "../../../lib/marketplaces";
 
 export const runtime = "nodejs";
 export const alt = "BizuMiner";
@@ -65,7 +66,12 @@ async function fetchProductImage(url: string | null): Promise<string | null> {
 // Satori não recorta texto em N linhas sozinho; corta o título por caractere
 // para não estourar o card. Largura generosa o bastante para não cortar cedo
 // demais em títulos curtos comuns do catálogo.
-function truncateTitle(title: string, max = 78): string {
+/**
+ * ~21 caracteres por linha nesta largura/corpo; 63 mantém o título dentro das
+ * 3 linhas do bloco. Era 78, que transbordava e virava corte seco — reticências
+ * comunicam "tem mais texto", corte no meio da palavra comunica defeito.
+ */
+function truncateTitle(title: string, max = 63): string {
   if (title.length <= max) return title;
   return `${title.slice(0, max).trimEnd()}…`;
 }
@@ -119,6 +125,10 @@ export default async function Image({ params }: { params: Promise<Params> }) {
   // o que afirmar; um selo negativo num card de divulgação só ocupa espaço.
   const badge = highlight?.tone === "unproven" ? null : highlight;
   const photo = await fetchProductImage(deal.image_url);
+  const marketplace = marketplaceDef(deal.marketplace);
+  const stamp = marketplace
+    ? { label: marketplace.stampLabel, style: marketplace.stampStyle }
+    : { label: deal.marketplace, style: "outlined" as const };
 
   return new ImageResponse(
     (
@@ -156,8 +166,31 @@ export default async function Image({ params }: { params: Promise<Params> }) {
         </div>
         <div style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "56px 64px" }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignSelf: "flex-start", marginBottom: 24, fontSize: 30, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
-              Bizu<span style={{ color: BLUE_TEXT }}>Miner</span>
+            {/* Marca à esquerda, origem à direita, mesma linha: a loja é lida
+                ANTES do título. Mesmo carimbo do card do site — preenchido
+                para o Mercado Livre, vazado para a Shopee — e a diferença é
+                estrutural, nunca de cor (a cor aqui já significa confiança). */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+              <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
+                Bizu<span style={{ color: BLUE_TEXT }}>Miner</span>
+              </div>
+              {stamp && (
+                <div
+                  style={{
+                    display: "flex",
+                    padding: "8px 14px",
+                    fontSize: 20,
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    border: `2px solid ${INK}`,
+                    backgroundColor: stamp.style === "filled" ? INK : SURFACE_BRIGHT,
+                    color: stamp.style === "filled" ? SURFACE_BRIGHT : INK,
+                  }}
+                >
+                  {stamp.label}
+                </div>
+              )}
             </div>
             {badge && (
               <div
@@ -181,7 +214,11 @@ export default async function Image({ params }: { params: Promise<Params> }) {
             <div
               style={{
                 display: "flex",
-                maxHeight: 132,
+                // 3 linhas EXATAS (50px × 1.08 = 54px cada). Antes era 132px,
+                // que dá 2,44 linhas: a terceira era fatiada ao meio da altura
+                // das letras e o card compartilhado parecia quebrado. Múltiplo
+                // do line-height faz o corte cair sempre no limite da linha.
+                maxHeight: 162,
                 overflow: "hidden",
                 fontSize: 50,
                 fontWeight: 800,

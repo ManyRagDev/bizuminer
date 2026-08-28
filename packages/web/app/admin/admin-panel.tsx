@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export type AdminRun = {
   id: string;
@@ -58,7 +58,32 @@ function parseRuns(payload: RunsResponse): AdminRun[] {
   }));
 }
 
-export default function AdminPanel({ initialRuns, initialRunningId }: { initialRuns: AdminRun[]; initialRunningId: string | null }) {
+/**
+ * Rodagens de UMA plataforma — parametrizado por `marketplace` (M4,
+ * `docs/tecnico/plano-multiplataforma.md`). O Mercado Livre continua com o
+ * mesmo comportamento de sempre (kill switch E0, aviso de captura manual);
+ * cada plataforma nova só precisa de `triggerPath`/`enabled`/`disabledNotice`
+ * próprios — este componente não sabe o nome de nenhuma plataforma.
+ */
+export default function AdminPanel({
+  marketplace,
+  marketplaceLabel,
+  triggerPath,
+  initialRuns,
+  initialRunningId,
+  enabled,
+  disabledNotice,
+}: {
+  marketplace: string;
+  marketplaceLabel: string;
+  /** Endpoint POST que aciona a rodagem desta plataforma. */
+  triggerPath: string;
+  initialRuns: AdminRun[];
+  initialRunningId: string | null;
+  enabled: boolean;
+  /** Mostrado só quando `enabled` é falso — explica por que está desligada e qual é o caminho vigente. */
+  disabledNotice: ReactNode;
+}) {
   const [runs, setRuns] = useState(initialRuns);
   const [runningId, setRunningId] = useState(initialRunningId);
   const [pages, setPages] = useState(1);
@@ -71,7 +96,7 @@ export default function AdminPanel({ initialRuns, initialRunningId }: { initialR
 
   async function refresh() {
     try {
-      const response = await fetch("/api/admin/rodagens");
+      const response = await fetch(`/api/admin/rodagens?marketplace=${encodeURIComponent(marketplace)}`);
       const payload = (await response.json()) as RunsResponse;
       if (!payload.ok) return;
       const next = parseRuns(payload);
@@ -104,18 +129,22 @@ export default function AdminPanel({ initialRuns, initialRunningId }: { initialR
   }, [busy, awaitingSince]);
 
   async function trigger() {
-    if (requesting || busy) return;
+    if (requesting || busy || !enabled) return;
     setRequesting(true);
     setMessage("");
     try {
-      const response = await fetch("/api/admin/rodagem", {
+      const response = await fetch(triggerPath, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pages }),
       });
-      const payload = (await response.json()) as { ok: boolean; error?: string };
+      const payload = (await response.json()) as { ok: boolean; error?: string; message?: string };
       if (response.status === 409) {
-        setMessage("Já existe uma rodagem em andamento.");
+        if (typeof payload.error === "string" && payload.error.endsWith("_capture_disabled")) {
+          setMessage(payload.message ?? `A captura de ${marketplaceLabel} está desligada.`);
+        } else {
+          setMessage("Já existe uma rodagem em andamento.");
+        }
         await refresh();
         return;
       }
@@ -130,24 +159,29 @@ export default function AdminPanel({ initialRuns, initialRunningId }: { initialR
   }
 
   return (
-    <section className="admin-section" aria-labelledby="runs-title">
+    <section className="admin-section" aria-labelledby={`runs-title-${marketplace}`}>
       {busy && <div className="admin-pulse" role="status" aria-label="Rodagem em andamento"><i /></div>}
       <div className="admin-runs-head">
-        <h2 id="runs-title">Rodagens do robô</h2>
+        <h2 id={`runs-title-${marketplace}`}>Rodagens · {marketplaceLabel}</h2>
         <div className="admin-trigger">
           <label>
             páginas
-            <select value={pages} onChange={(event) => setPages(Number(event.target.value))} disabled={requesting || busy}>
+            <select value={pages} onChange={(event) => setPages(Number(event.target.value))} disabled={requesting || busy || !enabled}>
               <option value={1}>1</option>
               <option value={2}>2</option>
               <option value={3}>3</option>
             </select>
           </label>
-          <button type="button" disabled={requesting || busy} onClick={() => void trigger()}>
+          <button type="button" disabled={requesting || busy || !enabled} onClick={() => void trigger()}>
             {busy ? "rodagem em andamento…" : requesting ? "acionando…" : "nova rodagem ▸"}
           </button>
         </div>
       </div>
+      {!enabled && (
+        <p className="admin-message admin-message--notice" role="status">
+          {disabledNotice}
+        </p>
+      )}
       {message && <p className="admin-message" role="status">{message}</p>}
       <div className="admin-table-wrap">
         <table className="admin-table">

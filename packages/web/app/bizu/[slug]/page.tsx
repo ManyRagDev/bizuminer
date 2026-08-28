@@ -6,6 +6,7 @@ import { getPageSession } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
 import { freshnessLabel, priceFreshness, priceNarrative, priceSignal, seenAgo } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
+import { marketplaceDef } from "../../../lib/marketplaces";
 import { validUserId } from "../../../lib/member-contract";
 import { savedProductIds } from "../../../lib/member-db";
 import SaveDealButton from "./save-deal-button";
@@ -39,7 +40,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const detail = await dealDetail(slug);
   if (!detail) return { title: "Achado não encontrado | BizuMiner" };
   const title = `${detail.deal.title} | BizuMiner`;
-  const description = "Preço monitorado e evidências disponíveis no BizuMiner.";
+  // Antes era uma frase fixa, igual em toda oferta compartilhada — o preview
+  // no WhatsApp não dizia preço nem loja. Agora carrega os dois fatos que
+  // mudam a decisão de quem recebe o link. O desconto declarado fica de fora
+  // de propósito: é alegação do vendedor, não medição nossa.
+  const store = marketplaceDef(detail.deal.marketplace)?.label ?? detail.deal.marketplace;
+  const price = (detail.deal.price_cents / 100).toLocaleString("pt-BR", {
+    style: "currency", currency: "BRL",
+    maximumFractionDigits: detail.deal.price_cents % 100 === 0 ? 0 : 2,
+  }).replace(/ /g, " ");
+  const description = `${price} na ${store} · preço monitorado pelo BizuMiner.`;
   return {
     title,
     description,

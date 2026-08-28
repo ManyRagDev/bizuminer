@@ -2,6 +2,8 @@
 
 > **Régua de 20/08/2026:** o documento mestre do projeto passou a ser [`docs/estado-do-projeto.md`](../estado-do-projeto.md). Este roadmap continua sendo o registro de fases e de execução; o estado consolidado e o modelo de distribuição vivem lá.
 
+> **Mudança de 25/08/2026:** a decisão antiga de cron para scraping do ML foi reaberta. Para trabalho novo, a Phase 5 e [`plano-extensao-captura.md`](./plano-extensao-captura.md) prevalecem: conter acesso automatizado e migrar para captura humana catalog-first.
+
 **Documento vivo — decidido em 18/08/2026.** Detalha as fases até a página web pública, mantendo o horizonte sem pular etapas de validação.
 
 Contexto: ML affiliation 🟢 provado em campo (4 cliques no painel), captura /ofertas 🟢 (`MercadoLivreDealsAdapter`, 70/70), Shopee 🟡 (bloqueio externo), persistência/worker/publicação 🔴.
@@ -74,6 +76,14 @@ Plano próprio criado: `plano-area-logada.md` (decisão do dono: sem autenticaç
 - Bot Telegram consumindo a mesma curadoria (subId próprio por canal)
 - Teste de comissão real (compra via link gerado) — destrava a afirmação "ciclo completo"
 - Shopee: retomar quando o bloqueio externo mudar
+
+## Phase 5 — Gerenciador de afiliados + extensão catalog-first (planejada em 25/08/2026)
+
+**Plano executável:** [`plano-extensao-captura.md`](./plano-extensao-captura.md). A mudança de rumo preserva a casa como primeiro tenant e acrescenta contas de afiliado, catálogo isolado, link com a tag do dono da publicação e extensão Chromium MV3.
+
+Sequência dura: **E0 conter o acesso automatizado ao ML → E1 identidade → E2 isolamento → E3 link/publicação → E4 dispositivo/API → E5 extensão mínima → E6 outbox → E7 gestão → E8 validação/distribuição**. Nenhuma entrega está ✅; o bookmarklet atual e a contenção documental deixam E0 🟡.
+
+Decisões fechadas: `app_user` continua pessoa; afiliado nasce em tabelas próprias; extensão envia imediatamente à API do BizuMiner; token é individual por dispositivo e revogável; banco é a fonte de verdade; cards são decorados no catálogo, mas somente o clique explícito extrai/envia um produto. Assinatura fixa e registro na Chrome Web Store não bloqueiam as fundações técnicas.
 
 ## Sequenciamento consolidado — revisão UX de 18/08/2026
 

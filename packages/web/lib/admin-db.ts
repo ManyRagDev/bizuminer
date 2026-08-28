@@ -79,7 +79,7 @@ export async function adminOverview(tenantId = "local"): Promise<AdminOverview> 
   }
 }
 
-export async function captureRuns(limit = 20, tenantId = "local"): Promise<CaptureRunRow[]> {
+export async function captureRuns(limit = 20, tenantId = "local", marketplace?: string): Promise<CaptureRunRow[]> {
   const sql = db();
   try {
     return await sql<CaptureRunRow[]>`
@@ -90,6 +90,7 @@ export async function captureRuns(limit = 20, tenantId = "local"): Promise<Captu
                where o.capture_run_id = cr.id) as observation_count
       from garimpa.capture_run cr
       where cr.tenant_id = ${tenantId}
+        and (${marketplace ?? null}::text is null or cr.marketplace = ${marketplace ?? null})
       order by cr.started_at desc
       limit ${Math.min(Math.max(limit, 1), 100)}
     `;
@@ -103,7 +104,13 @@ export async function captureRuns(limit = 20, tenantId = "local"): Promise<Captu
  * Um `running` mais velho que isso é processo morto que não fechou o registro —
  * não deve travar o painel para sempre, mas aparece na tabela como está.
  */
-export async function runningRun(tenantId = "local"): Promise<CaptureRunRow | null> {
+/**
+ * `marketplace` opcional filtra a trava de concorrência por plataforma —
+ * uma rodagem do ML em andamento não deve bloquear o disparo da Shopee.
+ * Sem filtro, devolve a rodagem em andamento de qualquer plataforma (usado
+ * pela visão geral do painel).
+ */
+export async function runningRun(tenantId = "local", marketplace?: string): Promise<CaptureRunRow | null> {
   const sql = db();
   try {
     const rows = await sql<CaptureRunRow[]>`
@@ -114,6 +121,7 @@ export async function runningRun(tenantId = "local"): Promise<CaptureRunRow | nu
       where cr.tenant_id = ${tenantId}
         and cr.status = 'running'
         and cr.started_at >= now() - interval '30 minutes'
+        and (${marketplace ?? null}::text is null or cr.marketplace = ${marketplace ?? null})
       order by cr.started_at desc
       limit 1
     `;

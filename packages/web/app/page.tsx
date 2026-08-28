@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { getPageSession } from "../lib/auth";
-import { dealCategories, topDeals } from "../lib/db";
+import { dealCategories, marketplaceCounts, topDeals } from "../lib/db";
 import { catalogStateFromSearchParams, catalogStateToDealQuery } from "../lib/deal-query";
 import { toVitrineProduct } from "../lib/deal-view";
 import { validUserId } from "../lib/member-contract";
@@ -18,7 +18,11 @@ export default async function Home({ searchParams }: HomeProps) {
     if (typeof value === "string") publicParams.set(key, value);
   }
   let initialState = catalogStateFromSearchParams(publicParams);
-  let [page, categories] = await Promise.all([topDeals(catalogStateToDealQuery(initialState)), dealCategories()]);
+  let [page, categories, marketplaceCountsByPlatform] = await Promise.all([
+    topDeals(catalogStateToDealQuery(initialState)),
+    dealCategories(),
+    marketplaceCounts(),
+  ]);
 
   // URL adulterada ou página antiga além do total volta a uma página válida.
   if (initialState.page > 1 && page.deals.length === 0) {
@@ -35,5 +39,5 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date());
 
-  return <Vitrine initialProducts={products} initialTotal={page.total} initialState={initialState} categories={categories} dateLabel={dateLabel} initialSavedIds={initialSavedIds} />;
+  return <Vitrine initialProducts={products} initialTotal={page.total} initialState={initialState} categories={categories} dateLabel={dateLabel} initialSavedIds={initialSavedIds} marketplaceCounts={marketplaceCountsByPlatform} />;
 }

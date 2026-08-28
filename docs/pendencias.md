@@ -1,5 +1,7 @@
 # Pendências — export da sessão de 19–20/08/2026
 
+> **Aviso de atualização (25/08/2026):** a ordem prática deste export foi suplantada para Mercado Livre. Não configurar o cron de scraping descrito abaixo. O plano vigente é [`tecnico/plano-extensao-captura.md`](./tecnico/plano-extensao-captura.md): E0 contém o acesso automatizado; depois vêm identidade, isolamento, link por afiliado e extensão catalog-first.
+
 Não é spec. É o resumo prático de tudo que essa conversa decidiu, construiu e deixou em aberto — para quem chegar depois (inclusive uma versão futura de mim) não precisar reconstruir o raciocínio do zero. Os documentos vivos (`estado-do-projeto.md`, os `plano-*.md`) têm o detalhe técnico; este aqui é o mapa de "o que fazer a seguir e por quê".
 
 ---
@@ -59,11 +61,11 @@ Todos os três mascarados pelo **mesmo erro minificado e inútil** (`TypeError: 
 
 ## O que falta decidir (só o dono decide)
 
-- **Cron da varredura: GitHub Actions**, decidido nesta sessão. Falta configurar o secret `DATABASE_URL` no repositório e escrever o workflow (`.github/workflows/sweep.yml`) — ninguém fez isso ainda, só a decisão foi tomada.
+- ~~**Cron da varredura ML: GitHub Actions**~~ — decisão histórica desta sessão, **reaberta em 25/08**. Não configurar; E0 do plano novo contém o acesso automatizado.
 - **Bot do Telegram**: criar no BotFather, guardar o token. Cinco minutos, ninguém fez ainda.
 - **Domínio `bizuminer.com.br`**: **comprado e no ar (20/08)** — `www.bizuminer.com.br` canônico (CNAME Vercel) e apex apontado. Falta só: redirecionar o apex → `www` no painel de domínios da Vercel e setar `NEXT_PUBLIC_SITE_URL=https://www.bizuminer.com.br` no ambiente Production (no `.env.local` local já está). Nenhuma mudança de código é necessária — `lib/site-url.ts` resolve sozinho.
 - **Provedor de e-mail**: SMTP da Hostinger, decidido. Só ativa depois que o domínio existir (verificação de DNS). Vale checar o limite de envio por hora do plano antes de contar com ele em volume.
-- **`/admin` publicado ou só local**: parou de ser bloqueante. Como o acionamento de rodagem vai passar a pedir execução ao GitHub Actions (não mais `spawn` de processo local, que não funcionaria na Vercel), o painel funciona igual hospedado ou rodando na sua máquina. Decide quando quiser.
+- **`/admin` publicado ou só local**: parou de ser bloqueante. A proposta antiga de acionar sweep pelo GitHub foi reaberta; o painel hospedado deve priorizar captura manual/extensão.
 
 ## Bloqueios duros que continuam de pé (pré qualquer deploy público de peso)
 
@@ -75,7 +77,7 @@ Todos os três mascarados pelo **mesmo erro minificado e inútil** (`TypeError: 
 
 ## Ordem prática sugerida a partir de daqui
 
-1. Configurar o cron (GitHub Actions + secret) — destrava histórico denso, que destrava quase tudo o resto
+1. ~~Configurar o cron ML~~ — **suplantado em 25/08**; executar E0 de `plano-extensao-captura.md`
 2. Comprar o domínio (já em andamento) e apontar o DNS
 3. Conferir visualmente os 4 PNGs do card D-1 (estão em `%TEMP%\og-final-*.png`) e testar colar um link real no WhatsApp/Telegram — **agora dá**: o domínio está no ar
 4. D-2: entregue (20/08) — conferir o composer e validar a copy gerada em chat real após o domínio
@@ -90,6 +92,6 @@ Todos os três mascarados pelo **mesmo erro minificado e inútil** (`TypeError: 
 | Área do cliente e painel do dono | `docs/tecnico/plano-area-logada.md` |
 | Distribuição (card, copy, composer, Telegram, alerta) | `docs/tecnico/plano-distribuicao.md` |
 | Handoff já executado do card | `docs/tecnico/handoff-d1-card.md` |
-| Varredura recorrente, decisão do GitHub Actions | `docs/tecnico/plano-motor-curadoria.md`, fase M1-C |
+| Varredura recorrente (decisão histórica, suplantada para ML) | `docs/tecnico/plano-motor-curadoria.md`, fase M1-C; plano vigente em `plano-extensao-captura.md` |
 | Vitrine pública | `docs/tecnico/plano-ux-vitrine.md` |
 | Brief antigo (histórico, não usar para decidir) | `docs/estrategia/*` |

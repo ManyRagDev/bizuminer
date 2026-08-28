@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "BizuMiner — captura de ofertas",
+  "version": "0.1.0",
+  "description": "Adiciona ofertas do Mercado Livre ao seu catálogo do BizuMiner com um clique. A captura só acontece quando você clica no card.",
+  "permissions": ["activeTab", "scripting", "storage", "alarms"],
+  "host_permissions": ["https://www.bizuminer.com.br/*"],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "BizuMiner"
+  },
+  "content_scripts": [],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
