@@ -22,7 +22,7 @@ export async function GET(_request: NextRequest) {
   const curated = await curateProducts(heroProducts, 12);
 
   // Cunha links curtos para cada produto (idempotente — reusa código existente)
-  const host = shareBaseUrl().replace(/^https?:\/\//, "").replace(/^www\./, "");
+  const host = shareBaseUrl().replace(/\/$/, "");
   const products = await Promise.all(
     curated.map(async (p) => {
       const code = await shortCodeForSlug(p.slug);
