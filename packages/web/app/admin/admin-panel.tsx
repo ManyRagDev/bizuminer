@@ -193,9 +193,14 @@ export default function AdminPanel({
           </button>
         </div>
       </div>
-      {!enabled && (
+      {!enabled && !consented && (
         <p className="admin-message admin-message--notice" role="status">
           {disabledNotice}
+        </p>
+      )}
+      {!enabled && consented && (
+        <p className="admin-message admin-message--ok" role="status">
+          Rodagem habilitada por consentimento. O robô será acionado ao clicar em "nova rodagem".
         </p>
       )}
       {message && <p className="admin-message" role="status">{message}</p>}
