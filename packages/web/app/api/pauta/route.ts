@@ -18,8 +18,8 @@ export async function GET(_request: NextRequest) {
   // Estágio 1: desejabilidade global — ~473 → ~40
   const heroProducts = await globalHeroProducts(40);
 
-  // Estágio 2: curadoria semântica — ~40 → ~12
-  const curated = await curateProducts(heroProducts, 12);
+  // Estágio 2: curadoria semântica — ~40 → ~20
+  const curated = await curateProducts(heroProducts, 20);
 
   // Cunha links curtos para cada produto (idempotente — reusa código existente)
   const host = shareBaseUrl().replace(/\/$/, "");

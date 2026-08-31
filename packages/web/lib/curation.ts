@@ -60,7 +60,7 @@ Não inclua explicações, só o array JSON.`;
  */
 export async function curateProducts(
   products: VitrineProduct[],
-  maxResults = 12,
+  maxResults = 20,
 ): Promise<VitrineProduct[]> {
   // Cache: se temos resultado fresco com os mesmos IDs, retorna
   const inputIds = products.map((p) => p.id).sort().join(",");
