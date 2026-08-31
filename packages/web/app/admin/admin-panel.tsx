@@ -73,6 +73,7 @@ export default function AdminPanel({
   initialRunningId,
   enabled,
   disabledNotice,
+  requiresConsent,
 }: {
   marketplace: string;
   marketplaceLabel: string;
@@ -83,6 +84,8 @@ export default function AdminPanel({
   enabled: boolean;
   /** Mostrado só quando `enabled` é falso — explica por que está desligada e qual é o caminho vigente. */
   disabledNotice: ReactNode;
+  /** Se true, exige checkbox de consentimento antes de acionar. */
+  requiresConsent?: boolean;
 }) {
   const [runs, setRuns] = useState(initialRuns);
   const [runningId, setRunningId] = useState(initialRunningId);
@@ -90,9 +93,11 @@ export default function AdminPanel({
   const [requesting, setRequesting] = useState(false);
   const [awaitingSince, setAwaitingSince] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+  const [consented, setConsented] = useState(false);
   const knownIds = useRef(new Set(initialRuns.map((run) => run.id)));
 
   const busy = runningId !== null || awaitingSince !== null;
+  const canTrigger = requiresConsent ? consented : enabled;
 
   async function refresh() {
     try {
@@ -129,14 +134,14 @@ export default function AdminPanel({
   }, [busy, awaitingSince]);
 
   async function trigger() {
-    if (requesting || busy || !enabled) return;
+    if (requesting || busy || !canTrigger) return;
     setRequesting(true);
     setMessage("");
     try {
       const response = await fetch(triggerPath, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pages }),
+        body: JSON.stringify({ pages, consent: requiresConsent ? consented : undefined }),
       });
       const payload = (await response.json()) as { ok: boolean; error?: string; message?: string };
       if (response.status === 409) {
@@ -164,15 +169,26 @@ export default function AdminPanel({
       <div className="admin-runs-head">
         <h2 id={`runs-title-${marketplace}`}>Rodagens · {marketplaceLabel}</h2>
         <div className="admin-trigger">
+          {requiresConsent && (
+            <label className="admin-consent">
+              <input
+                type="checkbox"
+                checked={consented}
+                onChange={(event) => setConsented(event.target.checked)}
+                disabled={requesting || busy}
+              />
+              entendo os riscos de rodar automático
+            </label>
+          )}
           <label>
             páginas
-            <select value={pages} onChange={(event) => setPages(Number(event.target.value))} disabled={requesting || busy || !enabled}>
+            <select value={pages} onChange={(event) => setPages(Number(event.target.value))} disabled={requesting || busy || !canTrigger}>
               <option value={1}>1</option>
               <option value={2}>2</option>
               <option value={3}>3</option>
             </select>
           </label>
-          <button type="button" disabled={requesting || busy || !enabled} onClick={() => void trigger()}>
+          <button type="button" disabled={requesting || busy || !canTrigger} onClick={() => void trigger()}>
             {busy ? "rodagem em andamento…" : requesting ? "acionando…" : "nova rodagem ▸"}
           </button>
         </div>

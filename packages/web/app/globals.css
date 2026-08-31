@@ -1466,6 +1466,8 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 .admin-trigger button { min-height: 46px; padding: 0 20px; border: 1px solid var(--ink); background: var(--acid); color: var(--on-acid); cursor: pointer; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .admin-trigger button:hover { background: var(--blue); border-color: var(--blue); color: var(--on-accent); }
 .admin-trigger button:disabled { cursor: not-allowed; opacity: .55; }
+.admin-consent { display: flex; align-items: center; gap: 6px; color: var(--warning); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.admin-consent input { width: 16px; height: 16px; accent-color: var(--warning); }
 .admin-message { margin: 14px 0 0; padding: 10px 12px; border-left: 3px solid var(--blue); background: color-mix(in srgb, var(--blue) 7%, transparent); font: 14px/1.4 Georgia, serif; }
 .admin-table-wrap { margin-top: 18px; overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
 .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }

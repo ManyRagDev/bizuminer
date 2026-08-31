@@ -9,6 +9,10 @@
  *
  * Semântica (falha fechada): ligado somente com flag `"true"` E
  * `NODE_ENV === "development"`. Produção nunca automatiza por acidente.
+ *
+ * Desde 31/08/2026: o admin pode habilitar em produção com consentimento
+ * explícito (checkbox "entendo os riscos"). O consentimento é verificado
+ * na API, não aqui — esta função continua sendo o gate passivo (env var).
  */
 
 export interface AutomatedCaptureEnv {
@@ -18,4 +22,14 @@ export interface AutomatedCaptureEnv {
 
 export function mlAutomatedCaptureEnabled(env: AutomatedCaptureEnv = process.env): boolean {
   return env.ML_AUTOMATED_CAPTURE_ENABLED === "true" && env.NODE_ENV === "development";
+}
+
+/**
+ * Gate com consentimento explícito do admin.
+ * Em produção, exige `consent: true` no body da requisição.
+ * Em desenvolvimento, funciona como antes (flag + env).
+ */
+export function mlCaptureAllowedWithConsent(consent: boolean, env: AutomatedCaptureEnv = process.env): boolean {
+  if (env.NODE_ENV === "development") return mlAutomatedCaptureEnabled(env);
+  return consent === true;
 }

@@ -3,7 +3,7 @@ import path from "node:path";
 import { NextRequest } from "next/server";
 import { runningRun } from "../../../../lib/admin-db";
 import { checkAdminUser, sinkJson } from "../../../../lib/api-auth";
-import { mlAutomatedCaptureEnabled } from "../../../../lib/automated-capture";
+import { mlAutomatedCaptureEnabled, mlCaptureAllowedWithConsent } from "../../../../lib/automated-capture";
 
 export const runtime = "nodejs";
 
@@ -24,28 +24,31 @@ export async function POST(request: NextRequest) {
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 
   // Kill switch E0: a rodagem automatizada do ML é bloqueada por default.
-  // Responder erro de domínio estável (não stack trace) e NÃO simular rodagem.
-  if (!mlAutomatedCaptureEnabled()) {
+  // Em produção, exige consentimento explícito do admin (checkbox).
+  // Em desenvolvimento, funciona com a flag de ambiente.
+  let consent = false;
+  let pages = 1;
+  try {
+    const body = (await request.json()) as { pages?: number; consent?: boolean };
+    if (typeof body.pages === "number" && Number.isInteger(body.pages)) {
+      pages = Math.min(Math.max(body.pages, 1), MAX_PAGES);
+    }
+    consent = body.consent === true;
+  } catch {
+    // corpo vazio = 1 página, sem consentimento
+  }
+
+  if (!mlCaptureAllowedWithConsent(consent)) {
     return sinkJson(
       check.sink,
       {
         ok: false,
         error: "ml_automated_capture_disabled",
         message:
-          "A varredura automatizada do Mercado Livre está desligada. Use a captura manual (bookmarklet) no painel.",
+          "A varredura automatizada do Mercado Livre está desligada. Marque 'Entendo os riscos' para habilitar, ou use a captura manual (bookmarklet).",
       },
       { status: 409 },
     );
-  }
-
-  let pages = 1;
-  try {
-    const body = (await request.json()) as { pages?: number };
-    if (typeof body.pages === "number" && Number.isInteger(body.pages)) {
-      pages = Math.min(Math.max(body.pages, 1), MAX_PAGES);
-    }
-  } catch {
-    // corpo vazio = 1 página
   }
 
   try {

@@ -232,6 +232,7 @@ export default async function AdminPage() {
             initialRunningId={state?.running?.id ?? null}
             enabled={captureEnabled(def.slug)}
             disabledNotice={panel.disabledNotice}
+            requiresConsent={def.slug === "mercadolivre"}
           />
         );
       })}
