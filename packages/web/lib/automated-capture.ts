@@ -17,19 +17,23 @@
 
 export interface AutomatedCaptureEnv {
   readonly ML_AUTOMATED_CAPTURE_ENABLED?: string;
+  readonly ML_AUTOMATED_CAPTURE_PRODUCTION?: string;
   readonly NODE_ENV?: string;
 }
 
 export function mlAutomatedCaptureEnabled(env: AutomatedCaptureEnv = process.env): boolean {
-  return env.ML_AUTOMATED_CAPTURE_ENABLED === "true" && env.NODE_ENV === "development";
+  if (env.ML_AUTOMATED_CAPTURE_ENABLED !== "true") return false;
+  if (env.NODE_ENV === "development") return true;
+  return env.ML_AUTOMATED_CAPTURE_PRODUCTION === "true";
 }
 
 /**
  * Gate com consentimento explícito do admin.
- * Em produção, exige `consent: true` no body da requisição.
- * Em desenvolvimento, funciona como antes (flag + env).
+ * Em produção, aceita `consent: true` no body (checkbox) OU a flag de
+ * ambiente (decisão consciente do dono). Em desenvolvimento, funciona como
+ * antes (flag + env).
  */
 export function mlCaptureAllowedWithConsent(consent: boolean, env: AutomatedCaptureEnv = process.env): boolean {
   if (env.NODE_ENV === "development") return mlAutomatedCaptureEnabled(env);
-  return consent === true;
+  return consent === true || mlAutomatedCaptureEnabled(env);
 }

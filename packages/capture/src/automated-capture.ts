@@ -7,10 +7,13 @@
  *
  * Semântica (falha fechada):
  * - a flag ausente, vazia ou diferente de `"true"` → DESLIGADO;
- * - `"true"` em produção (`NODE_ENV=production`) → DESLIGADO (produção nunca
- *   automatiza por acidente);
+ * - `"true"` em produção (`NODE_ENV=production`) SEM a flag de produção
+ *   explícita → DESLIGADO (produção nunca automatiza por acidente);
  * - `"true"` + `NODE_ENV=development` → LIGADO (desenvolvimento explicitamente
- *   autorizado).
+ *   autorizado);
+ * - `"true"` + `ML_AUTOMATED_CAPTURE_PRODUCTION=true` → LIGADO em produção
+ *   (decisão consciente do dono, 31/08/2026: consentimento via checkbox no
+ *   painel + flags de ambiente).
  *
  * O parser puro (`parseDealsHtml`) e as fixtures NÃO passam por este gate —
  * eles continuam testáveis e disponíveis para investigação offline. Só a
@@ -26,6 +29,7 @@
 /** Subconjunto de `process.env` necessário à decisão — injetável em teste. */
 export interface AutomatedCaptureEnv {
   readonly ML_AUTOMATED_CAPTURE_ENABLED?: string;
+  readonly ML_AUTOMATED_CAPTURE_PRODUCTION?: string;
   readonly NODE_ENV?: string;
 }
 
@@ -34,5 +38,9 @@ export interface AutomatedCaptureEnv {
  * Default seguro: desligado. Não há caminho de produção que ligue sozinho.
  */
 export function mlAutomatedCaptureEnabled(env: AutomatedCaptureEnv = process.env): boolean {
-  return env.ML_AUTOMATED_CAPTURE_ENABLED === "true" && env.NODE_ENV === "development";
+  if (env.ML_AUTOMATED_CAPTURE_ENABLED !== "true") return false;
+  if (env.NODE_ENV === "development") return true;
+  // Produção só automatiza com flag explícita adicional — o dono consente
+  // no painel (checkbox) e seta a flag no ambiente do servidor.
+  return env.ML_AUTOMATED_CAPTURE_PRODUCTION === "true";
 }

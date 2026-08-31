@@ -22,6 +22,21 @@ test("kill switch ML: flag true em produção → desligado (falha fechada)", ()
   assert.equal(mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "true" }), false);
 });
 
+test("kill switch ML: produção exige flag adicional explícita (31/08/2026)", () => {
+  assert.equal(
+    mlAutomatedCaptureEnabled({
+      ML_AUTOMATED_CAPTURE_ENABLED: "true",
+      ML_AUTOMATED_CAPTURE_PRODUCTION: "true",
+      NODE_ENV: "production",
+    }),
+    true,
+  );
+  assert.equal(
+    mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "true", ML_AUTOMATED_CAPTURE_PRODUCTION: "false", NODE_ENV: "production" }),
+    false,
+  );
+});
+
 test("kill switch ML: flag true + development → ligado", () => {
   assert.equal(
     mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "true", NODE_ENV: "development" }),

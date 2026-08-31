@@ -24,10 +24,11 @@ export async function POST(request: NextRequest) {
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 
   // Kill switch E0: a rodagem automatizada do ML é bloqueada por default.
-  // Em produção, exige consentimento explícito do admin (checkbox).
-  // Em desenvolvimento, funciona com a flag de ambiente.
+  // Em produção, exige consentimento explícito do admin (checkbox) OU a flag
+  // de ambiente ML_AUTOMATED_CAPTURE_PRODUCTION (decisão consciente do dono).
   let consent = false;
   let pages = 1;
+  let bodyParseFailed = false;
   try {
     const body = (await request.json()) as { pages?: number; consent?: boolean };
     if (typeof body.pages === "number" && Number.isInteger(body.pages)) {
@@ -35,7 +36,8 @@ export async function POST(request: NextRequest) {
     }
     consent = body.consent === true;
   } catch {
-    // corpo vazio = 1 página, sem consentimento
+    bodyParseFailed = true;
+    // corpo vazio ou ilegível = 1 página, sem consentimento
   }
 
   if (!mlCaptureAllowedWithConsent(consent)) {
@@ -46,6 +48,7 @@ export async function POST(request: NextRequest) {
         error: "ml_automated_capture_disabled",
         message:
           "A varredura automatizada do Mercado Livre está desligada. Marque 'Entendo os riscos' para habilitar, ou use a captura manual (bookmarklet).",
+        received: { consent, bodyParseFailed },
       },
       { status: 409 },
     );
