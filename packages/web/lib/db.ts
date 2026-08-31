@@ -49,7 +49,12 @@ export interface DealsPage {
 export function db() {
   return postgres(process.env.DATABASE_URL!, {
     prepare: false,
-    max: 3,
+    // max: 1 — cada instância abre UMA conexão. O pooler do Supabase em modo
+    // session limita a 15 sessões por projeto; instâncias com max:3 podiam
+    // multiplicar conexões sob concorrência (o /api/pauta estourou o teto ao
+    // passar de 12 para 20 produtos). Operações rodam suas queries de forma
+    // sequencial, então max:1 não custa latência e mantém o teto distante.
+    max: 1,
     ssl: process.env.DATABASE_URL!.includes("localhost") ? false : { rejectUnauthorized: false },
   });
 }
