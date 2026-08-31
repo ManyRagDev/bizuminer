@@ -1,6 +1,8 @@
 import postgres from "postgres";
 import type { DealQuery } from "./deal-query";
 import { freshnessDays, priceRangeForBand, shouldInterleaveMarketplaces } from "./deal-query.ts";
+import { categoryDesirabilityFromStats, heroScore, type CategoryStats, type HeroScorable } from "./desirability.ts";
+import { toVitrineProduct, type VitrineProduct } from "./deal-view.ts";
 import { parseProductSlug, slugCaseSql } from "./marketplaces.ts";
 
 /**
@@ -481,6 +483,119 @@ export async function resolvePublicationForLink(slug: string): Promise<Affiliate
       trackingId: row.tracking_id,
       toolId: row.tool_id,
     };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Desejabilidade global — P2 do plano de pauta.
+ *
+ * Calcula o score de desejo de cada categoria sobre o CATÁLOGO INTEIRO
+ * (produtos vistos nos últimos 14 dias), não sobre uma página.
+ * Retorna o Map de category → score normalizado (0–1).
+ *
+ * Destinado a ser chamado a cada rodagem de captura e materializado
+ * (tabela ou cache). Enquanto não materializa, o hero usa a versão
+ * em memória (categoryDesirabilityFromProducts).
+ */
+export async function globalCategoryDesirability(
+  tenantId = "local",
+): Promise<Map<string, number>> {
+  const sql = db();
+  try {
+    const rows = await sql<CategoryStats[]>`
+      with latest as (
+        select distinct on (product_id)
+          product_id, price_cents, sales_count
+        from garimpa.price_observation
+        where tenant_id = ${tenantId}
+        order by product_id, observed_at desc, id desc
+      )
+      select p.category,
+        count(*)::int as count,
+        sum(coalesce(l.sales_count, 0))::int as "totalSales",
+        sum(l.price_cents)::bigint::int as "sumPriceCents"
+      from garimpa.product p
+      join latest l on l.product_id = p.id
+      where p.tenant_id = ${tenantId}
+        and p.last_seen_at >= now() - interval '14 days'
+        and p.category is not null
+      group by p.category
+    `;
+    return categoryDesirabilityFromStats(rows);
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Seleciona os produtos para o hero a partir do catálogo inteiro.
+ * Retorna até `max` produtos ordenados por heroScore desc.
+ *
+ * Usa a desejabilidade global (calculada sobre todos os produtos)
+ * em vez da versão em memória (que normaliza sobre a página).
+ */
+export async function globalHeroProducts(
+  max = 6,
+  tenantId = "local",
+): Promise<VitrineProduct[]> {
+  const desirability = await globalCategoryDesirability(tenantId);
+  const sql = db();
+  try {
+    const rows = await sql<(DealRow & { total_count: number })[]>`
+      with latest as (
+        select distinct on (product_id)
+          id, product_id, price_cents, original_price_cents, claimed_discount_rate,
+          rating_star, sales_label, sales_count, observed_at
+        from garimpa.price_observation
+        where tenant_id = ${tenantId}
+        order by product_id, observed_at desc, id desc
+      ), stats as (
+        select l.product_id,
+          count(o.id)::int as observation_count,
+          floor(extract(epoch from (l.observed_at - min(o.observed_at))) / 86400)::int as history_days,
+          min(o.price_cents) filter (where o.id <> l.id) as previous_min_price_cents
+        from latest l
+        join garimpa.price_observation o
+          on o.product_id = l.product_id and o.tenant_id = ${tenantId}
+        group by l.product_id, l.id, l.observed_at
+      )
+      select p.id, p.title, p.image_url, p.category, p.marketplace,
+             ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
+             l.price_cents, l.original_price_cents, l.claimed_discount_rate,
+             l.rating_star, l.sales_label, l.sales_count,
+             l.observed_at as evidence_observed_at,
+             s.previous_min_price_cents, s.observation_count, s.history_days,
+             (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
+      from garimpa.product p
+      join latest l on l.product_id = p.id
+      join stats s on s.product_id = p.id
+      where p.tenant_id = ${tenantId}
+        and p.last_seen_at >= now() - interval '14 days'
+        and p.image_url is not null
+    `;
+
+    const heroScorable: Array<{ row: DealRow; score: number }> = rows.map((row) => {
+      const scorable: HeroScorable = {
+        priceCents: row.price_cents,
+        previousMinPriceCents: row.previous_min_price_cents,
+        observationCount: row.observation_count,
+        historyDays: row.history_days,
+        lowestVerified: row.lowest_verified,
+        ratingStar: row.rating_star,
+        salesCount: row.sales_count,
+        evidenceObservedAt: row.evidence_observed_at,
+        category: row.category,
+      };
+      return { row, score: heroScore(scorable, desirability) };
+    });
+
+    return heroScorable
+      .filter((entry) => entry.score >= 7)
+      .sort((a, b) => b.score - a.score || a.row.price_cents - b.row.price_cents)
+      .slice(0, max)
+      .map((entry) => toVitrineProduct(entry.row));
   } finally {
     await sql.end();
   }

@@ -1602,3 +1602,40 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 .admin-deny p:not(.eyebrow) { color: var(--ink-muted); font: 16px/1.5 Georgia, serif; }
 .admin-deny form { margin-top: 26px; }
 .admin-deny .auth-signout { min-height: 46px; padding: 0 20px; border: 1px solid var(--ink); }
+
+/* ── Pauta de stories ────────────────────────────────────────────────
+   Tela de copy/paste para postagem no WhatsApp Status.
+   Âncora: "Sei exatamente onde parei, mesmo tendo saído do app cinco vezes."
+   Base 4px, toque mínimo 48px. Ritmo acelera conforme desce. */
+.pauta-page { max-width: 480px; margin: 0 auto; padding: 0 16px 120px; }
+.pauta-header { position: sticky; top: 0; z-index: 10; padding: 16px 0 12px; background: var(--paper); }
+.pauta-header-top { display: flex; justify-content: space-between; align-items: baseline; }
+.pauta-header h1 { margin: 0; font: 900 18px/1 Arial, sans-serif; letter-spacing: .15em; }
+.pauta-count { font: 800 14px/1 Arial, sans-serif; color: var(--ink-secondary); }
+.pauta-progress { height: 4px; margin-top: 10px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.pauta-progress-bar { height: 100%; background: var(--blue); border-radius: 2px; transition: width .3s ease; }
+.pauta-loading, .pauta-empty { padding: 40px 0; text-align: center; color: var(--ink-tertiary); font: 14px/1.4 Georgia, serif; }
+
+/* Copiados — colapsam numa linha carimbada */
+.pauta-done-section { margin-bottom: 16px; }
+.pauta-done-item { width: 100%; min-height: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border: 0; border-bottom: 1px solid var(--line); background: var(--paper-deep); cursor: pointer; text-align: left; }
+.pauta-done-check { color: var(--blue-text); font-weight: 900; font-size: 13px; }
+.pauta-done-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13px/1.2 Arial, sans-serif; color: var(--ink-quiet); }
+.pauta-done-code { font: 700 11px/1 monospace; color: var(--ink-tertiary); }
+
+/* Cards pendentes */
+.pauta-pending-section { display: flex; flex-direction: column; gap: 12px; }
+.pauta-card { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.pauta-card-next { border-color: var(--ink); box-shadow: 0 2px 0 var(--ink); }
+.pauta-card-body { padding: 12px; display: flex; gap: 12px; }
+.pauta-card-image { flex: 0 0 80px; height: 80px; border-radius: 6px; overflow: hidden; background: var(--photo-bg); }
+.pauta-card-image img { width: 100%; height: 100%; object-fit: contain; }
+.pauta-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pauta-card-signal { font: 900 9px/1 Arial, sans-serif; letter-spacing: .15em; color: var(--blue-text); text-transform: uppercase; }
+.pauta-card-info h3 { margin: 0; font: 600 15px/1.25 Georgia, serif; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.pauta-card-meta { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+.pauta-card-meta strong { font: 800 18px/1 Arial, sans-serif; }
+.pauta-card-meta span { font: 700 9px/1 Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-tertiary); padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; }
+.pauta-copy-btn { width: 100%; min-height: 48px; border: 0; background: var(--ink-block); color: var(--on-accent); cursor: pointer; font: 900 12px/1 Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; transition: background .15s; }
+.pauta-copy-btn:hover { background: var(--ink); }
+.pauta-card-preview { margin: 0; padding: 6px 12px; font: 700 11px/1 monospace; color: var(--ink-tertiary); text-align: center; background: var(--paper-deep); }

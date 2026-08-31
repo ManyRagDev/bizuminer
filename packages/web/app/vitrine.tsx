@@ -8,6 +8,7 @@ import { freshnessLabel, priceFreshness, priceHighlight, priceNarrative, priceSi
 import { mergeSavedProducts, readSavedState, unionSavedIds, writeSavedState } from "../lib/saved-products";
 import type { VitrineProduct } from "../lib/deal-view";
 import { MARKETPLACES, marketplaceDef, type MarketplaceDef } from "../lib/marketplaces";
+import { categoryDesirabilityFromProducts, selectHeroProducts, HERO_MAX, HERO_MIN_SCORE } from "../lib/desirability";
 import { ThemeToggle } from "./theme-toggle";
 
 type ApiPage = { products: VitrineProduct[]; total: number };
@@ -35,59 +36,6 @@ const discountLabel = (product: VitrineProduct) => {
   return pct === null ? null : `−${pct}% no anúncio`;
 };
 const trackInteraction = (event: string, productId?: string) => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("bizuminer:interaction", { detail: { event, productId } })); };
-
-const HERO_MAX = 6;
-const HERO_MIN_SCORE = 7;
-
-/**
- * Score de desejo da categoria: ln(vendas) × √ln(ticket_médio).
- * Calculado em memória sobre os produtos da página — barato o bastante para
- * rodar a cada render sem query extra. Quando materializarmos na rodagem,
- * este cálculo sai do componente.
- */
-function categoryDesirability(products: VitrineProduct[]): Map<string, number> {
-  const groups = new Map<string, { count: number; totalSales: number; sumPrice: number }>();
-  for (const p of products) {
-    if (!p.category) continue;
-    const g = groups.get(p.category) ?? { count: 0, totalSales: 0, sumPrice: 0 };
-    g.count++;
-    g.totalSales += p.salesCount ?? 0;
-    g.sumPrice += p.priceCents;
-    groups.set(p.category, g);
-  }
-  let maxRaw = 0;
-  const raw = new Map<string, number>();
-  for (const [cat, g] of groups) {
-    if (g.count < 2 || g.sumPrice <= 0) continue;
-    const avgPrice = g.sumPrice / g.count;
-    const r = Math.log(g.count) * Math.sqrt(Math.log(avgPrice));
-    raw.set(cat, r);
-    if (r > maxRaw) maxRaw = r;
-  }
-  const scores = new Map<string, number>();
-  for (const [cat, r] of raw) scores.set(cat, maxRaw > 0 ? r / maxRaw : 0);
-  return scores;
-}
-
-/**
- * Score do hero: combina sinais de preço, histórico, social e desejo.
- * Retorna o score numérico; o componente decide o limiar e a quantidade.
- */
-function heroScore(product: VitrineProduct, desirability: Map<string, number>): number {
-  const h = historyInput(product);
-  const fresh = priceFreshness(product.evidenceObservedAt);
-  const dropPct = h.previousMinPriceCents && h.previousMinPriceCents > 0
-    ? (h.previousMinPriceCents - h.priceCents) / h.previousMinPriceCents
-    : 0;
-  const catScore = desirability.get(product.category ?? "") ?? 0;
-  return (h.lowestVerified ? 5 : 0)
-    + (h.observationCount >= 3 && h.historyDays >= 7 ? 3 : 0)
-    + (product.ratingStar !== null && product.ratingStar >= 4 ? 2 : 0)
-    + ((product.salesCount ?? 0) >= 100 ? 2 : 0)
-    + (dropPct >= 0.15 ? 2 : 0)
-    + (fresh === "current" ? 1 : 0)
-    + (catScore >= 0.85 ? 3 : 0);
-}
 
 function paginationItems(current: number, total: number): Array<number | "ellipsis-left" | "ellipsis-right"> {
   if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
@@ -243,14 +191,8 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
   const carouselDragged = useRef(false);
   const requestVersion = useRef(0);
   const heroProducts = useMemo(() => {
-    const withImage = initialProducts.filter((p) => p.imageUrl);
-    const desirability = categoryDesirability(withImage);
-    return withImage
-      .map((p) => ({ product: p, score: heroScore(p, desirability) }))
-      .filter((entry) => entry.score >= HERO_MIN_SCORE)
-      .sort((a, b) => b.score - a.score || a.product.priceCents - b.product.priceCents)
-      .slice(0, HERO_MAX)
-      .map((entry) => entry.product);
+    const desirability = categoryDesirabilityFromProducts(initialProducts);
+    return selectHeroProducts(initialProducts, desirability);
   }, [initialProducts]);
   const savedProducts = useMemo(() => mergeSavedProducts(favorites, favoriteProducts, [...mobileProducts, ...products]), [favoriteProducts, favorites, mobileProducts, products]);
   const shownProducts = showSaved ? savedProducts : products;
