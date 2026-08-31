@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { globalHeroProducts } from "../../../lib/db";
 import { curateProducts } from "../../../lib/curation";
-import { storyShareUrl } from "../../../lib/story-link";
+import { shortCodeForSlug } from "../../../lib/short-link-db";
+import { shareBaseUrl } from "../../../lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +22,12 @@ export async function GET(_request: NextRequest) {
   const curated = await curateProducts(heroProducts, 12);
 
   // Cunha links curtos para cada produto (idempotente — reusa código existente)
+  const host = shareBaseUrl().replace(/^https?:\/\//, "").replace(/^www\./, "");
   const products = await Promise.all(
-    curated.map(async (p) => ({
-      ...p,
-      shareUrl: await storyShareUrl(p.slug),
-    })),
+    curated.map(async (p) => {
+      const code = await shortCodeForSlug(p.slug);
+      return { ...p, shareUrl: `${host}/p/${code}` };
+    }),
   );
 
   return Response.json(
