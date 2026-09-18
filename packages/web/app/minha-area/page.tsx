@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getPageSession } from "../../lib/auth";
+import { getPageSession, isAdmin } from "../../lib/auth";
 import { catalogCategories } from "../../lib/db";
 import { toVitrineProduct } from "../../lib/deal-view";
 import { allowedProfileCategories, validUserId } from "../../lib/member-contract";
@@ -60,6 +60,7 @@ export default async function MinhaAreaPage() {
   return (
     <MemberArea
       identified
+      isAdmin={isAdmin(user)}
       userName={user.name ?? undefined}
       userEmail={user.email ?? undefined}
       categories={profileCategories}

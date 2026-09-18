@@ -27,21 +27,20 @@ interface CachedResult {
 let cache: CachedResult | null = null;
 
 /**
- * Prepara o input para a LLM: lista de produtos com título, preço,
- * categoria, avaliação e vendas. Sem imagem, sem link — só o que
- * a IA precisa para julgar "desejo".
+ * Prepara o input para a LLM: lista de produtos com ID, título, preço,
+ * categoria, avaliação e vendas.
  */
-function formatProductsForLLM(products: VitrineProduct[]): string {
+export function formatProductsForLLM(products: VitrineProduct[]): string {
   return products
     .map(
-      (p, i) =>
-        `${i + 1}. [${p.category}] ${p.title} — R$ ${(p.priceCents / 100).toFixed(2)} — ★${p.ratingStar ?? "?"} — ${p.salesCount ?? 0} vendas`,
+      (p) =>
+        `- id: "${p.id}" | [${p.category}] ${p.title} — R$ ${(p.priceCents / 100).toFixed(2)} — ★${p.ratingStar ?? "?"} — ${p.salesCount ?? 0} vendas`,
     )
     .join("\n");
 }
 
 const SYSTEM_PROMPT = `Você é um curador de ofertas para um público brasileiro que compra online.
-Você recebe uma lista de produtos com título, preço, categoria, avaliação e vendas.
+Você recebe uma lista de produtos com id, título, preço, categoria, avaliação e vendas.
 Sua tarefa é REORDENAR os produtos do mais desejável ao menos desejável.
 
 Critérios de desejo:
@@ -51,8 +50,8 @@ Critérios de desejo:
 - Preço acessível para o público brasileiro (R$20–500 é a faixa mais desejável)
 - Produtos que resolvem problemas reais ou melhoram a rotina
 
-Responda APENAS com um array JSON de IDs na ordem desejada. Exemplo: ["id1", "id2", "id3"]
-Não inclua explicações, só o array JSON.`;
+Responda APENAS com um array JSON de strings com os IDs na ordem desejada. Exemplo: ["id1", "id2", "id3"]
+Use EXATAMENTE os valores de id fornecidos na lista. Não inclua markdown adicional ou explicações, só o array JSON.`;
 
 /**
  * Curadoria semântica: reordena produtos por desejo usando Gemini.
@@ -89,8 +88,9 @@ export async function curateProducts(
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
 
-    // Extrai o array JSON da resposta
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    // Extrai o array JSON da resposta (limpando fences se houver)
+    const cleaned = text.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       console.warn("[curation] Resposta da LLM não contém array JSON:", text.slice(0, 200));
       return products.slice(0, maxResults);
@@ -99,8 +99,19 @@ export async function curateProducts(
     const orderedIds: string[] = JSON.parse(jsonMatch[0]);
     const byId = new Map(products.map((p) => [p.id, p]));
     const curated = orderedIds
-      .map((id) => byId.get(id))
+      .map((id) => byId.get(String(id).trim()))
       .filter((p): p is VitrineProduct => !!p);
+
+    if (curated.length === 0) {
+      console.warn("[curation] Nenhum ID da LLM coincidiu com os produtos — degrada para ordem determinística");
+      return products.slice(0, maxResults);
+    }
+
+    // Preserva itens omitidos pela LLM no final da lista
+    const seen = new Set(curated.map((p) => p.id));
+    for (const p of products) {
+      if (!seen.has(p.id)) curated.push(p);
+    }
 
     // Atualiza cache
     cache = { ids: curated.map((p) => p.id), timestamp: Date.now() };

@@ -13,6 +13,8 @@
  * descartado). Serve para validar o pipeline ponta a ponta contra o site real.
  */
 
+import { spawn } from "node:child_process";
+import path from "node:path";
 import { MercadoLivreDealsAdapter } from "../../capture/src/adapters/mercadolivre/deals.ts";
 import { mlAutomatedCaptureEnabled } from "../../capture/src/automated-capture.ts";
 import { sweep } from "../src/ingest.ts";
@@ -29,6 +31,7 @@ const flag = (name: string): string | undefined => {
 
 const pages = Number(flag("pages") ?? 1);
 const minDiscount = flag("min-discount") ? Number(flag("min-discount")) : undefined;
+const operationBatchId = flag("operation-batch");
 
 // Kill switch E0: aborta antes de instanciar adapter/store e de qualquer rede.
 if (!mlAutomatedCaptureEnabled()) {
@@ -71,6 +74,7 @@ const summary = await sweep(
     tenantId: "local",
     params: { minClaimedDiscount: minDiscount },
     maxPages: pages,
+    operationBatchId,
   },
   ctx,
 );
@@ -115,4 +119,24 @@ if (pg) {
         `${String(off).padStart(3)}% OFF  R$ ${(p.lastPriceCents / 100).toFixed(2).padStart(9)}  ${p.title.slice(0, 70)}`,
       );
     });
+}
+
+if (args.includes("--trigger-triage")) {
+  console.log("\n=== Loop Fechado: Disparando Triagem Editorial Automatizada (--trigger-triage) ===");
+  const triageScript = path.resolve(import.meta.dirname, "../../web/bin/run-triage.ts");
+  const child = spawn(
+    process.execPath,
+    ["--env-file=../web/.env.local", "--experimental-strip-types", triageScript, "--limit", "100"],
+    { stdio: "inherit", cwd: path.resolve(import.meta.dirname, "..") }
+  );
+  await new Promise<void>((resolve) => {
+    child.on("close", (code) => {
+      if (code === 0) {
+        console.log("=== Triagem automatizada pós-captura concluída com sucesso ===");
+      } else {
+        console.warn(`[aviso] Triagem automatizada pós-captura encerrou com código ${code}`);
+      }
+      resolve();
+    });
+  });
 }

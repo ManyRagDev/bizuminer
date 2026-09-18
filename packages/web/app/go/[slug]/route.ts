@@ -6,6 +6,7 @@ import {
   resolvePreGeneratedLink,
   shopeeRedirectTarget,
 } from "../../../lib/db";
+import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "../../../lib/catalog-policy";
 import { affiliateLinksV2Enabled } from "../../../lib/flags";
 import { marketplaceDef, parseProductSlug } from "../../../lib/marketplaces";
 
@@ -129,7 +130,11 @@ async function handleLegacy(req: Request, slug: string) {
       insert into garimpa.publication (id, tenant_id, product_id, affiliate_id, channel, slug)
       select gen_random_uuid()::text, p.tenant_id, p.id, 'aff_local', 'web', ${slug}
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.marketplace = 'mercadolivre' and 'ml-' || p.external_id = ${slug}
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       on conflict (slug) do update set published_at = now()
       returning id, tenant_id
     `;
@@ -141,7 +146,11 @@ async function handleLegacy(req: Request, slug: string) {
     const product = await sql<{ product_url: string }[]>`
       select p.product_url from garimpa.product p
       join garimpa.publication pub on pub.product_id = p.id
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       where pub.id = ${pub.id}
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
     `;
 
     // IP só como hash com sal fixo — dedup sem armazenar dado pessoal (LGPD).

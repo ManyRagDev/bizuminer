@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27T15:33:57.829691+00:00",
+  "generated_at": "2026-09-06T18:19:36.405930+00:00",
   "nodes": {
     "docs_apresentacoes_dashboard_executivo_multitenant_rls_foundation": {
       "code_fingerprint": "3f998ecf4da55f34deb7a5399013771442a45ad039bebd8e41c6d325a957333a",
@@ -12,23 +12,96 @@
           "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
         }
       ],
-      "score": 0.999901832,
+      "score": 0.791516157,
       "source_file": "docs/apresentacoes/dashboard-executivo.html",
       "status": "tentative",
       "uses": 1
     },
+    "docs_pesquisa_analise_competitiva_automacao_afiliados_saturacao_por_espelhamento": {
+      "code_fingerprint": "356464b35f5604a8c11fbba23786413fd496d2c9d1a1cc8a7b289040e85428eb",
+      "label": "Saturação por espelhamento de ofertas",
+      "last": "2026-09-06T17:23:26.536694+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-06T17:23:26.536694+00:00",
+          "outcome": "useful",
+          "q": "Olhe como está o projeto agora e proponha o que fazer imediatamente; o agente já consegue limpar a base ou faltam recursos?"
+        },
+        {
+          "date": "2026-09-06T15:33:41.541728+00:00",
+          "outcome": "useful",
+          "q": "Pensei em treinamentos com algum modelo do Gemini usando o Vertex Studio"
+        },
+        {
+          "date": "2026-09-06T15:29:44.550401+00:00",
+          "outcome": "useful",
+          "q": "Arquitetura de aprendizado de preferências para curadoria: embeddings/RAG, processo iterativo ou fine-tuning"
+        },
+        {
+          "date": "2026-09-06T15:20:04.927601+00:00",
+          "outcome": "useful",
+          "q": "Os outros 49 produtos são parecidos e a curadoria atual cria um padrão progressivo para uma LLM automatizar cada vez mais?"
+        },
+        {
+          "date": "2026-09-06T15:15:18.629197+00:00",
+          "outcome": "useful",
+          "q": "estou aqui nessa tela. Fiz avaliação de alguns conjuntos mas ainda me falta aquele estalo pra entender o que isso faz. Pode me ajudar explicando por favor? com linguagem popular"
+        }
+      ],
+      "score": 4.987889879,
+      "source_file": "docs/pesquisa/analise-competitiva-automacao-afiliados.md",
+      "status": "preferred",
+      "uses": 5
+    },
     "docs_tecnico_modelo_de_dados_capture_run": {
       "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
       "label": "capture_run",
-      "last": "2026-08-19T02:11:59.680745+00:00",
+      "last": "2026-09-05T23:34:00.955086+00:00",
       "provenance": [
+        {
+          "date": "2026-09-05T23:34:00.955086+00:00",
+          "outcome": "useful",
+          "q": "Nas rodagens, agrupar as consultas da mesma execução em uma linha expansível"
+        },
         {
           "date": "2026-08-19T02:11:59.680745+00:00",
           "outcome": "useful",
           "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
         }
       ],
-      "score": 0.820610337,
+      "score": 1.631692029,
+      "source_file": "docs/tecnico/modelo-de-dados.md",
+      "status": "preferred",
+      "uses": 2
+    },
+    "docs_tecnico_modelo_de_dados_documento": {
+      "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
+      "label": "Modelo de Dados",
+      "last": "2026-09-06T15:33:41.541728+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-06T15:33:41.541728+00:00",
+          "outcome": "useful",
+          "q": "Pensei em treinamentos com algum modelo do Gemini usando o Vertex Studio"
+        }
+      ],
+      "score": 0.997341431,
+      "source_file": "docs/tecnico/modelo-de-dados.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_tecnico_modelo_de_dados_offer": {
+      "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
+      "label": "offer",
+      "last": "2026-09-01T02:40:22.900857+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T02:40:22.900857+00:00",
+          "outcome": "useful",
+          "q": "Avaliar abordagens de curadoria manual, por LLM ou híbrida e recomendar uma solução técnica e prática para o Garimpa."
+        }
+      ],
+      "score": 0.877573588,
       "source_file": "docs/tecnico/modelo-de-dados.md",
       "status": "tentative",
       "uses": 1
@@ -49,7 +122,7 @@
           "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
         }
       ],
-      "score": 1.818674645,
+      "score": 1.439651694,
       "source_file": "docs/tecnico/modelo-de-dados.md",
       "status": "preferred",
       "uses": 2
@@ -57,44 +130,49 @@
     "docs_tecnico_modelo_de_dados_product": {
       "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
       "label": "product",
-      "last": "2026-08-27T13:33:12.360004+00:00",
+      "last": "2026-09-06T17:23:26.536694+00:00",
       "provenance": [
         {
-          "date": "2026-08-27T13:33:12.360004+00:00",
+          "date": "2026-09-06T17:23:26.536694+00:00",
           "outcome": "useful",
-          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+          "q": "Olhe como está o projeto agora e proponha o que fazer imediatamente; o agente já consegue limpar a base ou faltam recursos?"
         },
         {
-          "date": "2026-08-26T22:24:25.479629+00:00",
+          "date": "2026-09-06T15:29:44.550401+00:00",
           "outcome": "useful",
-          "q": "me explique o que esse plano vai fazer"
+          "q": "Arquitetura de aprendizado de preferências para curadoria: embeddings/RAG, processo iterativo ou fine-tuning"
         },
         {
-          "date": "2026-08-26T02:15:47.495935+00:00",
+          "date": "2026-09-06T15:20:04.927601+00:00",
           "outcome": "useful",
-          "q": "perfeito! Gere o plano de implementação completo, considerando que vou deixar uma outra sessão aqui no codex com o modelo Terra (médio) rodando fazendo a implementação."
+          "q": "Os outros 49 produtos são parecidos e a curadoria atual cria um padrão progressivo para uma LLM automatizar cada vez mais?"
         },
         {
-          "date": "2026-08-26T01:52:52.088632+00:00",
+          "date": "2026-09-06T15:15:18.629197+00:00",
           "outcome": "useful",
-          "q": "Já temos o necessário para gerar o plano de implementação?"
+          "q": "estou aqui nessa tela. Fiz avaliação de alguns conjuntos mas ainda me falta aquele estalo pra entender o que isso faz. Pode me ajudar explicando por favor? com linguagem popular"
         },
         {
-          "date": "2026-08-26T01:29:08.234669+00:00",
+          "date": "2026-09-05T02:25:08.399957+00:00",
           "outcome": "useful",
-          "q": "E com relação ao comportamento esperado ao clicar, ele vai direto via token para o supabase, ou os links capturados ficam na extensão?"
+          "q": "como eu faço para usar a curadoria? como ficou a arquitetura?"
         }
       ],
-      "score": 7.62307731,
+      "score": 12.742487379,
       "source_file": "docs/tecnico/modelo-de-dados.md",
       "status": "preferred",
-      "uses": 8
+      "uses": 15
     },
     "docs_tecnico_modelo_de_dados_publication": {
       "code_fingerprint": "6d787adea0a94bf816d12ce5ea5570858cf54459f887df2d151033d739ef83a3",
       "label": "publication",
-      "last": "2026-08-27T13:33:12.360004+00:00",
+      "last": "2026-09-01T02:40:22.900857+00:00",
       "provenance": [
+        {
+          "date": "2026-09-01T02:40:22.900857+00:00",
+          "outcome": "useful",
+          "q": "Avaliar abordagens de curadoria manual, por LLM ou híbrida e recomendar uma solução técnica e prática para o Garimpa."
+        },
         {
           "date": "2026-08-27T13:33:12.360004+00:00",
           "outcome": "useful",
@@ -116,26 +194,62 @@
           "q": "Já temos o necessário para gerar o plano de implementação?"
         }
       ],
-      "score": 3.910777267,
+      "score": 3.973320887,
       "source_file": "docs/tecnico/modelo-de-dados.md",
       "status": "preferred",
-      "uses": 4
+      "uses": 5
     },
-    "docs_tecnico_plano_motor_curadoria_ranking_por_valor": {
-      "code_fingerprint": "d07d86de69a544774ef06d2d2810838ce6c00d431352b333bf52362ddc201954",
-      "label": "Ranking por sinal de valor",
-      "last": "2026-08-19T02:01:57.485783+00:00",
+    "docs_tecnico_plano_motor_curadoria_documento": {
+      "code_fingerprint": "44fd729de5bc4616d6f63b8696a25b587c27cd9d573460a7c02485df69fffa56",
+      "label": "Plano de Implementação — Motor de Curadoria",
+      "last": "2026-08-27T15:34:50.057569+00:00",
       "provenance": [
         {
-          "date": "2026-08-19T02:01:57.485783+00:00",
+          "date": "2026-08-27T15:34:50.057569+00:00",
           "outcome": "useful",
-          "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
+          "q": "Precisamos de algum mecanismo no motor principal para evitar produtos ruins, por exemplo computador da Shopee; o sufixo da Shopee pressupõe qualidade duvidosa."
         }
       ],
-      "score": 0.820478198,
+      "score": 0.791604923,
       "source_file": "docs/tecnico/plano-motor-curadoria.md",
       "status": "tentative",
       "uses": 1
+    },
+    "docs_tecnico_plano_motor_curadoria_ranking_por_valor": {
+      "code_fingerprint": "44fd729de5bc4616d6f63b8696a25b587c27cd9d573460a7c02485df69fffa56",
+      "label": "Ranking por sinal de valor",
+      "last": "2026-09-06T17:23:26.536694+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-06T17:23:26.536694+00:00",
+          "outcome": "useful",
+          "q": "Olhe como está o projeto agora e proponha o que fazer imediatamente; o agente já consegue limpar a base ou faltam recursos?"
+        },
+        {
+          "date": "2026-09-06T15:33:41.541728+00:00",
+          "outcome": "useful",
+          "q": "Pensei em treinamentos com algum modelo do Gemini usando o Vertex Studio"
+        },
+        {
+          "date": "2026-09-06T15:29:44.550401+00:00",
+          "outcome": "useful",
+          "q": "Arquitetura de aprendizado de preferências para curadoria: embeddings/RAG, processo iterativo ou fine-tuning"
+        },
+        {
+          "date": "2026-09-06T15:20:04.927601+00:00",
+          "outcome": "useful",
+          "q": "Os outros 49 produtos são parecidos e a curadoria atual cria um padrão progressivo para uma LLM automatizar cada vez mais?"
+        },
+        {
+          "date": "2026-08-27T15:34:50.057569+00:00",
+          "outcome": "useful",
+          "q": "Precisamos de algum mecanismo no motor principal para evitar produtos ruins, por exemplo computador da Shopee; o sufixo da Shopee pressupõe qualidade duvidosa."
+        }
+      ],
+      "score": 5.431932991,
+      "source_file": "docs/tecnico/plano-motor-curadoria.md",
+      "status": "preferred",
+      "uses": 6
     },
     "docs_tecnico_plano_ux_vitrine_ux3_mina_navegavel": {
       "code_fingerprint": "60e3a7e876e425053c5990e2b3429bd7771ba847c0303fa2d940ce5f395218e7",
@@ -148,7 +262,7 @@
           "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
         }
       ],
-      "score": 0.820478198,
+      "score": 0.64948551,
       "source_file": "docs/tecnico/plano-ux-vitrine.md",
       "status": "tentative",
       "uses": 1
@@ -164,8 +278,24 @@
           "q": "Já temos o necessário para gerar o plano de implementação?"
         }
       ],
-      "score": 0.964370766,
+      "score": 0.763389983,
       "source_file": "docs/tecnico/roadmap.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_capture_readme_claimed_vs_verified_discount": {
+      "code_fingerprint": "5af423e717394b7ac8bb6d230523c020070a0b38f8bd00f7666c9f4694674c8c",
+      "label": "Desconto declarado versus desconto verificado",
+      "last": "2026-08-27T15:34:50.057569+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T15:34:50.057569+00:00",
+          "outcome": "useful",
+          "q": "Precisamos de algum mecanismo no motor principal para evitar produtos ruins, por exemplo computador da Shopee; o sufixo da Shopee pressupõe qualidade duvidosa."
+        }
+      ],
+      "score": 0.791604923,
+      "source_file": "packages/capture/README.md",
       "status": "tentative",
       "uses": 1
     },
@@ -190,7 +320,7 @@
           "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
         }
       ],
-      "score": 2.91212246,
+      "score": 2.305218278,
       "source_file": "packages/capture/src/adapters/mercadolivre/affiliate-link.ts",
       "status": "preferred",
       "uses": 3
@@ -206,7 +336,7 @@
           "q": "em vez de abrir o produto, o botão da extensão adicionar ao BizuMiner pode ser exibido no proprio catálogo? isso aceleraria os resultados para o usuário"
         }
       ],
-      "score": 0.963905802,
+      "score": 0.763021921,
       "source_file": "packages/capture/src/adapters/mercadolivre/deals.ts",
       "status": "tentative",
       "uses": 1
@@ -222,7 +352,7 @@
           "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
         }
       ],
-      "score": 0.998064308,
+      "score": 0.790061584,
       "source_file": "packages/capture/src/adapters/shopee/mapper.ts",
       "status": "tentative",
       "uses": 1
@@ -238,7 +368,7 @@
           "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
         }
       ],
-      "score": 0.998064308,
+      "score": 0.790061584,
       "source_file": "packages/capture/src/adapters/shopee/mapper.ts",
       "status": "tentative",
       "uses": 1
@@ -254,7 +384,7 @@
           "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
         }
       ],
-      "score": 0.963780266,
+      "score": 0.762922547,
       "source_file": "packages/capture/src/rate-limit.ts",
       "status": "tentative",
       "uses": 1
@@ -262,8 +392,13 @@
     "packages_capture_src_types_capturecontext": {
       "code_fingerprint": "56ede0146efa26292e0d955805089550c428a210003ed1d79411d1c3a419d30d",
       "label": "CaptureContext",
-      "last": "2026-08-26T01:52:52.088632+00:00",
+      "last": "2026-09-06T15:33:41.541728+00:00",
       "provenance": [
+        {
+          "date": "2026-09-06T15:33:41.541728+00:00",
+          "outcome": "useful",
+          "q": "Pensei em treinamentos com algum modelo do Gemini usando o Vertex Studio"
+        },
         {
           "date": "2026-08-26T01:52:52.088632+00:00",
           "outcome": "useful",
@@ -285,10 +420,10 @@
           "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
         }
       ],
-      "score": 3.856060471,
+      "score": 4.04977525,
       "source_file": "packages/capture/src/types.ts",
       "status": "preferred",
-      "uses": 4
+      "uses": 5
     },
     "packages_capture_src_types_rawoffer": {
       "code_fingerprint": "56ede0146efa26292e0d955805089550c428a210003ed1d79411d1c3a419d30d",
@@ -301,7 +436,7 @@
           "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
         }
       ],
-      "score": 0.998064308,
+      "score": 0.790061584,
       "source_file": "packages/capture/src/types.ts",
       "status": "tentative",
       "uses": 1
@@ -317,16 +452,37 @@
           "q": "em vez de abrir o produto, o botão da extensão adicionar ao BizuMiner pode ser exibido no proprio catálogo? isso aceleraria os resultados para o usuário"
         }
       ],
-      "score": 0.963905802,
+      "score": 0.763021921,
       "source_file": "packages/capture/test/fixtures/ofertas-sample.html",
       "status": "tentative",
       "uses": 1
     },
-    "packages_persistence_readme_supabase_garimpa_schema": {
-      "code_fingerprint": "bd8d7875a7174cf1dfaaeb62d110b8ace3a8b54d9e1ef021c660f9fd7ffbc68b",
-      "label": "Schema garimpa no Supabase Postgres",
-      "last": "2026-08-26T22:24:25.479629+00:00",
+    "packages_capture_tmp_ofertas_accessible_product_metadata": {
+      "code_fingerprint": "fb4fd9a7805f714812dfd1e40adaa508f6a42e33ca642a3b40e3be441147f07e",
+      "label": "Metadados acessíveis de produto",
+      "last": "2026-08-27T15:34:50.057569+00:00",
       "provenance": [
+        {
+          "date": "2026-08-27T15:34:50.057569+00:00",
+          "outcome": "useful",
+          "q": "Precisamos de algum mecanismo no motor principal para evitar produtos ruins, por exemplo computador da Shopee; o sufixo da Shopee pressupõe qualidade duvidosa."
+        }
+      ],
+      "score": 0.791604923,
+      "source_file": "packages/capture/tmp-ofertas.html",
+      "status": "tentative",
+      "uses": 1
+    },
+    "packages_persistence_readme_supabase_garimpa_schema": {
+      "code_fingerprint": "c47b20a0416feaa3ff002aed76d44f875f8f370b90c2b12950a2bc1eb2a26ef1",
+      "label": "Schema garimpa no Supabase Postgres",
+      "last": "2026-09-06T17:23:26.536694+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-06T17:23:26.536694+00:00",
+          "outcome": "useful",
+          "q": "Olhe como está o projeto agora e proponha o que fazer imediatamente; o agente já consegue limpar a base ou faltam recursos?"
+        },
         {
           "date": "2026-08-26T22:24:25.479629+00:00",
           "outcome": "useful",
@@ -346,20 +502,31 @@
           "date": "2026-08-26T01:29:08.234669+00:00",
           "outcome": "useful",
           "q": "E com relação ao comportamento esperado ao clicar, ele vai direto via token para o supabase, ou os links capturados ficam na extensão?"
-        },
-        {
-          "date": "2026-08-19T03:17:10.871533+00:00",
-          "outcome": "useful",
-          "q": "Como configurar o root directory e demais informações no Vercel?"
         }
       ],
-      "score": 4.698185678,
+      "score": 4.71815421,
       "source_file": "packages/persistence/README.md",
       "status": "preferred",
-      "uses": 5
+      "uses": 6
+    },
+    "packages_persistence_src_ingest_sweep": {
+      "code_fingerprint": "8729316c0b35370bf8f6504d7d7ddb57c9a3dca5e496f122af548a52560476eb",
+      "label": "sweep()",
+      "last": "2026-09-05T23:34:00.955086+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-05T23:34:00.955086+00:00",
+          "outcome": "useful",
+          "q": "Nas rodagens, agrupar as consultas da mesma execução em uma linha expansível"
+        }
+      ],
+      "score": 0.98210192,
+      "source_file": "packages/persistence/src/ingest.ts",
+      "status": "tentative",
+      "uses": 1
     },
     "packages_persistence_src_store": {
-      "code_fingerprint": "3a3c9e6240cbb79f05a6f04e10d8240997e1acae17c66ed07379a04e56c327e1",
+      "code_fingerprint": "30f2316d6f187ffb067554196193e13928f9d994274a79f86d1c4fabc1085d6a",
       "label": "store.ts",
       "last": "2026-08-27T15:27:50.715587+00:00",
       "provenance": [
@@ -374,13 +541,13 @@
           "q": "E com relação ao comportamento esperado ao clicar, ele vai direto via token para o supabase, ou os links capturados ficam na extensão?"
         }
       ],
-      "score": 1.96390547,
+      "score": 1.554615525,
       "source_file": "packages/persistence/src/store.ts",
       "status": "preferred",
       "uses": 2
     },
     "packages_persistence_src_store_priceobservationrecord": {
-      "code_fingerprint": "3a3c9e6240cbb79f05a6f04e10d8240997e1acae17c66ed07379a04e56c327e1",
+      "code_fingerprint": "30f2316d6f187ffb067554196193e13928f9d994274a79f86d1c4fabc1085d6a",
       "label": "PriceObservationRecord",
       "last": "2026-08-19T02:11:59.680745+00:00",
       "provenance": [
@@ -390,7 +557,7 @@
           "q": "Como organizar produtos novos, preços atualizados, execuções de captura e histórico para auditoria no BizuMiner?"
         }
       ],
-      "score": 0.820610337,
+      "score": 0.64959011,
       "source_file": "packages/persistence/src/store.ts",
       "status": "tentative",
       "uses": 1
@@ -406,13 +573,13 @@
           "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
         }
       ],
-      "score": 0.999901832,
+      "score": 0.791516157,
       "source_file": "packages/site/public/hero-bizuminer.png",
       "status": "tentative",
       "uses": 1
     },
     "packages_web_app_go_slug_route": {
-      "code_fingerprint": "c85f8a224351b003227d0d468c238337b1c8751ed7e587a9b19cd23dd56f9058",
+      "code_fingerprint": "7899ed7a89cf0b34ef88e7f26b8d1c0fac6ba119ff612092b182becee2e6e155",
       "label": "[slug]/route.ts",
       "last": "2026-08-27T15:27:50.715587+00:00",
       "provenance": [
@@ -422,13 +589,13 @@
           "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
         }
       ],
-      "score": 0.999901832,
+      "score": 0.791516157,
       "source_file": "packages/web/app/go/[slug]/route.ts",
       "status": "tentative",
       "uses": 1
     },
     "packages_web_app_vitrine": {
-      "code_fingerprint": "94866ed823221e6d61ef7c6920d6394bf162d9bbd05359bbf9d6cb2d9ba4f428",
+      "code_fingerprint": "7c63709f4ca3b2a8a1cadaa44b58b211d763eac61a67df4cde3d522d77563701",
       "label": "vitrine.tsx",
       "last": "2026-08-19T12:25:27.034715+00:00",
       "provenance": [
@@ -443,49 +610,49 @@
           "q": "Agora temos uma questão: em monitores grandes, ficou bom, mas em monitor menor, a hero está maior do que a tela comporta. E um detalhe: não da pra clicar nos cards de destaque. Tem o \"ver detalhes\" mas é pouco. Pode ter um link na propria imagem em si."
         }
       ],
-      "score": 1.65049032,
+      "score": 1.306518014,
       "source_file": "packages/web/app/vitrine.tsx",
       "status": "preferred",
       "uses": 2
     },
     "packages_web_app_vitrine_vitrine": {
-      "code_fingerprint": "94866ed823221e6d61ef7c6920d6394bf162d9bbd05359bbf9d6cb2d9ba4f428",
+      "code_fingerprint": "7c63709f4ca3b2a8a1cadaa44b58b211d763eac61a67df4cde3d522d77563701",
       "label": "Vitrine()",
-      "last": "2026-08-27T15:27:50.715587+00:00",
+      "last": "2026-09-06T17:23:26.536694+00:00",
       "provenance": [
         {
-          "date": "2026-08-27T15:27:50.715587+00:00",
+          "date": "2026-09-06T17:23:26.536694+00:00",
           "outcome": "useful",
-          "q": "Pensando do ponto de vista de branding das outras vitrines, eu havia considerado inicialmente serem vários domínios. Mas sendo o mesmo motor, trabalharíamos com um domínio e rotas pra cada tipo de loja?"
+          "q": "Olhe como está o projeto agora e proponha o que fazer imediatamente; o agente já consegue limpar a base ou faltam recursos?"
         },
         {
-          "date": "2026-08-27T13:33:12.360004+00:00",
+          "date": "2026-09-06T15:33:41.541728+00:00",
           "outcome": "useful",
-          "q": "A Shopee é tão grande e tem tanta coisa que fica difícil escolher. Capturar ofertas relâmpago, exibir até que dia e hora valem e usar as integrações para montar lojas específicas por área. O que você acha?"
+          "q": "Pensei em treinamentos com algum modelo do Gemini usando o Vertex Studio"
         },
         {
-          "date": "2026-08-19T12:25:27.034715+00:00",
+          "date": "2026-09-06T15:29:44.550401+00:00",
           "outcome": "useful",
-          "q": "Qual superficie da vitrine deve receber a experiencia mobile-first e como o catalogo se conecta aos cards, categorias e detalhes?"
+          "q": "Arquitetura de aprendizado de preferências para curadoria: embeddings/RAG, processo iterativo ou fine-tuning"
         },
         {
-          "date": "2026-08-19T03:39:28.046613+00:00",
+          "date": "2026-09-06T15:20:04.927601+00:00",
           "outcome": "useful",
-          "q": "Agora temos uma questão: em monitores grandes, ficou bom, mas em monitor menor, a hero está maior do que a tela comporta. E um detalhe: não da pra clicar nos cards de destaque. Tem o \"ver detalhes\" mas é pouco. Pode ter um link na propria imagem em si."
+          "q": "Os outros 49 produtos são parecidos e a curadoria atual cria um padrão progressivo para uma LLM automatizar cada vez mais?"
         },
         {
-          "date": "2026-08-19T02:01:57.485783+00:00",
+          "date": "2026-09-06T15:15:18.629197+00:00",
           "outcome": "useful",
-          "q": "A terminologia de sinal, sinal em formação e Explore a mina é autoexplicativa na UX do BizuMiner?"
+          "q": "estou aqui nessa tela. Fiz avaliação de alguns conjuntos mas ainda me falta aquele estalo pra entender o que isso faz. Pode me ajudar explicando por favor? com linguagem popular"
         }
       ],
-      "score": 5.289314402,
+      "score": 9.174878718,
       "source_file": "packages/web/app/vitrine.tsx",
       "status": "preferred",
-      "uses": 6
+      "uses": 11
     },
     "packages_web_app_vitrine_vitrineproduct": {
-      "code_fingerprint": "94866ed823221e6d61ef7c6920d6394bf162d9bbd05359bbf9d6cb2d9ba4f428",
+      "code_fingerprint": "7c63709f4ca3b2a8a1cadaa44b58b211d763eac61a67df4cde3d522d77563701",
       "label": "VitrineProduct",
       "last": "2026-08-19T12:25:27.034715+00:00",
       "provenance": [
@@ -500,13 +667,13 @@
           "q": "Quais arquivos e estilos controlam o hero e o banner de produto da home do BizuMiner?"
         }
       ],
-      "score": 1.649107186,
+      "score": 1.305423134,
       "source_file": "packages/web/app/vitrine.tsx",
       "status": "preferred",
       "uses": 2
     },
     "packages_web_lib_db_affiliatelink": {
-      "code_fingerprint": "7fe10cc367b02d122a3c82455280180afbd2ff6987cc2a10519e63779d811c2f",
+      "code_fingerprint": "cab207fe44af6d1affc49adfc4ddccda51f8e40540177bf749b08617599f9a70",
       "label": "affiliateLink()",
       "last": "2026-08-26T01:14:41.653230+00:00",
       "provenance": [
@@ -516,13 +683,13 @@
           "q": "Considerando extensão de navegador que permite ir adicionando os produtos. Melhor UX"
         }
       ],
-      "score": 0.963780266,
+      "score": 0.762922547,
       "source_file": "packages/web/lib/db.ts",
       "status": "tentative",
       "uses": 1
     },
     "packages_web_next_config": {
-      "code_fingerprint": "a75cb892e615d9a6995a64ce6fc88080b9ed0cd286a8cca4bc0249b768be0242",
+      "code_fingerprint": "f903c8b439f7924d200a3895300be784dd09f3463fcbbee6ac9ff0ffff270ba3",
       "label": "web/next.config.ts",
       "last": "2026-08-19T03:17:10.871533+00:00",
       "provenance": [
@@ -532,13 +699,13 @@
           "q": "Como configurar o root directory e demais informações no Vercel?"
         }
       ],
-      "score": 0.821469081,
+      "score": 0.650269886,
       "source_file": "packages/web/next.config.ts",
       "status": "tentative",
       "uses": 1
     },
     "packages_web_package": {
-      "code_fingerprint": "053fafd812b19e042f3689c7acb78d314ccae4d7cccf80c19f847bdec08a5253",
+      "code_fingerprint": "183704c4549d8156ec377c9cca0ccf71f2f707db4836597fb3f832b2d6368eed",
       "label": "web/package.json",
       "last": "2026-08-19T03:17:10.871533+00:00",
       "provenance": [
@@ -548,7 +715,7 @@
           "q": "Como configurar o root directory e demais informações no Vercel?"
         }
       ],
-      "score": 0.821469081,
+      "score": 0.650269886,
       "source_file": "packages/web/package.json",
       "status": "tentative",
       "uses": 1

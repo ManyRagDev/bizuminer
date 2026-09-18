@@ -8,9 +8,9 @@ export type PriceBand = typeof priceBands[number];
 
 /**
  * Janela de frescura do preço: quando o preço foi capturado.
- * "today" e "3d"/"7d" restringem a capturas recentes; "14d" é o padrão
- * da vitrine (já aplicado pela cláusula base de last_seen_at); "all" expande
- * para além de 14 dias, incluindo produtos dormentes.
+ * "today" e "3d" restringem a capturas recentes; "7d" é o teto público.
+ * "14d" e "all" seguem aceitos para URLs antigas, mas a consulta do catálogo
+ * nunca ultrapassa a validade global de sete dias.
  */
 export const freshnessBands = ["all", "today", "3d", "7d", "14d"] as const;
 export type FreshnessBand = typeof freshnessBands[number];
@@ -79,7 +79,7 @@ export function dealQueryFromSearchParams(params: URLSearchParams): Required<Dea
     sort: dealSorts.includes(rawSort as DealSort) ? rawSort as DealSort : "signal",
     priceBand: priceBands.includes(rawBand as PriceBand) ? rawBand as PriceBand : "all",
     marketplace: isKnownMarketplace(rawMarketplace) ? rawMarketplace : null,
-    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : "14d",
+    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : "7d",
     minRating: rawRating ? Math.min(Math.max(Number.parseFloat(rawRating), 1), 5) : null,
     minDiscount: rawDiscount ? Math.min(Math.max(Number.parseFloat(rawDiscount), 1), 100) : null,
     lowestOnly: params.get("lowestOnly") === "true",
@@ -115,7 +115,7 @@ export function priceRangeForBand(band: PriceBand): { min: number | null; max: n
   return { min: null, max: null };
 }
 
-/** Dias para o filtro de frescura. `null` = sem restrição (expande para além dos 14 dias base). */
+/** Dias para o filtro adicional; a política global ainda limita tudo a sete dias. */
 export function freshnessDays(band: FreshnessBand): number | null {
   if (band === "today") return 1;
   if (band === "3d") return 3;
@@ -142,7 +142,7 @@ export function catalogStateFromSearchParams(params: URLSearchParams): CatalogSt
     sort: dealSorts.includes(rawSort as DealSort) ? rawSort as DealSort : "signal",
     priceBand: priceBands.includes(rawBand as PriceBand) ? rawBand as PriceBand : "all",
     marketplace: isKnownMarketplace(rawMarketplace) ? rawMarketplace : null,
-    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : "14d",
+    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : "7d",
     minRating: rawRating ? Math.min(Math.max(Number.parseFloat(rawRating), 1), 5) : null,
     minDiscount: rawDiscount ? Math.min(Math.max(Number.parseFloat(rawDiscount), 1), 100) : null,
     lowestOnly: params.get("menorPreco") === "true",
@@ -158,9 +158,9 @@ export function catalogStateToSearchParams(state: CatalogState): URLSearchParams
   if (state.sort !== "signal") params.set("ordem", state.sort);
   if (state.search) params.set("busca", state.search);
   if (state.marketplace) params.set("loja", state.marketplace);
-  if (state.freshness !== "14d") params.set("frescor", state.freshness);
-  if (state.minRating !== null) params.set("avaliacao", String(state.minRating));
-  if (state.minDiscount !== null) params.set("desconto", String(state.minDiscount));
+  if (state.freshness && state.freshness !== "7d") params.set("frescor", state.freshness);
+  if (state.minRating != null) params.set("avaliacao", String(state.minRating));
+  if (state.minDiscount != null) params.set("desconto", String(state.minDiscount));
   if (state.lowestOnly) params.set("menorPreco", "true");
   if (state.hasHistory) params.set("historico", "true");
   return params;

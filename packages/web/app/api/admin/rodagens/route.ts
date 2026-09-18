@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { captureRuns, runningRun } from "../../../../lib/admin-db";
+import { captureRunHistory, runningRun } from "../../../../lib/admin-db";
 import { checkAdminUser, sinkJson } from "../../../../lib/api-auth";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const marketplace = request.nextUrl.searchParams.get("marketplace")?.trim() || undefined;
   try {
     const [runs, running] = await Promise.all([
-      captureRuns(20, "local", marketplace),
+      captureRunHistory(20, "local", marketplace),
       runningRun("local", marketplace),
     ]);
     return sinkJson(

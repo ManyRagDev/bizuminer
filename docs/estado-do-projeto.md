@@ -112,11 +112,17 @@ O painel é ferramenta interna de vocês dois: específico e cru, não precisa n
 | Extensão catalog-first multi-afiliado | 🟡 E0–E8 implementados; migrations E1–E4 aplicadas e verificadas (26/08); RLS gated; aguardando conferência |
 | Histórico de preço e selo honesto de menor preço | 🟡 |
 | Categoria de produto (75,9% de cobertura) | 🟡 |
+| Categoria de produto (75,9% de cobertura) | 🟡 |
 | Vitrine, busca, filtros, paginação | 🟡 |
 | Página `/bizu/[slug]` com histórico | 🟡 |
 | Redirect afiliado com telemetria própria | ✅ (validado em campo) |
 | Área do cliente (salvos, acompanhamento, recomendações, perfil) | 🟡 |
 | Painel do dono (telemetria + acionar robô) | 🟡 |
+| **Rodagens agrupadas por execução no painel** | 🟡 implementada e verificada em 05/09; banco real 12 linhas → 3 execuções (maior com 10 buscas); aguarda conferência independente |
+| **Curadoria manual + gate de publicação** | 🟡 código + migration aplicados e verificados em 01/09; conferência humana pendente |
+| **Captura category-first + controle de saturação** | 🟡 código entregue em 03/09; dry-run e testes locais passaram; rodada real pendente |
+| **M4-D — grupo editorial e contexto imutável** | 🟡 M4-D.1 aplicada e verificada no banco em 04/09; prova real decisão→undo aprovada; falta conferência independente |
+| **M4-E — caixa por grupos e sessão prática** | 🟡 implementada em 05/09; 31/31 testes de curadoria passam; build limpo; aguarda conferência independente de M4-D.1 e M4-E |
 | **Autenticação (Google OAuth) + gate do admin por e-mail** | 🟡 entregue 22/08, aguardando conferência |
 | Card de compartilhamento (OG) | 🟡 (entregue; falta veredito visual do dono e teste real pós-domínio) |
 | **Varredura recorrente ML (cron GitHub Actions)** | ⬜ **suspensa/reaberta em 25/08; não configurar enquanto E0 contém o acesso automatizado** |
@@ -384,3 +390,113 @@ Conferente: verifique contra a fonte de verdade, não contra este relato.
 - Migration `20260826070000_garimpa_rls_defense.sql` aplicada: `ENABLE ROW LEVEL SECURITY` nas 14 tabelas + política permissiva `garimpa_app` (`using (true) with check (true)`). O escopo por tenant fica como follow-up (ver `20260826030000_garimpa_tenant_rls.sql`, gated).
 - **Teste ponta a ponta real (feito pelo dono):** extensão dev carregada no Chrome, dispositivo pareado, card "Aparelho de Jantar Oxford Cerâmica Folk 20 Pç" capturado → `MLB33269708`, `price 17480`, `capture_source=extension`, publicação `ml-MLB33269708-bizuminer`. `/go` → 302 com `matt_word=juem4482159_ml-MLB33269708-bizuminer&matt_tool=99838509&forceInApp=true`; `click_event` gravado em `tenant_id=local`, `affiliate_id=aff_local`.
 - `verify:extension-e2e` → 0 duplicatas, 0 cruzamento, publicação na captura. `verify:affiliates` → 1 owner, 1 config ativa. RLS confirmada em `pg_class.relrowsecurity=true` nas 14 tabelas, com o app (garimpa_app) ainda lendo/escrevendo normalmente.
+
+**Registro — 01/09/2026: curadoria editorial v1 entregue (🟡 migration aplicada; aguardando conferência prática).**
+
+- Notificação de pendências no painel e mesa dedicada em `/admin/curadoria`, com sessão de 20, evidências, atalhos, motivos rápidos, “Outro” com texto livre, espera, depois e desfazer.
+- Estado atual em `product_curation` + log append-only em `curation_event`. Catálogo anterior permanece `legacy_visible`; produto novo nasce `pending` por trigger.
+- Gate aplicado às superfícies públicas: apenas `approved` e `legacy_visible` podem aparecer ou gerar saída afiliada.
+- Verificação local: contrato de curadoria 6/6; persistence 11/11; typecheck web/persistence e build web limpos. Suíte web completa executada antes do sexto teste: 123/131, com 8 falhas preexistentes e fora desta entrega.
+- **Aplicado ao banco:** migration `20260901025640_garimpa_curation.sql` executada no projeto `spbuwcwmxlycchuwhfir` e registrada no histórico remoto. `verify:curation` confirmou 571 produtos / 571 estados, zero órfãos, zero “Outro” inválido e trigger presente; `/` voltou a HTTP 200. Instrução e pedido de conferência prática em `docs/tecnico/handoff-curadoria-v1.md`.
+
+**Registro — 03/09/2026: captura category-first v1 entregue localmente (🟡 rodada real pendente).**
+
+- AliExpress e Shopee agora usam `category-first-v1` quando não há `--keyword`: 8 consultas dirigidas e 2 exploratórias. `achadinhos` não é mais o fallback da AliExpress.
+- O gate de descoberta limita apenas produtos novos (8 por consulta; 5 por família) e encerra páginas seguintes quando uma família domina 60% de ao menos 10 candidatos. Produtos conhecidos continuam recebendo observações de preço, mesmo se a família estiver saturada.
+- Cada consulta mantém auditoria em `capture_run.parameters`; nenhuma migration foi necessária porque o campo `jsonb` já existia. `verify:capture-plan` confere as rodadas reais depois da primeira execução.
+- Verificação local: persistence 11→18 e capture 120/120 testes, todos passando; typecheck de ambos limpo; dry-run dos dois CLIs confirmou o plano sem tocar em API/banco. Consulta read-only ao Supabase validou o lookup em lote (`MLB33269708` encontrado; id inexistente não encontrado). A execução real ficou explicitamente pendente para não inserir ofertas nem consumir APIs sem uma rodada deliberada.
+- Limite desta versão: o plano é configurado em código e comum às duas fontes; adaptação automática por taxa de aprovação/preço ainda depende de acumular histórico confiável das novas consultas.
+
+**Registro — 03–04/09/2026: M4-D (grupo editorial e contexto imutável) corrigida no banco (🟡 aguardando conferência independente).**
+
+- Família vira dado estruturado em `product` (`family_key/label/method/version`), classificada na captura pela mesma fonte única do gate (`product-family.ts`), sem backfill fictício.
+- Fila de curadoria passa a expor família, `deferred_until` e proveniência da captura (plano, modo, categoria-alvo e marketplace do run que apresentou o produto) via view `curation_queue_facts`.
+- Toda decisão humana (revisão, lote, desfazer) grava snapshot versionado no `curation_event.metadata` (incluindo URL da imagem, fatos exibidos, sinais objetivos, proveniência e origem da ação) — reproduzível sem consultar o estado mutável do anúncio.
+- `family_saturation` vira motivo de espera válido; "Depois" ganha `deferred_until` (adiar nunca é rejeitar) e contrato de validação.
+- Contrato puro de grupo editorial (`editorial-groups.ts`): grupos por tenant+família com id determinístico de 64 bits, representantes até 5 por evidência e singulares fora de balde; a borda de banco recalcula o grupo canônico e não confia no `group_id` do cliente.
+- **Retratação baseada no banco (04/09):** a migration `20260903200000` está aplicada. Leitura real encontrou 571 produtos, 104 com família, 467 sem família, 0 pares quebrados e nenhum snapshot ainda. O registro anterior `awaiting_migration` confundiu um estado anterior com o estado real atual.
+- **M4-D.1 aplicada:** `20260904173316_harden_editorial_context.sql` acrescenta estado anterior do motivo/adiamento aos eventos. Decisão consome `deferred_until`; undo restaura status+motivo+detalhe+adiamento; lote recusa produto duplicado; snapshot inclui imagem; verificador recusa ausência de snapshot e valida estrutura mínima.
+- **Verificação da correção:** persistence 22/22, capture 120/120, testes direcionados web 22/22, typechecks e build web limpos. A suíte web geral ficou em 140/148, com as mesmas 8 falhas anteriores fora deste escopo. `verify:curation` real confirmou 571 produtos/571 estados e zero órfãos; o novo `verify:editorial-context` falha fechado como `awaiting_migration` até a corretiva ser aplicada.
+- **Execução real:** versão `20260904173316` registrada no histórico remoto. Produto `00c6f380-9556-4a51-aad1-efe27599d60d` passou por aprovação (evento `43`) e undo (evento `44`); todos os checks da transição foram verdadeiros e o estado final voltou exatamente ao anterior. `verify:editorial-context` retornou `verified/ok=true`; `verify:curation` manteve 571 produtos/571 estados, sem órfãos e sem mudança na distribuição final.
+- **Cicatriz:** o histórico remoto anterior usa vários timestamps diferentes dos arquivos locais. Para evitar reaplicação, a entrega executou exclusivamente a migration M4-D.1 via vínculo administrativo e reparou exclusivamente sua versão. Reconciliar o histórico antigo é uma entrega separada.
+- **Bloqueio restante:** somente conferência independente. M4-E não começa antes do veredito.
+
+**Registro — 03/09/2026: pipeline e workflow completo de curadoria planejados (⬜ implementação não iniciada).**
+
+- O plano vivo `docs/tecnico/plano-motor-curadoria.md` passou a tratar grupo de semelhantes + exceções como unidade de trabalho, preservando a mesa individual como segunda etapa.
+- Próximas entregas fechadas: conferir M4-D.1, M4-E (caixa por grupos), M4-F (dataset/observabilidade), M4-G (LLM em modo sombra), M4-H (copiloto), M4-I (seleção editorial e realimentação da captura) e M4-J (fine-tuning apenas se justificado).
+- Decisões registradas: saturação não é rejeição; aprovação significa elegibilidade, não destaque; nenhuma loja recebe cota de aprovação; IA falha aberto para o workflow manual e decisão humana prevalece.
+- Esta atualização alterou apenas documentação. Não houve migration, chamada de marketplace, chamada de LLM nem mudança de comportamento em produção.
+
+**Registro — 05/09/2026: M4-E (caixa de entrada por grupos e sessão prática) implementada (🟡 aguarda conferência independente).**
+
+- **Notificação por carga de decisão:** tanto o painel admin (`/admin`) quanto o cabeçalho da curadoria exibem a carga real de decisão humana: *"X grupos e Y produtos singulares aguardam avaliação — Z produtos capturados"*.
+- **Estrutura por abas em `/admin/curadoria`:**
+  - `Hoje`: mesa individual de 20 produtos (preservada de M4-D como segunda etapa para itens singulares, finalistas e casos ambíguos), com atalhos de teclado e botão "Depois" persistente por 7 dias.
+  - `Grupos repetitivos`: cards de grupos canônicos com motivo/família, contagem de itens, distribuição por marketplace, faixa de preço, até 5 representantes ordenados por evidência + diversidade de loja, expansão sob demanda de todos os membros e ações atômicas.
+  - `Em espera`: visualização dos produtos retidos com motivo formal e adiados (`deferred_until`), com ação direta de antecipar avaliação que limpa o adiamento e devolve o item à fila imediatamente.
+  - `Aprendizados`: métricas agregadas de decisões humanas, taxa de compressão (produtos por decisão humana), distribuição de motivos e lista auditável dos padrões livres registrados em "Outro" (3 a 1000 caracteres).
+- **Ações em grupo atômicas:**
+  - `actOnGroup` executa em transação única: valida o `groupId` recalculando o hash canônico no servidor contra os fatos do banco (falha fechado contra hashes forjados), valida contra duplicatas, aplica decisão aos representantes selecionados e envia automaticamente todos os demais membros não selecionados para espera por saturação (`held/family_saturation`, nunca `rejected/low_utility`).
+  - Cada item decidido recebe `snapshot_v1` imutável com `group_id`, `review_session_id` e `bulk_action_id` compartilhados.
+- **Desfazer em lote atômico (`undoBulkReview`):**
+  - Reverte atomicamente todos os produtos afetados pela ação em lote para seus estados anteriores exatos (`from_status`, `from_reason_code`, `from_reason_detail`, `from_deferred_until`), gravando eventos de undo com snapshot de rastreabilidade.
+- **Resumo de encerramento de sessão:**
+  - Botão "Encerrar sessão" disponível a qualquer momento ou disparado ao esgotar a fila da sessão.
+  - Apresenta contadores auditáveis (aprovados, rejeitados, retidos por saturação, retidos por evidência, outros) e detalhamento dos textos livres registrados em "Outro".
+- **Isolamento de vitrine:**
+  - Confirmado via testes de regressão: `pc.status in ('approved', 'legacy_visible')` permanece estrito; produtos em `pending`, `held` (incluindo saturação) e `rejected` permanecem estritamente fora da vitrine pública e da busca.
+- **Verificação executada:**
+  - Suíte de curadoria e grupos: 31/31 testes passaram com sucesso (`test/curation-*.test.mjs`, `test/editorial-groups.test.mjs`).
+  - Suíte persistence: 22/22 testes passaram (`packages/persistence`).
+  - Verificação de contexto editorial no banco: `npm run verify:editorial-context` retornou `verified/ok=true`.
+  - Verificação de integridade no banco: `npm run verify:curation` confirmou 571 produtos / 571 estados / 0 órfãos.
+  - Build Next.js de produção: `npm run build` limpo em `packages/web` (0 erros).
+  - Typecheck: 0 erros em `packages/web` e `packages/persistence`.
+- **Bloqueio restante:** M4-E permanece 🟡 até aprovação formal em conferência independente de M4-D.1 e M4-E (`docs/tecnico/pedido-conferencia-m4e.md`).
+
+**Registro — 05/09/2026: rodagens do painel agrupadas por execução (🟡 aguarda conferência independente).**
+
+- O painel passou a exibir uma linha por execução completa do plano, com totais de buscas, itens, novos, mudanças de preço e duração agregados.
+- A expansão preserva cada consulta filha e seus fatos operacionais: categoria/consulta, modo dirigido ou exploratório, observações, páginas, limites por política, saturação, família dominante e erro.
+- Novas capturas persistem `parameters.captureExecutionId`; o histórico anterior usa somente o prefixo de `collector_run_id` quando o sufixo corresponde exatamente a `captureQueryId`. Horário e nome do plano não são usados como identidade.
+- A consulta do painel limita 20 execuções completas em vez de 20 consultas filhas; a métrica geral de rodagens também passou a contar execuções.
+- Prova no banco real da AliExpress: 12 linhas recentes foram normalizadas em 3 execuções, com uma execução de 10 buscas — o caso mostrado pelo dono.
+- Verificação: 4/4 testes específicos, 22/22 em persistence, typecheck limpo nos dois pacotes e inspeção visual do estado fechado/expandido. A suíte web completa ficou em 173/177 por quatro falhas preexistentes e fora deste escopo.
+- Conferência pendente: `docs/tecnico/pedido-conferencia-rodagens-agrupadas.md`.
+
+**Registro — 06/09/2026: validade global de oferta em 7 dias e fim da publicação por legado (🟡 implementação local).**
+
+- `product.last_seen_at` passa a ser a fonte única da validade operacional: após 7 dias sem nova captura, o produto some da vitrine, detalhes públicos, redirects afiliados, recomendações, salvos ativos e filas de avaliação.
+- Uma nova captura renova a evidência mesmo se o preço permanecer igual; isso confirma disponibilidade/preço sem exigir uma mudança artificial de valor. O histórico nunca é apagado e o produto volta automaticamente se for reobservado.
+- A vitrine deixa de aceitar `legacy_visible`: publicação pública exige `approved` + evidência vigente. `pending`, `legacy_visible`, `held`, `rejected` e qualquer item vencido ficam fora.
+- A fila e os grupos mostram apenas pendências vigentes. Estados e eventos antigos continuam no banco para aprendizado e auditoria, sem virar dívida de avaliação.
+- Medição anterior à mudança: 744 produtos; 499 legados (94 vigentes em 7 dias), 165 pendentes vigentes e 72 aprovados (64 vigentes). A política projetada reduz a vitrine pública para 64 produtos e a carga aberta para 259, antes de novas decisões.
+- Limpeza inicial aplicada pelo script auditável `curate-initial-catalog.ts`: 44 dos 64 aprovados vigentes foram reclassificados (32 para espera e 12 rejeitados), com `actor_type=llm`, `policy_version=bootstrap-clean-v1`, justificativa e snapshot. Saturação de unhas/moto preservou dois representantes de cada família; piercing/bijuteria saiu por desalinhamento de público; ofertas/promessas frágeis foram retidas ou rejeitadas.
+- Resultado real após a limpeza: 20 produtos públicos vigentes; 28 aprovados no histórico total, 34 em espera, 18 rejeitados, 499 legados e 165 pendentes. `verify:curation` confirmou 744/744 estados, zero órfãos e zero “Outro” inválido; `verify:editorial-context` confirmou snapshots e invariantes íntegros.
+- Índice `product_tenant_last_seen_only_idx` incluído na migration `20260906190000_catalog_freshness_policy.sql`; aplicação remota permanece pendente.
+
+**Registro — 09/09/2026: navegação integrada — Admin Shell + query params canônicos (🟡 aguarda conferência independente).**
+
+- **Admin Shell persistente:** `app/admin/layout.tsx` centraliza a barreira de dono e envolve `/admin`, `/admin/curadoria` e `/pauta` num shell único (`app/_components/admin-shell.tsx`): marca no topo, sidebar com as áreas do painel à esquerda (desktop) e drawer mobile. As páginas deixaram de repetir o próprio gate e o próprio header.
+- **`/pauta` entrou no shell:** autorizada por sessão admin OU token HMAC do QR; não autorizada mantém "Acesso restrito" sem shell.
+- **Query params canônicos com aliases preservados** (`lib/admin-query-aliases.ts`, 8 testes): `?aba=hoje|grupos|espera|aprendizados`, `?fila=held`, `?modo=…` e `?subaba=…` redirecionam para `?aba=`/`?sub=` canônicos. Os links internos do `/admin` também corrigidos (antes `?modo=`, que a mesa nem lia).
+- **Componentes compartilhados:** `detail-header.tsx`, `admin-badge.tsx` e `deny-access.tsx` eliminam a duplicação inline; vitrine mobile ganhou o link "⚡ Painel Admin" (antes ausente no menu do celular).
+- **Verificação:** typecheck limpo, testes web 215/215 (8 novos), persistence 22/22, build 17/17, smoke HTTP nas rotas públicas e gates de redirect.
+- **Conferência pendente:** `docs/tecnico/handoff-navegacao-integrada.md` (sidebar, drawer mobile, deep links antigos e pauta via QR).
+
+**Registro — 09/09/2026: resiliência da triagem com IA contra 503/capacidade (implementado, 🟡 aguarda conferência).**
+
+- **Causa:** `evaluateProductsBatch` chamava `generateContent` uma vez por lote, sem retry — um 503 do Gemini ("high demand, try again later", transitório) derrubava o lote inteiro e a triagem ia sem anotação de IA.
+- **Retry com backoff exponencial + jitter:** `withRetry` repete chamadas em erros transitórios (408, 429, 500, 502, 503, 504). Padrão: 3 tentativas, 1,2s → 10s, jitter de 25%. Configurável por lote via `EvaluationOptions.retry`.
+- **Cadeia de modelos fallback:** `gemini-2.5-flash` (primário) → `gemini-2.0-flash` (fallback) quando o primário está saturado; configurável via env `GEMINI_FALLBACK_MODELS`. Erro permanente (400/403) não troca de modelo nem desperdiça tentativas.
+- **Parse validado como retryável:** resposta que não é JSON/lista (prosa do modelo) agora entra no retry e, persistindo, troca de modelo — antes era descartada em silêncio.
+- **Fallback seguro preservado:** lote que esgota todos os modelos/retries não entra no resultado; o pipeline mantém os itens `pending` na fila humana.
+- **Verificação:** 222/222 testes (7 novos cobrem classificação de erro transitório, `withRetry`, `buildModelChain` e `parseAICurationResponse`), typecheck limpo, build limpo.
+
+**Registro — 09/09/2026: revisão de usabilidade do painel após o Admin Shell (implementado, 🟡 aguarda conferência).**
+
+- **Menus duplicados eliminados:** a sidebar do Admin Shell passou a listar SÓ as 3 seções de página (Cockpit → `/admin`, Curadoria → `/admin/curadoria`, Pauta → `/pauta`). As abas operacionais do Cockpit (`AdminTabs`) e as sub-abas editoriais da Curadoria (`curation-tabs`) continuam na própria página — antes, a sidebar duplicava com o `AdminTabs` no `/admin` (visão geral/rodagens/captura/afiliados/publicação).
+- **Piloto Automático em destaque:** em `/admin/curadoria?aba=bussola`, o gatilho `⚡ Rodar Triagem com IA` foi movido para o **topo** do card, logo após a descrição — antes era a última seção do card ("anexo no fim"). O card da **Bússola** ganhou o próprio botão **💾 Salvar Diretriz** (a diretriz é editada ali; antes o salvar ficava só no card do Piloto).
+- **Spot-check não volta com os mesmos produtos:** o botão **✓ Manter** agora persiste a confirmação (`confirmSpotCheck` + `confirmSpotCheckAction` nas server actions) — antes era só visual, então o produto reaparecia no refresh. A query `getRecentSpotCheckProducts` foi reescrita para mostrar somente produtos cuja **decisão mais recente** foi a aprovação da IA; assim que o diretor confirma ou descarta, um evento humano mais novo tira o produto da fila de amostragem. "✕ Descartar & Ensinar" já persistia corretamente.
+- **Verificação:** 222/222 testes, typecheck limpo, build 17/17 limpo, smoke HTTP 200 nas rotas de bússola e curadoria.

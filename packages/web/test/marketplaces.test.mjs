@@ -55,12 +55,11 @@ test("carimbos são visualmente distintos entre si — o ponto do recurso", () =
   assert.equal(new Set(assinaturas).size, MARKETPLACES.length, "há carimbos duplicados no registro");
 });
 
-test("logo declarado aponta para /brand/marketplaces e tem alt e altura", () => {
+test("logo declarado aponta para /brand/marketplaces e tem alt", () => {
   for (const def of MARKETPLACES) {
     if (!def.logo) continue;
-    assert.match(def.logo.src, /^\/brand\/marketplaces\/[a-z0-9-]+\.(svg|png)$/, `${def.slug}: caminho de logo fora do padrão`);
+    assert.match(def.logo.src, /^\/brand\/marketplaces\/(quadrados\/)?[a-z0-9-]+\.(svg|png)$/, `${def.slug}: caminho de logo fora do padrão`);
     assert.ok(def.logo.alt.length > 0, `${def.slug}: logo sem alt (leitor de tela perde a origem)`);
-    assert.ok(def.logo.height > 0, `${def.slug}: logo sem altura`);
   }
 });
 

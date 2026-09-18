@@ -12,8 +12,8 @@
  * Testáveis sem DATABASE_URL.
  */
 
-import type { VitrineProduct } from "./deal-view";
-import { priceFreshness } from "./deal-signal";
+import type { VitrineProduct } from "./deal-view.ts";
+import { priceFreshness } from "./deal-signal.ts";
 
 // ── Desejabilidade da categoria ─────────────────────────────────────
 

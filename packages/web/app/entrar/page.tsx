@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getPageAuth } from "../../lib/auth";
 import { ThemeToggle } from "../theme-toggle";
+import DetailHeader from "../_components/detail-header";
 import GoogleButton from "./google-button";
 
 export const dynamic = "force-dynamic";
@@ -20,16 +20,14 @@ export default async function EntrarPage() {
 
   return (
     <main className="auth-page">
-      <header className="detail-header">
-        <a className="brand" href="/" aria-label="BizuMiner, início">
-          <Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" />
-          <span className="brand-name"><b>Bizu</b><i>Miner</i></span>
-        </a>
-        <div className="detail-header-actions">
-          <ThemeToggle />
-          <a href="/#achados">← voltar aos achados</a>
-        </div>
-      </header>
+      <DetailHeader
+        actions={
+          <>
+            <ThemeToggle />
+            <a href="/#achados">← voltar aos achados</a>
+          </>
+        }
+      />
 
       <section className="auth-stage" aria-label="Entrar na sua área">
         <div className="auth-card">

@@ -9,7 +9,8 @@
  */
 
 import postgres, { type Sql } from "postgres";
-import type { ActivityCounts } from "./activity.ts";
+import { RECENT_WINDOW_DAYS, type ActivityCounts } from "./activity.ts";
+import type { ProductFamilyInfo } from "./product-family.ts";
 import type {
   FinishCaptureRunInput,
   OfferStore,
@@ -43,6 +44,22 @@ export class PostgresStore implements OfferStore {
     });
   }
 
+  async findExistingExternalIds(
+    tenantId: string,
+    marketplace: string,
+    externalIds: readonly string[],
+  ): Promise<ReadonlySet<string>> {
+    if (externalIds.length === 0) return new Set();
+    const rows = await this.sql<{ external_id: string }[]>`
+      select external_id
+      from ${this.sql(this.s)}.product
+      where tenant_id = ${tenantId}
+        and marketplace = ${marketplace}
+        and external_id = any(${externalIds})
+    `;
+    return new Set(rows.map((row) => row.external_id));
+  }
+
   async upsertProductWithObservation(input: {
     captureRunId: string;
     tenantId: string;
@@ -52,6 +69,7 @@ export class PostgresStore implements OfferStore {
     productUrl: string;
     imageUrl?: string;
     category?: string;
+    family?: ProductFamilyInfo;
     priceCents: number;
     originalPriceCents?: number;
     claimedDiscountRate?: number;
@@ -70,15 +88,22 @@ export class PostgresStore implements OfferStore {
       ), up as (
         insert into ${this.sql(this.s)}.product as p
           (id, tenant_id, marketplace, external_id, title, product_url, image_url, category,
+           family_key, family_label, family_method, family_version,
            last_price_cents, first_seen_at, last_seen_at, last_capture_run_id)
         values (gen_random_uuid()::text, ${input.tenantId}, ${input.marketplace}, ${input.externalId},
                 ${input.title}, ${input.productUrl}, ${input.imageUrl ?? null}, ${input.category ?? null},
+                ${input.family?.key ?? null}, ${input.family?.label ?? null},
+                ${input.family?.method ?? null}, ${input.family?.version ?? null},
                 ${input.priceCents}, ${input.observedAt}, ${input.observedAt}, ${input.captureRunId})
         on conflict (tenant_id, marketplace, external_id) do update set
           title = excluded.title,
           product_url = excluded.product_url,
           image_url = coalesce(excluded.image_url, p.image_url),
           category = coalesce(excluded.category, p.category),
+          family_key = coalesce(excluded.family_key, p.family_key),
+          family_label = coalesce(excluded.family_label, p.family_label),
+          family_method = coalesce(excluded.family_method, p.family_method),
+          family_version = coalesce(excluded.family_version, p.family_version),
           last_price_cents = excluded.last_price_cents,
           last_seen_at = excluded.last_seen_at,
           last_capture_run_id = excluded.last_capture_run_id,
@@ -122,6 +147,7 @@ export class PostgresStore implements OfferStore {
         productUrl: input.productUrl,
         imageUrl: input.imageUrl,
         category: input.category,
+        family: input.family,
         lastPriceCents: input.priceCents,
         firstSeenAt: input.observedAt,
         lastSeenAt: input.observedAt,
@@ -148,7 +174,8 @@ export class PostgresStore implements OfferStore {
       update ${this.sql(this.s)}.capture_run
       set finished_at = ${run.finishedAt}, status = ${run.status},
           items_captured = ${run.itemsCaptured}, items_new = ${run.itemsNew},
-          price_changes = ${run.priceChanges}, error = ${run.error ?? null}
+          price_changes = ${run.priceChanges}, error = ${run.error ?? null},
+          parameters = parameters || ${this.sql.json(run.parameterPatch ?? {})}
       where id = ${runId}
     `;
   }
@@ -205,7 +232,7 @@ export class PostgresStore implements OfferStore {
       select
         case
           when last_capture_run_id = ${currentRunId} then 'ativo'
-          when last_seen_at >= ${now} - interval '14 days' then 'recente'
+          when last_seen_at >= ${now} - (${RECENT_WINDOW_DAYS} * interval '1 day') then 'recente'
           else 'dormente'
         end as level,
         count(*)::text as n

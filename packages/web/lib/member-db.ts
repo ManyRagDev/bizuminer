@@ -1,4 +1,5 @@
 import { db, type DealRow } from "./db";
+import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "./catalog-policy.ts";
 import type { PriceBand } from "./deal-query";
 import { slugCaseSql } from "./marketplaces.ts";
 
@@ -77,7 +78,11 @@ export async function setFavorite(userId: string, productId: string, saved: bool
         insert into garimpa.favorite (tenant_id, user_id, product_id)
         select ${tenantId}, ${userId}, p.id
         from garimpa.product p
+        join garimpa.product_curation pc
+          on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+         and pc.status = ${PUBLIC_CURATION_STATUS}
         where p.id = ${productId} and p.tenant_id = ${tenantId}
+          and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
         on conflict (user_id, product_id) do nothing
         returning id
       `;
@@ -103,7 +108,11 @@ export async function bulkFavorites(userId: string, productIds: string[], tenant
       insert into garimpa.favorite (tenant_id, user_id, product_id)
       select ${tenantId}, ${userId}, p.id
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.tenant_id = ${tenantId} and p.id = any(${productIds})
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       on conflict (user_id, product_id) do nothing
       returning id
     `;
@@ -130,10 +139,15 @@ export async function startWatch(
       insert into garimpa.price_watch (tenant_id, user_id, product_id, baseline_price_cents, target_price_cents)
       select ${tenantId}, ${userId}, latest.product_id, latest.price_cents, ${targetPriceCents}
       from (
-        select product_id, price_cents
-        from garimpa.price_observation
-        where tenant_id = ${tenantId} and product_id = ${productId}
-        order by observed_at desc, id desc
+        select o.product_id, o.price_cents
+        from garimpa.price_observation o
+        join garimpa.product p on p.id = o.product_id and p.tenant_id = o.tenant_id
+        join garimpa.product_curation pc
+          on pc.product_id = o.product_id and pc.tenant_id = o.tenant_id
+         and pc.status = ${PUBLIC_CURATION_STATUS}
+        where o.tenant_id = ${tenantId} and o.product_id = ${productId}
+          and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
+        order by o.observed_at desc, o.id desc
         limit 1
       ) latest
       on conflict (user_id, product_id) do update set
@@ -251,8 +265,12 @@ export async function savedDeals(userId: string, tenantId = "local"): Promise<Sa
              f.created_at as saved_at
       from fav f
       join garimpa.product p on p.id = f.product_id and p.tenant_id = ${tenantId}
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       join latest l on l.product_id = p.id
       join stats s on s.product_id = p.id
+      where p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       order by f.created_at desc
     `;
   } finally {
@@ -280,7 +298,11 @@ export async function watchedDeals(userId: string, tenantId = "local"): Promise<
              l.price_cents as current_price_cents, l.observed_at as current_observed_at
       from watching w
       join garimpa.product p on p.id = w.product_id and p.tenant_id = ${tenantId}
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       left join latest l on l.product_id = w.product_id
+      where p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       order by w.created_at desc
     `;
   } finally {
@@ -366,10 +388,13 @@ export async function recommendedDeals(userId: string, limit = 8, tenantId = "lo
              s.previous_min_price_cents, s.observation_count, s.history_days,
              (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       join latest l on l.product_id = p.id
       join stats s on s.product_id = p.id
       where p.tenant_id = ${tenantId}
-        and p.last_seen_at >= now() - interval '14 days'
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
         and p.category = any(${categories})
         and p.id not in (
           select product_id from garimpa.favorite

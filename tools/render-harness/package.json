@@ -1,0 +1,10 @@
+{
+  "name": "garimpa-render-harness",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Driver Playwright que renderiza snapshots do PostSpark em PNG via harness headless",
+  "dependencies": {
+    "playwright": "1.62.1"
+  }
+}

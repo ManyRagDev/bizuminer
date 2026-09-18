@@ -2,13 +2,15 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getPageSession } from "../../../lib/auth";
+import { getPageSession, isAdmin } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
 import { freshnessLabel, priceFreshness, priceNarrative, priceSignal, seenAgo } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
 import { marketplaceDef } from "../../../lib/marketplaces";
 import { validUserId } from "../../../lib/member-contract";
 import { savedProductIds } from "../../../lib/member-db";
+import AdminBadge from "../../_components/admin-badge";
+import DetailHeader from "../../_components/detail-header";
 import SaveDealButton from "./save-deal-button";
 import RedirectBanner from "./redirect-banner";
 
@@ -80,13 +82,22 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   const product = toVitrineProduct(deal);
   const uid = (await cookies()).get("bm_uid")?.value;
   const session = await getPageSession(validUserId(uid) ? uid : null);
+  const isUserAdmin = session ? isAdmin(session.authUser) : false;
   const savedInAccount = session ? (await savedProductIds(session.appUserId)).includes(deal.id) : false;
   const relatedPage = deal.category ? await topDeals({ category: deal.category, limit: 6, sort: "signal" }) : null;
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
     {direto === "1" && <RedirectBanner slug={deal.slug} />}
-    <header className="detail-header"><a className="brand" href="/" aria-label="BizuMiner, início"><Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" /><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><div className="detail-header-actions"><a href="/#achados">← voltar aos achados</a><SaveDealButton product={product} initialSaved={savedInAccount} /></div></header>
+    <DetailHeader
+      actions={
+        <>
+          {isUserAdmin && <AdminBadge />}
+          <a href="/#achados">← voltar aos achados</a>
+          <SaveDealButton product={product} initialSaved={savedInAccount} />
+        </>
+      }
+    />
     <article className="deal-layout">
       <section className="deal-visual"><div className="deal-image-wrap">{deal.image_url ? <Image src={deal.image_url} alt={deal.title} fill priority sizes="(max-width: 820px) 100vw, 52vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={48} height={48} /></div>}</div>{deal.category && <span className="deal-category">{deal.category}</span>}</section>
       <section className="deal-summary">
@@ -94,8 +105,12 @@ export default async function DealPage({ params, searchParams }: PageProps) {
         <span className={`deal-signal ${signal.tone}`}>{signal.label}</span>
         <h1>{deal.title}</h1>
         {(deal.rating_star !== null || deal.sales_label) && <p className="deal-evidence">{deal.rating_star !== null && <span>★ {deal.rating_star.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}/5</span>}{deal.rating_star !== null && deal.sales_label && <i>·</i>}{deal.sales_label && <span>{deal.sales_label}</span>}<small>{mpEvidence}</small></p>}
-        <p className="deal-narrative"><b>Histórico do preço:</b> {priceNarrative({ priceCents: deal.price_cents, previousMinPriceCents: deal.previous_min_price_cents, observationCount: deal.observation_count, historyDays: deal.history_days, lowestVerified: deal.lowest_verified }, brl)}</p>
         {fresh === "current" ? <div className="deal-price"><small>{deal.original_price_cents && deal.original_price_cents > deal.price_cents ? brl(deal.original_price_cents) : ""}</small><strong>{brl(deal.price_cents)}</strong>{freshnessLabel(deal.evidence_observed_at) && <em>{freshnessLabel(deal.evidence_observed_at)}</em>}</div> : <div className="deal-price deal-price-stale"><strong>preço atual não confirmado</strong><em>última captura: {brl(deal.price_cents)} · {seenAgo(deal.evidence_observed_at)}</em></div>}
+        {fresh !== "current" && (
+          <div className="price-stale-warning" role="alert">
+            ⚠️ <strong>Atenção:</strong> Esta oferta foi verificada {seenAgo(deal.evidence_observed_at)}. O preço e estoque podem ter variado no marketplace.
+          </div>
+        )}
         <a className="deal-cta" href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a>
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       </section>

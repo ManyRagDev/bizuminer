@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "./catalog-policy.ts";
 import type { DealQuery } from "./deal-query";
 import { freshnessDays, priceRangeForBand, shouldInterleaveMarketplaces } from "./deal-query.ts";
 import { categoryDesirabilityFromStats, heroScore, type CategoryStats, type HeroScorable } from "./desirability.ts";
@@ -71,13 +72,13 @@ export function db() {
  *
  * Estado de vida derivado (decisão 20/08, activity.ts):
  * - ativo   = visto na rodagem atual → vitrine (prioridade na ordenação)
- * - recente = visto nos últimos 14 dias → vitrine (depois dos ativos)
+ * - recente = visto nos últimos 7 dias → vitrine (depois dos ativos)
  * - dormente= além → fora da vitrine, histórico preservado
  *
  * Antes desta correção, a vitrine filtrava estritamente pela rodagem atual
  * (capture_run_id = current_run) — uma rodagem nova com produtos diferentes
  * apagava os anteriores da vitrine mesmo tendo histórico. Agora a janela é
- * de 14 dias (last_seen_at), e a ordenação empurra os ativos para o topo.
+ * de 7 dias (last_seen_at), e a ordenação empurra os ativos para o topo.
  *
  * DIVERSIDADE DE LOJA NA VITRINE (decisão do dono, 27/08/2026)
  *
@@ -109,7 +110,7 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
   const category = query.category?.trim() || null;
   const search = query.search?.trim() || null;
   const marketplace = query.marketplace?.trim() || null;
-  const freshness = query.freshness ?? "14d";
+  const freshness = query.freshness ?? "7d";
   const minRating = query.minRating ?? null;
   const minDiscount = query.minDiscount ?? null;
   const lowestOnly = query.lowestOnly ?? false;
@@ -117,10 +118,9 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
   // Regra (pura e testada) em deal-query.ts — ver o cabeçalho desta função.
   const interleaveMarketplaces = shouldInterleaveMarketplaces({ sort, marketplace });
   const { min: minPriceCents, max: maxPriceCents } = priceRangeForBand(query.priceBand ?? "all");
-  // "all" expande para além dos 14 dias — remove a janela base; qualquer
-  // outro valor restringe para capturas dentro da janela escolhida.
+  // Filtros antigos como "all" e "14d" não furam a validade global de 7 dias.
+  // Valores menores continuam restringindo a captura dentro desse teto.
   const freshnessDaysValue = freshnessDays(freshness);
-  const includeDormant = freshness === "all";
   const sql = db();
   try {
     const rows = await sql<(DealRow & { total_count: number; in_current_run: boolean })[]>`
@@ -186,12 +186,15 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
                ) as marketplace_rank,
                count(*) over()::int as total_count
         from garimpa.product p
+        join garimpa.product_curation pc
+          on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+         and pc.status = ${PUBLIC_CURATION_STATUS}
         join latest l on l.product_id = p.id
         join stats s on s.product_id = p.id
         left join current_run cr
           on cr.marketplace = p.marketplace and cr.id = l.capture_run_id
         where p.tenant_id = ${tenantId}
-          and (${includeDormant}::boolean or p.last_seen_at >= now() - interval '14 days')
+          and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
           and (${freshnessDaysValue}::integer is null or l.observed_at >= now() - (${freshnessDaysValue} || ' days')::interval)
           and (${category}::text is null or p.category = ${category})
           and (${search}::text is null or p.title ilike '%' || ${search} || '%')
@@ -233,7 +236,7 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
 }
 
 /**
- * Categorias existentes na vitrine: produtos vistos nos últimos 14 dias
+ * Categorias existentes na vitrine: produtos aprovados vistos nos últimos 7 dias
  * (estado ativo + recente). Antes filtrava pela rodagem atual — uma rodagem
  * curta fazia categorias sumirem.
  */
@@ -243,9 +246,12 @@ export async function dealCategories(tenantId = "local"): Promise<string[]> {
     const rows = await sql<{ category: string }[]>`
       select distinct p.category as category
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.tenant_id = ${tenantId}
         and p.category is not null
-        and p.last_seen_at >= now() - interval '14 days'
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       order by category asc
     `;
     return rows.map((row) => row.category);
@@ -255,7 +261,7 @@ export async function dealCategories(tenantId = "local"): Promise<string[]> {
 }
 
 /**
- * Contagem de produtos por marketplace, na mesma janela de 14 dias da
+ * Contagem de produtos por marketplace, na mesma janela de 7 dias da
  * vitrine — alimenta o filtro de plataforma ("Mercado Livre (41)").
  */
 export async function marketplaceCounts(tenantId = "local"): Promise<Record<string, number>> {
@@ -264,8 +270,11 @@ export async function marketplaceCounts(tenantId = "local"): Promise<Record<stri
     const rows = await sql<{ marketplace: string; count: number }[]>`
       select p.marketplace, count(*)::int as count
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.tenant_id = ${tenantId}
-        and p.last_seen_at >= now() - interval '14 days'
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       group by p.marketplace
     `;
     return Object.fromEntries(rows.map((row) => [row.marketplace, row.count]));
@@ -289,6 +298,9 @@ export async function catalogCategories(tenantId = "local"): Promise<string[]> {
     const rows = await sql<{ category: string }[]>`
       select distinct p.category as category
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.tenant_id = ${tenantId}
         and p.category is not null
       order by category asc
@@ -333,11 +345,15 @@ export async function dealDetail(slug: string, tenantId = "local"): Promise<Deal
              s.previous_min_price_cents, s.observation_count, s.history_days,
              (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       join latest l on l.product_id = p.id
       join stats s on s.product_id = p.id
       where p.tenant_id = ${tenantId}
         and p.marketplace = ${marketplace}
         and p.external_id = ${externalId}
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       limit 1
     `;
     const deal = deals[0];
@@ -423,9 +439,13 @@ export async function resolvePreGeneratedLink(
       select pub.id as publication_id, pub.tenant_id, pub.affiliate_url
       from garimpa.publication pub
       join garimpa.product p on p.id = pub.product_id
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.tenant_id = ${tenantId}
         and p.marketplace = ${marketplace}
         and p.external_id = ${externalId}
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       order by pub.published_at desc
       limit 1
     `;
@@ -471,12 +491,16 @@ export async function resolvePublicationForLink(slug: string): Promise<Affiliate
              c.tracking_id, c.tool_id
       from garimpa.publication pub
       join garimpa.product p on p.id = pub.product_id
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       join garimpa.affiliate_account a on a.id = pub.affiliate_id
       join garimpa.affiliate_marketplace_config c
         on c.affiliate_id = a.id and c.marketplace = 'mercadolivre'
       where pub.slug = ${slug}
         and a.status = 'active'
         and c.status = 'active'
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
       limit 1
     `;
     const row = rows[0];
@@ -497,7 +521,7 @@ export async function resolvePublicationForLink(slug: string): Promise<Affiliate
  * Desejabilidade global — P2 do plano de pauta.
  *
  * Calcula o score de desejo de cada categoria sobre o CATÁLOGO INTEIRO
- * (produtos vistos nos últimos 14 dias), não sobre uma página.
+ * (produtos aprovados vistos nos últimos 7 dias), não sobre uma página.
  * Retorna o Map de category → score normalizado (0–1).
  *
  * Destinado a ser chamado a cada rodagem de captura e materializado
@@ -522,9 +546,12 @@ export async function globalCategoryDesirability(
         sum(coalesce(l.sales_count, 0))::int as "totalSales",
         sum(l.price_cents)::bigint::int as "sumPriceCents"
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       join latest l on l.product_id = p.id
       where p.tenant_id = ${tenantId}
-        and p.last_seen_at >= now() - interval '14 days'
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
         and p.category is not null
       group by p.category
     `;
@@ -574,10 +601,13 @@ export async function globalHeroProducts(
              s.previous_min_price_cents, s.observation_count, s.history_days,
              (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
       from garimpa.product p
+      join garimpa.product_curation pc
+        on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+       and pc.status = ${PUBLIC_CURATION_STATUS}
       join latest l on l.product_id = p.id
       join stats s on s.product_id = p.id
       where p.tenant_id = ${tenantId}
-        and p.last_seen_at >= now() - interval '14 days'
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
         and p.image_url is not null
     `;
 

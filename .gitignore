@@ -60,3 +60,7 @@ packages/capture/tmp-*.html
 
 # Legacy prototype is an independent nested Git repository
 packages/site/
+
+# Social Media & Marketing
+social/
+

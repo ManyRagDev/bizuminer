@@ -1,9 +1,8 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { ImageResponse } from "next/og";
 import { dealDetail } from "../../../lib/db";
 import { priceHighlight } from "../../../lib/deal-signal";
 import { marketplaceDef } from "../../../lib/marketplaces";
+import { brl, fetchProductImage, ogFonts, truncate } from "../../../lib/og-assets";
 
 export const runtime = "nodejs";
 export const alt = "BizuMiner";
@@ -24,65 +23,16 @@ const BLUE = "#2563eb";
 const BLUE_TEXT = "#1d4ed8";
 const LINE = "rgba(21, 21, 21, 0.18)";
 
-const brl = (cents: number) =>
-  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 });
-
-let fontsPromise: Promise<{ extraBold: Buffer; semiBold: Buffer }> | null = null;
-
-function loadFonts() {
-  if (!fontsPromise) {
-    fontsPromise = Promise.all([
-      readFile(path.join(process.cwd(), "public/fonts/Manrope-ExtraBold.ttf")),
-      readFile(path.join(process.cwd(), "public/fonts/Manrope-SemiBold.ttf")),
-    ]).then(([extraBold, semiBold]) => ({ extraBold, semiBold }));
-  }
-  return fontsPromise;
-}
-
-/**
- * Busca a foto do produto com timeout curto. Falhou? O card sai sem foto —
- * nunca quebra.
- *
- * O CDN do Mercado Livre (mlstatic.com) serve `.webp` por padrão, formato que
- * o Satori (motor de imagem do next/og) não decodifica — falha em silêncio
- * dentro do pipe da resposta, sem mensagem de erro legível. A própria CDN
- * aceita trocar a extensão por `.jpg` na mesma URL e devolve JPEG de verdade;
- * confirmado em campo em 20/08/2026.
- */
-async function fetchProductImage(url: string | null): Promise<string | null> {
-  if (!url) return null;
-  const jpegUrl = url.endsWith(".webp") ? `${url.slice(0, -".webp".length)}.jpg` : url;
-  try {
-    const response = await fetch(jpegUrl, { signal: AbortSignal.timeout(4000) });
-    if (!response.ok) return null;
-    const buffer = await response.arrayBuffer();
-    const type = response.headers.get("content-type") ?? "image/jpeg";
-    return `data:${type};base64,${Buffer.from(buffer).toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
-
-// Satori não recorta texto em N linhas sozinho; corta o título por caractere
-// para não estourar o card. Largura generosa o bastante para não cortar cedo
-// demais em títulos curtos comuns do catálogo.
 /**
  * ~21 caracteres por linha nesta largura/corpo; 63 mantém o título dentro das
  * 3 linhas do bloco. Era 78, que transbordava e virava corte seco — reticências
  * comunicam "tem mais texto", corte no meio da palavra comunica defeito.
  */
-function truncateTitle(title: string, max = 63): string {
-  if (title.length <= max) return title;
-  return `${title.slice(0, max).trimEnd()}…`;
-}
+const TITLE_MAX_CHARS = 63;
 
 export default async function Image({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
-  const { extraBold, semiBold } = await loadFonts();
-  const fonts = [
-    { name: "Manrope", data: extraBold, weight: 800 as const, style: "normal" as const },
-    { name: "Manrope", data: semiBold, weight: 600 as const, style: "normal" as const },
-  ];
+  const fonts = await ogFonts();
 
   const detail = await dealDetail(slug);
 
@@ -227,7 +177,7 @@ export default async function Image({ params }: { params: Promise<Params> }) {
                 color: INK,
               }}
             >
-              {truncateTitle(deal.title)}
+              {truncate(deal.title, TITLE_MAX_CHARS)}
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>

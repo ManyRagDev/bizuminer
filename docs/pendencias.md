@@ -92,6 +92,7 @@ Todos os três mascarados pelo **mesmo erro minificado e inútil** (`TypeError: 
 | Área do cliente e painel do dono | `docs/tecnico/plano-area-logada.md` |
 | Distribuição (card, copy, composer, Telegram, alerta) | `docs/tecnico/plano-distribuicao.md` |
 | Handoff já executado do card | `docs/tecnico/handoff-d1-card.md` |
+| Navegação integrada (Admin Shell, query params canônicos) | `docs/tecnico/handoff-navegacao-integrada.md` |
 | Varredura recorrente (decisão histórica, suplantada para ML) | `docs/tecnico/plano-motor-curadoria.md`, fase M1-C; plano vigente em `plano-extensao-captura.md` |
 | Vitrine pública | `docs/tecnico/plano-ux-vitrine.md` |
 | Brief antigo (histórico, não usar para decidir) | `docs/estrategia/*` |

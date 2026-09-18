@@ -8,6 +8,7 @@
 
 import { classifyActivity } from "./activity.ts";
 import type { ActivityCounts } from "./activity.ts";
+import type { ProductFamilyInfo } from "./product-family.ts";
 
 export interface ProductRecord {
   readonly id: string;
@@ -18,6 +19,7 @@ export interface ProductRecord {
   readonly productUrl: string;
   readonly imageUrl?: string;
   readonly category?: string;
+  readonly family?: ProductFamilyInfo;
   readonly lastPriceCents: number;
   readonly firstSeenAt: Date;
   readonly lastSeenAt: Date;
@@ -71,9 +73,22 @@ export interface FinishCaptureRunInput {
   readonly itemsNew: number;
   readonly priceChanges: number;
   readonly error?: string;
+  /** Métricas conhecidas apenas ao fim, mescladas ao JSON de auditoria. */
+  readonly parameterPatch?: Readonly<Record<string, string | number | boolean | null | undefined>>;
 }
 
 export interface OfferStore {
+  /**
+   * Consulta em lote quais anúncios já pertencem ao catálogo.
+   * O gate de descoberta usa isto para nunca bloquear a reobservação de preço
+   * de um produto conhecido, mesmo quando a família dele está saturada.
+   */
+  findExistingExternalIds(
+    tenantId: string,
+    marketplace: string,
+    externalIds: readonly string[],
+  ): Promise<ReadonlySet<string>>;
+
   upsertProductWithObservation(input: {
     captureRunId: string;
     tenantId: string;
@@ -83,6 +98,7 @@ export interface OfferStore {
     productUrl: string;
     imageUrl?: string;
     category?: string;
+    family?: ProductFamilyInfo;
     priceCents: number;
     originalPriceCents?: number;
     claimedDiscountRate?: number;
@@ -129,6 +145,7 @@ export class InMemoryStore implements OfferStore {
     productUrl: string;
     imageUrl?: string;
     category?: string;
+    family?: ProductFamilyInfo;
     priceCents: number;
     originalPriceCents?: number;
     claimedDiscountRate?: number;
@@ -151,6 +168,7 @@ export class InMemoryStore implements OfferStore {
         productUrl: input.productUrl,
         imageUrl: input.imageUrl ?? existing.imageUrl,
         category: input.category ?? existing.category,
+        family: input.family ?? existing.family,
         lastPriceCents: input.priceCents,
         lastSeenAt: input.observedAt,
         lastCaptureRunId: input.captureRunId,
@@ -166,6 +184,7 @@ export class InMemoryStore implements OfferStore {
         productUrl: input.productUrl,
         imageUrl: input.imageUrl,
         category: input.category,
+        family: input.family,
         lastPriceCents: input.priceCents,
         firstSeenAt: input.observedAt,
         lastSeenAt: input.observedAt,
@@ -211,7 +230,31 @@ export class InMemoryStore implements OfferStore {
   async finishCaptureRun(runId: string, run: FinishCaptureRunInput): Promise<void> {
     const existing = this.runs.get(runId);
     if (!existing) throw new Error(`capture_run inexistente: ${runId}`);
-    this.runs.set(runId, { ...existing, ...run });
+    const { parameterPatch, ...finished } = run;
+    this.runs.set(runId, {
+      ...existing,
+      ...finished,
+      parameters: { ...existing.parameters, ...(parameterPatch ?? {}) },
+    });
+  }
+
+  async findExistingExternalIds(
+    tenantId: string,
+    marketplace: string,
+    externalIds: readonly string[],
+  ): Promise<ReadonlySet<string>> {
+    const wanted = new Set(externalIds);
+    const found = new Set<string>();
+    for (const product of this.products.values()) {
+      if (
+        product.tenantId === tenantId &&
+        product.marketplace === marketplace &&
+        wanted.has(product.externalId)
+      ) {
+        found.add(product.externalId);
+      }
+    }
+    return found;
   }
 
   async priceRange(productId: string) {

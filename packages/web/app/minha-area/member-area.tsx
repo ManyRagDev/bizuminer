@@ -7,6 +7,8 @@ import { priceHighlight } from "../../lib/deal-signal";
 import type { VitrineProduct } from "../../lib/deal-view";
 import { movementLabel, watchMovement } from "../../lib/member-contract";
 import { readSavedState, writeSavedState } from "../../lib/saved-products";
+import AdminBadge from "../_components/admin-badge";
+import DetailHeader from "../_components/detail-header";
 import { ThemeToggle } from "../theme-toggle";
 
 export type MemberSaved = VitrineProduct & { savedAt: string };
@@ -110,6 +112,7 @@ function MoreCard({ label, hint, href }: { label: string; hint: string; href: st
 
 export default function MemberArea({
   identified,
+  isAdmin = false,
   userName,
   userEmail,
   categories,
@@ -119,6 +122,7 @@ export default function MemberArea({
   initialProfile,
 }: {
   identified: boolean;
+  isAdmin?: boolean;
   userName?: string;
   userEmail?: string;
   categories: string[];
@@ -255,17 +259,16 @@ export default function MemberArea({
 
   return (
     <main className="member-page">
-      <header className="detail-header">
-        <a className="brand" href="/" aria-label="BizuMiner, início">
-          <Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" />
-          <span className="brand-name"><b>Bizu</b><i>Miner</i></span>
-        </a>
-        <div className="detail-header-actions">
-          <ThemeToggle />
-          <form action="/auth/sair" method="post"><button className="auth-signout" type="submit">sair</button></form>
-          <a href="/#achados">← voltar aos achados</a>
-        </div>
-      </header>
+      <DetailHeader
+        actions={
+          <>
+            {isAdmin && <AdminBadge />}
+            <ThemeToggle />
+            <form action="/auth/sair" method="post"><button className="auth-signout" type="submit">sair</button></form>
+            <a href="/#achados">← voltar aos achados</a>
+          </>
+        }
+      />
 
       <section className="member-hero">
         <div className="member-hero-copy">
