@@ -35,6 +35,69 @@ export interface SpotCheckProduct {
   publishedAt: string;
 }
 
+export const DAILY_AUDIT_TARGET = 12;
+
+export interface DailyAuditProgress {
+  target: number;
+  reviewed: number;
+  confirmed: number;
+  corrected: number;
+  remaining: number;
+  complete: boolean;
+}
+
+export function toDailyAuditProgress(
+  confirmed: number,
+  corrected: number,
+  target = DAILY_AUDIT_TARGET,
+): DailyAuditProgress {
+  const safeTarget = Math.min(Math.max(target, 1), 50);
+  const safeConfirmed = Math.max(0, confirmed);
+  const safeCorrected = Math.max(0, corrected);
+  const reviewed = safeConfirmed + safeCorrected;
+  return {
+    target: safeTarget,
+    reviewed,
+    confirmed: safeConfirmed,
+    corrected: safeCorrected,
+    remaining: Math.max(0, safeTarget - reviewed),
+    complete: reviewed >= safeTarget,
+  };
+}
+
+/** Progresso da sessão diária no fuso operacional do BizuMiner. */
+export async function getDailyAuditProgress(
+  tenantId = "local",
+  target = DAILY_AUDIT_TARGET,
+): Promise<DailyAuditProgress> {
+  const empty = toDailyAuditProgress(0, 0, target);
+  if (!process.env.DATABASE_URL) return empty;
+
+  const sql = db();
+  try {
+    const rows = await sql<{ confirmed: number; corrected: number }[]>`
+      select
+        count(*) filter (where metadata ? 'spotCheckConfirm')::int as confirmed,
+        count(*) filter (where metadata ? 'spotCheckReject')::int as corrected
+      from garimpa.curation_event
+      where tenant_id = ${tenantId}
+        and actor_type = 'human'
+        and (metadata ? 'spotCheckConfirm' or metadata ? 'spotCheckReject')
+        and created_at >= (
+          date_trunc('day', now() at time zone 'America/Sao_Paulo')
+          at time zone 'America/Sao_Paulo'
+        )
+    `;
+    const confirmed = rows[0]?.confirmed ?? 0;
+    const corrected = rows[0]?.corrected ?? 0;
+    return toDailyAuditProgress(confirmed, corrected, target);
+  } catch {
+    return empty;
+  } finally {
+    await sql.end();
+  }
+}
+
 export const DEFAULT_GUIDELINE =
   "Foco em utilidades práticas de casa, cozinha, gadgets inteligentes e presentes criativos com alto apelo visual e compra por impulso. Evitar peças industriais, ferramentas secas, insumos de reposição e itens de nicho ultra-específico.";
 
@@ -627,7 +690,7 @@ export interface TriageBatchItem {
   productUrl: string | null;
   marketplace: string;
   priceCents: number;
-  status: "approved" | "rejected" | "held";
+  status: "approved" | "rejected" | "held" | "pending";
   actorType: "rule" | "llm" | "human";
   reasonCode: string | null;
   reasonDetail: string | null;
@@ -654,7 +717,7 @@ export async function getTriageBatchItems(
     const rows = await sql<{
       id: string;
       product_id: string;
-      to_status: "approved" | "rejected" | "held";
+      to_status: "approved" | "rejected" | "held" | "pending";
       reason_code: string | null;
       reason_detail: string | null;
       actor_type: "rule" | "llm" | "human";
@@ -726,5 +789,3 @@ export async function getTriageBatchItems(
     await sql.end();
   }
 }
-
-

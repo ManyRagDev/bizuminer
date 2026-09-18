@@ -8,8 +8,9 @@ import { bookmarkletCompiles, bookmarkletHref } from "../../lib/bookmarklet";
 import { captureEnabled } from "../../lib/platform-gates";
 import { marketplaceCounts } from "../../lib/db";
 import { MARKETPLACES } from "../../lib/marketplaces";
-import { curationDecisionLoad, curationSummary } from "../../lib/curation-db";
+import { curationDecisionLoad, curationSummary, dailySuggestedCandidates } from "../../lib/curation-db";
 import { formatDecisionLoad } from "../../lib/curation-contract";
+import { getDailyAuditProgress, getEditorialGuideline } from "../../lib/editorial-compass";
 import AdminPanel, { type AdminRun } from "./admin-panel";
 import { toAdminRun } from "../../lib/admin-run-groups";
 import AdminTabs from "./admin-tabs";
@@ -19,6 +20,7 @@ import Capturador from "./capturador";
 import Affiliates from "./affiliates";
 import Devices from "./devices";
 import BatchCapturePanel from "./batch-capture-panel";
+import TodayCommandCenter from "./today-command-center";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,16 @@ export const metadata: Metadata = {
 
 const iso = (value: Date | string | null): string | null =>
   value === null ? null : new Date(value).toISOString();
+
+function saoPauloDay(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
+}
 
 /**
  * Painel de rodagem por plataforma: endpoint de disparo + o aviso mostrado
@@ -93,7 +105,7 @@ export default async function AdminPage({
   }
   // Estado por plataforma derivado do REGISTRO, não de uma lista hardcoded:
   // acrescentar a AliExpress (M5) não exige tocar nesta página (M-R5).
-  const [overview, clicked, productCounts, curation, runsByMarketplace, decisionLoad] = await Promise.all([
+  const [overview, clicked, productCounts, curation, runsByMarketplace, decisionLoad, auditProgress, editorialConfig, suggestedCandidates] = await Promise.all([
     adminOverview(),
     topClicked(7, 6),
     marketplaceCounts(),
@@ -108,6 +120,9 @@ export default async function AdminPage({
       }),
     ).then((entries) => new Map(entries)),
     curationDecisionLoad("local"),
+    getDailyAuditProgress("local"),
+    getEditorialGuideline("local"),
+    dailySuggestedCandidates("local", 50),
   ]);
 
   // Afiliados (E1): a tabela só existe após a migration ser aplicada. Enquanto
@@ -158,47 +173,30 @@ export default async function AdminPage({
 
   const overviewTab = (
     <>
-      <section className="admin-section admin-curation-alert" aria-labelledby="next-action-title">
-        <div>
-          <p className="eyebrow">Próxima ação recomendada</p>
-          <h2 id="next-action-title">
-            {overview.lastTriage?.status === "running"
-              ? "A IA está avaliando a fila"
-              : curation.newPending > 0
-                ? `Avaliar com IA os ${curation.newPending.toLocaleString("pt-BR")} produtos novos`
-                : "Rodar a captura diária"}
-          </h2>
-          <p>{overview.lastTriage?.status === "running" ? "Aguarde a conclusão da triagem e então revise somente as exceções." : curation.newPending > 0 ? "A triagem reduz a lista grande antes da sua revisão editorial." : "A captura das lojas abastece a fila; o painel indicará a triagem quando houver produtos novos."}</p>
-        </div>
-        <div style={{ marginTop: "14px" }}>
-          <a className="admin-curation-start" href={overview.lastTriage?.status === "running" || curation.newPending > 0 ? "/admin/curadoria?aba=pipeline" : "/admin?aba=rodagens"}>
-            {overview.lastTriage?.status === "running" ? "Ver pipeline de triagem →" : curation.newPending > 0 ? "Avaliar com IA →" : "Rodar captura diária →"}
-          </a>
-        </div>
-      </section>
+      <TodayCommandCenter
+        autoPublish={editorialConfig.autoPublish}
+        minScore={editorialConfig.minScoreAutoPublish}
+        captureDoneToday={saoPauloDay(overview.lastOkRunAt) === saoPauloDay(new Date())}
+        triageDoneToday={saoPauloDay(overview.lastTriage?.finishedAt) === saoPauloDay(new Date())}
+        publishedToday={saoPauloDay(overview.lastTriage?.finishedAt) === saoPauloDay(new Date()) ? overview.lastTriage?.approvedCount ?? 0 : 0}
+        auditReviewed={auditProgress.reviewed}
+        auditTarget={auditProgress.target}
+        auditComplete={auditProgress.complete}
+        suggestedCandidateCount={suggestedCandidates.length}
+        suggestedCandidateExamples={suggestedCandidates.slice(0, 3).map((candidate) => candidate.title)}
+      />
+      <div id="captura-hoje">
+        <BatchCapturePanel
+          marketplaces={MARKETPLACES.map((def) => ({
+            slug: def.slug,
+            label: def.label,
+            enabled: def.slug === "mercadolivre" || captureEnabled(def.slug),
+          }))}
+        />
+      </div>
       <section className="admin-section admin-curation-alert" aria-labelledby="curation-alert-title">
-        <div>
-          <p className="eyebrow">Curadoria & Triagem</p>
-          <h2 id="curation-alert-title">{formatDecisionLoad(decisionLoad)}</h2>
-          <p>{curation.newPending > 0 ? `${curation.newPending.toLocaleString("pt-BR")} produtos aguardam decisão editorial antes de entrar no catálogo.` : "O catálogo segue atualizado e monitorado."}</p>
-          {overview.lastTriage && (
-            <div style={{ marginTop: "12px", padding: "8px 12px", background: "var(--surface-sunken, rgba(0,0,0,0.04))", borderRadius: "8px", fontSize: "0.85rem", display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-              <span>✨ <b>Última triagem IA:</b> {overview.lastTriage.finishedAt ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(overview.lastTriage.finishedAt)) : "em andamento"}</span>
-              <span style={{ opacity: 0.85 }}>· {overview.lastTriage.approvedCount} aprovados, {overview.lastTriage.heldCount} em espera, {overview.lastTriage.rejectedCount} rejeitados ({overview.lastTriage.totalInput} avaliados)</span>
-            </div>
-          )}
-        </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", marginTop: "14px" }}>
-          <a className="admin-curation-start" href="/admin/curadoria?aba=excecoes">
-            🎯 Julgar Fila de Decisão ({decisionLoad.singularsCount + decisionLoad.openGroupsCount}) →
-          </a>
-          <a className="admin-curation-secondary" href="/admin/curadoria?aba=pipeline">
-            ⚡ Pipeline de Triagem →
-          </a>
-          <a className="admin-curation-secondary" href="/admin/curadoria?aba=bussola">
-            🧭 Bússola Editorial →
-          </a>
-        </div>
+        <div><p className="eyebrow">Pendências fora da rotina diária</p><h2 id="curation-alert-title">{formatDecisionLoad(decisionLoad)}</h2><p>Use a mesa de Curadoria quando quiser resolver exceções; esse backlog não impede a conclusão de hoje.</p></div>
+        <a className="admin-curation-secondary" href="/admin/curadoria?aba=excecoes">Abrir Curadoria →</a>
       </section>
       <section className="admin-section" aria-label="Visão geral">
         <div className="metric-row">
@@ -243,7 +241,11 @@ export default async function AdminPage({
 
   const rodagensTab = (
     <>
-      <BatchCapturePanel />
+      <nav className="section-local-nav" aria-label="Operação">
+        <a className="active" href="/admin?aba=rodagens">Capturas e histórico</a>
+        <a href="/admin?aba=captura-manual">Captura manual</a>
+        <a href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
+      </nav>
       {MARKETPLACES.filter((def) => def.slug in RUN_PANELS).map((def) => {
         const panel = RUN_PANELS[def.slug]!;
         const state = runsByMarketplace.get(def.slug);
@@ -266,6 +268,11 @@ export default async function AdminPage({
 
   const capturaManualTab = (
     <>
+      <nav className="section-local-nav" aria-label="Operação">
+        <a href="/admin?aba=rodagens">Capturas e histórico</a>
+        <a className="active" href="/admin?aba=captura-manual">Captura manual</a>
+        <a href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
+      </nav>
       <Capturador bookmarkletHref={bookmarklet} bookmarkletOk={bookmarkletOk} />
       <Devices />
     </>
@@ -273,6 +280,10 @@ export default async function AdminPage({
 
   const publicacaoTab = (
     <>
+      <nav className="section-local-nav" aria-label="Publicação">
+        <a href="/pauta">Pauta de links</a>
+        <a className="active" href="/admin?aba=publicacao">Criador de posts</a>
+      </nav>
       <section className="admin-section" style={{ background: "var(--surface-elevated, #fafafa)", border: "1px solid var(--line, #e4e4e7)", borderRadius: "10px", padding: "16px 20px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h3 style={{ margin: "0 0 4px 0", fontSize: "1rem" }}>📋 Pauta de Stories & Links Reduzidos</h3>

@@ -81,7 +81,7 @@ export default function CockpitOperacional({
   pulse: SystemOperationalPulse;
   triageBatches: TriageBatchHistory[];
   captureRuns: CaptureRunRow[];
-  onInspectBatch?: (runTime: string) => void;
+  onInspectBatch?: (batchId: string, runTime: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"triage" | "capture">("triage");
 
@@ -242,7 +242,7 @@ export default function CockpitOperacional({
                         <button
                           type="button"
                           className="btn-inspect-batch"
-                          onClick={() => onInspectBatch(batch.runTime)}
+                          onClick={() => onInspectBatch(batch.batchId, batch.runTime)}
                           title="Inspecionar produtos avaliados neste lote"
                         >
                           🔍 Inspecionar

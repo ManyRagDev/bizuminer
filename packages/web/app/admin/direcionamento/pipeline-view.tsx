@@ -39,12 +39,12 @@ export default function PipelineView({
   const [batchItems, setBatchItems] = useState<TriageBatchItem[]>([]);
   const [isLoadingBatch, setIsLoadingBatch] = useState(false);
 
-  const handleInspectBatch = async (runTime: string) => {
+  const handleInspectBatch = async (batchId: string, runTime: string) => {
     setInspectBatchTime(runTime);
     setIsBatchModalOpen(true);
     setIsLoadingBatch(true);
     try {
-      const res = await getTriageBatchItemsAction(runTime);
+      const res = await getTriageBatchItemsAction(batchId);
       if (res.ok && res.items) {
         setBatchItems(res.items);
       } else {
@@ -73,6 +73,11 @@ export default function PipelineView({
 
   return (
     <div className="pipeline-view-container">
+      <nav className="section-local-nav" aria-label="Operação">
+        <a href="/admin?aba=rodagens">Capturas e histórico</a>
+        <a href="/admin?aba=captura-manual">Captura manual</a>
+        <a className="active" href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
+      </nav>
       {/* Banner Superior do Pipeline */}
       <section className="pipeline-header-banner" aria-label="Pipeline de Triagem e Telemetria">
         <div className="pipeline-banner-content">
@@ -84,7 +89,7 @@ export default function PipelineView({
         </div>
         <div className="pipeline-banner-actions">
           <a href="/admin/curadoria?aba=bussola" className="btn-secondary-link">
-            🧭 Ajustar Bússola Editorial →
+            🧭 Ajustar critérios da IA →
           </a>
         </div>
       </section>
@@ -152,14 +157,14 @@ export default function PipelineView({
               <div><span>Processados no lote:</span> <b>{triageSummary.processed}</b></div>
               <div className="stat-approved"><span>Aprovados no Piloto:</span> <b>{triageSummary.approved}</b></div>
               <div className="stat-rejected"><span>Rejeitados:</span> <b>{triageSummary.rejected}</b></div>
-              <div className="stat-held"><span>Em espera (filtro):</span> <b>{triageSummary.held}</b></div>
+              <div className="stat-held"><span>Retidos para revisão:</span> <b>{triageSummary.held}</b></div>
               <div className="stat-pending"><span>Pendentes (com nota):</span> <b>{triageSummary.annotatedPending}</b></div>
             </div>
             <div className="summary-explanation">
               {triageSummary.approved > 0 ? (
                 <p className="approved-notice">
                   🎉 <strong>{triageSummary.approved} produto(s)</strong> atingiram nota alta e foram publicados automaticamente!
-                  Você pode conferir a amostragem na <a href="/admin/curadoria?aba=auditoria">Mesa de Spot-Check →</a>
+                  Você pode conferir a amostra na <a href="/admin/curadoria?aba=auditoria">Auditoria de hoje →</a>
                 </p>
               ) : (
                 <p className="no-approved-notice">
@@ -174,8 +179,10 @@ export default function PipelineView({
                 type="button"
                 className="btn-inspect-summary"
                 onClick={() => {
-                  if (triageBatches && triageBatches.length > 0) {
-                    handleInspectBatch(triageBatches[0].runTime);
+                  if (triageSummary.triageRunId) {
+                    handleInspectBatch(triageSummary.triageRunId, new Date().toISOString());
+                  } else if (triageBatches && triageBatches.length > 0) {
+                    handleInspectBatch(triageBatches[0].batchId, triageBatches[0].runTime);
                   }
                 }}
               >

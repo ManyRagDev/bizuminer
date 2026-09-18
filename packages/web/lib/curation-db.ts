@@ -583,6 +583,7 @@ export interface ReviewContext {
   groupId?: string | null;
   reviewSessionId?: string | null;
   bulkActionId?: string | null;
+  emergencyApproval?: boolean;
 }
 
 const POLICY_VERSION = "v1";
@@ -666,13 +667,16 @@ async function applyDecision(
 
   const target = stateAfterDecision(decision);
 
-  const metadata = buildSnapshotMetadata(toSnapshotFacts(facts), {
+  const snapshotMetadata = buildSnapshotMetadata(toSnapshotFacts(facts), {
     via,
     groupId: context.groupId ?? null,
     reviewSessionId: context.reviewSessionId ?? null,
     bulkActionId: context.bulkActionId ?? null,
     policyVersion: POLICY_VERSION,
   });
+  const metadata = context.emergencyApproval
+    ? { ...snapshotMetadata, emergencyApproval: true }
+    : snapshotMetadata;
 
   await tx`
     update garimpa.product_curation
@@ -745,6 +749,117 @@ export async function reviewProductsBulk(
         results.push(result);
       }
       return results;
+    });
+  } finally {
+    await sql.end();
+  }
+}
+
+export interface DailySuggestedCandidate {
+  productId: string;
+  title: string;
+  aiScore: number;
+}
+
+/**
+ * Candidatos nota 3 da triagem de hoje. Bloqueios e rejeições nunca entram:
+ * esta é a válvula operacional explícita, não uma forma de furar segurança.
+ */
+export async function dailySuggestedCandidates(
+  tenantId = "local",
+  limit = 50,
+): Promise<DailySuggestedCandidate[]> {
+  if (!process.env.DATABASE_URL) return [];
+  const sql = db();
+  try {
+    return await sql<DailySuggestedCandidate[]>`
+      select
+        e.product_id as "productId",
+        coalesce(p.title, e.metadata->'snapshot'->>'title', 'Produto') as title,
+        coalesce((e.metadata->'automation'->>'aiScore')::int, 0) as "aiScore"
+      from garimpa.curation_event e
+      join garimpa.product_curation c
+        on c.tenant_id = e.tenant_id and c.product_id = e.product_id
+      left join garimpa.product p
+        on p.tenant_id = e.tenant_id and p.id = e.product_id
+      where e.tenant_id = ${tenantId}
+        and e.actor_type = 'llm'
+        and e.to_status = 'pending'
+        and c.status = 'pending'
+        and coalesce((e.metadata->'automation'->>'aiScore')::int, 0) = 3
+        and e.created_at >= (
+          date_trunc('day', now() at time zone 'America/Sao_Paulo')
+          at time zone 'America/Sao_Paulo'
+        )
+        and not exists (
+          select 1 from garimpa.curation_event newer
+          where newer.tenant_id = e.tenant_id
+            and newer.product_id = e.product_id
+            and newer.id > e.id
+        )
+      order by e.id desc
+      limit ${Math.min(Math.max(limit, 1), 100)}
+    `;
+  } finally {
+    await sql.end();
+  }
+}
+
+/** Aprova, numa única transação, somente os candidatos seguros sugeridos hoje. */
+export async function approveDailySuggestedCandidates(
+  reviewerAppUserId: string,
+  tenantId = "local",
+  limit = 50,
+): Promise<number> {
+  const candidates = await dailySuggestedCandidates(tenantId, limit);
+  if (candidates.length === 0) return 0;
+
+  const sql = db();
+  try {
+    return await sql.begin(async (tx) => {
+      let approved = 0;
+      const reviewSessionId = crypto.randomUUID();
+      for (const candidate of candidates) {
+        const eligible = await tx<{ product_id: string }[]>`
+          select c.product_id
+          from garimpa.product_curation c
+          where c.tenant_id = ${tenantId}
+            and c.product_id = ${candidate.productId}
+            and c.status = 'pending'
+            and exists (
+              select 1
+              from garimpa.curation_event e
+              where e.tenant_id = c.tenant_id
+                and e.product_id = c.product_id
+                and e.actor_type = 'llm'
+                and e.to_status = 'pending'
+                and coalesce((e.metadata->'automation'->>'aiScore')::int, 0) = 3
+                and e.created_at >= (
+                  date_trunc('day', now() at time zone 'America/Sao_Paulo')
+                  at time zone 'America/Sao_Paulo'
+                )
+                and not exists (
+                  select 1 from garimpa.curation_event newer
+                  where newer.tenant_id = e.tenant_id
+                    and newer.product_id = e.product_id
+                    and newer.id > e.id
+                )
+            )
+          for update
+        `;
+        if (eligible.length === 0) continue;
+        const result = await applyDecision(
+          tx as TxLike,
+          tenantId,
+          candidate.productId,
+          { status: "approved", reasonCode: null, reasonDetail: null },
+          reviewerAppUserId,
+          "bulk",
+          { reviewSessionId, emergencyApproval: true },
+        );
+        if (result) approved++;
+      }
+      return approved;
     });
   } finally {
     await sql.end();

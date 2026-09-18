@@ -2,11 +2,30 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildDynamicSystemPrompt } from "../lib/ai-curation-service.ts";
 import { processIngestionPipeline } from "../lib/curation-pipeline.ts";
-import { DEFAULT_GUIDELINE } from "../lib/editorial-compass.ts";
+import { DEFAULT_GUIDELINE, toDailyAuditProgress } from "../lib/editorial-compass.ts";
 
 test("Bússola: DEFAULT_GUIDELINE contém as diretrizes essenciais de achadinhos", () => {
   assert.ok(DEFAULT_GUIDELINE.includes("utilidades práticas"));
   assert.ok(DEFAULT_GUIDELINE.includes("peças industriais"));
+});
+
+test("Auditoria diária encerra na meta sem criar trabalho adicional", () => {
+  assert.deepEqual(toDailyAuditProgress(9, 2, 12), {
+    target: 12,
+    reviewed: 11,
+    confirmed: 9,
+    corrected: 2,
+    remaining: 1,
+    complete: false,
+  });
+  assert.deepEqual(toDailyAuditProgress(12, 1, 12), {
+    target: 12,
+    reviewed: 13,
+    confirmed: 12,
+    corrected: 1,
+    remaining: 0,
+    complete: true,
+  });
 });
 
 test("Bússola: buildDynamicSystemPrompt injeta diretrizes e exemplos few-shot no prompt", () => {
@@ -212,5 +231,4 @@ test("Inspeção de Lote: getTriageBatchItems devolve array seguro", async () =>
   const items = await getTriageBatchItems(new Date().toISOString(), "local");
   assert.ok(Array.isArray(items));
 });
-
 

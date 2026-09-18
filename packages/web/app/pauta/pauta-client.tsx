@@ -135,6 +135,10 @@ export default function PautaClient({
 
   return (
     <div className="pauta-page">
+      <nav className="section-local-nav" aria-label="Publicação">
+        <a className="active" href="/pauta">Pauta de links</a>
+        <a href="/admin?aba=publicacao">Criador de posts</a>
+      </nav>
       <header className="pauta-header">
         <div className="pauta-header-top">
           <h1>PAUTA · LINKS REDUZIDOS</h1>

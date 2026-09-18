@@ -19,55 +19,35 @@ interface NavGroup {
 }
 
 function resolveActiveId(pathname: string, search: string): string {
-  if (pathname === "/pauta") return "pauta";
+  if (pathname === "/pauta") return "publicar";
 
   if (pathname.startsWith("/admin/curadoria") || pathname.startsWith("/admin/direcionamento")) {
     const params = new URLSearchParams(search);
     const aba = params.get("aba");
-    if (aba === "bussola" || pathname.startsWith("/admin/direcionamento")) return "curadoria-bussola";
-    if (aba === "pipeline" || aba === "lotes") return "curadoria-pipeline";
-    if (aba === "auditoria" || aba === "espera") return "curadoria-auditoria";
-    if (aba === "selecao") return "curadoria-selecao";
-    return "curadoria-excecoes";
+    if (aba === "bussola" || pathname.startsWith("/admin/direcionamento")) return "configuracoes";
+    if (aba === "pipeline" || aba === "lotes") return "operacao";
+    return "curadoria";
   }
 
   if (pathname === "/admin") {
     const params = new URLSearchParams(search);
     const aba = params.get("aba");
-    if (aba === "rodagens") return "rodagens";
-    if (aba === "captura-manual") return "captura-manual";
-    if (aba === "afiliados") return "afiliados";
-    if (aba === "publicacao") return "publicacao";
-    return "visao-geral";
+    if (aba === "rodagens" || aba === "captura-manual") return "operacao";
+    if (aba === "afiliados") return "configuracoes";
+    if (aba === "publicacao") return "publicar";
+    return "hoje";
   }
 
-  return "visao-geral";
+  return "hoje";
 }
 
 function resolveSectionTitle(activeId: string): string {
   switch (activeId) {
-    case "visao-geral":
-      return "Painel · Visão Geral";
-    case "curadoria-excecoes":
-      return "Curadoria · Fila de Decisão";
-    case "curadoria-auditoria":
-      return "Curadoria · Auditoria & Espera";
-    case "curadoria-bussola":
-      return "Curadoria · Bússola Editorial";
-    case "curadoria-pipeline":
-      return "Curadoria · Pipeline & Lotes";
-    case "curadoria-selecao":
-      return "Catálogo · Vitrine Ativa";
-    case "pauta":
-      return "Distribuição · Pauta de Stories";
-    case "publicacao":
-      return "Distribuição · Criador de Posts";
-    case "rodagens":
-      return "Operação · Lojas & Rodagens";
-    case "captura-manual":
-      return "Operação · Captura Manual";
-    case "afiliados":
-      return "Configuração · Contas de Afiliados";
+    case "hoje": return "Painel · Hoje";
+    case "curadoria": return "Painel · Curadoria";
+    case "publicar": return "Painel · Publicar";
+    case "operacao": return "Painel · Operação";
+    case "configuracoes": return "Painel · Configurações";
     default:
       return "Painel do Administrador";
   }
@@ -110,61 +90,35 @@ export default function AdminShell({
 
   const navigationGroups: NavGroup[] = [
     {
-      groupTitle: "Dashboard",
+      groupTitle: "Rotina",
       items: [
-        { id: "visao-geral", href: "/admin?aba=visao-geral", label: "Visão Geral", icon: "📊" },
+        { id: "hoje", href: "/admin?aba=visao-geral", label: "Hoje", icon: "☀️" },
       ],
     },
     {
-      groupTitle: "Curadoria & IA",
+      groupTitle: "Trabalho",
       items: [
         {
-          id: "curadoria-excecoes",
+          id: "curadoria",
           href: "/admin/curadoria?aba=excecoes",
-          label: "Fila de Decisão",
+          label: "Curadoria",
           icon: "🎯",
           badge: curationCount > 0 ? curationCount : undefined,
           badgeType: "warning",
         },
         {
-          id: "curadoria-auditoria",
-          href: "/admin/curadoria?aba=auditoria",
-          label: "Auditoria & Espera",
-          icon: "🔍",
-        },
-        {
-          id: "curadoria-bussola",
-          href: "/admin/curadoria?aba=bussola",
-          label: "Bússola Editorial",
-          icon: "🧭",
-        },
-        {
-          id: "curadoria-pipeline",
-          href: "/admin/curadoria?aba=pipeline",
-          label: "Pipeline & Lotes",
-          icon: "⚡",
+          id: "publicar",
+          href: "/pauta",
+          label: "Publicar",
+          icon: "📱",
         },
       ],
     },
     {
-      groupTitle: "Distribuição",
+      groupTitle: "Sistema",
       items: [
-        { id: "pauta", href: "/pauta", label: "Pauta de Stories", icon: "📱" },
-        { id: "curadoria-selecao", href: "/admin/curadoria?aba=selecao", label: "Vitrine Ativa", icon: "💎" },
-        { id: "publicacao", href: "/admin?aba=publicacao", label: "Criador de Posts", icon: "✍️" },
-      ],
-    },
-    {
-      groupTitle: "Operação & Captura",
-      items: [
-        { id: "rodagens", href: "/admin?aba=rodagens", label: "Lojas & Rodagens", icon: "🔄" },
-        { id: "captura-manual", href: "/admin?aba=captura-manual", label: "Captura Manual", icon: "📥" },
-      ],
-    },
-    {
-      groupTitle: "Configurações",
-      items: [
-        { id: "afiliados", href: "/admin?aba=afiliados", label: "Contas de Afiliados", icon: "⚙️" },
+        { id: "operacao", href: "/admin?aba=rodagens", label: "Operação", icon: "🔄" },
+        { id: "configuracoes", href: "/admin/curadoria?aba=bussola", label: "Configurações", icon: "⚙️" },
       ],
     },
   ];

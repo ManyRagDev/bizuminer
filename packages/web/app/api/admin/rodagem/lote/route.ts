@@ -35,14 +35,21 @@ export async function POST(request: NextRequest) {
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   let pages = 1;
   let consent = false;
+  let requestedMarketplaces: string[] | undefined;
   try {
-    const body = (await request.json()) as { pages?: number; consent?: boolean };
+    const body = (await request.json()) as { pages?: number; consent?: boolean; marketplaces?: unknown };
     if (Number.isInteger(body.pages)) pages = Math.min(Math.max(body.pages!, 1), MAX_PAGES);
     consent = body.consent === true;
+    if (Array.isArray(body.marketplaces)) {
+      requestedMarketplaces = body.marketplaces.filter((value): value is string => typeof value === "string");
+    }
   } catch { /* corpo vazio usa o padrão seguro */ }
 
   if (!process.env.DATABASE_URL) return sinkJson(check.sink, { ok: false, error: "no_database_url" }, { status: 500 });
-  const marketplaces = batchCapturePlan(consent);
+  const marketplaces = batchCapturePlan(consent, requestedMarketplaces);
+  if (marketplaces.length === 0) {
+    return sinkJson(check.sink, { ok: false, error: "no_marketplace_selected" }, { status: 400 });
+  }
   const enabled: string[] = [];
   const skipped: Array<{ marketplace: string; reason: string }> = [];
   for (const marketplace of marketplaces) {

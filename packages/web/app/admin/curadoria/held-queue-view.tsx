@@ -34,9 +34,9 @@ export default function HeldQueueView({
   if (products.length === 0) {
     return (
       <section className="curation-empty">
-        <span className="curation-proof">EM ESPERA<br />VAZIO</span>
+        <span className="curation-proof">RETIDOS<br />VAZIO</span>
         <p className="eyebrow">Curadoria</p>
-        <h1>Nenhum produto em espera.</h1>
+        <h1>Nenhum produto retido.</h1>
         <p>Não há produtos retidos por saturação, falta de evidência ou adiados para revisão posterior.</p>
         <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
           <a className="admin-curation-start" href="/admin/curadoria?aba=hoje">Ver fila aguardando →</a>
@@ -60,8 +60,9 @@ export default function HeldQueueView({
       <header className="curation-held-head">
         <div>
           <p className="eyebrow">Produtos Retidos e Adiados</p>
-          <h2>{products.length} itens aguardando momento oportuno</h2>
-          <p>{heldCount} retidos com motivo formal · {deferredCount} adiados com data programada</p>
+          <h2>{products.length} itens fora da publicação automática</h2>
+          <p>{heldCount} retidos pela IA para revisão manual · {deferredCount} adiados por você com data programada</p>
+          {heldCount > 0 && <small>Hoje, itens retidos não voltam sozinhos para a triagem; uma regra de reativação por preço/evidência será definida separadamente.</small>}
         </div>
       </header>
 

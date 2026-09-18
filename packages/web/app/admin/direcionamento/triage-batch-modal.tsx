@@ -61,7 +61,7 @@ export default function TriageBatchModal({
   items: TriageBatchItem[];
   isLoading: boolean;
 }) {
-  const [filterStatus, setFilterStatus] = useState<"all" | "approved" | "held" | "rejected">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "approved" | "pending" | "held" | "rejected">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fechar com tecla Escape e travar o scroll da página
@@ -96,6 +96,7 @@ export default function TriageBatchModal({
     return {
       all: items.length,
       approved: items.filter((i) => i.status === "approved").length,
+      pending: items.filter((i) => i.status === "pending").length,
       held: items.filter((i) => i.status === "held").length,
       rejected: items.filter((i) => i.status === "rejected").length,
     };
@@ -168,6 +169,13 @@ export default function TriageBatchModal({
             </button>
             <button
               type="button"
+              className={`triage-filter-btn pending ${filterStatus === "pending" ? "active" : ""}`}
+              onClick={() => setFilterStatus("pending")}
+            >
+              ★ Candidatos ({counts.pending})
+            </button>
+            <button
+              type="button"
               className={`triage-filter-btn approved ${filterStatus === "approved" ? "active" : ""}`}
               onClick={() => setFilterStatus("approved")}
             >
@@ -178,7 +186,7 @@ export default function TriageBatchModal({
               className={`triage-filter-btn held ${filterStatus === "held" ? "active" : ""}`}
               onClick={() => setFilterStatus("held")}
             >
-              ⏳ Em Espera ({counts.held})
+              ⏳ Retidos ({counts.held})
             </button>
             <button
               type="button"
@@ -206,6 +214,11 @@ export default function TriageBatchModal({
             <div className="triage-modal-loading">
               <span className="triage-spinner" aria-hidden="true" />
               <p>Carregando os produtos avaliados e justificativas da IA...</p>
+            </div>
+          ) : items.length === 0 ? (
+            <div className="triage-modal-empty" role="alert">
+              <p>Não foi possível carregar os produtos deste lote.</p>
+              <small>Feche a janela e tente novamente. Se o problema persistir, a execução continua preservada no histórico.</small>
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="triage-modal-empty">
@@ -240,8 +253,10 @@ export default function TriageBatchModal({
                       <span className={`triage-status-pill status-${item.status}`}>
                         {item.status === "approved"
                           ? "✓ Auto-Aprovado"
+                          : item.status === "pending"
+                          ? "★ Candidato para revisão"
                           : item.status === "held"
-                          ? "⏳ Em Espera"
+                          ? "⏳ Retido"
                           : "✕ Rejeitado"}
                       </span>
 
@@ -303,7 +318,9 @@ export default function TriageBatchModal({
             <span className="stat-dot">·</span>
             <span className="text-approved">+{counts.approved} aprovados</span>
             <span className="stat-dot">·</span>
-            <span className="text-held">{counts.held} em espera</span>
+            <span>{counts.pending} candidatos</span>
+            <span className="stat-dot">·</span>
+            <span className="text-held">{counts.held} retidos</span>
             <span className="stat-dot">·</span>
             <span className="text-rejected">{counts.rejected} rejeitados</span>
           </div>

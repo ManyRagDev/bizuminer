@@ -58,6 +58,10 @@ export default function BussolaView({
 
   return (
     <div className="bussola-reborn-container">
+      <nav className="section-local-nav" aria-label="Configurações">
+        <a className="active" href="/admin/curadoria?aba=bussola">Critérios e automação</a>
+        <a href="/admin?aba=afiliados">Contas de afiliados</a>
+      </nav>
       {/* 1. Cockpit de Automação & Piloto Automático (Largura Total Alinhada) */}
       <section className="bussola-cockpit-hero" aria-labelledby="cockpit-heading">
         <div className="cockpit-hero-top">
@@ -156,7 +160,7 @@ export default function BussolaView({
             <span className="safeguard-icon" aria-hidden="true">🎯</span>
             <div>
               <strong>Spot-Check Ativo</strong>
-              <small>Amostragem em 2 min na Auditoria</small>
+              <small>12 itens por dia em cerca de 10–15 min</small>
             </div>
           </div>
         </div>
@@ -255,7 +259,7 @@ export default function BussolaView({
         {goldenExamples.length === 0 ? (
           <div className="golden-empty-state">
             <p>Nenhuma decisão humana recente arquivada como referência ainda.</p>
-            <small>Conforme você julga exceções na Fila de Decisão, os exemplos mais relevantes aparecem aqui automaticamente.</small>
+            <small>Conforme você julga exceções na Curadoria, os exemplos mais relevantes aparecem aqui automaticamente.</small>
           </div>
         ) : (
           <div className="golden-cards-grid">

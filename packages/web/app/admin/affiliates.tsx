@@ -80,7 +80,12 @@ export default function Affiliates({ initialAccounts }: { initialAccounts: Accou
   }
 
   return (
-    <section className="admin-section" aria-labelledby="affiliates-title">
+    <>
+      <nav className="section-local-nav" aria-label="Configurações">
+        <a href="/admin/curadoria?aba=bussola">Critérios e automação</a>
+        <a className="active" href="/admin?aba=afiliados">Contas de afiliados</a>
+      </nav>
+      <section className="admin-section" aria-labelledby="affiliates-title">
       <h2 id="affiliates-title">Afiliados</h2>
 
       {accounts.length === 0 ? (
@@ -134,6 +139,7 @@ export default function Affiliates({ initialAccounts }: { initialAccounts: Accou
         Os valores de tracking/tool são gravados no servidor e nunca devolvidos a esta tela. A comissão por afiliado
         só entra no clique na entrega E3 — até lá o link continua usando a configuração global.
       </p>
-    </section>
+      </section>
+    </>
   );
 }

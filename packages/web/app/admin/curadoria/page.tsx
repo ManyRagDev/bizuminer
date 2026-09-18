@@ -10,6 +10,7 @@ import {
 } from "../../../lib/curation-db.ts";
 import {
   getEditorialGuideline,
+  getDailyAuditProgress,
   getGoldenExamples,
   getOperationalPulse,
   getRecentSpotCheckProducts,
@@ -31,7 +32,7 @@ import PipelineView from "../direcionamento/pipeline-view.tsx";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Mesa Única de Curadoria Editorial | BizuMiner",
+  title: "Curadoria | BizuMiner",
   robots: { index: false, follow: false },
 };
 
@@ -59,6 +60,7 @@ export default async function CurationPage({
   let groupCards = null;
   let heldProducts = null;
   let spotCheckProducts = null;
+  let auditProgress = null;
   let guideline = null;
   let goldenExamples = null;
   let triageBatches = null;
@@ -86,7 +88,10 @@ export default async function CurationPage({
     if (subTab === "espera") {
       heldProducts = await deferredQueue(50, "local");
     } else {
-      spotCheckProducts = await getRecentSpotCheckProducts("local", 12);
+      auditProgress = await getDailyAuditProgress("local");
+      spotCheckProducts = auditProgress.complete
+        ? []
+        : await getRecentSpotCheckProducts("local", auditProgress.remaining);
     }
   } else if (activeTab === "bussola") {
     const [g, ge] = await Promise.all([
@@ -132,7 +137,7 @@ export default async function CurationPage({
           href="/admin/curadoria?aba=excecoes"
           className={"curation-tab " + (activeTab === "excecoes" ? "active" : "")}
         >
-          Fila de Decisão
+          Revisar
           {exceptionsCount > 0 && (
             <span className="curation-tab-badge" title="Fila de julgamento">{exceptionsCount}</span>
           )}
@@ -141,7 +146,7 @@ export default async function CurationPage({
           href="/admin/curadoria?aba=auditoria"
           className={"curation-tab " + (activeTab === "auditoria" ? "active" : "")}
         >
-          Auditoria & Espera
+          Controle de qualidade
           {summary.held > 0 && (
             <span className="curation-tab-badge" title="Em espera">{summary.held}</span>
           )}
@@ -150,19 +155,19 @@ export default async function CurationPage({
           href="/admin/curadoria?aba=bussola"
           className={"curation-tab " + (activeTab === "bussola" ? "active" : "")}
         >
-          🧭 Bússola Editorial
+          Critérios e automação
         </a>
         <a
           href="/admin/curadoria?aba=pipeline"
           className={"curation-tab " + (activeTab === "pipeline" ? "active" : "")}
         >
-          ⚡ Pipeline & Lotes
+          Histórico da IA
         </a>
         <a
           href="/admin/curadoria?aba=selecao"
           className={"curation-tab " + (activeTab === "selecao" ? "active" : "")}
         >
-          Vitrine Ativa
+          No ar
           {summary.approved > 0 && (
             <span className="curation-tab-badge" title="Produtos no ar na vitrine">{summary.approved}</span>
           )}
@@ -186,13 +191,13 @@ export default async function CurationPage({
               href="/admin/curadoria?aba=excecoes&sub=singulars"
               className={"curation-sub-tab " + (subTab !== "grupos" ? "active" : "")}
             >
-              Itens Singulares ({decisionLoad.singularsCount})
+              Itens individuais ({decisionLoad.singularsCount})
             </a>
             <a
               href="/admin/curadoria?aba=excecoes&sub=grupos"
               className={"curation-sub-tab " + (subTab === "grupos" ? "active" : "")}
             >
-              Grupos Repetitivos ({decisionLoad.openGroupsCount})
+              Produtos semelhantes ({decisionLoad.openGroupsCount})
             </a>
           </div>
 
@@ -216,20 +221,24 @@ export default async function CurationPage({
               href="/admin/curadoria?aba=auditoria&sub=spotcheck"
               className={"curation-sub-tab " + (subTab !== "espera" ? "active" : "")}
             >
-              Auditoria Rápida (Spot-Check)
+              Auditoria de hoje
             </a>
             <a
               href="/admin/curadoria?aba=auditoria&sub=espera"
               className={"curation-sub-tab " + (subTab === "espera" ? "active" : "")}
             >
-              Fila de Espera ({summary.held})
+              Retidos pela IA ({summary.held})
             </a>
           </div>
 
           {subTab === "espera" && heldProducts ? (
             <HeldQueueView initialProducts={heldProducts} />
           ) : spotCheckProducts ? (
-            <SpotCheckView initialProducts={spotCheckProducts} />
+            <SpotCheckView
+              initialProducts={spotCheckProducts}
+              initialReviewed={auditProgress?.reviewed ?? 0}
+              dailyTarget={auditProgress?.target ?? 12}
+            />
           ) : null}
         </div>
       )}

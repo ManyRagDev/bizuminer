@@ -9,10 +9,15 @@ const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" 
 
 export default function SpotCheckView({
   initialProducts,
+  initialReviewed,
+  dailyTarget,
 }: {
   initialProducts: SpotCheckProduct[];
+  initialReviewed: number;
+  dailyTarget: number;
 }) {
   const [items, setItems] = useState<SpotCheckProduct[]>(initialProducts);
+  const [reviewed, setReviewed] = useState(initialReviewed);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectFeedback, setRejectFeedback] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
@@ -22,7 +27,10 @@ export default function SpotCheckView({
     setIsConfirming(true);
     try {
       const res = await confirmSpotCheckAction({ productId });
-      if (res.ok) setItems((prev) => prev.filter((p) => p.id !== productId));
+      if (res.ok) {
+        setItems((prev) => prev.filter((p) => p.id !== productId));
+        setReviewed((value) => value + 1);
+      }
       else alert(`Erro ao confirmar produto: ${res.error}`);
     } catch (err) {
       alert(`Falha na comunicação: ${err instanceof Error ? err.message : String(err)}`);
@@ -41,6 +49,7 @@ export default function SpotCheckView({
       });
       if (res.ok) {
         setItems((prev) => prev.filter((p) => p.id !== productId));
+        setReviewed((value) => value + 1);
         setRejectingId(null);
         setRejectFeedback("");
       } else {
@@ -56,16 +65,34 @@ export default function SpotCheckView({
   return (
     <div className="spotcheck-view-container">
       <div className="spotcheck-intro">
-        <h3>Auditoria Rápida (Spot-Check em 2 Minutos)</h3>
+        <div className="daily-audit-title-row">
+          <div>
+            <p className="eyebrow">Controle de qualidade de hoje</p>
+            <h3>Auditoria rápida</h3>
+          </div>
+          <strong className={reviewed >= dailyTarget ? "daily-audit-count complete" : "daily-audit-count"}>
+            {Math.min(reviewed, dailyTarget)}/{dailyTarget}
+          </strong>
+        </div>
         <p>
           Amostragem dos últimos produtos aprovados no piloto automático pela IA.
           Revise visualmente: se encontrar algo fora do padrão, descarte e informe o motivo para calibrar a IA.
         </p>
+        <div className="daily-audit-progress" role="progressbar" aria-label="Progresso da auditoria de hoje" aria-valuemin={0} aria-valuemax={dailyTarget} aria-valuenow={Math.min(reviewed, dailyTarget)}>
+          <span style={{ width: `${Math.min(100, (reviewed / dailyTarget) * 100)}%` }} />
+        </div>
       </div>
 
-      {items.length === 0 ? (
+      {reviewed >= dailyTarget ? (
+        <div className="empty-state-box daily-audit-complete">
+          <p className="eyebrow">Rotina concluída</p>
+          <h3>Auditoria de hoje finalizada ✓</h3>
+          <p>Você revisou {dailyTarget} produtos. Aprovações antigas continuam preservadas, mas não são uma obrigação para hoje.</p>
+          <a className="admin-curation-start" href="/pauta">Preparar pauta de Stories →</a>
+        </div>
+      ) : items.length === 0 ? (
         <div className="empty-state-box">
-          <p>✓ Nenhum produto recente pendente de auditoria rápida. Todos os aprovados foram validados!</p>
+          <p>Não há aprovações automáticas disponíveis para completar a amostra de hoje.</p>
         </div>
       ) : (
         <div className="spotcheck-grid">

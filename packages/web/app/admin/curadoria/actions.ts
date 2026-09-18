@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getPageAuth, isAdmin, resolveAppUserId } from "../../../lib/auth.ts";
 import {
   actOnGroup,
+  approveDailySuggestedCandidates,
   clearDeferredReview,
   deferReview,
   groupMembers,
@@ -38,6 +39,22 @@ async function reviewerId(): Promise<string | null> {
   const user = await getPageAuth();
   if (!user || !isAdmin(user)) return null;
   return resolveAppUserId(user.id);
+}
+
+export async function approveTodaySuggestedAction(): Promise<
+  { ok: true; approved: number } | { ok: false; error: string }
+> {
+  const reviewer = await reviewerId();
+  if (!reviewer) return { ok: false, error: "forbidden" };
+  try {
+    const approved = await approveDailySuggestedCandidates(reviewer, "local", 50);
+    revalidatePath("/");
+    revalidatePath("/admin");
+    revalidatePath("/admin/curadoria");
+    return { ok: true, approved };
+  } catch {
+    return { ok: false, error: "approval_failed" };
+  }
 }
 
 export async function submitCurationDecision(input: CurationDecisionInput): Promise<CurationActionResult> {
@@ -180,6 +197,7 @@ export type AutomatedTriageActionResult =
   | {
       ok: true;
       processed: number;
+      approved: number;
       rejected: number;
       held: number;
       annotatedPending: number;
@@ -204,5 +222,3 @@ export async function runAutomatedTriageAction(
     return { ok: false, error: message };
   }
 }
-
-

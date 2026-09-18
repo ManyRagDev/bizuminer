@@ -9,3 +9,18 @@ test("lote diário sempre inclui Shopee e AliExpress", () => {
 test("consentimento explícito adiciona Mercado Livre ao lote", () => {
   assert.deepEqual(batchCapturePlan(true), ["mercadolivre", "shopee", "aliexpress"]);
 });
+
+test("seleção explícita mantém ordem, remove duplicatas e respeita consentimento", () => {
+  assert.deepEqual(
+    batchCapturePlan(true, ["aliexpress", "mercadolivre", "mercadolivre"]),
+    ["mercadolivre", "aliexpress"],
+  );
+  assert.deepEqual(
+    batchCapturePlan(false, ["mercadolivre", "shopee"]),
+    ["shopee"],
+  );
+});
+
+test("seleção desconhecida não entra no lote", () => {
+  assert.deepEqual(batchCapturePlan(true, ["outra", "shopee"]), ["shopee"]);
+});
