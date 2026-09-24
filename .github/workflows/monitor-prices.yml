@@ -1,0 +1,42 @@
+name: Acompanhar preços por ID
+
+on:
+  schedule:
+    - cron: '7 3,9,15,21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    if: vars.MONITORING_ENABLED == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        marketplace: [shopee, aliexpress]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: monitor-${{ matrix.marketplace }}
+      cancel-in-progress: false
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SHOPEE_CAPTURE_ENABLED: ${{ vars.SHOPEE_CAPTURE_ENABLED }}
+      SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
+      SHOPEE_APP_SECRET: ${{ secrets.SHOPEE_APP_SECRET }}
+      ALIEXPRESS_CAPTURE_ENABLED: ${{ vars.ALIEXPRESS_CAPTURE_ENABLED }}
+      ALIEXPRESS_APP_KEY: ${{ secrets.ALIEXPRESS_APP_KEY }}
+      ALIEXPRESS_APP_SECRET: ${{ secrets.ALIEXPRESS_APP_SECRET }}
+      ALIEXPRESS_TRACKING_ID: ${{ secrets.ALIEXPRESS_TRACKING_ID }}
+      MONITOR_PLAN_BUDGET: ${{ vars.MONITOR_PLAN_BUDGET || '20' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: packages/persistence/package-lock.json
+      - run: npm ci --prefix packages/persistence
+      - name: Reconsultar produtos priorizados
+        run: node --experimental-strip-types packages/persistence/bin/monitor-prices.ts --marketplace ${{ matrix.marketplace }} --limit "$MONITOR_PLAN_BUDGET" --execute
