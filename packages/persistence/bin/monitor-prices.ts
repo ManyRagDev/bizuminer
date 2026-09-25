@@ -41,6 +41,13 @@ await sql.end();
 const selected = monitoringQueue(candidates.filter((candidate) => !suppressed.has(candidate.productId)), marketplace, limit);
 const byId = new Map(candidates.map((candidate) => [candidate.productId, candidate]));
 const queue = selected.map((decision) => ({ decision, product: byId.get(decision.productId)! }));
+const runParameters = {
+  captureMode: "monitoring", monitoringPolicy: "monitoring-v1", budget: limit,
+  selected: queue.length,
+  githubRunId: process.env.GITHUB_RUN_ID ?? null,
+  githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
+  githubEvent: process.env.GITHUB_EVENT_NAME ?? null,
+};
 
 if (!execute) {
   console.log(JSON.stringify({ marketplace, mode: "dry-run", tenantId, limit,
@@ -53,7 +60,21 @@ if (!execute) {
 }
 
 if (queue.length === 0) {
-  console.log(JSON.stringify({ marketplace, mode: "execute", attempted: 0, matched: 0 }));
+  const store = new PostgresStore({ connectionString, maxConnections: 1 });
+  try {
+    const runId = await store.startCaptureRun({
+      tenantId, marketplace, startedAt: new Date(),
+      collectorRunId: `monitor-${marketplace}-${Date.now()}`,
+      parameters: runParameters,
+    });
+    await store.finishCaptureRun(runId, {
+      finishedAt: new Date(), status: "ok", itemsCaptured: 0, itemsNew: 0,
+      priceChanges: 0, parameterPatch: { attempted: 0, matched: 0, missing: 0, failed: 0 },
+    });
+    console.log(JSON.stringify({ marketplace, mode: "execute", runId, attempted: 0, matched: 0 }));
+  } finally {
+    await store.close();
+  }
   process.exit(0);
 }
 
@@ -76,7 +97,7 @@ const store = new PostgresStore({ connectionString, maxConnections: 1 });
 const lookup = new MonitoringLookup();
 const runId = await store.startCaptureRun({
   tenantId, marketplace, startedAt: new Date(), collectorRunId: ctx.runId,
-  parameters: { captureMode: "monitoring", monitoringPolicy: "monitoring-v1", budget: limit, selected: queue.length },
+  parameters: runParameters,
 });
 let attempted = 0;
 let matched = 0;

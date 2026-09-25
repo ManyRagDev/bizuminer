@@ -21,6 +21,8 @@ import Affiliates from "./affiliates";
 import Devices from "./devices";
 import BatchCapturePanel from "./batch-capture-panel";
 import TodayCommandCenter from "./today-command-center";
+import GithubMonitoringPanel from "./github-monitoring-panel";
+import { githubMonitoringRuns } from "../../lib/github-monitoring";
 
 export const dynamic = "force-dynamic";
 
@@ -147,6 +149,9 @@ export default async function AdminPage({
       validatedAt: c.validatedAt ? new Date(c.validatedAt).toISOString() : null,
     })),
   }));
+  const githubMonitoring = await githubMonitoringRuns()
+    .then((runs) => ({ runs, error: false }))
+    .catch(() => ({ runs: [], error: true }));
 
   // Bookmarklet gerado no servidor: o token de captura (CAPTURE_TOKEN) fica
   // embutido no código mas nunca é exposto ao client como variável separada.
@@ -246,6 +251,7 @@ export default async function AdminPage({
         <a href="/admin?aba=captura-manual">Captura manual</a>
         <a href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
       </nav>
+      <GithubMonitoringPanel {...githubMonitoring} />
       {MARKETPLACES.filter((def) => def.slug in RUN_PANELS).map((def) => {
         const panel = RUN_PANELS[def.slug]!;
         const state = runsByMarketplace.get(def.slug);
