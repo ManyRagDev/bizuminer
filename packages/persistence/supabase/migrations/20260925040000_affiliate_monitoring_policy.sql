@@ -48,6 +48,19 @@ revoke all on garimpa.affiliate_monitoring_policy,
   garimpa.affiliate_monitoring_policy_event,
   garimpa.affiliate_monitoring_skip from anon, authenticated;
 
+alter table garimpa.affiliate_monitoring_policy enable row level security;
+alter table garimpa.affiliate_monitoring_policy_event enable row level security;
+alter table garimpa.affiliate_monitoring_skip enable row level security;
+create policy affiliate_monitoring_policy_app_access
+  on garimpa.affiliate_monitoring_policy for all to garimpa_app
+  using (true) with check (true);
+create policy affiliate_monitoring_policy_event_app_access
+  on garimpa.affiliate_monitoring_policy_event for all to garimpa_app
+  using (true) with check (true);
+create policy affiliate_monitoring_skip_app_access
+  on garimpa.affiliate_monitoring_skip for all to garimpa_app
+  using (true) with check (true);
+
 comment on table garimpa.affiliate_monitoring_policy is
   'Escolha de cron por afiliado e marketplace; ausência de linha equivale a desligado.';
 comment on table garimpa.affiliate_monitoring_policy_event is

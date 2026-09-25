@@ -39,6 +39,8 @@ Falta de disparo não aparece na API do GitHub como run. Detectar execução per
 - Aba **Rodagens**: controles de Shopee/AliExpress para a próxima execução agendada, histórico das mudanças e indicação explícita de que ML ainda não tem cron. O disparo manual continua separado da escolha de agendamento.
 - Worker: em `schedule`, consulta a política antes de selecionar produtos ou chamar APIs externas. Se a loja estiver pausada, grava a razão e termina sem consulta. Em `workflow_dispatch`, preserva o disparo manual do administrador. Enquanto a migration não tiver sido aplicada, a casa mantém temporariamente o cron anterior; outros tenants não recebem essa exceção.
 - Esta entrega controla somente a casa. O banco está estruturado por afiliado, mas o worker continua selecionando `tenant_id=local` e usando credenciais globais; não habilitar terceiros antes de implementar credenciais, atribuição de links e orçamento por conta.
+- Migration aplicada no Supabase do projeto `spbuwcwmxlycchuwhfir` via MCP com versão remota `20260925114255` (`affiliate_monitoring_policy`). Verificação: três linhas da casa (Shopee/AliExpress ligadas, ML desligado), RLS ligado nas três novas tabelas, sem `SELECT` para `anon`/`authenticated`, e leitura confirmada como `garimpa_app`.
+- Teste controlado de pausa: Shopee ficou desligada por segundos; o CLI chamado como `schedule` registrou `policy_disabled` em `affiliate_monitoring_skip` e saiu antes da API. A configuração foi restaurada e o histórico tem os dois eventos do teste.
 
 ## Critérios de aceite
 
