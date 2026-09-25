@@ -251,7 +251,7 @@ export default async function AdminPage({
         <a href="/admin?aba=captura-manual">Captura manual</a>
         <a href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
       </nav>
-      <GithubMonitoringPanel {...githubMonitoring} />
+      <GithubMonitoringPanel {...githubMonitoring} dispatchConfigured={Boolean(process.env.GITHUB_ACTIONS_WRITE_TOKEN)} />
       {MARKETPLACES.filter((def) => def.slug in RUN_PANELS).map((def) => {
         const panel = RUN_PANELS[def.slug]!;
         const state = runsByMarketplace.get(def.slug);

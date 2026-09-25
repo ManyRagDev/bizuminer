@@ -26,11 +26,12 @@ Falta de disparo não aparece na API do GitHub como run. Detectar execução per
 
 ## Sequência de entrega
 
-1. **Visibilidade da casa**: mostrar histórico do workflow na aba de rodagens e vincular novas linhas de `capture_run` pelo `GITHUB_RUN_ID`. Registrar também tentativas com fila vazia. Esta etapa já está implementada no código local. Histórico anterior não tem vínculo retroativo.
-2. **Política por conta**: migration, autorização por membership, API de ligar/pausar, trilha de auditoria e tela de afiliado. Default desligado. Não expor token do GitHub ao navegador.
-3. **Worker multi-tenant**: tirar `local` fixo dos CLIs, carregar configuração e credenciais adequadas a cada conta, aplicar orçamento global, claim idempotente, rechecagem da política antes da chamada externa e resultado durável mesmo se o job falhar.
-4. **ML**: decidir um método de acesso autorizado e testado, então adicionar o adapter de acompanhamento por ID e os gates da plataforma. Opt-in do afiliado é necessário para a preferência dele, mas não substitui a habilitação técnica da plataforma. Até lá, o controle de ML deve aparecer como `indisponível para agendamento`, sem um toggle funcional.
-5. **Alertas e relatório**: aviso de run perdido, falha recorrente, itens sem atualização e exportação por período/conta/loja.
+1. **Visibilidade da casa**: mostrar histórico do workflow na aba de rodagens e vincular novas linhas de `capture_run` pelo `GITHUB_RUN_ID`. Registrar também tentativas com fila vazia. Esta etapa já está implementada. Histórico anterior não tem vínculo retroativo.
+2. **Disparo remoto da casa**: botão administrativo chama `workflow_dispatch` via rota autenticada. Requer `GITHUB_ACTIONS_WRITE_TOKEN` no ambiente Production da Vercel, com permissão de repositório `Actions: write`, restrito a `ManyRagDev/bizuminer`. A rota guarda o token no servidor e verifica Origin. Enquanto a credencial não existir, o botão fica desabilitado e o link para a página do workflow no GitHub continua disponível.
+3. **Política por conta**: migration, autorização por membership, API de ligar/pausar, trilha de auditoria e tela de afiliado. Default desligado. Não expor token do GitHub ao navegador.
+4. **Worker multi-tenant**: tirar `local` fixo dos CLIs, carregar configuração e credenciais adequadas a cada conta, aplicar orçamento global, claim idempotente, rechecagem da política antes da chamada externa e resultado durável mesmo se o job falhar.
+5. **ML**: decidir um método de acesso autorizado e testado, então adicionar o adapter de acompanhamento por ID e os gates da plataforma. Opt-in do afiliado é necessário para a preferência dele, mas não substitui a habilitação técnica da plataforma. Até lá, o controle de ML deve aparecer como `indisponível para agendamento`, sem um toggle funcional.
+6. **Alertas e relatório**: aviso de run perdido, falha recorrente, itens sem atualização e exportação por período/conta/loja.
 
 ## Critérios de aceite
 

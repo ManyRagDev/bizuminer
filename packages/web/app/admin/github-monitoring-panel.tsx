@@ -1,4 +1,5 @@
 import type { GithubMonitoringRun } from "../../lib/github-monitoring";
+import MonitoringDispatchButton from "./monitoring-dispatch-button";
 
 const dateTime = (value: string) => new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit",
@@ -21,12 +22,13 @@ function captureLabel(capture: GithubMonitoringRun["captures"][number]): string 
 }
 
 export default function GithubMonitoringPanel({
-  runs, error,
-}: { runs: GithubMonitoringRun[]; error: boolean }) {
+  runs, error, dispatchConfigured,
+}: { runs: GithubMonitoringRun[]; error: boolean; dispatchConfigured: boolean }) {
   return (
     <section className="admin-section" aria-labelledby="github-monitoring-title">
       <h2 id="github-monitoring-title">Acompanhamento agendado · conta da casa</h2>
       <p>O estado da execução vem do GitHub. Os preços confirmados vêm do banco. Uma execução concluída pode não ter encontrado produtos elegíveis.</p>
+      <MonitoringDispatchButton configured={dispatchConfigured} />
       <p><a href="https://github.com/ManyRagDev/bizuminer/actions/workflows/monitor-prices.yml" target="_blank" rel="noopener noreferrer">Iniciar acompanhamento no GitHub ↗</a> <span>É necessário entrar no GitHub com acesso ao repositório.</span></p>
       {error ? (
         <p className="admin-message admin-message--notice" role="status">O histórico do GitHub está indisponível no momento. O histórico das capturas abaixo continua disponível.</p>

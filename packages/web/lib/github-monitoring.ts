@@ -27,12 +27,13 @@ export interface GithubMonitoringRun {
 /** Histórico do agendador. O token é opcional enquanto o repositório for público. */
 export async function githubMonitoringRuns(): Promise<GithubMonitoringRun[]> {
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
-  if (process.env.GITHUB_ACTIONS_READ_TOKEN) {
-    headers.Authorization = `Bearer ${process.env.GITHUB_ACTIONS_READ_TOKEN}`;
+  const token = process.env.GITHUB_ACTIONS_READ_TOKEN ?? process.env.GITHUB_ACTIONS_WRITE_TOKEN;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
   const response = await fetch(
     `https://api.github.com/repos/${REPOSITORY}/actions/workflows/${WORKFLOW}/runs?per_page=20`,
-    { headers, next: { revalidate: 300 } },
+    { headers, next: { revalidate: 30 } },
   );
   if (!response.ok) throw new Error(`github_actions_http_${response.status}`);
   const payload = await response.json() as {
