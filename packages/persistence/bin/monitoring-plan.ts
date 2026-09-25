@@ -15,7 +15,7 @@ import {
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL não definido");
 const tenantId = process.env.MONITOR_TENANT_ID ?? "local";
-const budget = Math.max(0, Math.floor(Number(process.env.MONITOR_PLAN_BUDGET ?? "50")));
+const budget = Math.max(0, Math.floor(Number(process.env.MONITOR_PLAN_BUDGET ?? "20")));
 if (!Number.isFinite(budget)) throw new Error("MONITOR_PLAN_BUDGET inválido");
 const sql = postgres(connectionString, {
   prepare: false,
@@ -43,6 +43,9 @@ try {
         tracked: decisions.filter((d) => d.targetHours !== null).length,
         due: decisions.filter((d) => d.due).length,
         watchedDue: decisions.filter((d) => d.due && d.tier === "watch").length,
+        tiers: Object.fromEntries(["watch", "approved", "engaged", "candidate", "archive"].map((tier) =>
+          [tier, { total: decisions.filter((d) => d.tier === tier).length,
+            due: decisions.filter((d) => d.tier === tier && d.due).length }])),
         selected: queue.length,
         oldestOverdueHours: Math.round(Math.max(0, ...queue.map((d) => d.overdueHours))),
         selectedPreviewIds: queue.slice(0, 5).map((d) => d.productId),

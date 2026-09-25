@@ -22,17 +22,17 @@ export interface MonitoringDecision {
 }
 
 export function monitoringDecision(candidate: MonitoringCandidate, now = new Date()): MonitoringDecision {
+  const ageHours = Math.max(0, (now.getTime() - candidate.lastObservedAt.getTime()) / 3_600_000);
   const tier: MonitorTier = candidate.activeWatches > 0 ? "watch"
     : candidate.curationStatus === "approved" ? "approved"
     : candidate.clicks7d > 0 ? "engaged"
-    : candidate.curationStatus === "pending" ? "candidate"
+    : candidate.curationStatus === "pending" && ageHours <= 14 * 24 ? "candidate"
     : "archive";
   const targetHours = tier === "watch" ? 24
     : tier === "approved" ? 48
     : tier === "engaged" ? 72
     : tier === "candidate" ? 168
     : null;
-  const ageHours = Math.max(0, (now.getTime() - candidate.lastObservedAt.getTime()) / 3_600_000);
   const overdueHours = targetHours === null ? 0 : Math.max(0, ageHours - targetHours);
   return {
     productId: candidate.productId,

@@ -20,16 +20,16 @@ O produto tem dois ciclos distintos:
 | Interesse explícito | `price_watch.active` | 24 h | API oficial em Shopee/Ali; fila humana no ML |
 | Curadoria | `product_curation.status = approved` | 48 h | API oficial em Shopee/Ali; fila humana no ML |
 | Interesse observado | clique nos últimos 7 dias | 72 h | API oficial em Shopee/Ali; fila humana no ML |
-| Formação de histórico | `pending` | 7 dias | API oficial em Shopee/Ali; fila humana no ML |
+| Formação de histórico | `pending` visto nos últimos 14 dias | 7 dias | API oficial em Shopee/Ali; fila humana no ML |
 | Arquivo | demais estados, inclusive `legacy_visible` sem interesse | sem revisão dedicada | reencontro eventual na descoberta |
 
-Quando há várias razões, vale a primeira faixa da tabela. Dentro de uma faixa, vence o item mais atrasado. O orçamento é separado por loja. A partir de 10 consultas por rodada, 10% são reservados para candidatos e 10% para itens com clique, desde que existam itens vencidos; interesses explícitos têm precedência. O orçamento não define disponibilidade nem prova que o produto sumiu.
+Quando há várias razões, vale a primeira faixa da tabela. Dentro de uma faixa, vence o item mais atrasado. Candidatos sem aprovação deixam a fila dedicada após 14 dias sem nova captura; uma nova captura os torna elegíveis novamente. O orçamento é separado por loja. A partir de 10 consultas por rodada, 10% são reservados para candidatos e 10% para itens com clique, desde que existam itens vencidos; interesses explícitos têm precedência. O orçamento não define disponibilidade nem prova que o produto sumiu.
 
 **ML:** a restrição vigente ao acesso automatizado impede prometer revisão individual recorrente. A fila informa ao operador o que merece nova captura humana. Um usuário que marcar um item do ML deve ver a data real da última captura; a interface não deve sugerir revisão diária garantida.
 
 ## Primeira medição
 
-Consulta somente leitura em 24/09/2026, com o orçamento ilustrativo de 50 itens por loja:
+Consulta somente leitura em 24/09/2026, com o orçamento ilustrativo de 50 itens por loja (o orçamento inicial agendado é de 20):
 
 | Loja | Catálogo | Elegíveis pela política | Vencidos | “De olho” vencidos |
 | --- | ---: | ---: | ---: | ---: |
@@ -38,6 +38,8 @@ Consulta somente leitura em 24/09/2026, com o orçamento ilustrativo de 50 itens
 | AliExpress | 828 | 474 | 83 | 0 |
 
 Esses números são um retrato da política aplicada ao banco, não medição de cumprimento de cadência. `npm run monitoring:plan` reproduz o relatório. O estado `legacy_visible` não equivale a aprovação editorial e, sozinho, não deve consumir o orçamento premium.
+
+O orçamento inicial de 20 consultas por loja em cada uma das quatro rodadas diárias é um piloto de capacidade. A fila atual inclui 104 itens aprovados na Shopee e 138 na AliExpress, além de candidatos; o orçamento pode não sustentar todas as metas internas enquanto a taxa de correspondência e a demanda não forem medidas por pelo menos 14 dias. Não divulgar frequência garantida até esse ajuste.
 
 ## Execução técnica
 

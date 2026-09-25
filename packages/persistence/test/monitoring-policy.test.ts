@@ -30,7 +30,7 @@ test("produto rejeitado ou retido não consome consultas sem interesse", () => {
 
 test("fila respeita orçamento, loja e faixa antes do atraso", () => {
   const queue = monitoringQueue([
-    candidate("old-pending", { lastObservedAt: new Date("2026-09-01T00:00:00Z") }),
+    candidate("old-pending", { lastObservedAt: new Date("2026-09-14T00:00:00Z") }),
     candidate("watched", { activeWatches: 1 }),
     candidate("approved", { curationStatus: "approved" }),
     candidate("ali", { marketplace: "aliexpress", activeWatches: 1 }),
@@ -41,11 +41,15 @@ test("fila respeita orçamento, loja e faixa antes do atraso", () => {
 test("reserva parte do orçamento para formar histórico de candidatos", () => {
   const approved = Array.from({ length: 20 }, (_, i) => candidate(`approved-${i}`, { curationStatus: "approved" }));
   const queue = monitoringQueue([...approved,
-    candidate("candidate-a", { lastObservedAt: new Date("2026-09-01T00:00:00Z") }),
-    candidate("candidate-b", { lastObservedAt: new Date("2026-09-01T00:00:00Z") }),
+    candidate("candidate-a", { lastObservedAt: new Date("2026-09-14T00:00:00Z") }),
+    candidate("candidate-b", { lastObservedAt: new Date("2026-09-14T00:00:00Z") }),
   ], "shopee", 10, now);
   assert.equal(queue.length, 10);
   assert.equal(queue.filter((entry) => entry.tier === "candidate").length, 1);
+});
+
+test("candidato sem aprovação sai da fila após duas semanas sem captura", () => {
+  assert.equal(monitoringDecision(candidate("old", { lastObservedAt: new Date("2026-09-01T00:00:00Z") }), now).tier, "archive");
 });
 
 test("ausências repetidas recebem recuo progressivo, menor para itens observados pelo usuário", () => {
