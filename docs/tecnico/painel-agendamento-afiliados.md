@@ -33,6 +33,13 @@ Falta de disparo não aparece na API do GitHub como run. Detectar execução per
 5. **ML**: decidir um método de acesso autorizado e testado, então adicionar o adapter de acompanhamento por ID e os gates da plataforma. Opt-in do afiliado é necessário para a preferência dele, mas não substitui a habilitação técnica da plataforma. Até lá, o controle de ML deve aparecer como `indisponível para agendamento`, sem um toggle funcional.
 6. **Alertas e relatório**: aviso de run perdido, falha recorrente, itens sem atualização e exportação por período/conta/loja.
 
+## Entrega da conta da casa (25/09/2026)
+
+- Migration `20260925040000_affiliate_monitoring_policy.sql`: política por afiliado e loja, trilha de mudanças e registro de jobs agendados pausados. As linhas da casa nascem com Shopee/AliExpress ligadas e ML desligado; novas contas não herdam ativação.
+- Aba **Rodagens**: controles de Shopee/AliExpress para a próxima execução agendada, histórico das mudanças e indicação explícita de que ML ainda não tem cron. O disparo manual continua separado da escolha de agendamento.
+- Worker: em `schedule`, consulta a política antes de selecionar produtos ou chamar APIs externas. Se a loja estiver pausada, grava a razão e termina sem consulta. Em `workflow_dispatch`, preserva o disparo manual do administrador. Enquanto a migration não tiver sido aplicada, a casa mantém temporariamente o cron anterior; outros tenants não recebem essa exceção.
+- Esta entrega controla somente a casa. O banco está estruturado por afiliado, mas o worker continua selecionando `tenant_id=local` e usando credenciais globais; não habilitar terceiros antes de implementar credenciais, atribuição de links e orçamento por conta.
+
 ## Critérios de aceite
 
 - Duas contas com escolhas diferentes: uma roda e a outra não; cada uma vê somente sua política, seus produtos e seu histórico.

@@ -21,6 +21,11 @@ function captureLabel(capture: GithubMonitoringRun["captures"][number]): string 
   return `${store}: ${capture.matched}/${capture.attempted} preços confirmados${capture.priceChanges ? `, ${capture.priceChanges} alterações` : ""}`;
 }
 
+function skipLabel(skip: GithubMonitoringRun["skips"][number]): string {
+  const store = skip.marketplace === "shopee" ? "Shopee" : skip.marketplace === "aliexpress" ? "AliExpress" : skip.marketplace;
+  return `${store}: ${skip.reason === "account_suspended" ? "conta suspensa" : "pausada no painel"}`;
+}
+
 export default function GithubMonitoringPanel({
   runs, error, dispatchConfigured,
 }: { runs: GithubMonitoringRun[]; error: boolean; dispatchConfigured: boolean }) {
@@ -46,8 +51,8 @@ export default function GithubMonitoringPanel({
                     <td>{dateTime(run.createdAt)}</td>
                     <td>{run.event === "schedule" ? "agendada" : run.event === "workflow_dispatch" ? "manual" : run.event}</td>
                     <td><span className={`run-status ${state.className}`}>{state.label}</span></td>
-                    <td>{run.captures.length > 0
-                      ? run.captures.map(captureLabel).join(" · ")
+                    <td>{run.captures.length + run.skips.length > 0
+                      ? [...run.captures.map(captureLabel), ...run.skips.map(skipLabel)].join(" · ")
                       : run.conclusion === "skipped" ? "nenhuma captura iniciada" : "sem relatório vinculado"}</td>
                     <td><a href={run.url} target="_blank" rel="noopener noreferrer">Ver execução ↗</a></td>
                   </tr>

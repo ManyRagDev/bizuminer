@@ -22,6 +22,7 @@ export interface GithubMonitoringRun {
     failed: number;
     priceChanges: number;
   }>;
+  skips: Array<{ marketplace: string; reason: string }>;
 }
 
 /** Histórico do agendador. O token é opcional enquanto o repositório for público. */
@@ -55,6 +56,7 @@ export async function githubMonitoringRuns(): Promise<GithubMonitoringRun[]> {
     updatedAt: run.updated_at,
     url: `https://github.com/${REPOSITORY}/actions/runs/${run.id}`,
     captures: [] as GithubMonitoringRun["captures"],
+    skips: [] as GithubMonitoringRun["skips"],
   }));
   if (runs.length === 0) return runs;
 
@@ -94,6 +96,21 @@ export async function githubMonitoringRuns(): Promise<GithubMonitoringRun[]> {
         failed: capture.failed,
         priceChanges: capture.price_changes,
       });
+    }
+    try {
+      const skips = await sql<{ github_run_id: string; marketplace: string; reason: string }[]>`
+        select github_run_id, marketplace, reason
+        from garimpa.affiliate_monitoring_skip
+        where affiliate_id = 'aff_local' and github_run_id = any(${ids}::text[])
+      `;
+      for (const skip of skips) {
+        byId.get(skip.github_run_id)?.skips.push({
+          marketplace: skip.marketplace, reason: skip.reason,
+        });
+      }
+    } catch (error) {
+      // Compatibilidade enquanto a migration de política não foi aplicada.
+      if ((error as { code?: string }).code !== "42P01") throw error;
     }
     return runs;
   } finally {

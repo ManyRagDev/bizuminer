@@ -23,6 +23,8 @@ import BatchCapturePanel from "./batch-capture-panel";
 import TodayCommandCenter from "./today-command-center";
 import GithubMonitoringPanel from "./github-monitoring-panel";
 import { githubMonitoringRuns } from "../../lib/github-monitoring";
+import MonitoringPolicyPanel from "./monitoring-policy-panel";
+import { houseMonitoringPolicies, houseMonitoringPolicyEvents } from "../../lib/affiliate-monitoring-db";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +154,8 @@ export default async function AdminPage({
   const githubMonitoring = await githubMonitoringRuns()
     .then((runs) => ({ runs, error: false }))
     .catch(() => ({ runs: [], error: true }));
+  const monitoringPolicies = await houseMonitoringPolicies().catch(() => null);
+  const monitoringPolicyEvents = await houseMonitoringPolicyEvents().catch(() => []);
 
   // Bookmarklet gerado no servidor: o token de captura (CAPTURE_TOKEN) fica
   // embutido no código mas nunca é exposto ao client como variável separada.
@@ -252,6 +256,7 @@ export default async function AdminPage({
         <a href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
       </nav>
       <GithubMonitoringPanel {...githubMonitoring} dispatchConfigured={Boolean(process.env.GITHUB_ACTIONS_WRITE_TOKEN)} />
+      <MonitoringPolicyPanel initialPolicies={monitoringPolicies} initialEvents={monitoringPolicyEvents} />
       {MARKETPLACES.filter((def) => def.slug in RUN_PANELS).map((def) => {
         const panel = RUN_PANELS[def.slug]!;
         const state = runsByMarketplace.get(def.slug);

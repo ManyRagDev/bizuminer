@@ -8,6 +8,7 @@ import { PostgresStore } from "../src/pg-store.ts";
 import { loadMonitoringCandidates, suppressedMonitoringIds } from "../src/monitoring-candidates.ts";
 import { monitoringQueue, type MonitorMarketplace } from "../src/monitoring-policy.ts";
 import { MonitoringLookup } from "../src/monitoring-lookup.ts";
+import { monitoringScheduleDecision, recordMonitoringSkip } from "../src/monitoring-schedule.ts";
 import { categoryForTitle } from "../src/category.ts";
 import { familyInfoForTitle } from "../src/product-family.ts";
 import type { CaptureContext, Credential } from "../../capture/src/types.ts";
@@ -35,6 +36,19 @@ const sql = postgres(connectionString, {
   max: 1,
   ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false },
 });
+const scheduleDecision = await monitoringScheduleDecision(
+  sql, tenantId, marketplace, process.env.GITHUB_EVENT_NAME,
+);
+if (!scheduleDecision.allowed) {
+  if (scheduleDecision.affiliateId && process.env.GITHUB_RUN_ID && scheduleDecision.reason) {
+    await recordMonitoringSkip(sql, scheduleDecision.affiliateId, marketplace,
+      process.env.GITHUB_RUN_ID, scheduleDecision.reason);
+  }
+  await sql.end();
+  console.log(JSON.stringify({ marketplace, mode: "schedule", tenantId,
+    skipped: scheduleDecision.reason }));
+  process.exit(0);
+}
 const candidates = await loadMonitoringCandidates(sql, tenantId);
 const suppressed = await suppressedMonitoringIds(sql, tenantId, marketplace, candidates);
 await sql.end();
