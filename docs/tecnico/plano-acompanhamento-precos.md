@@ -2,6 +2,8 @@
 
 **Estado em 24/09/2026:** política, auditoria de cobertura, lookup por ID, worker de retenção e workflow preparados. Piloto de um produto por loja executado em produção: ambos retornaram correspondência exata, gravaram uma observação e passaram na verificação de tenant, preço atual e histórico anterior. Rodadas `c9dd26a6-6e92-4c51-8afe-bf9a115620e8` (Shopee) e `27a78eb8-9592-4c60-affa-89b5ff35f744` (AliExpress). Na AliExpress houve uma mudança de preço. Lotes de 20: Shopee 20/20 correspondências; AliExpress 12/20 e depois 9/20, com as demais respostas vazias para o ID, sem erro ou preço inválido. Essas ausências recebem recuo progressivo, sem alterar a data de preço. Os segredos e flags de captura já estão configurados no GitHub; o workflow ainda fica inativo até `MONITORING_ENABLED=true`. As cadências abaixo são metas de seleção, não uma promessa pública até a cobertura ser medida em operação.
 
+**Validação do executor (24/09):** primeiro disparo no GitHub confirmou a Shopee e mostrou 2 bloqueios temporários de frequência na AliExpress (17 correspondências, 1 ausência, 2 falhas). A agenda foi desligada, a retenção AliExpress passou a espaçar chamadas a 0,4/s e um novo lote local de 20 terminou com 17 correspondências, 3 ausências e zero falhas. Reativar a agenda somente após o novo commit e uma rodada GitHub bem-sucedida.
+
 ## Promessa que podemos sustentar
 
 O usuário deve ver o preço registrado, a data da última conferência e o histórico que realmente existe. Um produto sem nova resposta da fonte permanece com a última observação datada; ausência na resposta, erro ou limite da API nunca renovam o preço. “De olho no preço” ganha prioridade operacional. Nenhum alerta parte apenas do desconto declarado pelo anúncio.

@@ -31,7 +31,9 @@ export type LookupResult = { readonly offer: RawOffer } | { readonly offer: null
 
 export class MonitoringLookup {
   private readonly shopee = new ShopeeClient();
-  private readonly aliexpress = new AliExpressClient();
+  // Retenção consulta IDs em sequência. O padrão do adapter (2/s) estourou
+  // o limite real da conta no GitHub Actions; espaçar a 0,4/s evita a rajada.
+  private readonly aliexpress = new AliExpressClient({ ratePerSecond: 0.4 });
 
   async byId(cred: Credential, externalId: string, ctx: CaptureContext): Promise<RawOffer | null> {
     return (await this.byIdDetailed(cred, externalId, ctx)).offer;
