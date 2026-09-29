@@ -7,9 +7,11 @@ import { dealDetail, topDeals } from "../../../lib/db";
 import { freshnessLabel, priceFreshness, priceNarrative, priceSignal, seenAgo } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
 import { marketplaceDef } from "../../../lib/marketplaces";
+import { productShareDescription } from "../../../lib/product-share";
 import { validUserId } from "../../../lib/member-contract";
 import { savedProductIds } from "../../../lib/member-db";
 import AdminBadge from "../../_components/admin-badge";
+import CopyProductLink from "../../_components/copy-product-link";
 import DetailHeader from "../../_components/detail-header";
 import SaveDealButton from "./save-deal-button";
 import RedirectBanner from "./redirect-banner";
@@ -42,16 +44,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const detail = await dealDetail(slug);
   if (!detail) return { title: "Achado não encontrado | BizuMiner" };
   const title = `${detail.deal.title} | BizuMiner`;
-  // Antes era uma frase fixa, igual em toda oferta compartilhada — o preview
-  // no WhatsApp não dizia preço nem loja. Agora carrega os dois fatos que
-  // mudam a decisão de quem recebe o link. O desconto declarado fica de fora
-  // de propósito: é alegação do vendedor, não medição nossa.
-  const store = marketplaceDef(detail.deal.marketplace)?.label ?? detail.deal.marketplace;
-  const price = (detail.deal.price_cents / 100).toLocaleString("pt-BR", {
-    style: "currency", currency: "BRL",
-    maximumFractionDigits: detail.deal.price_cents % 100 === 0 ? 0 : 2,
-  }).replace(/ /g, " ");
-  const description = `${price} na ${store} · preço monitorado pelo BizuMiner.`;
+  const description = productShareDescription(detail.deal);
   return {
     title,
     description,
@@ -112,6 +105,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
           </div>
         )}
         <a className="deal-cta" href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a>
+        <CopyProductLink slug={deal.slug} title={deal.title} />
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       </section>
     </article>

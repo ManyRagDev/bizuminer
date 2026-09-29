@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { dealDetail } from "../../../lib/db";
-import { priceHighlight } from "../../../lib/deal-signal";
+import { priceFreshness, priceHighlight, seenAgo } from "../../../lib/deal-signal";
 import { marketplaceDef } from "../../../lib/marketplaces";
 import { brl, fetchProductImage, ogFonts, truncate } from "../../../lib/og-assets";
 
@@ -64,6 +64,7 @@ export default async function Image({ params }: { params: Promise<Params> }) {
   }
 
   const { deal } = detail;
+  const stale = priceFreshness(deal.evidence_observed_at) === "stale";
   const highlight = priceHighlight({
     priceCents: deal.price_cents,
     previousMinPriceCents: deal.previous_min_price_cents,
@@ -73,7 +74,7 @@ export default async function Image({ params }: { params: Promise<Params> }) {
   });
   // Card não repete "ainda sem histórico" — silêncio é o padrão quando não há
   // o que afirmar; um selo negativo num card de divulgação só ocupa espaço.
-  const badge = highlight?.tone === "unproven" ? null : highlight;
+  const badge = stale || highlight?.tone === "unproven" ? null : highlight;
   const photo = await fetchProductImage(deal.image_url);
   const marketplace = marketplaceDef(deal.marketplace);
   const stamp = marketplace
@@ -182,7 +183,7 @@ export default async function Image({ params }: { params: Promise<Params> }) {
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
-              {deal.original_price_cents !== null && deal.original_price_cents > deal.price_cents && (
+              {!stale && deal.original_price_cents !== null && deal.original_price_cents > deal.price_cents && (
                 // Satori não suporta text-decoration (mesmo bug de "fit-content": erro
                 // minificado "u2 is not iterable" no pipe da resposta). Sem risco de
                 // reintroduzir — o contraste de tamanho/cor já distingue o preço anterior.
@@ -205,7 +206,7 @@ export default async function Image({ params }: { params: Promise<Params> }) {
                 color: INK_MUTED,
               }}
             >
-              Ofertas monitoradas · link de afiliado
+              {stale ? `Última captura ${seenAgo(deal.evidence_observed_at) ?? "sem data"} · confira o preço atual` : "Ofertas monitoradas · link de afiliado"}
             </div>
           </div>
         </div>
