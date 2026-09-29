@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 /**
- * Tela "Sem acesso" exibida para quem está logado mas não é o dono.
+ * Tela "Sem acesso" exibida para quem está logado sem a role `afiliado`.
  * Antes vivia dentro de `app/admin/page.tsx`; agora é compartilhada pelo
  * layout de `/admin` (e serve de referência única para o rótulo do painel).
  */
@@ -32,8 +32,7 @@ export default function DenyAccess() {
         <p className="eyebrow">Painel do administrador</p>
         <h1>Sem acesso</h1>
         <p>
-          Este painel é exclusivo do dono do BizuMiner. Se você acha que deveria estar aqui, entre com a
-          conta correta.
+          Este painel exige a role de acesso <b>afiliado</b>. Sua conta pessoal continua disponível normalmente.
         </p>
         <form action="/auth/sair" method="post">
           <button className="auth-signout" type="submit">

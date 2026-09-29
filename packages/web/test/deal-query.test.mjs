@@ -20,8 +20,18 @@ test("traduz faixas de preço para limites inclusivos consistentes", () => {
 
 test("restaura página, busca, filtros e ordenação a partir da URL pública", () => {
   const state = catalogStateFromSearchParams(new URLSearchParams("pagina=3&categoria=Casa&preco=100_500&ordem=price&busca=%20cafeteira%20"));
-  assert.deepEqual(state, { page: 3, category: "Casa", priceBand: "100_500", sort: "price", search: "cafeteira", marketplace: null, freshness: "7d", minRating: null, minDiscount: null, lowestOnly: false, hasHistory: false });
-  assert.deepEqual(catalogStateToDealQuery(state), { limit: CATALOG_PAGE_SIZE, offset: 48, category: "Casa", priceBand: "100_500", sort: "price", search: "cafeteira", marketplace: null, freshness: "7d", minRating: null, minDiscount: null, lowestOnly: false, hasHistory: false });
+  assert.deepEqual(state, { page: 3, category: "Casa", priceBand: "100_500", sort: "price", search: "cafeteira", marketplace: null, freshness: "2d", minRating: null, minDiscount: null, lowestOnly: false, hasHistory: false });
+  assert.deepEqual(catalogStateToDealQuery(state), { limit: CATALOG_PAGE_SIZE, offset: 48, category: "Casa", priceBand: "100_500", sort: "price", search: "cafeteira", marketplace: null, freshness: "2d", minRating: null, minDiscount: null, lowestOnly: false, hasHistory: false });
+});
+
+test("48 horas é o padrão; sete dias continua acessível por filtro e URL", () => {
+  assert.equal(dealQueryFromSearchParams(new URLSearchParams()).freshness, "2d");
+  assert.equal(catalogStateFromSearchParams(new URLSearchParams()).freshness, "2d");
+  assert.equal(dealQueryFromSearchParams(new URLSearchParams("freshness=7d")).freshness, "7d");
+  const older = catalogStateFromSearchParams(new URLSearchParams("frescor=7d&loja=mercadolivre"));
+  assert.equal(older.freshness, "7d");
+  assert.equal(older.marketplace, "mercadolivre");
+  assert.equal(catalogStateToSearchParams(older).get("frescor"), "7d");
 });
 
 test("mantém a URL curta no estado padrão e serializa apenas o que mudou", () => {

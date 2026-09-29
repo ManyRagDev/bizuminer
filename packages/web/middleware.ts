@@ -7,13 +7,13 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 /**
  * Identidade pré-auth + sessão (AL-3, 22/08/2026).
  *
- * 1. Todo visitante recebe o cookie httpOnly bm_uid (como antes): é o elo do
- *    anônimo com salvos/acompanhamentos, e a ponte do merge no login.
+ * 1. Todo visitante recebe o cookie httpOnly bm_uid: ele identifica o estado
+ *    local a importar no login, mas não autoriza escrita na área pessoal.
  * 2. O Proxy do @supabase/ssr roda em TODAS as rotas: rotaciona o token e
  *    devolve a sessão nova. As páginas públicas (vitrine, produto) usam a
  *    sessão para personalizar — corações da conta em qualquer aparelho.
  * 3. Gates de rota: /minha-area e /admin sem sessão → /entrar; /api/admin/*
- *    sem sessão → 401; /api/minha/* passa (o handler resolve sessão → bm_uid);
+ *    sem sessão → 401; /api/minha/* exige sessão no próprio handler;
  *    /entrar com sessão → /minha-area. O gate real fica em cada página/API —
  *    o middleware é a UX, não a fronteira.
  */
@@ -29,20 +29,19 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   let response: NextResponse;
 
-  if (pathname.startsWith("/api/admin/")) {
-    // Painel: sem sessão não há dono possível — corta cedo.
+  if (pathname.startsWith("/api/admin/") || pathname === "/api/pauta") {
+    // Painel: corta ausência de sessão cedo; o handler valida `afiliado`.
     response = authenticated
       ? supabaseResponse
       : NextResponse.json({ ok: false, error: "no_session" }, { status: 401 });
   } else if (pathname.startsWith("/api/minha/")) {
-    // Área do cliente: o handler resolve sessão → bm_uid (modelo híbrido)
-    // e 401a se não houver nenhuma. O middleware só rotaciona a sessão.
+    // Área pessoal: o handler exige sessão e resolve o app_user.
     response = supabaseResponse;
   } else if (pathname === "/entrar") {
     response = authenticated
       ? NextResponse.redirect(new URL("/minha-area", request.url))
       : supabaseResponse;
-  } else if (pathname === "/minha-area" || pathname === "/admin" ||
+  } else if (pathname === "/minha-area" || pathname === "/admin" || pathname === "/pauta" ||
              pathname.startsWith("/minha-area/") || pathname.startsWith("/admin/")) {
     response = authenticated
       ? supabaseResponse

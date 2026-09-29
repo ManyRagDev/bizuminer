@@ -49,12 +49,10 @@ export default function PautaClient({
   qrBundle,
   mobileUrl = "",
   qrDataUrl = "",
-  authTokenToPersist,
 }: {
   qrBundle?: PautaQrBundle;
   mobileUrl?: string;
   qrDataUrl?: string;
-  authTokenToPersist?: string;
 }) {
   const [products, setProducts] = useState<PautaProduct[]>([]);
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
@@ -65,18 +63,6 @@ export default function PautaClient({
     qrBundle?.defaultMode ?? "local"
   );
   const [copiedMobileUrl, setCopiedMobileUrl] = useState(false);
-
-  useEffect(() => {
-    // Se veio autenticado via QR Code (?auth=...), grava o cookie no celular por 30 dias
-    if (authTokenToPersist) {
-      document.cookie = `bm_pauta_auth=${encodeURIComponent(authTokenToPersist)}; path=/; max-age=2592000; SameSite=Lax`;
-      if (typeof window !== "undefined" && window.history.replaceState) {
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.delete("auth");
-        window.history.replaceState({}, "", currentUrl.pathname + (currentUrl.search ? currentUrl.search : ""));
-      }
-    }
-  }, [authTokenToPersist]);
 
   useEffect(() => {
     // No mobile pequeno, inicia colapsado para economizar espaço de tela

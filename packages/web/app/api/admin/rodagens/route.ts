@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { captureRunHistory, runningRun } from "../../../../lib/admin-db";
-import { checkAdminUser, sinkJson } from "../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * parâmetro, devolve todas — comportamento anterior preservado.
  */
 export async function GET(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   const marketplace = request.nextUrl.searchParams.get("marketplace")?.trim() || undefined;

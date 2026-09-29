@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { checkAdminUser, sinkJson } from "../../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 
 export const runtime = "nodejs";
 
@@ -8,7 +8,7 @@ const REPOSITORY = "ManyRagDev/bizuminer";
 
 /** Dispara a reconsulta da casa no GitHub. O token nunca chega ao navegador. */
 export async function POST(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 

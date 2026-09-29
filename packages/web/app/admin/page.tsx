@@ -25,6 +25,7 @@ import GithubMonitoringPanel from "./github-monitoring-panel";
 import { githubMonitoringRuns } from "../../lib/github-monitoring";
 import MonitoringPolicyPanel from "./monitoring-policy-panel";
 import { houseMonitoringPolicies, houseMonitoringPolicyEvents } from "../../lib/affiliate-monitoring-db";
+import { getPageAuth, roleAccess } from "../../lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,9 @@ export default async function AdminPage({
   searchParams: Promise<{ aba?: string }>;
 }) {
   const { aba } = await searchParams;
+  const authUser = await getPageAuth();
+  const access = authUser ? await roleAccess(authUser.id, "afiliado") : null;
+  if (!access) redirect("/entrar?next=/admin");
   if (aba === "curadoria") {
     redirect("/admin/curadoria?aba=excecoes");
   }
@@ -133,7 +137,7 @@ export default async function AdminPage({
   // não aplicada, o painel degrada para lista vazia em vez de derrubar a página.
   let accounts: AffiliateAccountSummary[] = [];
   try {
-    accounts = await listAffiliateAccounts();
+    accounts = await listAffiliateAccounts(access.appUserId);
   } catch {
     accounts = [];
   }
@@ -157,14 +161,10 @@ export default async function AdminPage({
   const monitoringPolicies = await houseMonitoringPolicies().catch(() => null);
   const monitoringPolicyEvents = await houseMonitoringPolicyEvents().catch(() => []);
 
-  // Bookmarklet gerado no servidor: o token de captura (CAPTURE_TOKEN) fica
-  // embutido no código mas nunca é exposto ao client como variável separada.
-  const captureConfig = {
-    endpoint: `${shareBaseUrl()}/api/capture`,
-    token: process.env.CAPTURE_TOKEN ?? "",
-  };
-  const bookmarklet = bookmarkletHref(captureConfig);
-  const bookmarkletOk = bookmarkletCompiles(captureConfig);
+  // O bookmarklet só extrai e copia o bloco BM1. Nenhuma credencial fica
+  // embutida; a persistência ocorre no endpoint autenticado do painel.
+  const bookmarklet = bookmarkletHref();
+  const bookmarkletOk = bookmarkletCompiles();
 
   const platformStatusRows: PlatformStatusRow[] = MARKETPLACES.map((def) => {
     const lastRun = runsByMarketplace.get(def.slug)?.runs[0];

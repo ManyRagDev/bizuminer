@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
-import { checkAdminUser, sinkJson } from "../../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { houseMonitoringPolicies, houseMonitoringPolicyEvents, setHouseMonitoringPolicy } from "../../../../../lib/affiliate-monitoring-db";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   try {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   if (request.headers.get("origin") !== request.nextUrl.origin) {

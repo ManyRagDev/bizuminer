@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getPageSession, isAdmin } from "../../../lib/auth";
+import { getPageSession, isAffiliate } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
 import { freshnessLabel, priceFreshness, priceNarrative, priceSignal, seenAgo } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
@@ -82,7 +82,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   const product = toVitrineProduct(deal);
   const uid = (await cookies()).get("bm_uid")?.value;
   const session = await getPageSession(validUserId(uid) ? uid : null);
-  const isUserAdmin = session ? isAdmin(session.authUser) : false;
+  const isUserAdmin = session ? await isAffiliate(session.authUser) : false;
   const savedInAccount = session ? (await savedProductIds(session.appUserId)).includes(deal.id) : false;
   const relatedPage = deal.category ? await topDeals({ category: deal.category, limit: 6, sort: "signal" }) : null;
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];

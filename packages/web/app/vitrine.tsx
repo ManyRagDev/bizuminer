@@ -11,14 +11,14 @@ import { MARKETPLACES, marketplaceDef, type MarketplaceDef } from "../lib/market
 import { categoryDesirabilityFromProducts, selectHeroProducts, HERO_MAX, HERO_MIN_SCORE } from "../lib/desirability";
 import { ThemeToggle } from "./theme-toggle";
 
-type ApiPage = { products: VitrineProduct[]; total: number };
+type ApiPage = { products: VitrineProduct[]; total: number; categories: string[]; marketplaceCounts: Record<string, number> };
 type MobileView = "home" | "categories" | "saved" | "filters" | "menu" | "guide";
 
 const catalogGuide = "Acompanhamos o preço de todas as ofertas daqui. Como isso vale para o catálogo inteiro, não repetimos em cada produto: o selo só aparece quando o histórico tem algo a dizer que o anúncio não diz.";
 
 const priceFilters: Array<{ value: PriceBand; label: string }> = [{ value: "all", label: "todos" }, { value: "under_100", label: "até R$100" }, { value: "100_500", label: "R$100–500" }, { value: "over_500", label: "acima R$500" }];
 const sortOptions: Array<{ value: DealSort; label: string }> = [{ value: "signal", label: "melhores oportunidades" }, { value: "price", label: "menor preço" }, { value: "popularity", label: "mais populares" }, { value: "recent", label: "atualizados agora" }];
-const freshnessOptions: Array<{ value: FreshnessBand; label: string }> = [{ value: "today", label: "hoje" }, { value: "3d", label: "últimos 3 dias" }, { value: "7d", label: "últimos 7 dias" }, { value: "14d", label: "últimos 14 dias" }, { value: "all", label: "tudo" }];
+const freshnessOptions: Array<{ value: FreshnessBand; label: string }> = [{ value: "today", label: "hoje" }, { value: "2d", label: "últimas 48 horas" }, { value: "3d", label: "últimos 3 dias" }, { value: "7d", label: "últimos 7 dias" }, { value: "14d", label: "últimos 14 dias" }, { value: "all", label: "tudo" }];
 const ratingOptions = [{ value: 4, label: "★★★★+" }, { value: 3, label: "★★★+" }, { value: 2, label: "★★+" }];
 const discountOptions = [{ value: 30, label: "30%+" }, { value: 50, label: "50%+" }, { value: 70, label: "70%+" }];
 const brl = (cents: number) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 });
@@ -168,8 +168,10 @@ function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: V
   </article>;
 }
 
-export default function Vitrine({ initialProducts, initialTotal, initialState, categories, dateLabel, initialSavedIds = [], marketplaceCounts = {}, isUserAdmin = false }: { initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string; initialSavedIds?: string[]; marketplaceCounts?: Record<string, number>; isUserAdmin?: boolean }) {
+export default function Vitrine({ initialProducts, initialTotal, initialState, categories: initialCategories, dateLabel, initialSavedIds = [], marketplaceCounts: initialMarketplaceCounts = {}, isUserAdmin = false }: { initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string; initialSavedIds?: string[]; marketplaceCounts?: Record<string, number>; isUserAdmin?: boolean }) {
   const [products, setProducts] = useState(initialProducts);
+  const [categories, setCategories] = useState(initialCategories);
+  const [marketplaceCounts, setMarketplaceCounts] = useState(initialMarketplaceCounts);
   const [mobileProducts, setMobileProducts] = useState(initialProducts);
   const [total, setTotal] = useState(initialTotal);
   const [catalog, setCatalog] = useState(initialState);
@@ -191,8 +193,9 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
   const carouselDragged = useRef(false);
   const requestVersion = useRef(0);
   const heroProducts = useMemo(() => {
-    const desirability = categoryDesirabilityFromProducts(initialProducts);
-    return selectHeroProducts(initialProducts, desirability);
+    const currentProducts = initialProducts.filter((product) => priceFreshness(product.evidenceObservedAt) === "current");
+    const desirability = categoryDesirabilityFromProducts(currentProducts);
+    return selectHeroProducts(currentProducts, desirability);
   }, [initialProducts]);
   const savedProducts = useMemo(() => mergeSavedProducts(favorites, favoriteProducts, [...mobileProducts, ...products]), [favoriteProducts, favorites, mobileProducts, products]);
   const shownProducts = showSaved ? savedProducts : products;
@@ -265,12 +268,19 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
     if (dealQuery.category) params.set("category", dealQuery.category);
     if (dealQuery.search) params.set("q", dealQuery.search);
     if (dealQuery.marketplace) params.set("marketplace", dealQuery.marketplace);
+    params.set("freshness", dealQuery.freshness);
+    if (dealQuery.minRating !== null) params.set("minRating", String(dealQuery.minRating));
+    if (dealQuery.minDiscount !== null) params.set("minDiscount", String(dealQuery.minDiscount));
+    if (dealQuery.lowestOnly) params.set("lowestOnly", "true");
+    if (dealQuery.hasHistory) params.set("hasHistory", "true");
     try {
       const response = await fetch(`/api/deals?${params}`);
       if (!response.ok) throw new Error("catalog_failed");
       const page = await response.json() as ApiPage;
       if (version !== requestVersion.current) return false;
       setProducts(page.products);
+      setCategories(page.categories);
+      setMarketplaceCounts(page.marketplaceCounts);
       setMobileProducts((current) => mode === "append" ? [...new Map([...current, ...page.products].map((product) => [product.id, product])).values()] : page.products);
       setMobileLoadedPage(next.page);
       setTotal(page.total);
@@ -307,7 +317,7 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
     document.querySelector("#achados")?.scrollIntoView({ behavior: "smooth" });
   }
   function submitSearch(event: FormEvent<HTMLFormElement>) { event.preventDefault(); trackInteraction("search"); setMobileView("home"); changeCatalog({ ...catalog, page: 1, search: query.trim() }, "replace", true); }
-  function clearFilters() { const next: CatalogState = { page: 1, category: null, priceBand: "all", sort: "signal", search: "", marketplace: null, freshness: "14d", minRating: null, minDiscount: null, lowestOnly: false, hasHistory: false }; setQuery(""); setMobileView("home"); changeCatalog(next, "replace", false); }
+  function clearFilters() { const next: CatalogState = { page: 1, category: null, priceBand: "all", sort: "signal", search: "", marketplace: null, freshness: "2d", minRating: null, minDiscount: null, lowestOnly: false, hasHistory: false }; setQuery(""); setMobileView("home"); changeCatalog(next, "replace", false); }
   function changePage(page: number) {
     if (page < 1 || page > totalPages || page === catalog.page || isLoading) return;
     trackInteraction("page_change"); changeCatalog({ ...catalog, page }, "push", true);
@@ -423,7 +433,7 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
       {!showSaved && catalog.category === null && catalog.priceBand === "all" && !catalog.search && <p className="catalog-intro">{catalogGuide}</p>}
       {loadError && <p className="catalog-error" role="alert">{loadError} <button onClick={() => void fetchDeals(catalog, false)}>tentar de novo</button></p>}
       <div className="desktop-catalog">{shownProducts.length ? <><div className="product-grid">{shownProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} />)}</div>{!showSaved && totalPages > 1 && <CatalogPagination current={catalog.page} total={totalPages} disabled={isLoading} onChange={changePage} />}</> : !isLoading && <EmptyState onClear={clearFilters} saved={showSaved} />}</div>
-      <div className="mobile-catalog"><div className="mobile-catalog-toolbar"><CategoryList className="category-list toolbar-chips" categories={categories} active={catalog.category} onChoose={chooseCategory} /><button className="toolbar-filters" aria-label={`Filtros${(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "14d") ? " (ativos)" : ""}`} onClick={() => setMobileView("filters")}><span aria-hidden="true">⚙</span>{(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "14d") && <em aria-hidden="true" />}</button></div>{mobileProducts.length ? <div className="mobile-product-grid">{mobileProducts.map((product, index) => <Fragment key={product.id}><ProductCard product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} featured={index === 0} />{index === 5 && discoveryCategories.length > 0 && <DiscoveryBreak categories={discoveryCategories} onChoose={chooseCategory} />}</Fragment>)}</div> : !isLoading && <EmptyState onClear={clearFilters} />}{mobileHasMore && <button className="mobile-load-more" type="button" disabled={isLoading} onClick={() => void loadMore()}>{isLoading ? "carregando…" : "carregar mais 24"}<span>{mobileProducts.length} de {total} ofertas</span></button>}</div>
+      <div className="mobile-catalog"><div className="mobile-catalog-toolbar"><CategoryList className="category-list toolbar-chips" categories={categories} active={catalog.category} onChoose={chooseCategory} /><button className="toolbar-filters" aria-label={`Filtros${(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") ? " (ativos)" : ""}`} onClick={() => setMobileView("filters")}><span aria-hidden="true">⚙</span>{(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") && <em aria-hidden="true" />}</button></div>{mobileProducts.length ? <div className="mobile-product-grid">{mobileProducts.map((product, index) => <Fragment key={product.id}><ProductCard product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} featured={index === 0} />{index === 5 && discoveryCategories.length > 0 && <DiscoveryBreak categories={discoveryCategories} onChoose={chooseCategory} />}</Fragment>)}</div> : !isLoading && <EmptyState onClear={clearFilters} />}{mobileHasMore && <button className="mobile-load-more" type="button" disabled={isLoading} onClick={() => void loadMore()}>{isLoading ? "carregando…" : "carregar mais 24"}<span>{mobileProducts.length} de {total} ofertas</span></button>}</div>
     </section>
 
     <section className="price-radar" aria-label="Como avaliamos os preços"><div><p className="eyebrow">Histórico BizuMiner</p><h2>Desconto chama atenção.<br /><em>Histórico</em> ajuda a decidir.</h2></div><div className="radar-note"><span className="radar-orbit"><i>R$</i></span><p>Registramos o preço em cada captura. Enquanto o acompanhamento ainda é curto, mostramos exatamente quantos registros existem — sem transformar pouca informação em certeza.</p></div></section>

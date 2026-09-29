@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { checkAdminUser, sinkJson } from "../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 import { decodeManualCaptureBlock, persistManualCapture } from "../../../../lib/manual-capture";
 
 export const runtime = "nodejs";
@@ -8,12 +8,12 @@ export const runtime = "nodejs";
  * Captura manual: recebe o bloco BM1 gerado pelo bookmarklet (que o curador
  * colou no painel), decodifica, valida e persiste produto + observação.
  *
- * Só o dono (ADMIN_EMAIL) envia — mesmo gate das rodagens. O bloco em si não
+ * Só quem possui a role `afiliado` envia — mesmo gate das rodagens. O bloco não
  * carrega segredo: a autenticidade é da sessão; o checksum só garante que a
  * cópia manual não veio truncada.
  */
 export async function POST(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await persistManualCapture(payload);
+    const result = await persistManualCapture(payload, check.appUserId);
     return sinkJson(check.sink, { ok: true, ...result }, { status: 200 });
   } catch (err) {
     return sinkJson(

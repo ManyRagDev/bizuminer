@@ -21,9 +21,8 @@ const priceBRL = (cents: number) =>
  * Captura manual via bookmarklet.
  *
  * Fluxo: o curador navega no ML como humano → clica no favorito → o bookmarklet
- * envia o payload DIRETO para o endpoint de captura (com fallback de copiar o
- * bloco BM1 para colagem manual). O bookmarklet é gerado no SERVIDOR
- * (page.tsx) e chega aqui pronto — o token de captura não é exposto ao client.
+ * copia o bloco BM1 para colagem manual. O bookmarklet é gerado no servidor
+ * (page.tsx) e não carrega credencial de captura.
  *
  * Instalação: o React bloqueia URLs `javascript:` em `href`, então NÃO usamos
  * link arrastável (incidente 25/08/2026). O dono copia o código e cria o
@@ -104,8 +103,8 @@ export default function Capturador({ bookmarkletHref, bookmarkletOk }: { bookmar
       <div className="capturador-step">
         <h3>2. Capture a oferta</h3>
         <p>
-          Abra uma página de produto no Mercado Livre e clique no favorito “Salvar no BizuMiner”. A oferta é enviada
-          direto ao BizuMiner — sem copiar nem colar. Se o envio falhar, o bloco é copiado para colagem manual abaixo.
+          Abra uma página de produto no Mercado Livre e clique no favorito “Salvar no BizuMiner”. O bloco é copiado
+          para a área de transferência; cole-o abaixo para gravar pela sua sessão de afiliado.
         </p>
       </div>
 

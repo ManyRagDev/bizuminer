@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRouteAuth, isAdmin, resolveAppUserId, type AuthUser } from "./auth.ts";
+import { getRouteAuth, roleAccess, resolveAppUserId, type AuthUser } from "./auth.ts";
 import { mergeAnonymousIntoAuth } from "./auth-merge.ts";
 import { validUserId } from "./member-contract.ts";
 import { attachSink, createCookieSink } from "./supabase.ts";
@@ -7,13 +7,12 @@ import { attachSink, createCookieSink } from "./supabase.ts";
 /**
  * Identidade e autorização das APIs (AL-3, 22/08/2026).
  *
- * Área do cliente — modelo híbrido (decisão de 22/08):
- *  1. sessão Supabase → linha app_user via auth_user_id (merge idempotente
- *     se o vínculo faltar por um caminho raro);
- *  2. sem sessão → cookie bm_uid, exatamente como antes do login.
+ * Área pessoal: sessão Supabase → linha app_user via auth_user_id. O
+ * cookie bm_uid serve apenas para importar os dados locais durante o login;
+ * sem cadastro, os favoritos permanecem somente no localStorage.
  *
- * Painel — exclusivo do dono: sessão + e-mail === ADMIN_EMAIL. 401 sem
- * sessão, 403 com sessão de outra conta.
+ * Painel/operação — exclusivo de quem possui a role `afiliado`. 401 sem
+ * sessão, 403 com sessão sem a role.
  */
 
 export interface MemberIdentity {
@@ -37,22 +36,21 @@ export async function resolveMemberIdentity(request: NextRequest): Promise<Membe
     }
     return { userId: appUserId, sink };
   }
-  const uid = request.cookies.get("bm_uid")?.value;
-  if (!validUserId(uid)) return null;
-  return { userId: uid, sink };
+  return null;
 }
 
-export type AdminCheck =
-  | { kind: "ok"; user: AuthUser; sink: NextResponse }
+export type AffiliateCheck =
+  | { kind: "ok"; user: AuthUser; appUserId: string; sink: NextResponse }
   | { kind: "no_session" }
   | { kind: "forbidden" };
 
-export async function checkAdminUser(request: NextRequest): Promise<AdminCheck> {
+export async function checkAffiliateUser(request: NextRequest): Promise<AffiliateCheck> {
   const sink = createCookieSink();
   const auth = await getRouteAuth(request, sink);
   if (!auth) return { kind: "no_session" };
-  if (!isAdmin(auth)) return { kind: "forbidden" };
-  return { kind: "ok", user: auth, sink };
+  const access = await roleAccess(auth.id, "afiliado");
+  if (!access) return { kind: "forbidden" };
+  return { kind: "ok", user: auth, appUserId: access.appUserId, sink };
 }
 
 /** Resposta JSON com os cookies de sessão do sink aplicados. */

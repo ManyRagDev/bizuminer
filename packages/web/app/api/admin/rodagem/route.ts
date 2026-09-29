@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { NextRequest } from "next/server";
 import { runningRun } from "../../../../lib/admin-db";
-import { checkAdminUser, sinkJson } from "../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 import { mlAutomatedCaptureEnabled, mlCaptureAllowedWithConsent } from "../../../../lib/automated-capture";
 
 export const runtime = "nodejs";
@@ -16,10 +16,10 @@ const MAX_PAGES = 3;
  * auditável de 18/08). Esta rota não inventa registro nenhum: se o processo
  * morrer antes do primeiro insert, nenhuma linha aparece e o painel avisa.
  *
- * Só o dono (ADMIN_EMAIL) aciona — o painel é exclusivo dele (AL-3, 22/08).
+ * Só quem possui a role `afiliado` pode acionar a rodagem.
  */
 export async function POST(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 

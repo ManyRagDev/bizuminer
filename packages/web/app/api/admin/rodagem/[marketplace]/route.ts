@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { NextRequest } from "next/server";
 import { runningRun } from "../../../../../lib/admin-db";
-import { checkAdminUser, sinkJson } from "../../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { captureTriggerFor } from "../../../../../lib/capture-triggers";
 
 export const runtime = "nodejs";
@@ -18,12 +18,12 @@ const MAX_PAGES = 3;
  * CLI (`sweep-shopee.ts` etc.), não esta rota. Se o processo morrer antes do
  * primeiro insert, nenhuma linha aparece e o painel mostra o vazio.
  *
- * Só o dono (ADMIN_EMAIL) aciona.
+ * Só quem possui a role `afiliado` aciona.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ marketplace: string }> }) {
   const { marketplace } = await params;
 
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 

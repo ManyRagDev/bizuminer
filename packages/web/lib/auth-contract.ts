@@ -5,18 +5,13 @@ import { validUserId } from "./member-contract.ts";
  * os testes cobrem por inteiro (mesmo padrão de member-contract.ts).
  */
 
-/** Único e-mail com acesso ao painel /admin. Fallback em código: nada abre
- *  sem este valor no ambiente. */
-export const ADMIN_EMAIL_DEFAULT = "emanuel.adm10@gmail.com";
+/** Roles de aplicação reconhecidas. A autorização real é consultada no
+ * banco; nunca vem de user_metadata nem de um valor enviado pelo cliente. */
+export const APP_ROLES = ["afiliado"] as const;
+export type AppRole = (typeof APP_ROLES)[number];
 
-export function adminEmail(): string {
-  return (process.env.ADMIN_EMAIL ?? ADMIN_EMAIL_DEFAULT).trim().toLowerCase();
-}
-
-/** O e-mail do dono compara normalizado (trim + minúsculas), como toda
- *  comparação de e-mail deve ser — "Emanuel.ADM10@Gmail.com" ≠ dono. */
-export function isAdminEmail(value: unknown): value is string {
-  return typeof value === "string" && value.trim().toLowerCase() === adminEmail();
+export function isAppRole(value: unknown): value is AppRole {
+  return typeof value === "string" && APP_ROLES.includes(value as AppRole);
 }
 
 /**

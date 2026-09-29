@@ -179,6 +179,7 @@ export interface ManualCaptureResult {
  */
 export async function persistManualCapture(
   payload: ManualCapturePayload,
+  appUserId: string,
   tenantId = "local",
 ): Promise<ManualCaptureResult> {
   const capturedAt = new Date(payload.c);
@@ -194,7 +195,19 @@ export async function persistManualCapture(
       is_new: boolean;
       previous_price_cents: number | null;
     }[]>`
-      with prev as (
+      with authorized as (
+        select 1
+        from garimpa.app_user_role aur
+        join garimpa.affiliate_membership am on am.app_user_id = aur.app_user_id
+        join garimpa.affiliate_account a
+          on a.id = am.affiliate_id
+         and a.tenant_id = ${tenantId}
+         and a.status = 'active'
+        where aur.app_user_id = ${appUserId}
+          and aur.role = 'afiliado'::garimpa.app_role
+          and aur.revoked_at is null
+        limit 1
+      ), prev as (
         select id, last_price_cents
         from garimpa.product
         where tenant_id = ${tenantId}
@@ -204,9 +217,10 @@ export async function persistManualCapture(
         insert into garimpa.product as p
           (id, tenant_id, marketplace, external_id, title, product_url, image_url,
            last_price_cents, first_seen_at, last_seen_at)
-        values (gen_random_uuid()::text, ${tenantId}, 'mercadolivre', ${payload.i},
-                ${payload.t}, ${payload.u}, ${payload.img ?? null},
-                ${payload.p}, ${capturedAt}, ${capturedAt})
+        select gen_random_uuid()::text, ${tenantId}, 'mercadolivre', ${payload.i},
+               ${payload.t}, ${payload.u}, ${payload.img ?? null},
+               ${payload.p}, ${capturedAt}, ${capturedAt}
+        from authorized
         on conflict (tenant_id, marketplace, external_id) do update set
           title = excluded.title,
           product_url = excluded.product_url,
@@ -229,7 +243,8 @@ export async function persistManualCapture(
       from up left join prev on true
     `;
 
-    const row = rows[0]!;
+    const row = rows[0];
+    if (!row) throw new Error("affiliate_access_required");
     return {
       productId: row.id,
       externalId: payload.i,

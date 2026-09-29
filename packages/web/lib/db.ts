@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "./catalog-policy.ts";
-import type { DealQuery } from "./deal-query";
+import type { DealQuery, FreshnessBand } from "./deal-query";
 import { freshnessDays, priceRangeForBand, shouldInterleaveMarketplaces } from "./deal-query.ts";
 import { categoryDesirabilityFromStats, heroScore, type CategoryStats, type HeroScorable } from "./desirability.ts";
 import { toVitrineProduct, type VitrineProduct } from "./deal-view.ts";
@@ -110,7 +110,7 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
   const category = query.category?.trim() || null;
   const search = query.search?.trim() || null;
   const marketplace = query.marketplace?.trim() || null;
-  const freshness = query.freshness ?? "7d";
+  const freshness = query.freshness ?? "2d";
   const minRating = query.minRating ?? null;
   const minDiscount = query.minDiscount ?? null;
   const lowestOnly = query.lowestOnly ?? false;
@@ -240,7 +240,8 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
  * (estado ativo + recente). Antes filtrava pela rodagem atual — uma rodagem
  * curta fazia categorias sumirem.
  */
-export async function dealCategories(tenantId = "local"): Promise<string[]> {
+export async function dealCategories(freshness: FreshnessBand = "7d", tenantId = "local"): Promise<string[]> {
+  const freshnessDaysValue = Math.min(freshnessDays(freshness) ?? PRODUCT_EVIDENCE_TTL_DAYS, PRODUCT_EVIDENCE_TTL_DAYS);
   const sql = db();
   try {
     const rows = await sql<{ category: string }[]>`
@@ -251,7 +252,7 @@ export async function dealCategories(tenantId = "local"): Promise<string[]> {
        and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.tenant_id = ${tenantId}
         and p.category is not null
-        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
+        and p.last_seen_at >= now() - (${freshnessDaysValue} * interval '1 day')
       order by category asc
     `;
     return rows.map((row) => row.category);
@@ -264,7 +265,8 @@ export async function dealCategories(tenantId = "local"): Promise<string[]> {
  * Contagem de produtos por marketplace, na mesma janela de 7 dias da
  * vitrine — alimenta o filtro de plataforma ("Mercado Livre (41)").
  */
-export async function marketplaceCounts(tenantId = "local"): Promise<Record<string, number>> {
+export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantId = "local"): Promise<Record<string, number>> {
+  const freshnessDaysValue = Math.min(freshnessDays(freshness) ?? PRODUCT_EVIDENCE_TTL_DAYS, PRODUCT_EVIDENCE_TTL_DAYS);
   const sql = db();
   try {
     const rows = await sql<{ marketplace: string; count: number }[]>`
@@ -274,7 +276,7 @@ export async function marketplaceCounts(tenantId = "local"): Promise<Record<stri
         on pc.product_id = p.id and pc.tenant_id = p.tenant_id
        and pc.status = ${PUBLIC_CURATION_STATUS}
       where p.tenant_id = ${tenantId}
-        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
+        and p.last_seen_at >= now() - (${freshnessDaysValue} * interval '1 day')
       group by p.marketplace
     `;
     return Object.fromEntries(rows.map((row) => [row.marketplace, row.count]));

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminEmail } from "./auth-contract.ts";
+import type { AppRole } from "./auth-contract.ts";
 import { mergeAnonymousIntoAuth } from "./auth-merge.ts";
 import { db } from "./db.ts";
 import { createPageSupabase, createRouteSupabase } from "./supabase.ts";
@@ -48,10 +48,38 @@ export async function getRouteAuth(request: NextRequest, response: NextResponse)
   return toAuthUser(data.user);
 }
 
-/** O dono é único: e-mail normalizado === ADMIN_EMAIL. Sem coluna `role` —
- *  decisão do documento mestre (cliente e dono em modelos separados). */
-export function isAdmin(user: AuthUser): boolean {
-  return isAdminEmail(user.email);
+export interface RoleAccess {
+  appUserId: string;
+  role: AppRole;
+}
+
+/**
+ * Autorização server-side por role persistida. A role não é lida de
+ * user_metadata (editável pelo usuário) nem de e-mail/configuração. Consultar
+ * o banco também faz uma revogação valer imediatamente, sem esperar refresh do
+ * JWT do Supabase.
+ */
+export async function roleAccess(authUserId: string, role: AppRole): Promise<RoleAccess | null> {
+  const sql = db();
+  try {
+    const rows = await sql<{ app_user_id: string; role: AppRole }[]>`
+      select au.id as app_user_id, aur.role::text as role
+      from garimpa.app_user au
+      join garimpa.app_user_role aur on aur.app_user_id = au.id
+      where au.auth_user_id = ${authUserId}
+        and aur.role = ${role}::garimpa.app_role
+        and aur.revoked_at is null
+      limit 1
+    `;
+    const row = rows[0];
+    return row ? { appUserId: row.app_user_id, role: row.role } : null;
+  } finally {
+    await sql.end();
+  }
+}
+
+export async function isAffiliate(user: AuthUser): Promise<boolean> {
+  return (await roleAccess(user.id, "afiliado")) !== null;
 }
 
 /** Linha app_user da conta autenticada (via auth_user_id), ou null. */

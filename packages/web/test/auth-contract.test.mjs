@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isAdminEmail, sanitizeNext, validUserId } from "../lib/auth-contract.ts";
+import { isAppRole, sanitizeNext, validUserId } from "../lib/auth-contract.ts";
 
-test("isAdminEmail aceita exatamente o e-mail do dono, normalizado", () => {
-  assert.equal(isAdminEmail("emanuel.adm10@gmail.com"), true);
-  assert.equal(isAdminEmail("  EMANUEL.ADM10@GMAIL.COM  "), true);
-  assert.equal(isAdminEmail("outra.conta@gmail.com"), false);
-  assert.equal(isAdminEmail(""), false);
-  assert.equal(isAdminEmail(undefined), false);
-  assert.equal(isAdminEmail(null), false);
-  assert.equal(isAdminEmail(42), false);
+test("isAppRole aceita somente roles conhecidas da aplicação", () => {
+  assert.equal(isAppRole("afiliado"), true);
+  assert.equal(isAppRole("admin"), false);
+  assert.equal(isAppRole(" AFILIADO "), false);
+  assert.equal(isAppRole(""), false);
+  assert.equal(isAppRole(undefined), false);
+  assert.equal(isAppRole(null), false);
+  assert.equal(isAppRole(42), false);
 });
 
 test("sanitizeNext só deixa caminho interno passar", () => {

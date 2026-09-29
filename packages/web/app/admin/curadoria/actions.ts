@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getPageAuth, isAdmin, resolveAppUserId } from "../../../lib/auth.ts";
+import { getPageAuth, isAffiliate, resolveAppUserId } from "../../../lib/auth.ts";
 import {
   actOnGroup,
   approveDailySuggestedCandidates,
@@ -37,7 +37,7 @@ export type DeferralActionResult =
 
 async function reviewerId(): Promise<string | null> {
   const user = await getPageAuth();
-  if (!user || !isAdmin(user)) return null;
+  if (!user || !(await isAffiliate(user))) return null;
   return resolveAppUserId(user.id);
 }
 

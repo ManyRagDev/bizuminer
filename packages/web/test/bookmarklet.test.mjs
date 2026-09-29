@@ -13,7 +13,6 @@ import {
 
 test("bookmarklet compila como JavaScript válido", () => {
   assert.equal(bookmarkletCompiles(), true);
-  assert.equal(bookmarkletCompiles({ endpoint: "https://www.bizuminer.com.br/api/capture", token: "tok123" }), true);
 });
 
 test("bookmarklet é de uma linha (arrastável/copiável)", () => {
@@ -36,16 +35,11 @@ test("bookmarklet contém as peças essenciais do bloco BM1", () => {
   assert.ok(source.includes("og:price:amount"), "leitura de preço presente");
 });
 
-test("bookmarklet injeta endpoint e token quando configurado", () => {
-  const source = bookmarkletSource({ endpoint: "https://www.bizuminer.com.br/api/capture", token: "tok123" });
-  assert.ok(source.includes("https://www.bizuminer.com.br/api/capture"), "endpoint presente");
-  assert.ok(source.includes("tok123"), "token presente");
-  assert.ok(source.includes("fetch(ENDPOINT"), "envio direto via fetch presente");
-});
-
-test("bookmarklet sem token gera fallback de bloco (envio desativado)", () => {
+test("bookmarklet não embute credencial nem envia direto", () => {
   const source = bookmarkletSource();
-  assert.ok(source.includes("copyBlock(buildBlock(payload))"), "fallback de copiar bloco presente");
+  assert.ok(source.includes("copyBlock(buildBlock(payload))"), "cópia do bloco presente");
+  assert.ok(!source.includes("CAPTURE_TOKEN"), "sem token global");
+  assert.ok(!source.includes("fetch("), "sem bypass do endpoint autenticado");
 });
 
 test("versão do bookmarklet é exposta para o painel", () => {

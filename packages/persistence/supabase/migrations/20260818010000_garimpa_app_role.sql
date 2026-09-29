@@ -1,11 +1,12 @@
 -- Role dedicado do app Garimpa (privilégio mínimo: só o schema garimpa).
--- Evita usar o superusuário `postgres` no runtime; a senha do app é própria.
+-- A senha é provisionada/rotacionada fora do repositório e nunca deve ser
+-- gravada em migration ou em outro arquivo versionado.
 do $$
 begin
   if not exists (select from pg_roles where rolname = 'garimpa_app') then
-    create role garimpa_app login password 'GrimpaOf3rtas2026!';
+    create role garimpa_app login;
   else
-    alter role garimpa_app login password 'GrimpaOf3rtas2026!';
+    alter role garimpa_app login;
   end if;
 end
 $$;

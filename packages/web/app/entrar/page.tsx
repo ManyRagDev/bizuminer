@@ -40,8 +40,8 @@ export default async function EntrarPage() {
           <GoogleButton />
 
           <p className="auth-note">
-            Sem senha para decorar: a conta é a do Google que você já usa. É também por ela que o dono reconhece
-            quem tem acesso ao painel.
+            Sem senha para decorar: a conta é a do Google que você já usa. O painel operacional aparece somente
+            para contas que receberam a role de afiliado.
           </p>
 
           <aside className="auth-ticket" role="note">

@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getPageSession, isAdmin } from "../lib/auth";
+import { getPageSession, isAffiliate } from "../lib/auth";
 import { dealCategories, marketplaceCounts, topDeals } from "../lib/db";
 import { catalogStateFromSearchParams, catalogStateToDealQuery } from "../lib/deal-query";
 import { toVitrineProduct } from "../lib/deal-view";
@@ -20,8 +20,8 @@ export default async function Home({ searchParams }: HomeProps) {
   let initialState = catalogStateFromSearchParams(publicParams);
   let [page, categories, marketplaceCountsByPlatform] = await Promise.all([
     topDeals(catalogStateToDealQuery(initialState)),
-    dealCategories(),
-    marketplaceCounts(),
+    dealCategories(initialState.freshness),
+    marketplaceCounts(initialState.freshness),
   ]);
 
   // URL adulterada ou página antiga além do total volta a uma página válida.
@@ -35,7 +35,7 @@ export default async function Home({ searchParams }: HomeProps) {
   // Anônimo continua só no localStorage — comportamento intacto.
   const uid = (await cookies()).get("bm_uid")?.value;
   const session = await getPageSession(validUserId(uid) ? uid : null);
-  const isUserAdmin = Boolean(session && isAdmin(session.authUser));
+  const isUserAdmin = session ? await isAffiliate(session.authUser) : false;
   const initialSavedIds = session ? await savedProductIds(session.appUserId) : [];
 
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date());

@@ -5,7 +5,7 @@
  * `tool_id` são configuração autoritativa do servidor. Nenhuma função deste
  * módulo devolve esses valores em payload — as views expõem apenas
  * `configured`, `status` e `validated_at`. A escrita de credencial só acontece
- * a partir de ação autenticada do dono, nunca é lida de `process.env` global
+ * a partir de ação autenticada de um afiliado vinculado, nunca é lida de `process.env` global
  * no caminho de clique (isso é E3).
  */
 
@@ -54,8 +54,8 @@ function toAccount(row: {
   };
 }
 
-/** Lista todas as contas de afiliado (só o dono; fronteira server-only). */
-export async function listAffiliateAccounts(): Promise<AffiliateAccountSummary[]> {
+/** Lista apenas as contas às quais o afiliado autenticado pertence. */
+export async function listAffiliateAccounts(appUserId: string): Promise<AffiliateAccountSummary[]> {
   const sql = db();
   try {
     const rows = await sql<{
@@ -73,6 +73,10 @@ export async function listAffiliateAccounts(): Promise<AffiliateAccountSummary[]
              (select count(*)::int from garimpa.affiliate_membership m
                where m.affiliate_id = a.id and m.role = 'owner') as owner_count
       from garimpa.affiliate_account a
+      where exists (
+        select 1 from garimpa.affiliate_membership mine
+        where mine.affiliate_id = a.id and mine.app_user_id = ${appUserId}
+      )
       order by (a.id = 'aff_local') desc, a.created_at asc
     `;
 
@@ -164,10 +168,11 @@ export async function getHouseAccount(): Promise<AffiliateAccountSummary | null>
 }
 
 /**
- * Grava/atualiza a credencial de marketplace de um afiliado. Só o dono chama.
+ * Grava/atualiza a credencial de marketplace de uma conta vinculada.
  * Nunca devolve os valores gravados — apenas o status resultante.
  */
 export async function upsertMarketplaceConfig(input: {
+  appUserId: string;
   affiliateId: string;
   marketplace: string;
   trackingId: string;
@@ -183,7 +188,12 @@ export async function upsertMarketplaceConfig(input: {
     }[]>`
       insert into garimpa.affiliate_marketplace_config
         (affiliate_id, marketplace, tracking_id, tool_id, status)
-      values (${input.affiliateId}, ${input.marketplace}, ${input.trackingId}, ${input.toolId}, 'active')
+      select ${input.affiliateId}, ${input.marketplace}, ${input.trackingId}, ${input.toolId}, 'active'
+      where exists (
+        select 1 from garimpa.affiliate_membership am
+        where am.affiliate_id = ${input.affiliateId}
+          and am.app_user_id = ${input.appUserId}
+      )
       on conflict (affiliate_id, marketplace) do update set
         tracking_id = excluded.tracking_id,
         tool_id = excluded.tool_id,
@@ -192,7 +202,8 @@ export async function upsertMarketplaceConfig(input: {
         updated_at = now()
       returning marketplace, true as configured, status, validated_at
     `;
-    const row = rows[0]!;
+    const row = rows[0];
+    if (!row) throw new Error("affiliate_access_required");
     return {
       marketplace: row.marketplace,
       configured: row.configured,

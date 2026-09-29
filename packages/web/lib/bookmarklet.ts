@@ -3,16 +3,14 @@
  *
  * O bookmarklet roda na página do Mercado Livre que o HUMANO já abriu — lê o
  * DOM da página (URL canônica, título, preço, preço original, imagem), monta o
- * payload BM1 e ENVIA DIRETO para o endpoint de captura via fetch (com
- * fallback de copiar o bloco para colagem manual no painel).
+ * payload BM1 e copia o bloco para colagem na área autenticada do painel.
  *
  * Decisões (24/08/2026):
  * - É ação humana, não scraping: nenhuma requisição automatizada ao ML. O
  *   navegador do curador carrega a página normalmente; o script só lê o que já
  *   está renderizado na tela que ele abriu.
- * - A autenticação do envio é um token estático (CAPTURE_TOKEN) embutido no
- *   bookmarklet. Não é segredo forte — é só para o endpoint não aceitar POST
- *   de qualquer um. Quem tem o bookmarklet é o dono.
+ * - Nenhuma credencial é embutida no bookmarklet. A gravação acontece apenas
+ *   em `/api/admin/captura`, protegida pela sessão e pela role `afiliado`.
  * - A estratégia de link afiliado (matt_full) continua no servidor; o
  *   bookmarklet só entrega o href real do produto.
  *
@@ -34,15 +32,7 @@
  */
 
 /** Versão do bookmarklet — muda quando o script mudar (cache do painel). */
-export const BOOKMARKLET_VERSION = "1.1.0";
-
-/** Endereço absoluto do endpoint de captura (injetado na geração). */
-export interface BookmarkletConfig {
-  /** Endpoint POST que recebe o payload. Ex.: https://www.bizuminer.com.br/api/capture */
-  endpoint: string;
-  /** Token estático de autorização (CAPTURE_TOKEN). Vazio = sem envio, só bloco. */
-  token: string;
-}
+export const BOOKMARKLET_VERSION = "2.0.0";
 
 /** Corpo legível (multi-linha, apenas documentação). Vira UMA linha em produção. */
 const BOOKMARKLET_BODY = String.raw`(function(){
@@ -56,8 +46,6 @@ function priceFromPage(){var p=meta('og:price:amount');if(p){var c=ariaToCents(p
 function originalFromPage(){var p=meta('og:price:standard_amount');if(p){var c=ariaToCents(p);if(!isFinite(c)){var n=parseFloat(String(p).replace(/\./g,'').replace(',','.'));c=isFinite(n)&&n>0?Math.round(n*100):NaN;}if(isFinite(c)&&c>0)return c;}var i,am=document.querySelectorAll('.andes-money-amount');for(i=0;i<am.length;i++){var lab=am[i].getAttribute('aria-label');if(lab&&lab.indexOf('Antes')===0){var c2=ariaToCents(lab);if(isFinite(c2)&&c2>0)return c2;}}return undefined;}
 function buildBlock(payload){var json=JSON.stringify(payload);var encoded=b64url(json);var checksum=fnv1a32(encoded).toString(16);return 'BM1.'+encoded+'.'+checksum;}
 function copyBlock(block){function fb(){prompt('BizuMiner: copie o bloco abaixo e cole no painel:',block);}function ok(){alert('BizuMiner: bloco copiado!\nCole no painel → Captura manual.');}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(block).then(ok,fb);}else{fb();}}
-var ENDPOINT=__ENDPOINT__;
-var TOKEN=__TOKEN__;
 try{
   var itemId=extractItemId();
   if(!itemId){alert('BizuMiner: não reconheci o anúncio nesta página.\nAbra uma página de produto do Mercado Livre.');return;}
@@ -72,45 +60,28 @@ try{
   var payload={v:1,m:'mercadolivre',u:url,i:itemId,t:title,p:priceCents,c:Date.now()};
   if(originalCents!==undefined)payload.op=originalCents;
   if(image)payload.img=image;
-  if(ENDPOINT&&TOKEN){
-    fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify(payload)})
-      .then(function(r){return r.json().then(function(j){return {status:r.status,body:j};});})
-      .then(function(x){if(x.status>=200&&x.status<300&&x.body&&x.body.ok){alert('BizuMiner: oferta salva!\n'+(x.body.title||''));}else{alert('BizuMiner: falha ao salvar.\n'+(x.body&&x.body.message?x.body.message:('HTTP '+x.status)));}})
-      .catch(function(){copyBlock(buildBlock(payload));});
-  }else{
-    copyBlock(buildBlock(payload));
-  }
+  copyBlock(buildBlock(payload));
 }catch(e){alert('BizuMiner: erro no bookmarklet:\n'+e.message);}
 })();`;
 
-/** Serializa uma string JS com aspas simples (o bookmarklet só usa aspas simples). */
-function jsString(value: string): string {
-  return "'" + value.replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
-}
-
 /**
- * Código final em UMA linha, com endpoint e token injetados. Remover quebras
+ * Código final em UMA linha. Remover quebras
  * de linha e espaços de indentação é seguro porque todo statement termina em
  * `;` — a semântica não muda.
  */
-export function bookmarkletSource(config?: BookmarkletConfig): string {
-  const endpoint = jsString(config?.endpoint ?? "");
-  const token = jsString(config?.token ?? "");
-  const body = BOOKMARKLET_BODY
-    .replace("__ENDPOINT__", endpoint)
-    .replace("__TOKEN__", token);
-  return body.replace(/\n\s*/g, "").trim();
+export function bookmarkletSource(): string {
+  return BOOKMARKLET_BODY.replace(/\n\s*/g, "").trim();
 }
 
 /** Href completo para favorito (javascript:). */
-export function bookmarkletHref(config?: BookmarkletConfig): string {
-  return `javascript:${bookmarkletSource(config)}`;
+export function bookmarkletHref(): string {
+  return `javascript:${bookmarkletSource()}`;
 }
 
 /** Confirma que o corpo gera JavaScript sintaticamente válido (novo Function). */
-export function bookmarkletCompiles(config?: BookmarkletConfig): boolean {
+export function bookmarkletCompiles(): boolean {
   try {
-    new Function(bookmarkletSource(config));
+    new Function(bookmarkletSource());
     return true;
   } catch {
     return false;

@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { checkAdminUser, sinkJson } from "../../../../lib/api-auth";
-import { resolveAppUserId } from "../../../../lib/auth";
+import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 import { createPairingCode } from "../../../../lib/extension-db";
 import { captureIpKey } from "../../../../lib/rate-limit";
 
@@ -8,8 +7,8 @@ export const runtime = "nodejs";
 
 /**
  * Cria um código de pareamento para um dispositivo (E4, plano §7.1).
- * Só o dono (ADMIN_EMAIL) chama; o código bruto aparece UMA vez, aqui. O banco
- * guarda só o hash. Pilot: afiliado é a casa (aff_local).
+ * Só quem possui a role `afiliado` chama; o código bruto aparece UMA vez. O banco
+ * guarda só o hash. A conta é derivada da membership, nunca do payload.
  */
 
 const PAIRING_HOURLY_LIMIT = 5;
@@ -29,7 +28,7 @@ function pairingLimited(key: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 
@@ -49,15 +48,9 @@ export async function POST(request: NextRequest) {
     return sinkJson(check.sink, { ok: false, error: "invalid_device_name" }, { status: 400 });
   }
 
-  const appUserId = await resolveAppUserId(check.user.id);
-  if (!appUserId) {
-    return sinkJson(check.sink, { ok: false, error: "app_user_not_found" }, { status: 409 });
-  }
-
   try {
     const { deviceId, pairingCode, expiresAt } = await createPairingCode({
-      affiliateId: "aff_local",
-      appUserId,
+      appUserId: check.appUserId,
       deviceName,
     });
     return sinkJson(check.sink, { ok: true, deviceId, pairingCode, expiresAt: expiresAt.toISOString() }, { status: 201 });

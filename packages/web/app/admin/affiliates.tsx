@@ -40,6 +40,7 @@ export default function Affiliates({ initialAccounts }: { initialAccounts: Accou
   const [toolId, setToolId] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const configurableAccount = accounts[0] ?? null;
 
   async function refresh() {
     const response = await fetch("/api/admin/affiliates");
@@ -57,7 +58,7 @@ export default function Affiliates({ initialAccounts }: { initialAccounts: Accou
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          affiliateId: "aff_local",
+          affiliateId: configurableAccount?.id,
           marketplace: "mercadolivre",
           trackingId: trackingId.trim(),
           toolId: toolId.trim(),
@@ -111,7 +112,7 @@ export default function Affiliates({ initialAccounts }: { initialAccounts: Accou
       )}
 
       <form className="capturador-form" onSubmit={(event) => void saveConfig(event)}>
-        <h3>Credencial do Mercado Livre (casa)</h3>
+        <h3>Credencial do Mercado Livre{configurableAccount ? ` · ${configurableAccount.displayName}` : ""}</h3>
         <label className="sr-only" htmlFor="aff-tracking">Tracking id (matt_word)</label>
         <input
           id="aff-tracking"
@@ -130,7 +131,7 @@ export default function Affiliates({ initialAccounts }: { initialAccounts: Accou
           placeholder="tool id (matt_tool)"
           autoComplete="off"
         />
-        <button type="submit" disabled={busy}>{busy ? "salvando…" : "salvar configuração"}</button>
+        <button type="submit" disabled={busy || !configurableAccount}>{busy ? "salvando…" : "salvar configuração"}</button>
       </form>
 
       {message && <p className="admin-message" role="status">{message}</p>}

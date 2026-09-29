@@ -27,7 +27,7 @@ export default function Devices() {
 
   async function load() {
     try {
-      const response = await fetch("/api/admin/extension/devices?affiliateId=aff_local");
+      const response = await fetch("/api/admin/extension/devices");
       const payload = (await response.json()) as { ok: boolean; devices?: Device[] };
       if (payload.ok && payload.devices) setDevices(payload.devices);
       else setDevices([]);
@@ -62,7 +62,7 @@ export default function Devices() {
       const response = await fetch("/api/admin/extension/devices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "revoke", affiliateId: "aff_local", deviceId }),
+        body: JSON.stringify({ action: "revoke", deviceId }),
       });
       const payload = (await response.json()) as { ok: boolean };
       setMessage(payload.ok ? "Dispositivo revogado." : "Não foi possível revogar.");

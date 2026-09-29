@@ -28,7 +28,7 @@ export interface AffiliateMetricRow {
   devices: number;
 }
 
-export async function listDevices(affiliateId: string): Promise<DeviceRow[]> {
+export async function listDevices(appUserId: string): Promise<DeviceRow[]> {
   const sql = db();
   try {
     const rows = await sql<{
@@ -43,7 +43,11 @@ export async function listDevices(affiliateId: string): Promise<DeviceRow[]> {
     }[]>`
       select id, affiliate_id, name, token_prefix, paired_at, last_used_at, revoked_at, created_at
       from garimpa.extension_device
-      where affiliate_id = ${affiliateId}
+      where exists (
+          select 1 from garimpa.affiliate_membership am
+          where am.affiliate_id = garimpa.extension_device.affiliate_id
+            and am.app_user_id = ${appUserId}
+        )
       order by created_at desc
     `;
     return rows.map((row) => ({
@@ -61,13 +65,18 @@ export async function listDevices(affiliateId: string): Promise<DeviceRow[]> {
   }
 }
 
-export async function revokeDevice(affiliateId: string, deviceId: string): Promise<boolean> {
+export async function revokeDevice(deviceId: string, appUserId: string): Promise<boolean> {
   const sql = db();
   try {
     const rows = await sql<{ id: string }[]>`
       update garimpa.extension_device
       set revoked_at = now(), token_hash = null, token_prefix = null
-      where id = ${deviceId} and affiliate_id = ${affiliateId} and revoked_at is null
+      where id = ${deviceId} and revoked_at is null
+        and exists (
+          select 1 from garimpa.affiliate_membership am
+          where am.affiliate_id = garimpa.extension_device.affiliate_id
+            and am.app_user_id = ${appUserId}
+        )
       returning id
     `;
     return rows.length > 0;
@@ -76,13 +85,18 @@ export async function revokeDevice(affiliateId: string, deviceId: string): Promi
   }
 }
 
-export async function renameDevice(affiliateId: string, deviceId: string, name: string): Promise<boolean> {
+export async function renameDevice(deviceId: string, name: string, appUserId: string): Promise<boolean> {
   const sql = db();
   try {
     const rows = await sql<{ id: string }[]>`
       update garimpa.extension_device
       set name = ${name}
-      where id = ${deviceId} and affiliate_id = ${affiliateId}
+      where id = ${deviceId}
+        and exists (
+          select 1 from garimpa.affiliate_membership am
+          where am.affiliate_id = garimpa.extension_device.affiliate_id
+            and am.app_user_id = ${appUserId}
+        )
       returning id
     `;
     return rows.length > 0;

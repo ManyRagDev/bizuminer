@@ -51,9 +51,21 @@ export async function authenticateDevice(tokenHash: string): Promise<DeviceAuth>
       public_slug: string;
       display_name: string;
       revoked_at: string | null;
+      account_status: string;
+      role_active: boolean;
     }[]>`
       select d.id as device_id, a.id as affiliate_id, a.tenant_id, a.public_slug, a.display_name,
-             d.revoked_at::text
+             d.revoked_at::text, a.status as account_status,
+             exists (
+               select 1
+               from garimpa.app_user_role aur
+               join garimpa.affiliate_membership am
+                 on am.app_user_id = aur.app_user_id
+                and am.affiliate_id = d.affiliate_id
+               where aur.app_user_id = d.created_by_app_user_id
+                 and aur.role = 'afiliado'::garimpa.app_role
+                 and aur.revoked_at is null
+             ) as role_active
       from garimpa.extension_device d
       join garimpa.affiliate_account a on a.id = d.affiliate_id
       where d.token_hash = ${tokenHash}
@@ -61,7 +73,9 @@ export async function authenticateDevice(tokenHash: string): Promise<DeviceAuth>
     `;
     const row = rows[0];
     if (!row) return { kind: "unknown" };
-    if (row.revoked_at !== null) return { kind: "revoked" };
+    if (row.revoked_at !== null || row.account_status !== "active" || !row.role_active) {
+      return { kind: "revoked" };
+    }
     return {
       kind: "ok",
       device: {
@@ -79,7 +93,6 @@ export async function authenticateDevice(tokenHash: string): Promise<DeviceAuth>
 
 /** Cria um dispositivo pendente com código de pareamento de uso único. */
 export async function createPairingCode(input: {
-  affiliateId: string;
   appUserId: string;
   deviceName: string;
 }): Promise<{ deviceId: string; pairingCode: string; expiresAt: Date }> {
@@ -93,17 +106,28 @@ export async function createPairingCode(input: {
       update garimpa.extension_device
       set pairing_code_hash = null, pairing_expires_at = null
       where created_by_app_user_id = ${input.appUserId}
-        and affiliate_id = ${input.affiliateId}
         and pairing_code_hash is not null
     `;
 
     const rows = await sql<{ id: string }[]>`
       insert into garimpa.extension_device
         (affiliate_id, created_by_app_user_id, name, pairing_code_hash, pairing_expires_at)
-      values (${input.affiliateId}, ${input.appUserId}, ${input.deviceName},
-              ${hashPairingCode(code)}, ${expiresAt})
+      select am.affiliate_id, ${input.appUserId}, ${input.deviceName},
+             ${hashPairingCode(code)}, ${expiresAt}
+      from garimpa.affiliate_membership am
+      join garimpa.affiliate_account a
+        on a.id = am.affiliate_id and a.status = 'active'
+      join garimpa.app_user_role aur
+        on aur.app_user_id = am.app_user_id
+       and aur.role = 'afiliado'::garimpa.app_role
+       and aur.revoked_at is null
+      where am.app_user_id = ${input.appUserId}
+      order by (am.role = 'owner') desc, am.created_at asc
+      limit 1
       returning id
     `;
+
+    if (!rows[0]) throw new Error("affiliate_access_required");
 
     return { deviceId: rows[0]!.id, pairingCode: code, expiresAt };
   } finally {
@@ -135,6 +159,18 @@ export async function exchangePairingCode(pairingCode: string): Promise<Exchange
         where pairing_code_hash = ${hashPairingCode(pairingCode)}
           and pairing_expires_at > now()
           and token_hash is null
+          and exists (
+            select 1
+            from garimpa.app_user_role aur
+            join garimpa.affiliate_membership am
+              on am.app_user_id = aur.app_user_id
+             and am.affiliate_id = garimpa.extension_device.affiliate_id
+            join garimpa.affiliate_account a
+              on a.id = am.affiliate_id and a.status = 'active'
+            where aur.app_user_id = garimpa.extension_device.created_by_app_user_id
+              and aur.role = 'afiliado'::garimpa.app_role
+              and aur.revoked_at is null
+          )
         returning id as device_id,
                   (select a.display_name from garimpa.affiliate_account a where a.id = garimpa.extension_device.affiliate_id) as display_name
       `;
@@ -165,6 +201,28 @@ export async function persistExtensionCapture(
 
   try {
     return await sql.begin(async (tx) => {
+      // Revalida dentro da transação para que revogação de role, membership,
+      // conta ou dispositivo interrompa também um request já autenticado.
+      const access = await tx<{ allowed: boolean }[]>`
+        select exists (
+          select 1
+          from garimpa.extension_device d
+          join garimpa.affiliate_account a
+            on a.id = d.affiliate_id and a.status = 'active'
+          join garimpa.affiliate_membership am
+            on am.affiliate_id = d.affiliate_id
+           and am.app_user_id = d.created_by_app_user_id
+          join garimpa.app_user_role aur
+            on aur.app_user_id = d.created_by_app_user_id
+           and aur.role = 'afiliado'::garimpa.app_role
+           and aur.revoked_at is null
+          where d.id = ${device.deviceId}
+            and d.revoked_at is null
+            and d.affiliate_id = ${device.affiliateId}
+        ) as allowed
+      `;
+      if (!access[0]?.allowed) throw new Error("affiliate_access_required");
+
       // 1. produto (upsert por tenant+marketplace+external_id)
       const product = await tx<{ id: string; is_new: boolean }[]>`
         insert into garimpa.product as prod

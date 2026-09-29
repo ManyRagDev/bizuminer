@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { checkAffiliateUser, sinkJson } from "../../../lib/api-auth";
 import { globalHeroProducts } from "../../../lib/db";
 import { curateProducts } from "../../../lib/curation";
 import { shortCodesForSlugs } from "../../../lib/short-link-db";
@@ -14,7 +15,11 @@ export const dynamic = "force-dynamic";
  *
  * GET /api/pauta → { products: PautaProduct[], total: number }
  */
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const check = await checkAffiliateUser(request);
+  if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
+  if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+
   // Estágio 1: desejabilidade global — ~473 → ~40
   const heroProducts = await globalHeroProducts(40);
 
@@ -28,7 +33,7 @@ export async function GET(_request: NextRequest) {
   const codes = await shortCodesForSlugs(curated.map((p) => p.slug));
   const products = curated.map((p) => ({ ...p, shareUrl: `${host}/p/${codes.get(p.slug)}` }));
 
-  return Response.json(
+  return sinkJson(check.sink,
     { products, total: products.length },
     { headers: { "Cache-Control": "no-store" } },
   );

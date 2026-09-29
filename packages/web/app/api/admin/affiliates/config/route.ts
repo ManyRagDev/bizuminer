@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { checkAdminUser, sinkJson } from "../../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { upsertMarketplaceConfig } from "../../../../../lib/affiliate-db";
 
 export const runtime = "nodejs";
@@ -7,13 +7,13 @@ export const runtime = "nodejs";
 /**
  * Grava/atualiza a credencial de marketplace de um afiliado (E1).
  *
- * Só o dono (ADMIN_EMAIL) chama. O corpo carrega tracking_id/tool_id; a
+ * Só quem possui a role `afiliado` chama. O corpo carrega tracking_id/tool_id; a
  * resposta NUNCA os devolve — apenas configured/status/validatedAt. A
  * credencial é configuração autoritativa do servidor (R2): o client a envia,
  * mas nunca a recebe de volta nem a escolhe para outra conta.
  */
 export async function POST(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 
@@ -34,7 +34,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const config = await upsertMarketplaceConfig({ affiliateId, marketplace, trackingId, toolId });
+    const config = await upsertMarketplaceConfig({
+      appUserId: check.appUserId,
+      affiliateId,
+      marketplace,
+      trackingId,
+      toolId,
+    });
     return sinkJson(check.sink, { ok: true, config }, { status: 200 });
   } catch {
     return sinkJson(check.sink, { ok: false, error: "server_error" }, { status: 500 });

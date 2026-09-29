@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { NextRequest } from "next/server";
 import { captureBatchStatus, createCaptureBatch, latestCaptureBatch, runningRun } from "../../../../../lib/admin-db";
-import { checkAdminUser, sinkJson } from "../../../../../lib/api-auth";
+import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { mlCaptureAllowedWithConsent } from "../../../../../lib/automated-capture";
 import { batchCapturePlan } from "../../../../../lib/batch-capture-plan";
 import { captureTriggerFor } from "../../../../../lib/capture-triggers";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 const MAX_PAGES = 3;
 
 export async function GET(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   const id = request.nextUrl.searchParams.get("id");
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 /** Dispara as duas lojas padrão; ML entra somente com consentimento explícito. */
 export async function POST(request: NextRequest) {
-  const check = await checkAdminUser(request);
+  const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   let pages = 1;
