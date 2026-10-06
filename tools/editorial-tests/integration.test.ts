@@ -9,7 +9,7 @@ const {
   getEditorialSelectionDesk, getPublishedEditorialSelection,
   replaceEditorialSelection, saveEditorialAssessment,
 } = require("../../packages/web/lib/editorial-selection-db.ts");
-const { EDITORIAL_DIMENSIONS, editorialEvidenceFingerprint, publishedEditorialStateKey } = require("../../packages/web/lib/editorial-selection.ts");
+const { EDITORIAL_DIMENSIONS, EDITORIAL_MAX_PRODUCTS, editorialEvidenceFingerprint, publishedEditorialStateKey } = require("../../packages/web/lib/editorial-selection.ts");
 const { HERO_POLICY_VERSION } = require("../../packages/web/lib/hero-policy.ts");
 const { topDeals, dealDetail } = require("../../packages/web/lib/db.ts");
 
@@ -459,16 +459,17 @@ async function catalogItem(id: string, rating: number | null, sales: number, off
   await pg.query("insert into garimpa.price_observation(id,tenant_id,product_id,price_cents,rating_star,sales_count,observed_at,offer_evidence) values($1,'local',$2,2000,$3,$4,now(),$5)", [`obs_${id}`, id, rating, sales, offerEvidence ? JSON.stringify(offerEvidence) : null]);
 }
 
-await scenario("before the first edition, all surfaces share three global catalog highlights without writes", async () => {
+await scenario("before the first edition, all surfaces share the selection while only the top three enter the hero", async () => {
   await reset();
   await pg.exec("update garimpa.price_observation set offer_evidence=null where id='obs_1'");
   for (const [id, rating, sales] of [["a",5,1000],["b",4.9,1000],["c",4.8,1000],["d",4.5,1000]] as const) await catalogItem(id,rating,sales);
   const home = await getPublishedEditorialSelection("home","local",factory);
   assert.equal(home.mode,"catalog"); assert.equal(home.version,null); assert.equal(home.id,null);
   assert.deepEqual(home.heroProductIds,["a","b","c"]);
-  assert.equal(home.validUntil,home.heroValidUntil);
+  assert.ok(Date.parse(home.validUntil)<=Date.parse(home.heroValidUntil));
   for (const destination of ["pauta","all"]) assert.deepEqual(await getPublishedEditorialSelection(destination,"local",factory),home);
-  assert.deepEqual(home.products.map((p: any) => p.id),home.heroProductIds);
+  assert.deepEqual(home.products.map((p: any) => p.id),["a","b","c","d","product_1"]);
+  assert.deepEqual(home.products.slice(0,3).map((p: any) => p.id),home.heroProductIds);
   assert.ok(home.products.every((p: any) => p.editorialPurchaseContents === ""));
   for (const key of ["assessment","offerEvidence","score","catalogSignals"]) assert.equal(key in home.products[0],false);
   for (const sort of ["signal","price","popularity","recent"]) {
@@ -478,6 +479,54 @@ await scenario("before the first edition, all surfaces share three global catalo
   }
   assert.equal((await pg.query<{count:number}>("select (select count(*) from garimpa.editorial_assessment)+(select count(*) from garimpa.editorial_selection) as count")).rows[0].count,0);
   assert.equal((await getEditorialSelectionDesk("local",factory)).catalogHeroActive,true);
+});
+
+await scenario("catalog selection fills 24 valid positions; hero stays at three and filters do not change either", async () => {
+  await reset();
+  await pg.exec("update garimpa.price_observation set offer_evidence=null where id='obs_1'");
+  for (let n=0;n<30;n++) await catalogItem(`rank_${String(n).padStart(2,"0")}`,5,1000);
+  await pg.exec("update garimpa.product set image_url=null where id='rank_00'");
+  await pg.exec("update garimpa.product_curation set status='held' where product_id='rank_01'");
+  await pg.exec("update garimpa.price_observation set observed_at=now()-interval '49 hours' where product_id='rank_02'");
+  await pg.query("update garimpa.price_observation set offer_evidence=$1 where product_id='rank_03'",[JSON.stringify({priceMinCents:1000,priceMaxCents:5000})]);
+  const home = await getPublishedEditorialSelection("home","local",factory);
+  assert.equal(home.products.length,EDITORIAL_MAX_PRODUCTS);
+  assert.deepEqual(home.products.map((p: any) => p.id),Array.from({length:24},(_,n)=>`rank_${String(n+4).padStart(2,"0")}`));
+  assert.deepEqual(home.heroProductIds,["rank_04","rank_05","rank_06"]);
+  for (const destination of ["pauta","all"]) assert.deepEqual(await getPublishedEditorialSelection(destination,"local",factory),home);
+  for (const sort of ["signal","price","popularity","recent"]) {
+    const filtered = await topDeals({category:"tecnologia",limit:1,offset:1,sort},"local",home,factory);
+    assert.equal(filtered.deals.length,0);
+    assert.equal(filtered.selectionStateKey,publishedEditorialStateKey(home));
+  }
+  const page1 = await topDeals({limit:12,sort:"signal"},"local",home,factory);
+  const page2 = await topDeals({limit:12,offset:12,sort:"signal"},"local",home,factory);
+  assert.deepEqual([...page1.deals,...page2.deals].map((p: any)=>p.id),home.products.map((p: any)=>p.id));
+  const key=publishedEditorialStateKey(home);
+  await pg.exec("update garimpa.price_observation set price_cents=1999 where product_id='rank_07'");
+  const changed=await getPublishedEditorialSelection("home","local",factory);
+  assert.deepEqual(changed.heroProductIds,home.heroProductIds);
+  assert.notEqual(publishedEditorialStateKey(changed),key,"a change outside the hero still refreshes the shared selection");
+  assert.equal((await pg.query<{count:number}>("select (select count(*) from garimpa.editorial_assessment)+(select count(*) from garimpa.editorial_selection) as count")).rows[0].count,0);
+});
+
+await scenario("a pauta item's deadline does not prematurely expire fresh hero highlights", async () => {
+  await reset();
+  await pg.exec("update garimpa.price_observation set offer_evidence=null where id='obs_1'");
+  for (const [id,rating] of [["a",5],["b",4.9],["c",4.8],["d",4.5]] as const) await catalogItem(id,rating,1000);
+  await pg.exec("update garimpa.price_observation set observed_at=now()-interval '47 hours' where product_id='d'");
+  const home=await getPublishedEditorialSelection("home","local",factory);
+  assert.equal(home.products.length,5); assert.deepEqual(home.heroProductIds,["a","b","c"]);
+  assert.ok(Date.parse(home.validUntil)<Date.parse(home.heroValidUntil));
+  const d=home.products.find((p:any)=>p.id==='d');
+  assert.equal(Date.parse(home.validUntil),Date.parse(d.evidenceObservedAt)+48*3600000);
+  const again=await getPublishedEditorialSelection("pauta","local",factory);
+  assert.equal(home.validUntil,again.validUntil); assert.equal(home.heroValidUntil,again.heroValidUntil);
+  await pg.exec("update garimpa.price_observation set observed_at=now()-interval '49 hours' where product_id='d'");
+  const expired=await getPublishedEditorialSelection("pauta","local",factory);
+  assert.deepEqual(expired.products.map((p:any)=>p.id),["a","b","c","product_1"]);
+  assert.deepEqual(expired.heroProductIds,home.heroProductIds);
+  assert.equal(expired.heroValidUntil,home.heroValidUntil);
 });
 
 await scenario("catalog bootstrap preserves human blockers instead of reverting to popularity", async () => {

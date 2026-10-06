@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  EDITORIAL_DIMENSIONS, EDITORIAL_POLICY_VERSION,
+  EDITORIAL_DIMENSIONS, EDITORIAL_MAX_PRODUCTS, EDITORIAL_POLICY_VERSION,
   editorialEvidenceFingerprint, editorialSelectionBlockers,
   validateEditorialAssessment, validateEditorialSelection,
 } from "../lib/editorial-selection.ts";
@@ -176,4 +176,11 @@ test("seleção rejeita requisições malformadas, duplicados e ids primitivos s
       assert.equal(result.ok, false, `${key} must reject ${String(value)}`);
     }
   }
+});
+
+test("a seleção compartilhada comporta 24 produtos sem herdar o limite da hero", () => {
+  assert.equal(EDITORIAL_MAX_PRODUCTS,24);
+  const items=Array.from({length:24},(_,n)=>({...selection().items[0],productId:`p_${n}`,assessmentId:`a_${n}`}));
+  assert.equal(validateEditorialSelection(selection({items}),now).ok,true);
+  assert.equal(validateEditorialSelection(selection({items:[...items,{...items[0],productId:"p_24"}]}),now).error,"selection_limit");
 });

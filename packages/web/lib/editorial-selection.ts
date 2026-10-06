@@ -2,6 +2,8 @@ import type { VitrineProduct } from "./deal-view.ts";
 import { HERO_POLICY_VERSION } from "./hero-policy.ts";
 
 export const EDITORIAL_POLICY_VERSION = "achadinhos-v1";
+/** The shared selection is broader than the hero's three positions. */
+export const EDITORIAL_MAX_PRODUCTS = 24;
 export const EDITORIAL_DIMENSIONS = [
   { id: "audience", label: "Adequação ao público", prompt: "Quem se beneficia e em qual situação?" },
   { id: "utility", label: "Utilidade ou interesse", prompt: "Qual benefício concreto justifica a indicação?" },
@@ -180,7 +182,7 @@ export function validateEditorialSelection(input: unknown, now = new Date()): { 
   if (raw.expectedVersion !== null && (!Number.isSafeInteger(raw.expectedVersion) || (raw.expectedVersion as number) < 1)) return { ok: false, error: "invalid_expected_version" };
   const validUntil = typeof raw.validUntil === "string" ? new Date(raw.validUntil) : new Date(NaN);
   if (!Number.isFinite(validUntil.getTime()) || validUntil <= now || validUntil.getTime() > now.getTime() + 7 * 86400000) return { ok: false, error: "invalid_selection_validity" };
-  if (!Array.isArray(raw.items) || raw.items.length > 24) return { ok: false, error: "selection_limit" };
+  if (!Array.isArray(raw.items) || raw.items.length > EDITORIAL_MAX_PRODUCTS) return { ok: false, error: "selection_limit" };
   const seen = new Set<string>();
   const items: ReplaceEditorialSelectionInput["items"] = [];
   for (const item of raw.items as ReplaceEditorialSelectionInput["items"]) {

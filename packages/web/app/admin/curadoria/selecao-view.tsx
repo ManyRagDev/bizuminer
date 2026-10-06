@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useMemo, useState, useTransition, type FormEvent } from "react";
 import {
   EDITORIAL_DIMENSIONS,
+  EDITORIAL_MAX_PRODUCTS,
   EDITORIAL_LEVELS,
   type EditorialAssessmentInput,
   type EditorialCandidate,
@@ -29,7 +30,7 @@ function errorMessage(error: string): string {
     stale_assessment: "As evidências mudaram após a avaliação. Revise o produto.",
     invalid_destinations: "Cada destaque precisa ter ao menos um destino.",
     destination_context_required: "Explique o contexto dos produtos destinados somente à home ou somente à pauta.",
-    selection_limit: "A seleção aceita até 24 produtos.",
+    selection_limit: `A seleção aceita até ${EDITORIAL_MAX_PRODUCTS} produtos.`,
     assessment_explanation_required: "Preencha público, benefício, conteúdo da compra e justificativa pública.",
     invalid_critical_doubts: "Registre no máximo 20 dúvidas, cada uma com 3 a 500 caracteres.",
     invalid_max_price: "Informe um preço máximo aceitável válido.",
@@ -173,9 +174,10 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
   }, [draft, byId, catalogHeroActive, selection, dirty, ranked]);
 
   function prepareBest() {
-    const best = rankHeroCandidates(candidates.filter((candidate) => candidate.assessment)).filter((entry) => entry.selectedForHero);
+    const best = rankHeroCandidates(candidates.filter((candidate) => candidate.assessment))
+      .filter((entry) => entry.classification.status === "hero").slice(0, EDITORIAL_MAX_PRODUCTS);
     const additions = best.filter(({ candidate }) => !draft.some((item) => item.productId === candidate.id));
-    if (draft.length + additions.length > 24) { setFeedback("Retire itens da seleção para abrir espaço aos melhores candidatos."); return; }
+    if (draft.length + additions.length > EDITORIAL_MAX_PRODUCTS) { setFeedback("Retire itens da seleção para abrir espaço aos melhores candidatos."); return; }
     if (!best.length) { setFeedback("Ainda não há avaliações válidas para montar uma edição editorial. Avalie os candidatos; antes da primeira edição, os melhores do catálogo já aparecem automaticamente na home e na pauta."); return; }
     const bestIds = new Set(best.map(({ candidate }) => candidate.id));
     changeDraft([...best.map(({ candidate }) => ({ productId: candidate.id, assessmentId: candidate.assessment!.id,
@@ -215,8 +217,8 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       <p>Público {HERO_WEIGHTS.audience}% · utilidade {HERO_WEIGHTS.utility}% · valor {HERO_WEIGHTS.value}% · confiança {HERO_WEIGHTS.confidence}% · clareza {HERO_WEIGHTS.clarity}%.</p>
       <p>{catalogHeroActive && !selection && !dirty ? "Destaques atuais: antes da primeira edição editorial, home e pauta compartilham os melhores do catálogo aprovado. Avaliações válidas têm prioridade, seguidas pelos sinais de preço comparável, avaliações, clareza e vendas." : "Prévia da próxima ativação: itens do rascunho destinados à home, com a avaliação atual. A ordem geral permanece editorial; a hero usa a classificação."}</p>
       {heroPreview.length ? <ol>{heroPreview.map(({ candidate, classification }) => <li key={candidate.id}><b>{candidate.title}</b> · {heroScoreLabel(classification)} · {classification.basis === "editorial" ? "avaliação editorial" : "sinais do catálogo"}</li>)}</ol> : <p>Nenhum item válido nesta prévia. Ofertas desatualizadas ou com impedimentos de compra precisam de revisão.</p>}
-      <button type="button" disabled={!schemaReady || pending} onClick={prepareBest}>Preparar os {HERO_MAX_PRODUCTS} melhores candidatos</button>
-      <p>Este botão prepara uma edição com os melhores candidatos já avaliados. Ao ativá-la, ela passa a controlar home e pauta; uma edição vazia ou vencida não é preenchida automaticamente pelo catálogo.</p>
+      <button type="button" disabled={!schemaReady || pending} onClick={prepareBest}>Preparar seleção com até {EDITORIAL_MAX_PRODUCTS} produtos</button>
+      <p>Home e pauta compartilham até {EDITORIAL_MAX_PRODUCTS} produtos; os {HERO_MAX_PRODUCTS} melhores ocupam a hero. Este botão prepara uma edição com candidatos já avaliados. Ao ativá-la, ela passa a controlar home e pauta; uma edição vazia ou vencida não é preenchida automaticamente pelo catálogo.</p>
     </section>
     <section className="editorial-selection-board" aria-labelledby="editorial-current-title">
       <h3 id="editorial-current-title">Seleção vigente {selection ? `· versão ${selection.version}` : "· ainda não ativada"}</h3>
@@ -248,7 +250,7 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       <HeroClassificationDetails classification={classification} />
       {candidate.selectionBlockers.length > 0 && <div className="editorial-selection-blockers"><p>Para incluir numa edição editorial:</p><ul>{candidate.selectionBlockers.map((blocker, index) => <li key={`${index}-${blocker}`}>{blocker}</li>)}</ul></div>}
       <EvidenceDetails candidate={candidate} />
-      <div className="selecao-card-actions"><a className="btn-card-link" href={candidate.productUrl} target="_blank" rel="noopener noreferrer nofollow">↗ Conferir anúncio</a><button type="button" disabled={!schemaReady || pending} onClick={() => setEditingId(editingId === candidate.id ? null : candidate.id)}>{candidate.assessment ? "Reavaliar" : "Avaliar"}</button><button type="button" disabled={!schemaReady || pending || !candidate.assessment || candidate.selectionBlockers.length > 0 || draft.length >= 24 || draft.some((item) => item.productId === candidate.id)} onClick={() => { if (candidate.assessment) changeDraft([...draft, { productId: candidate.id, assessmentId: candidate.assessment.id, destinations: ["home", "pauta"], context: "" }]); }}>Incluir no destaque</button></div>
+      <div className="selecao-card-actions"><a className="btn-card-link" href={candidate.productUrl} target="_blank" rel="noopener noreferrer nofollow">↗ Conferir anúncio</a><button type="button" disabled={!schemaReady || pending} onClick={() => setEditingId(editingId === candidate.id ? null : candidate.id)}>{candidate.assessment ? "Reavaliar" : "Avaliar"}</button><button type="button" disabled={!schemaReady || pending || !candidate.assessment || candidate.selectionBlockers.length > 0 || draft.length >= EDITORIAL_MAX_PRODUCTS || draft.some((item) => item.productId === candidate.id)} onClick={() => { if (candidate.assessment) changeDraft([...draft, { productId: candidate.id, assessmentId: candidate.assessment.id, destinations: ["home", "pauta"], context: "" }]); }}>Incluir no destaque</button></div>
       {editingId === candidate.id && <AssessmentForm key={`${candidate.id}-${candidate.assessment?.id ?? "new"}`} candidate={candidate} disabled={!schemaReady} onCancel={() => setEditingId(null)} onSaved={(updated) => { setCandidates((current) => current.map((item) => item.id === updated.id ? updated : item)); setEditingId(null); setFeedback("Avaliação salva. Confira os impedimentos antes de incluir no destaque."); if (draft.some((item) => item.productId === updated.id) && updated.assessment) changeDraft(draft.map((item) => item.productId === updated.id ? { ...item, assessmentId: updated.assessment!.id } : item)); }} />}
       </div>
     </article>)}</div>

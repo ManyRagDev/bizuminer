@@ -3,7 +3,7 @@ import { db } from "./db.ts";
 import { productSlug } from "./marketplaces.ts";
 import { catalogHeroPresentation, rankHeroCandidates } from "./hero-ranking.ts";
 import {
-  EDITORIAL_POLICY_VERSION, editorialEvidenceFingerprint, editorialSelectionBlockers,
+  EDITORIAL_MAX_PRODUCTS, EDITORIAL_POLICY_VERSION, editorialEvidenceFingerprint, editorialSelectionBlockers,
   validateEditorialAssessment, validateEditorialSelection,
   type EditorialAssessment, type EditorialAssessmentInput, type EditorialCandidate,
   type EditorialDestination, type EditorialSelection, type PublishedEditorialSelection,
@@ -229,11 +229,14 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
         const assessments = await latestAssessments(tx, tenantId);
         const rows = await candidateRows(tx, tenantId);
         const candidates = rows.map((row) => toCandidate(row, assessments.get(row.id) ?? null, now));
-        const highlights = rankHeroCandidates(candidates, now).filter((entry) => entry.selectedForHero);
-        const validUntil = highlightDeadline(highlights.map(({ candidate }) => candidate));
-        return { ...empty, schemaReady: true, mode: "catalog", validUntil, heroValidUntil: validUntil,
+        const selected = rankHeroCandidates(candidates, now)
+          .filter((entry) => entry.classification.status === "hero").slice(0, EDITORIAL_MAX_PRODUCTS);
+        const highlights = selected.filter((entry) => entry.selectedForHero);
+        const validUntil = highlightDeadline(selected.map(({ candidate }) => candidate));
+        const heroValidUntil = highlightDeadline(highlights.map(({ candidate }) => candidate));
+        return { ...empty, schemaReady: true, mode: "catalog", validUntil, heroValidUntil,
           heroProductIds: highlights.map(({ candidate }) => candidate.id),
-          products: highlights.map(({ candidate, classification }) => ({ ...publicProduct(candidate),
+          products: selected.map(({ candidate, classification }) => ({ ...publicProduct(candidate),
             ...(candidate.assessment ? { editorialRationale: candidate.assessment.publicRationale, editorialPurchaseContents: candidate.assessment.purchaseContents } : catalogHeroPresentation(candidate, classification)),
             selectionItemId: `catalog:${candidate.id}`, editorialContext: "" })) };
       }

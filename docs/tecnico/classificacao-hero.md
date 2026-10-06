@@ -22,7 +22,7 @@ Dentro de uma edição ativa, a hero compara todos os itens válidos destinados 
 
 ## Antes da primeira edição
 
-A leitura pública também funciona quando ainda não existe edição editorial: classifica o catálogo aprovado completo e fornece os mesmos três produtos para home, pauta e detalhe. É uma projeção calculada, sem inserir avaliações, atribuir autoria humana ou inventar uma versão publicada.
+A leitura pública também funciona quando ainda não existe edição editorial: classifica o catálogo aprovado completo e fornece uma seleção compartilhada de até 24 produtos para home, pauta e detalhe. Somente os três primeiros ocupam a hero; a pauta recebe a seleção mais ampla, na mesma ordem. É uma projeção calculada, sem inserir avaliações, atribuir autoria humana ou inventar uma versão publicada.
 
 Avaliações editoriais válidas têm prioridade. Produtos sem avaliação são ordenados por um índice separado de evidências disponíveis. Essas escalas não são comparadas como se medissem a mesma qualidade:
 
@@ -46,18 +46,18 @@ Uma avaliação existente é respeitada: produto com revisão negativa, incomple
 
 A mesa mostra a origem da classificação: avaliação editorial ou sinais do catálogo. Os pontos de evidência não aparecem como nota de qualidade. A prévia inicial reproduz os destaques públicos; ao preparar um rascunho, passa a mostrar a próxima edição destinada à home.
 
-O botão Preparar os 3 melhores candidatos usa avaliações válidas para montar um rascunho local; a ativação publica a edição. Impedimentos para incluir na edição são identificados separadamente da elegibilidade do catálogo inicial.
+O botão Preparar seleção com até 24 produtos usa avaliações válidas para montar um rascunho local; a ativação publica a edição. A prévia da hero continua mostrando somente os três melhores do rascunho. Impedimentos para incluir na edição são identificados separadamente da elegibilidade do catálogo inicial.
 
-Home e pauta usam `getPublishedEditorialSelection`. Busca, filtros, marketplace, ordenação e paginação não alteram o pool da hero. A projeção pública não expõe avaliações internas, dúvidas, snapshots ou notas. O prazo vem das observações e, quando houver, da vigência da edição; não é renovado artificialmente em cada leitura.
+Home e pauta usam `getPublishedEditorialSelection`. Busca, filtros, marketplace, ordenação e paginação não alteram o pool da hero. A projeção pública não expõe avaliações internas, dúvidas, snapshots ou notas. O prazo vem das observações e, quando houver, da vigência da edição; não é renovado artificialmente em cada leitura. No modo inicial, o prazo da seleção considera todos os seus produtos, enquanto o prazo da hero considera somente seus três destaques: o vencimento de outro item não suspende os destaques ainda válidos.
 
 A home verifica mudanças a cada 60 segundos enquanto visível e ao receber foco. Sua assinatura incorpora política, modo, produtos, preços, prazos e apresentação pública, incluindo mudanças de avaliação sem nova edição. A pauta usa o mesmo serviço e marca os destaques da hero. Prazos locais ocultam itens vencidos; a verificação remota pode levar até o próximo ciclo. A rotação do carrossel pausa durante foco por teclado e passagem do mouse.
 
 ## Verificação
 
 - 27 testes puros do ranking: classificação relativa, compatibilidade, desempates, escassez, sinais e bloqueios.
-- 265 testes da suíte web passaram.
-- 27 cenários PostgreSQL isolados passaram: serviços e SQL reais, integridade, isolamento, ativação, projeções, ranking inicial sem escrita, decisão vazia/vencida/retirada e atualização sem nova versão.
+- 266 testes da suíte web passaram.
+- 29 cenários PostgreSQL isolados passaram: serviços e SQL reais, integridade, isolamento, ativação, projeções, ranking inicial sem escrita, decisão vazia/vencida/retirada, seleção com 24 produtos e hero com três, prazos independentes e atualização sem nova versão.
 - Typecheck e build de produção web passaram. O build usou uma cópia isolada em `/tmp`, preservando o servidor ativo na porta 3100.
-- No ambiente conectado, os serviços reais retornaram os mesmos três IDs e prazos para home e pauta, sem criar avaliações ou edições. Navegador conferido: hero preenchida, pauta com os mesmos produtos e prévia do painel, sem erros de console observados.
+- No ambiente conectado, os serviços reais retornaram 24 produtos na mesma ordem para home e pauta e três IDs de hero, sem criar avaliações ou edições. Os destaques da hero são os três primeiros da seleção compartilhada.
 
 Nenhuma nova migration é necessária. O mecanismo ainda não agrupa famílias automaticamente nem dispõe de qualidade editorial calibrada; a revisão humana continua sendo a melhor fonte para comparar utilidade, público e custo-benefício.
