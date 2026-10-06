@@ -5897,3 +5897,62 @@ kbd { min-width: 21px; padding: 2px 5px; display: inline-block; border: 1px soli
   .workflow-result { align-items: flex-start; flex-direction: column; }
   .emergency-approval { grid-template-columns: 1fr; }
 }
+
+/* Shared editorial selection desk. */
+.editorial-selection-board { margin: 20px 0 32px; padding: 24px; border: 1px solid var(--line-strong); background: var(--surface); }
+.editorial-selection-board > p, .editorial-assessment-form > p { color: var(--ink-muted); font-size: 13px; line-height: 1.5; }
+.editorial-selection-alert { padding: 14px 18px; border: 1px solid var(--warning-line); color: var(--ink); background: var(--surface); }
+.editorial-selection-list { display: grid; gap: 16px; padding-left: 24px; }
+.editorial-selection-list > li { padding: 16px; border: 1px solid var(--line); }
+.editorial-selection-list > li > p { font-size: 13px; line-height: 1.5; }
+.editorial-selection-destinations { display: flex; gap: 18px; margin: 12px 0; }
+.editorial-selection-destinations label { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+.editorial-selection-context, .editorial-selection-activate > label { display: grid; gap: 6px; font-size: 12px; }
+.editorial-selection-context input, .editorial-selection-activate select, .editorial-assessment-form input, .editorial-assessment-form select, .editorial-assessment-form textarea { width: 100%; padding: 10px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); font: inherit; }
+.editorial-selection-activate { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.editorial-selection-activate button, .editorial-selection-board .selecao-card-actions button, .editorial-assessment-form button, .selecao-card-actions > button { padding: 10px 12px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-weight: 700; }
+.editorial-selection-activate > button { background: var(--blue); color: var(--on-accent); border-color: var(--blue); }
+.editorial-selection-activate span { font-size: 12px; color: var(--ink-muted); }
+.editorial-selection-activate button:disabled, .selecao-card-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.editorial-selection-blockers { color: var(--warning); font-size: 12px; line-height: 1.5; }
+.editorial-card-editing { grid-column: 1 / -1; max-width: 900px; }
+.editorial-card-editing .selecao-card-thumb { max-height: 240px; }
+.editorial-assessment-form { display: grid; gap: 14px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+.editorial-assessment-form h4 { margin: 0; }
+.editorial-assessment-form label { display: grid; gap: 6px; font-size: 13px; }
+.editorial-assessment-form fieldset { padding: 14px; border: 1px solid var(--line); display: grid; gap: 10px; }
+.editorial-assessment-form fieldset p { margin: 0; color: var(--ink-muted); font-size: 12px; }
+.editorial-assessment-form textarea { min-height: 70px; resize: vertical; }
+.editorial-assessment-form small { color: var(--ink-muted); line-height: 1.4; }
+.editorial-evidence-details { font-size: 12px; margin: 10px 0; }
+.editorial-evidence-details summary { cursor: pointer; }
+.editorial-evidence-details pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; }
+.editorial-card-rationale, .product-editorial-rationale { font-size: 13px; line-height: 1.5; color: var(--ink-body); }
+.pauta-selection-note { color: var(--ink-muted); font-size: 12px; line-height: 1.5; }
+.pauta-editorial-rationale, .pauta-editorial-context { margin: 6px 0; color: var(--ink-body); font-size: 13px; line-height: 1.5; }
+.pauta-editorial-context { color: var(--ink-muted); }
+.hero-product-context { color: var(--ink-muted); font-size: 13px; line-height: 1.5; }
+@media (max-width: 768px) {
+  .editorial-selection-board { padding: 16px; }
+  .editorial-selection-list { padding-left: 18px; }
+  .editorial-selection-list > li { padding: 10px; }
+  .editorial-selection-activate { align-items: stretch; flex-direction: column; }
+}
+.editorial-evidence-details dl { display: grid; gap: 8px; }
+.editorial-evidence-details dt { color: var(--ink-muted); font-weight: 700; }
+.editorial-evidence-details dd { margin: 3px 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.product-editorial-contents, .hero-product-contents, .pauta-editorial-contents { font-size: 13px; color: var(--ink-body); line-height: 1.5; }
+.deal-editorial-presentation { margin: 16px 0; padding: 14px 16px; border: 1px solid var(--line); background: var(--surface); }
+.deal-editorial-presentation p { margin: 6px 0; font-size: 14px; line-height: 1.5; }
+.hero-ranking-board { margin: 20px 0; padding: 20px; border: 1px solid var(--line-strong); background: var(--surface); }
+.hero-ranking-board p, .hero-ranking-board li { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.hero-ranking-board > button { padding: 10px 14px; border: 1px solid var(--blue); background: var(--blue); color: var(--on-accent); font: inherit; font-weight: 700; cursor: pointer; }
+.hero-ranking-board > button:disabled { opacity: .45; cursor: not-allowed; }
+.hero-rank-label { font-size: 12px; font-weight: 700; color: var(--blue-text); }
+.hero-classification-details, .hero-rubric-guide { margin: 12px 0; padding: 10px; border: 1px solid var(--line); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.hero-classification-details summary, .hero-rubric-guide summary { cursor: pointer; font-weight: 700; }
+.hero-classification-details dl { display: grid; gap: 8px; }
+.hero-classification-details dt { color: var(--ink-muted); }
+.hero-classification-details dd { margin: 0; }
+.hero-rubric-guide p { margin-top: 8px !important; }
+@media (max-width: 768px) { .hero-ranking-board { padding: 14px; } }

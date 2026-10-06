@@ -6,7 +6,6 @@ import {
   curationQueue,
   curationSummary,
   deferredQueue,
-  getApprovedVitrineProducts,
 } from "../../../lib/curation-db.ts";
 import {
   getEditorialGuideline,
@@ -19,8 +18,7 @@ import {
 import { captureRuns } from "../../../lib/admin-db.ts";
 import { canonicalAdminQuery, canonicalAdminUrl } from "../../../lib/admin-query-aliases.ts";
 import { formatDecisionLoad } from "../../../lib/curation-contract.ts";
-import { shortCodesForSlugs } from "../../../lib/short-link-db.ts";
-import { shareBaseUrl } from "../../../lib/site-url.ts";
+import { getEditorialSelectionDesk } from "../../../lib/editorial-selection-db.ts";
 import SelecaoView from "./selecao-view.tsx";
 import CurationReviewer from "./curation-reviewer.tsx";
 import GroupReviewer from "./group-reviewer.tsx";
@@ -55,7 +53,7 @@ export default async function CurationPage({
   ]);
 
   // Carregamento sob demanda conforme a aba ativa
-  let approvedProducts = null;
+  let selectionDesk = null;
   let singularProducts = null;
   let groupCards = null;
   let heldProducts = null;
@@ -66,13 +64,9 @@ export default async function CurationPage({
   let triageBatches = null;
   let operationalPulse = null;
   let serializedCaptureRuns = null;
-  let shareHost = shareBaseUrl().replace(/\/$/, "");
-  let productShortCodes: Record<string, string> = {};
 
   if (activeTab === "selecao") {
-    approvedProducts = await getApprovedVitrineProducts("local", 60);
-    const codesMap = await shortCodesForSlugs(approvedProducts.map((p) => p.slug));
-    productShortCodes = Object.fromEntries(codesMap.entries());
+    selectionDesk = await getEditorialSelectionDesk("local");
   } else if (activeTab === "excecoes") {
     if (subTab === "grupos") {
       groupCards = await curationGroupCards(20, "local");
@@ -167,19 +161,20 @@ export default async function CurationPage({
           href="/admin/curadoria?aba=selecao"
           className={"curation-tab " + (activeTab === "selecao" ? "active" : "")}
         >
-          No ar
+          Seleção editorial
           {summary.approved > 0 && (
-            <span className="curation-tab-badge" title="Produtos no ar na vitrine">{summary.approved}</span>
+            <span className="curation-tab-badge" title="Produtos aprovados no catálogo">{summary.approved}</span>
           )}
         </a>
       </nav>
 
       {/* ABA 1: Seleção do Dia */}
-      {activeTab === "selecao" && approvedProducts && (
+      {activeTab === "selecao" && selectionDesk && (
         <SelecaoView
-          initialProducts={approvedProducts}
-          shortCodes={productShortCodes}
-          shareHost={shareHost}
+          initialCandidates={selectionDesk.candidates}
+          initialSelection={selectionDesk.selection}
+          schemaReady={selectionDesk.schemaReady}
+          catalogHeroActive={selectionDesk.catalogHeroActive}
         />
       )}
 

@@ -1,0 +1,7 @@
+{
+  "name": "bizuminer-editorial-integration-tests",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --import tsx integration.test.ts" },
+  "devDependencies": { "@electric-sql/pglite": "0.5.8", "tsx": "4.21.0" }
+}

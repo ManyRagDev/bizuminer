@@ -173,6 +173,7 @@ export async function sweep(
           ratingStar: offer.ratingStar,
           salesLabel: offer.salesLabel,
           salesCount: offer.salesCount,
+          offerEvidence: offer.offerEvidence,
           observedAt: offer.capturedAt,
         });
         if (result.isNew) {

@@ -1,6 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  getEditorialSelectionDesk,
+  replaceEditorialSelection,
+  saveEditorialAssessment,
+} from "../../../lib/editorial-selection-db.ts";
+import type { EditorialAssessmentInput } from "../../../lib/editorial-selection.ts";
 import { getPageAuth, isAffiliate, resolveAppUserId } from "../../../lib/auth.ts";
 import {
   actOnGroup,
@@ -220,5 +226,40 @@ export async function runAutomatedTriageAction(
   } catch (err) {
     const message = err instanceof Error ? err.message : "triage_failed";
     return { ok: false, error: message };
+  }
+}
+
+/** Avaliar e destacar são decisões distintas da aprovação do catálogo. */
+export async function saveEditorialAssessmentAction(input: EditorialAssessmentInput) {
+  const reviewer = await reviewerId();
+  if (!reviewer) return { ok: false as const, error: "forbidden" };
+  try {
+    const result = await saveEditorialAssessment(input, reviewer, "local");
+    if (!result.ok) return result;
+    const desk = await getEditorialSelectionDesk("local");
+    revalidatePath("/admin/curadoria");
+    revalidatePath("/");
+    revalidatePath("/pauta");
+    return { ...result, candidate: desk.candidates.find((candidate) => candidate.id === input.productId) ?? null };
+  } catch {
+    return { ok: false as const, error: "Não foi possível salvar a avaliação. Tente novamente." };
+  }
+}
+
+export async function replaceEditorialSelectionAction(input: Parameters<typeof replaceEditorialSelection>[0]) {
+  const reviewer = await reviewerId();
+  if (!reviewer) return { ok: false as const, error: "forbidden" };
+  try {
+    const result = await replaceEditorialSelection(input, reviewer, "local");
+    if (result.ok) {
+      revalidatePath("/");
+      revalidatePath("/pauta");
+      revalidatePath("/api/deals");
+      revalidatePath("/api/pauta");
+      revalidatePath("/admin/curadoria");
+    }
+    return result;
+  } catch {
+    return { ok: false as const, error: "Não foi possível ativar a seleção. Tente novamente." };
   }
 }

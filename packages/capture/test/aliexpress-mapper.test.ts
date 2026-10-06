@@ -99,6 +99,21 @@ describe("mapProductNodes — campos", () => {
     // Converter seria afirmar o que a loja não afirmou.
     const { offers } = mapProductNodes([produtoReal], capturedAt, "BRL");
     assert.equal(offers[0]!.ratingStar, undefined);
+    assert.equal(offers[0]!.offerEvidence?.positiveReviewRate, 1);
+    assert.equal(offers[0]!.offerEvidence?.reviewCount, undefined);
+    assert.equal(offers[0]!.offerEvidence?.variantKey, undefined);
+    assert.equal(offers[0]!.offerEvidence?.packageContents, undefined);
+    assert.deepEqual(offers[0]!.offerEvidence?.source, {
+      marketplace: "aliexpress", method: "official_api",
+      url: produtoReal.product_detail_url, capturedAt: capturedAt.toISOString(),
+    });
+  });
+
+  it("mantém percentual positivo desconhecido quando ausente ou inválido", () => {
+    for (const evaluate_rate of [undefined, "", "não informado", "150%"] ) {
+      const { offers } = mapProductNodes([{ ...produtoReal, evaluate_rate }], capturedAt, "BRL");
+      assert.equal(offers[0]!.offerEvidence?.positiveReviewRate, undefined);
+    }
   });
 
   it("volume de vendas é contagem, não dinheiro (25 vendas, não 2500)", () => {

@@ -1,7 +1,9 @@
+import { sameOfferConfigurationSql } from "./offer-history.ts";
 import postgres from "postgres";
 import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "./catalog-policy.ts";
+import { publishedEditorialStateKey, type PublishedEditorialSelection } from "./editorial-selection.ts";
 import type { DealQuery, FreshnessBand } from "./deal-query";
-import { freshnessDays, priceRangeForBand, shouldInterleaveMarketplaces } from "./deal-query.ts";
+import { freshnessDays, priceRangeForBand } from "./deal-query.ts";
 import { categoryDesirabilityFromStats, heroScore, type CategoryStats, type HeroScorable } from "./desirability.ts";
 import { toVitrineProduct, type VitrineProduct } from "./deal-view.ts";
 import { parseProductSlug, slugCaseSql } from "./marketplaces.ts";
@@ -45,6 +47,8 @@ export interface DealDetail {
 export interface DealsPage {
   deals: DealRow[];
   total: number;
+  selectionVersion: number | null;
+  selectionStateKey: string;
 }
 
 export function db() {
@@ -60,50 +64,8 @@ export function db() {
   });
 }
 
-/**
- * Vitrine: preço histórico primeiro, desconto declarado apenas como desempate.
- * A observação mais recente é excluída do mínimo anterior para que um produto
- * novo nunca seja chamado de "menor preço" por acidente.
- */
-/**
- * Vitrine: preço histórico primeiro, desconto declarado apenas como desempate.
- * A observação mais recente é excluída do mínimo anterior para que um produto
- * novo nunca seja chamado de "menor preço" por acidente.
- *
- * Estado de vida derivado (decisão 20/08, activity.ts):
- * - ativo   = visto na rodagem atual → vitrine (prioridade na ordenação)
- * - recente = visto nos últimos 7 dias → vitrine (depois dos ativos)
- * - dormente= além → fora da vitrine, histórico preservado
- *
- * Antes desta correção, a vitrine filtrava estritamente pela rodagem atual
- * (capture_run_id = current_run) — uma rodagem nova com produtos diferentes
- * apagava os anteriores da vitrine mesmo tendo histórico. Agora a janela é
- * de 7 dias (last_seen_at), e a ordenação empurra os ativos para o topo.
- *
- * DIVERSIDADE DE LOJA NA VITRINE (decisão do dono, 27/08/2026)
- *
- * A home é o chamariz e precisa **sempre mostrar as duas lojas** misturadas.
- * Medido antes da mudança: os 24 primeiros eram 24/24 Mercado Livre e a
- * Shopee só aparecia na página 2 — ou seja, invisível para quem abre o site.
- *
- * A causa não era preferência por loja, era o critério de sinal: produto
- * recém-capturado tem UMA observação, então `previous_min_price_cents` é nulo,
- * `lowest_verified` é falso e a queda percentual é nula. Ele perde todos os
- * desempates para produto com histórico. Como a Shopee entrou agora, o
- * catálogo inteiro dela era "novo" — e nenhuma loja nova jamais apareceria.
- *
- * Solução: `marketplace_rank` (row_number particionado por marketplace, com
- * os MESMOS critérios de sinal) e ordenação pelo rank. O resultado é
- * ML#1, SH#1, ML#2, SH#2… — cada loja entra com os seus melhores, ninguém é
- * promovido por ser de loja nenhuma. Generaliza sozinho para N lojas: quando
- * a AliExpress entrar, vira ML/SH/ALI sem tocar nesta query (M-R5).
- * Quando uma loja acaba (50 Shopee vs 347 ML), a outra segue sozinha.
- *
- * Só vale para `sort = 'signal'` (a vitrine curada) e sem filtro de loja.
- * Em "menor preço" a pessoa pediu preço: intercalar poria um item de R$500
- * acima de um de R$100, quebrando a promessa explícita do controle.
- */
-export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promise<DealsPage> {
+/** A seleção editorial determina a ordem inicial; filtros explícitos preservam sua ordenação. */
+export async function topDeals(query: DealQuery = {}, tenantId = "local", publishedSelection?: PublishedEditorialSelection, sqlFactory: typeof db = db): Promise<DealsPage> {
   const limit = Math.min(Math.max(query.limit ?? 12, 1), 24);
   const offset = Math.max(query.offset ?? 0, 0);
   const sort = query.sort ?? "signal";
@@ -115,14 +77,17 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
   const minDiscount = query.minDiscount ?? null;
   const lowestOnly = query.lowestOnly ?? false;
   const hasHistory = query.hasHistory ?? false;
-  // Regra (pura e testada) em deal-query.ts — ver o cabeçalho desta função.
-  const interleaveMarketplaces = shouldInterleaveMarketplaces({ sort, marketplace });
+  const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId);
+  const selectedIds = sort === "signal" ? selection.products.map((product) => product.id) : [];
   const { min: minPriceCents, max: maxPriceCents } = priceRangeForBand(query.priceBand ?? "all");
   // Filtros antigos como "all" e "14d" não furam a validade global de 7 dias.
   // Valores menores continuam restringindo a captura dentro desse teto.
   const freshnessDaysValue = freshnessDays(freshness);
-  const sql = db();
+  const sql = sqlFactory();
   try {
+    const { editorialSelectionSchemaReady } = await import("./editorial-selection-db.ts");
+    const schemaReady = await editorialSelectionSchemaReady(sql);
+    const configurationComparison = schemaReady ? sameOfferConfigurationSql("l", "o") : "false";
     const rows = await sql<(DealRow & { total_count: number; in_current_run: boolean })[]>`
       with current_run as (
         -- Uma rodagem "atual" por marketplace, não uma global filtrada no ML.
@@ -139,7 +104,8 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
       ), latest as (
         select distinct on (product_id)
           id, product_id, capture_run_id, price_cents, original_price_cents, claimed_discount_rate,
-          rating_star, sales_label, sales_count, observed_at
+          rating_star, sales_label, sales_count, observed_at,
+          ${sql.unsafe(schemaReady ? "offer_evidence" : "null::jsonb as offer_evidence")}
         from garimpa.price_observation
         where tenant_id = ${tenantId}
         order by product_id, observed_at desc, id desc
@@ -147,16 +113,13 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
         select l.product_id,
           count(o.id)::int as observation_count,
           floor(extract(epoch from (l.observed_at - min(o.observed_at))) / 86400)::int as history_days,
-          min(o.price_cents) filter (where o.id <> l.id) as previous_min_price_cents
+          min(o.price_cents) filter (where o.id <> l.id) as previous_min_price_cents,
+          bool_and(${sql.unsafe(configurationComparison)}) as history_comparable
         from latest l
         join garimpa.price_observation o
           on o.product_id = l.product_id and o.tenant_id = ${tenantId}
-        group by l.product_id, l.id, l.observed_at
+        group by l.product_id, l.id, l.observed_at, l.offer_evidence
       ), ranked as (
-        -- CTE separada por necessidade do Postgres, não por gosto: alias de
-        -- select (marketplace_rank) não é resolvível dentro de uma EXPRESSÃO
-        -- no order by — só numa referência nua. Materializando aqui, o rank
-        -- vira coluna de verdade e pode entrar no case-when lá embaixo.
         select p.id, p.title, p.image_url, p.category, p.marketplace,
                ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
                l.price_cents,
@@ -166,24 +129,12 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
                l.sales_label,
                l.sales_count,
                l.observed_at as evidence_observed_at,
-               s.previous_min_price_cents as min_price_cents,
-               s.previous_min_price_cents,
+               case when s.history_comparable then s.previous_min_price_cents end as min_price_cents,
+               case when s.history_comparable then s.previous_min_price_cents end as previous_min_price_cents,
                s.observation_count,
                s.history_days,
-               (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified,
+               (s.history_comparable and s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified,
                (cr.id is not null) as in_current_run,
-               -- Posição do produto DENTRO da sua própria loja, pelos mesmos
-               -- critérios de sinal. É o que permite intercalar sem inventar
-               -- ordenação: rank 1 de cada loja disputa as primeiras posições.
-               row_number() over (
-                 partition by p.marketplace
-                 order by
-                   (cr.id is not null) desc,
-                   (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) desc nulls last,
-                   ((s.previous_min_price_cents - l.price_cents)::numeric / nullif(s.previous_min_price_cents, 0)) desc nulls last,
-                   l.claimed_discount_rate desc nulls last,
-                   p.id asc
-               ) as marketplace_rank,
                count(*) over()::int as total_count
         from garimpa.product p
         join garimpa.product_curation pc
@@ -203,7 +154,7 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
           and (${marketplace}::text is null or p.marketplace = ${marketplace})
           and (${minRating}::numeric is null or l.rating_star >= ${minRating})
           and (${minDiscount}::numeric is null or l.claimed_discount_rate >= (${minDiscount}::numeric / 100))
-          and (${lowestOnly}::boolean is false or (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents))
+          and (${lowestOnly}::boolean is false or (s.history_comparable and s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents))
           and (${hasHistory}::boolean is false or (s.observation_count >= 3 and s.history_days >= 7))
       )
       select id, title, image_url, category, marketplace, slug,
@@ -214,11 +165,8 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
              in_current_run, total_count
       from ranked
       order by
-        -- Vitrine (sinal, sem filtro de loja): intercala as lojas.
-        -- Ordenação explícita pedida pela pessoa (preço/popularidade/recentes)
-        -- NUNCA é intercalada — ver comentário do cabeçalho da função.
-        case when ${interleaveMarketplaces}::boolean then marketplace_rank end asc nulls last,
-        in_current_run desc,
+        case when ${sort} = 'signal' then array_position(${selectedIds}::text[], id) end asc nulls last,
+        case when ${sort} = 'signal' then in_current_run end desc nulls last,
         case when ${sort} = 'signal' then lowest_verified end desc nulls last,
         case when ${sort} = 'signal' then ((previous_min_price_cents - price_cents)::numeric / nullif(previous_min_price_cents, 0)) end desc nulls last,
         case when ${sort} = 'signal' then claimed_discount_rate end desc nulls last,
@@ -229,7 +177,7 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local"): Promi
       limit ${limit}
       offset ${offset}
     `;
-    return { deals: rows, total: rows[0]?.total_count ?? 0 };
+    return { deals: rows, total: rows[0]?.total_count ?? 0, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) };
   } finally {
     await sql.end();
   }
@@ -314,18 +262,22 @@ export async function catalogCategories(tenantId = "local"): Promise<string[]> {
 }
 
 /** Produto individual e seus fatos de preço para a página compartilhável. */
-export async function dealDetail(slug: string, tenantId = "local"): Promise<DealDetail | null> {
+export async function dealDetail(slug: string, tenantId = "local", sqlFactory: typeof db = db): Promise<DealDetail | null> {
   const parsed = parseProductSlug(slug);
   if (!parsed) return null;
   const { marketplace, externalId } = parsed;
 
-  const sql = db();
+  const sql = sqlFactory();
   try {
+    const { editorialSelectionSchemaReady } = await import("./editorial-selection-db.ts");
+    const schemaReady = await editorialSelectionSchemaReady(sql);
+    const configurationComparison = schemaReady ? sameOfferConfigurationSql("l", "o") : "false";
     const deals = await sql<DealRow[]>`
       with latest as (
         select distinct on (product_id)
           id, product_id, price_cents, original_price_cents, claimed_discount_rate,
-          rating_star, sales_label, sales_count, observed_at
+          rating_star, sales_label, sales_count, observed_at,
+          ${sql.unsafe(schemaReady ? "offer_evidence" : "null::jsonb as offer_evidence")}
         from garimpa.price_observation
         where tenant_id = ${tenantId}
         order by product_id, observed_at desc, id desc
@@ -333,19 +285,20 @@ export async function dealDetail(slug: string, tenantId = "local"): Promise<Deal
         select l.product_id,
           count(o.id)::int as observation_count,
           floor(extract(epoch from (l.observed_at - min(o.observed_at))) / 86400)::int as history_days,
-          min(o.price_cents) filter (where o.id <> l.id) as previous_min_price_cents
+          min(o.price_cents) filter (where o.id <> l.id) as previous_min_price_cents,
+          bool_and(${sql.unsafe(configurationComparison)}) as history_comparable
         from latest l
         join garimpa.price_observation o
           on o.product_id = l.product_id and o.tenant_id = ${tenantId}
-        group by l.product_id, l.id, l.observed_at
+        group by l.product_id, l.id, l.observed_at, l.offer_evidence
       )
       select p.id, p.title, p.image_url, p.category, p.marketplace,
              ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
              l.price_cents, l.original_price_cents, l.claimed_discount_rate,
              l.rating_star, l.sales_label, l.sales_count, l.observed_at as evidence_observed_at,
-             s.previous_min_price_cents as min_price_cents,
-             s.previous_min_price_cents, s.observation_count, s.history_days,
-             (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
+             case when s.history_comparable then s.previous_min_price_cents end as min_price_cents,
+             case when s.history_comparable then s.previous_min_price_cents end as previous_min_price_cents, s.observation_count, s.history_days,
+             (s.history_comparable and s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
       from garimpa.product p
       join garimpa.product_curation pc
         on pc.product_id = p.id and pc.tenant_id = p.tenant_id

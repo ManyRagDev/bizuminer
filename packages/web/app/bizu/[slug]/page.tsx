@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getPageSession, isAffiliate } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
+import { getEditorialProductPresentation } from "../../../lib/editorial-selection-db";
 import { freshnessLabel, priceFreshness, priceNarrative, priceSignal, seenAgo } from "../../../lib/deal-signal";
 import { toVitrineProduct } from "../../../lib/deal-view";
 import { marketplaceDef } from "../../../lib/marketplaces";
@@ -64,6 +65,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   if (!detail) notFound();
 
   const { deal, price_history: history } = detail;
+  const editorial = await getEditorialProductPresentation(deal.id);
   const mp = marketplaceDef(deal.marketplace);
   const mpLabel = mp?.label ?? deal.marketplace;
   const mpCta = mp?.ctaLabel ?? `ver na ${mpLabel}`;
@@ -97,6 +99,11 @@ export default async function DealPage({ params, searchParams }: PageProps) {
         <p className="eyebrow">Preço monitorado · {mpLabel}</p>
         <span className={`deal-signal ${signal.tone}`}>{signal.label}</span>
         <h1>{deal.title}</h1>
+        {editorial && <div className="deal-editorial-presentation">
+          <p><b>Por que indicamos:</b> {editorial.editorialRationale}</p>
+          {editorial.editorialPurchaseContents && <p><b>O que vem:</b> {editorial.editorialPurchaseContents}</p>}
+          {editorial.editorialContext && <p>{editorial.editorialContext}</p>}
+        </div>}
         {(deal.rating_star !== null || deal.sales_label) && <p className="deal-evidence">{deal.rating_star !== null && <span>★ {deal.rating_star.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}/5</span>}{deal.rating_star !== null && deal.sales_label && <i>·</i>}{deal.sales_label && <span>{deal.sales_label}</span>}<small>{mpEvidence}</small></p>}
         {fresh === "current" ? <div className="deal-price"><small>{deal.original_price_cents && deal.original_price_cents > deal.price_cents ? brl(deal.original_price_cents) : ""}</small><strong>{brl(deal.price_cents)}</strong>{freshnessLabel(deal.evidence_observed_at) && <em>{freshnessLabel(deal.evidence_observed_at)}</em>}</div> : <div className="deal-price deal-price-stale"><strong>preço atual não confirmado</strong><em>última captura: {brl(deal.price_cents)} · {seenAgo(deal.evidence_observed_at)}</em></div>}
         {fresh !== "current" && (
@@ -109,7 +116,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       </section>
     </article>
-    <section className="history-section" aria-labelledby="history-title"><div><p className="eyebrow">Histórico disponível</p><h2 id="history-title">Preço com contexto, não só com etiqueta.</h2><p>Há {deal.observation_count} registro{deal.observation_count === 1 ? "" : "s"} em {deal.history_days} dia{deal.history_days === 1 ? "" : "s"} de acompanhamento. O destaque de menor preço só aparece após pelo menos 3 registros distribuídos em 7 dias.</p></div><div className="history-card"><Chart points={history} /><dl><div><dt>menor registro disponível</dt><dd>{low === null ? "—" : brl(low)}</dd></div><div><dt>maior registro disponível</dt><dd>{high === null ? "—" : brl(high)}</dd></div><div><dt>última atualização</dt><dd>{freshnessLabel(deal.evidence_observed_at) ?? "sem data"}</dd></div></dl></div></section>
+    <section className="history-section" aria-labelledby="history-title"><div><p className="eyebrow">Histórico disponível</p><h2 id="history-title">Preço com contexto, não só com etiqueta.</h2><p>Há {deal.observation_count} registro{deal.observation_count === 1 ? "" : "s"} do anúncio em {deal.history_days} dia{deal.history_days === 1 ? "" : "s"} de acompanhamento. A comparação de menor preço exige a mesma configuração confirmada e pelo menos 3 registros distribuídos em 7 dias. Sem essa identificação, os valores representam o histórico do anúncio e podem corresponder a variantes diferentes.</p></div><div className="history-card"><Chart points={history} /><dl><div><dt>menor preço observado no anúncio</dt><dd>{low === null ? "—" : brl(low)}</dd></div><div><dt>maior preço observado no anúncio</dt><dd>{high === null ? "—" : brl(high)}</dd></div><div><dt>última atualização</dt><dd>{freshnessLabel(deal.evidence_observed_at) ?? "sem data"}</dd></div></dl></div></section>
     {related.length > 0 && <section className="related-section" aria-labelledby="related-title"><div className="related-heading"><p className="eyebrow">Continue descobrindo</p><h2 id="related-title">Mais em {deal.category}</h2></div><div className="related-rail">{related.map((item) => <article key={item.id} className="related-card"><a className="related-image" href={`/bizu/${item.slug}`}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill sizes="(max-width: 820px) 68vw, 22vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</a><p>{item.category}</p><h3><a href={`/bizu/${item.slug}`}>{item.title}</a></h3><strong>{brl(item.priceCents)}</strong><a className="related-link" href={`/bizu/${item.slug}`}>ver detalhes <span>→</span></a></article>)}</div></section>}
     <div className="deal-sticky-cta"><a href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a></div>
   </main>;

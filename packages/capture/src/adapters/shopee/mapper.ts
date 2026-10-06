@@ -56,7 +56,6 @@ export function mapProductNode(
   const priceCents = toCents(node.price ?? node.priceMin);
   if (priceCents == null || priceCents <= 0) return null;
 
-  const maxCents = toCents(node.priceMax);
   const discountRate = toRate(node.priceDiscountRate);
 
   // A Shopee não devolve "preço de". Derivamos a partir do desconto declarado
@@ -65,9 +64,7 @@ export function mapProductNode(
   const originalPriceCents =
     discountRate != null && discountRate > 0 && discountRate < 1
       ? Math.round(priceCents / (1 - discountRate))
-      : maxCents != null && maxCents > priceCents
-        ? maxCents
-        : undefined;
+      : undefined;
 
   const shopId = node.shopId != null ? String(node.shopId) : undefined;
   const productUrl = node.productLink ?? node.offerLink;
@@ -87,7 +84,13 @@ export function mapProductNode(
     commissionRate: toRate(node.commissionRate),
     commissionCents: toCents(node.commission),
     salesCount: numberOrUndefined(node.sales),
-    ratingStar: numberOrUndefined(node.ratingStar),
+    ratingStar: ratingOrUndefined(node.ratingStar),
+    offerEvidence: {
+      version: 1,
+      source: { marketplace: MARKETPLACE, method: "official_api", url: productUrl, capturedAt: capturedAt.toISOString() },
+      priceMinCents: positiveCents(node.priceMin),
+      priceMaxCents: positiveCents(node.priceMax),
+    },
     startsAt: fromEpochSeconds(node.periodStartTime),
     endsAt: fromEpochSeconds(node.periodEndTime),
     capturedAt,
@@ -117,4 +120,14 @@ function numberOrUndefined(v: unknown): number | undefined {
   if (v == null) return undefined;
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : undefined;
+}
+
+function positiveCents(value: unknown): number | undefined {
+  const cents = toCents(value);
+  return cents != null && cents > 0 ? cents : undefined;
+}
+
+function ratingOrUndefined(value: unknown): number | undefined {
+  const rating = numberOrUndefined(value);
+  return rating != null && rating > 0 && rating <= 5 ? rating : undefined;
 }

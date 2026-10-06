@@ -9,6 +9,7 @@
 import { classifyActivity } from "./activity.ts";
 import type { ActivityCounts } from "./activity.ts";
 import type { ProductFamilyInfo } from "./product-family.ts";
+import type { OfferEvidence } from "../../capture/src/types.ts";
 
 export interface ProductRecord {
   readonly id: string;
@@ -36,6 +37,7 @@ export interface PriceObservationRecord {
   readonly salesLabel?: string;
   /** Limite inferior aproximado derivado do rótulo do marketplace. */
   readonly salesCount?: number;
+  readonly offerEvidence?: OfferEvidence;
   readonly observedAt: Date;
   readonly titleSnapshot: string;
   readonly productUrlSnapshot: string;
@@ -105,6 +107,7 @@ export interface OfferStore {
     ratingStar?: number;
     salesLabel?: string;
     salesCount?: number;
+    offerEvidence?: OfferEvidence;
     observedAt: Date;
   }): Promise<UpsertResult>;
 
@@ -152,6 +155,7 @@ export class InMemoryStore implements OfferStore {
     ratingStar?: number;
     salesLabel?: string;
     salesCount?: number;
+    offerEvidence?: OfferEvidence;
     observedAt: Date;
   }): Promise<UpsertResult> {
     const key = `${input.tenantId}|${input.marketplace}|${input.externalId}`;
@@ -202,6 +206,7 @@ export class InMemoryStore implements OfferStore {
         ratingStar: input.ratingStar,
         salesLabel: input.salesLabel,
         salesCount: input.salesCount,
+        offerEvidence: input.offerEvidence,
         observedAt: input.observedAt,
         titleSnapshot: input.title,
         productUrlSnapshot: input.productUrl,
@@ -210,7 +215,23 @@ export class InMemoryStore implements OfferStore {
     };
     const observations = this.observations.get(product.id) ?? [];
     const duplicate = observations.findIndex((item) => item.captureRunId === input.captureRunId);
-    if (duplicate >= 0) observations[duplicate] = observation;
+    if (duplicate >= 0) {
+      const previous = observations[duplicate]!;
+      // Uma repetição incompleta da mesma oferta não apaga a evidência.
+      // Oferta alterada não herda configuração nem pacote de outra captura.
+      observations[duplicate] = {
+        ...observation,
+        offerEvidence: observation.offerEvidence ?? (
+          previous.titleSnapshot === observation.titleSnapshot &&
+          previous.productUrlSnapshot === observation.productUrlSnapshot &&
+          previous.imageUrlSnapshot === observation.imageUrlSnapshot &&
+          previous.categorySnapshot === observation.categorySnapshot &&
+          previous.priceCents === observation.priceCents
+            ? previous.offerEvidence
+            : undefined
+        ),
+      };
+    }
     else observations.push(observation);
     this.observations.set(product.id, observations);
 

@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
   return Response.json({
     products: page.deals.map(toVitrineProduct),
     total: page.total,
+    selectionVersion: page.selectionVersion,
+    selectionStateKey: page.selectionStateKey,
     categories,
     marketplaceCounts: counts,
     limit: query.limit,

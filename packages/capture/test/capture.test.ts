@@ -104,6 +104,40 @@ describe("mapProductNode", () => {
     assert.equal(offer.originalPriceCents, 31650);
   });
 
+  it("preserva faixa declarada e proveniência sem deduzir variante ou pacote", () => {
+    const capturedAt = new Date("2026-10-05T12:00:00Z");
+    const offer = mapProductNode({ ...base, priceMin: "20.29", priceMax: "48.99" }, capturedAt)!;
+    assert.equal(offer.offerEvidence?.priceMinCents, 2029);
+    assert.equal(offer.offerEvidence?.priceMaxCents, 4899);
+    assert.deepEqual(offer.offerEvidence?.source, {
+      marketplace: "shopee", method: "official_api",
+      url: base.productLink, capturedAt: capturedAt.toISOString(),
+    });
+    assert.equal(offer.offerEvidence?.variantKey, undefined);
+    assert.equal(offer.offerEvidence?.packageContents, undefined);
+    assert.equal(offer.offerEvidence?.reviewCount, undefined);
+    const withoutRange = mapProductNode(base)!;
+    assert.equal(withoutRange.offerEvidence?.priceMinCents, undefined);
+    assert.equal(withoutRange.offerEvidence?.priceMaxCents, undefined);
+  });
+
+  it("não usa preço máximo de variantes como preço riscado sem desconto declarado", () => {
+    const offer = mapProductNode({
+      ...base, price: undefined, priceMin: "10", priceMax: "30", priceDiscountRate: undefined,
+    })!;
+    assert.equal(offer.priceCents, 1000);
+    assert.equal(offer.originalPriceCents, undefined);
+    assert.equal(offer.offerEvidence?.priceMinCents, 1000);
+    assert.equal(offer.offerEvidence?.priceMaxCents, 3000);
+  });
+
+  it("trata nota zero ou fora da escala como desconhecida", () => {
+    for (const ratingStar of [0, "0", "", -1, 6, "não informado"]) {
+      assert.equal(mapProductNode({ ...base, ratingStar })!.ratingStar, undefined);
+    }
+    assert.equal(mapProductNode({ ...base, ratingStar: "4.9" })!.ratingStar, 4.9);
+  });
+
   it("descarta nó sem identidade, preço ou URL", () => {
     assert.equal(mapProductNode({ ...base, itemId: undefined }), null);
     assert.equal(mapProductNode({ ...base, productName: "  " }), null);

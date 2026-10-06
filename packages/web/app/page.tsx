@@ -6,6 +6,8 @@ import { toVitrineProduct } from "../lib/deal-view";
 import { validUserId } from "../lib/member-contract";
 import { savedProductIds } from "../lib/member-db";
 import Vitrine from "./vitrine";
+import { getPublishedEditorialSelection } from "../lib/editorial-selection-db";
+import { publishedEditorialStateKey } from "../lib/editorial-selection";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +20,9 @@ export default async function Home({ searchParams }: HomeProps) {
     if (typeof value === "string") publicParams.set(key, value);
   }
   let initialState = catalogStateFromSearchParams(publicParams);
+  const selection = await getPublishedEditorialSelection("home");
   let [page, categories, marketplaceCountsByPlatform] = await Promise.all([
-    topDeals(catalogStateToDealQuery(initialState)),
+    topDeals(catalogStateToDealQuery(initialState), "local", selection),
     dealCategories(initialState.freshness),
     marketplaceCounts(initialState.freshness),
   ]);
@@ -27,7 +30,7 @@ export default async function Home({ searchParams }: HomeProps) {
   // URL adulterada ou página antiga além do total volta a uma página válida.
   if (initialState.page > 1 && page.deals.length === 0) {
     initialState = { ...initialState, page: 1 };
-    page = await topDeals(catalogStateToDealQuery(initialState));
+    page = await topDeals(catalogStateToDealQuery(initialState), "local", selection);
   }
   const products = page.deals.map(toVitrineProduct);
 
@@ -40,5 +43,5 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date());
 
-  return <Vitrine initialProducts={products} initialTotal={page.total} initialState={initialState} categories={categories} dateLabel={dateLabel} initialSavedIds={initialSavedIds} marketplaceCounts={marketplaceCountsByPlatform} isUserAdmin={isUserAdmin} />;
+  return <Vitrine editorialProducts={selection.products} editorialHeroIds={selection.heroProductIds} editorialHeroValidUntil={selection.heroValidUntil} editorialStateKey={publishedEditorialStateKey(selection)} editorialVersion={selection.version} initialProducts={products} initialTotal={page.total} initialState={initialState} categories={categories} dateLabel={dateLabel} initialSavedIds={initialSavedIds} marketplaceCounts={marketplaceCountsByPlatform} isUserAdmin={isUserAdmin} />;
 }

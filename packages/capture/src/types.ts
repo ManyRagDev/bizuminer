@@ -22,6 +22,35 @@ export type CaptureSource = "official_api" | "http_json" | "http_html" | "browse
 export type MarketplaceSlug = string;
 
 /**
+ * Evidências explicitamente fornecidas pela fonte, sem inferência do título.
+ * Ausência significa desconhecido; não equivale a zero, pacote vazio ou
+ * variante única. Strings preservam a descrição da fonte, sem padronização
+ * que possa mudar o significado. Datas ISO permitem persistência em JSON.
+ */
+export interface OfferEvidence {
+  readonly version: 1;
+  readonly source: {
+    readonly marketplace: MarketplaceSlug;
+    readonly method: CaptureSource;
+    readonly url: string;
+    readonly capturedAt: string;
+  };
+  readonly description?: string;
+  /** Identidade da configuração, apenas quando informada pela fonte. */
+  readonly variantKey?: string;
+  readonly variantLabel?: string;
+  readonly packageContents?: readonly string[];
+  readonly packageQuantity?: number;
+  readonly dimensions?: string;
+  readonly reviewCount?: number;
+  /** Fração 0..1 de avaliações positivas; NÃO equivale à nota em estrelas. */
+  readonly positiveReviewRate?: number;
+  /** Faixa declarada do anúncio; não prova identidade da variante no preço. */
+  readonly priceMinCents?: number;
+  readonly priceMaxCents?: number;
+}
+
+/**
  * Credencial de um marketplace. O formato varia por adapter, então o núcleo
  * trata como opaco. O adapter valida o formato que espera.
  *
@@ -81,6 +110,7 @@ export interface RawOffer {
   readonly salesCount?: number;
   readonly ratingStar?: number;
   readonly salesLabel?: string;
+  readonly offerEvidence?: OfferEvidence;
 
   /** Janela de validade da campanha, quando houver. */
   readonly startsAt?: Date;

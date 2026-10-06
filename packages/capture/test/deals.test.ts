@@ -94,6 +94,11 @@ describe("parseDealsHtml (fixture real)", () => {
     assert.equal(offer?.salesLabel, undefined);
   });
 
+  it("não apresenta nota zero como avaliação de compradores", () => {
+    const [offer] = parseDealsHtml(fixture.replace(/Classificação\s+[0-5](?:[.,]\d+)?\s+de\s+5\s+estrelas/g, "Classificação 0 de 5 estrelas"), capturedAt);
+    assert.equal(offer?.ratingStar, undefined);
+  });
+
   it("deduplica por externalId", () => {
     const duplicado = parseDealsHtml(fixture + fixture, capturedAt);
     assert.equal(duplicado.length, 3);

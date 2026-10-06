@@ -105,7 +105,7 @@ function parseMarketplaceEvidence(chunk: string): { ratingStar?: number; salesLa
         : 1;
     if (Number.isFinite(base)) salesCount = Math.round(base * multiplier);
   }
-  return { ratingStar: ratingStar != null && ratingStar >= 0 && ratingStar <= 5 ? ratingStar : undefined, salesLabel, salesCount };
+  return { ratingStar: ratingStar != null && ratingStar > 0 && ratingStar <= 5 ? ratingStar : undefined, salesLabel, salesCount };
 }
 
 /** Extrai as ofertas de um HTML da página /ofertas. Puro — sem rede. */
@@ -189,6 +189,10 @@ function parseCard(chunk: string, capturedAt: Date): RawOffer | null {
     originalPriceCents,
     claimedDiscountRate,
     ...parseMarketplaceEvidence(chunk),
+    offerEvidence: {
+      version: 1,
+      source: { marketplace: ML_MARKETPLACE, method: "http_html", url: DEALS_URL, capturedAt: capturedAt.toISOString() },
+    },
     capturedAt,
     source: "http_html",
     raw: { href },

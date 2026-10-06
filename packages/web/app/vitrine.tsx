@@ -8,17 +8,19 @@ import { freshnessLabel, priceFreshness, priceHighlight, priceNarrative, priceSi
 import { mergeSavedProducts, readSavedState, unionSavedIds, writeSavedState } from "../lib/saved-products";
 import type { VitrineProduct } from "../lib/deal-view";
 import { MARKETPLACES, marketplaceDef, type MarketplaceDef } from "../lib/marketplaces";
-import { categoryDesirabilityFromProducts, selectHeroProducts, HERO_MAX, HERO_MIN_SCORE } from "../lib/desirability";
 import CopyProductLink from "./_components/copy-product-link";
 import { ThemeToggle } from "./theme-toggle";
+import { HERO_MAX_PRODUCTS } from "../lib/hero-policy";
 
-type ApiPage = { products: VitrineProduct[]; total: number; categories: string[]; marketplaceCounts: Record<string, number> };
+type EditorialProduct = VitrineProduct & { editorialRationale: string; editorialContext: string; editorialPurchaseContents: string };
+
+type ApiPage = { selectionVersion?: number | null; selectionStateKey?: string; products: VitrineProduct[]; total: number; categories: string[]; marketplaceCounts: Record<string, number> };
 type MobileView = "home" | "categories" | "saved" | "filters" | "menu" | "guide";
 
 const catalogGuide = "Acompanhamos o preço de todas as ofertas daqui. Como isso vale para o catálogo inteiro, não repetimos em cada produto: o selo só aparece quando o histórico tem algo a dizer que o anúncio não diz.";
 
 const priceFilters: Array<{ value: PriceBand; label: string }> = [{ value: "all", label: "todos" }, { value: "under_100", label: "até R$100" }, { value: "100_500", label: "R$100–500" }, { value: "over_500", label: "acima R$500" }];
-const sortOptions: Array<{ value: DealSort; label: string }> = [{ value: "signal", label: "melhores oportunidades" }, { value: "price", label: "menor preço" }, { value: "popularity", label: "mais populares" }, { value: "recent", label: "atualizados agora" }];
+const sortOptions: Array<{ value: DealSort; label: string }> = [{ value: "signal", label: "ordem editorial" }, { value: "price", label: "menor preço" }, { value: "popularity", label: "mais populares" }, { value: "recent", label: "atualizados agora" }];
 const freshnessOptions: Array<{ value: FreshnessBand; label: string }> = [{ value: "today", label: "hoje" }, { value: "2d", label: "últimas 48 horas" }, { value: "3d", label: "últimos 3 dias" }, { value: "7d", label: "últimos 7 dias" }, { value: "14d", label: "últimos 14 dias" }, { value: "all", label: "tudo" }];
 const ratingOptions = [{ value: 4, label: "★★★★+" }, { value: 3, label: "★★★+" }, { value: 2, label: "★★+" }];
 const discountOptions = [{ value: 30, label: "30%+" }, { value: 50, label: "50%+" }, { value: 70, label: "70%+" }];
@@ -132,20 +134,20 @@ function EditorialSlide({ products, hidden }: { products: VitrineProduct[]; hidd
       <p className="hero-kicker">Curadoria de ponta a ponta</p>
       <h2>Menos tempo procurando.<br /><em>Mais clareza</em> para decidir.</h2>
       <p>O BizuMiner reúne ofertas, acompanha preços e organiza as evidências que ajudam você a comparar sem abrir dezenas de abas.</p>
-      <a href="#achados" tabIndex={hidden ? -1 : undefined}>ver ofertas selecionadas <b>↓</b></a>
+      <a href="#achados" tabIndex={hidden ? -1 : undefined}>ver catálogo <b>↓</b></a>
     </div>
     <div className="hero-editorial-board" aria-hidden="true">
       <span className="hero-edition">EDIÇÃO<br /><b>01</b></span>
       <div className="hero-grid-lines" />
       {primary?.imageUrl && <div className="hero-cutout hero-cutout-primary"><Image src={primary.imageUrl} alt="" fill priority sizes="(max-width: 900px) 64vw, 30vw" /></div>}
       {secondary?.imageUrl && <div className="hero-cutout hero-cutout-secondary"><Image src={secondary.imageUrl} alt="" fill sizes="(max-width: 900px) 30vw, 18vw" /></div>}
-      <div className="hero-note"><small>COMO ESCOLHEMOS</small><b>preço atual</b><b>histórico disponível</b><b>avaliação e vendas</b></div>
+      <div className="hero-note"><small>COMO ESCOLHEMOS</small><b>utilidade e público</b><b>valor da oferta</b><b>clareza da compra</b></div>
       <span className="hero-tape" />
     </div>
   </article>;
 }
 
-function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: VitrineProduct; index: number; hidden: boolean; onImageClick: (event: MouseEvent<HTMLAnchorElement>, productId: string) => void }) {
+function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: EditorialProduct; index: number; hidden: boolean; onImageClick: (event: MouseEvent<HTMLAnchorElement>, productId: string) => void }) {
   const fresh = priceFreshness(product.evidenceObservedAt);
   const status = fresh === "current" ? priceSignal(historyInput(product)) : { tone: "monitoring" as const, label: `última vez visto ${seenAgo(product.evidenceObservedAt)}` };
   return <article className={`hero-slide hero-product-slide hero-product-${index + 1}`} aria-hidden={hidden}>
@@ -153,7 +155,9 @@ function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: V
       <p>Destaque {String(index + 2).padStart(2, "0")} · seleção BizuMiner</p>
       <span className={`hero-history-label ${status.tone}`}>{status.label}</span>
       <h2>{product.title}</h2>
-      <p className="hero-product-reason">{priceNarrative(historyInput(product), brl)}</p>
+      <p className="hero-product-reason">{product.editorialRationale}</p>
+      {product.editorialPurchaseContents && <p className="hero-product-contents"><b>O que vem:</b> {product.editorialPurchaseContents}</p>}
+      {product.editorialContext && <p className="hero-product-context">{product.editorialContext}</p>}
       <div className="hero-product-facts">
         <span><small>{fresh === "current" ? "preço atual" : "última vez visto"}</small><strong>{brl(product.priceCents)}</strong></span>
         {product.ratingStar !== null && <span><small>{marketplaceDef(product.marketplace)?.ratingLabel ?? `avaliação em ${product.marketplace}`}</small><strong>★ {product.ratingStar.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}</strong></span>}
@@ -169,7 +173,7 @@ function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: V
   </article>;
 }
 
-export default function Vitrine({ initialProducts, initialTotal, initialState, categories: initialCategories, dateLabel, initialSavedIds = [], marketplaceCounts: initialMarketplaceCounts = {}, isUserAdmin = false }: { initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string; initialSavedIds?: string[]; marketplaceCounts?: Record<string, number>; isUserAdmin?: boolean }) {
+export default function Vitrine({ editorialProducts = [], editorialHeroIds = [], editorialHeroValidUntil = null, editorialStateKey = null, editorialVersion = null, initialProducts, initialTotal, initialState, categories: initialCategories, dateLabel, initialSavedIds = [], marketplaceCounts: initialMarketplaceCounts = {}, isUserAdmin = false }: { editorialProducts?: EditorialProduct[]; editorialHeroIds?: string[]; editorialHeroValidUntil?: string | null; editorialStateKey?: string | null; editorialVersion?: number | null; initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string; initialSavedIds?: string[]; marketplaceCounts?: Record<string, number>; isUserAdmin?: boolean }) {
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
   const [marketplaceCounts, setMarketplaceCounts] = useState(initialMarketplaceCounts);
@@ -186,18 +190,20 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
   const [categoryQuery, setCategoryQuery] = useState("");
   const [notice, setNotice] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [carouselPaused, setCarouselPaused] = useState(false);
+  const [carouselHovered, setCarouselHovered] = useState(false);
+  const [carouselFocused, setCarouselFocused] = useState(false);
+  const carouselPaused = carouselHovered || carouselFocused;
+  const [heroCurrent, setHeroCurrent] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [navOpen, setNavOpen] = useState(false);
   const pointerStart = useRef<number | null>(null);
   const carouselDragged = useRef(false);
   const requestVersion = useRef(0);
-  const heroProducts = useMemo(() => {
-    const currentProducts = initialProducts.filter((product) => priceFreshness(product.evidenceObservedAt) === "current");
-    const desirability = categoryDesirabilityFromProducts(currentProducts);
-    return selectHeroProducts(currentProducts, desirability);
-  }, [initialProducts]);
+  const editorialById = new Map(editorialProducts.map((product) => [product.id, product]));
+  const heroProducts = heroCurrent ? editorialHeroIds.slice(0, HERO_MAX_PRODUCTS).flatMap((id) => editorialById.has(id) ? [editorialById.get(id)!] : []) : [];
+  const editorialContents = useMemo(() => new Map(editorialProducts.map((product) => [product.id, product.editorialPurchaseContents])), [editorialProducts]);
+  const editorialRationales = useMemo(() => new Map(editorialProducts.map((product) => [product.id, product.editorialRationale])), [editorialProducts]);
   const savedProducts = useMemo(() => mergeSavedProducts(favorites, favoriteProducts, [...mobileProducts, ...products]), [favoriteProducts, favorites, mobileProducts, products]);
   const shownProducts = showSaved ? savedProducts : products;
   const totalPages = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
@@ -252,6 +258,39 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
     const timer = window.setTimeout(() => setCurrentSlide((slide) => (slide + 1) % slideCount), 6200);
     return () => window.clearTimeout(timer);
   }, [carouselPaused, currentSlide, slideCount]);
+  useEffect(() => {
+    if (!editorialStateKey) return;
+    const controller = new AbortController();
+    let checking = false;
+    const invalidate = () => { setHeroCurrent(false); setCurrentSlide(0); };
+    const verify = async () => {
+      if (document.visibilityState === "hidden" || checking) return;
+      checking = true;
+      try {
+        const response = await fetch("/api/editorial-selection", { cache: "no-store", signal: controller.signal });
+        if (!response.ok) return;
+        const state = await response.json() as { selectionStateKey: string };
+        if (!controller.signal.aborted && state.selectionStateKey !== editorialStateKey) {
+          invalidate();
+          window.location.reload();
+        }
+      } catch { /* The local deadline still hides expired highlights. */ }
+      finally { checking = false; }
+    };
+    const deadline = editorialHeroValidUntil ? Date.parse(editorialHeroValidUntil) : NaN;
+    const expiry = Number.isFinite(deadline) ? window.setTimeout(() => { invalidate(); void verify(); }, Math.max(0, deadline - Date.now() + 50)) : null;
+    const timer = window.setInterval(() => { void verify(); }, 60_000);
+    const onVisible = () => { void verify(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      controller.abort();
+      if (expiry !== null) window.clearTimeout(expiry);
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [editorialHeroIds, editorialHeroValidUntil, editorialStateKey]);
 
   function syncUrl(next: CatalogState, mode: "push" | "replace") {
     const params = catalogStateToSearchParams(next);
@@ -279,6 +318,14 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
       if (!response.ok) throw new Error("catalog_failed");
       const page = await response.json() as ApiPage;
       if (version !== requestVersion.current) return false;
+      if ((page.selectionStateKey !== undefined && editorialStateKey !== null && page.selectionStateKey !== editorialStateKey)
+        || (page.selectionVersion !== undefined && page.selectionVersion !== editorialVersion)) {
+        // A nova navegação deve usar a mesma edição no catálogo e no carrossel.
+        // A URL já representa os filtros solicitados; a home lê uma única seleção.
+        syncUrl(next, "replace");
+        window.location.reload();
+        return false;
+      }
       setProducts(page.products);
       setCategories(page.categories);
       setMarketplaceCounts(page.marketplaceCounts);
@@ -399,8 +446,8 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
       </div>
     </header>
 
-    <section className="hero" id="topo">
-      <div className="hero-carousel" role="region" aria-roledescription="carrossel" aria-label="Destaques BizuMiner" onMouseEnter={() => setCarouselPaused(true)} onMouseLeave={() => setCarouselPaused(false)} onPointerDown={(event) => { pointerStart.current = event.clientX; carouselDragged.current = false; }} onPointerUp={(event) => finishCarouselGesture(event.clientX)} onPointerCancel={() => { pointerStart.current = null; carouselDragged.current = false; }}>
+    <section className="hero" id="topo" data-selection-version={editorialVersion ?? undefined} onFocusCapture={() => setCarouselFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCarouselFocused(false); }}>
+      <div className="hero-carousel" role="region" aria-roledescription="carrossel" aria-label="Destaques BizuMiner" onMouseEnter={() => setCarouselHovered(true)} onMouseLeave={() => setCarouselHovered(false)} onPointerDown={(event) => { pointerStart.current = event.clientX; carouselDragged.current = false; }} onPointerUp={(event) => finishCarouselGesture(event.clientX)} onPointerCancel={() => { pointerStart.current = null; carouselDragged.current = false; }}>
         <div className="hero-track" style={{ transform: `translateX(-${currentSlide * 100}%)` }}><EditorialSlide products={heroProducts} hidden={currentSlide !== 0} />{heroProducts.map((product, index) => <ProductHeroSlide key={product.id} product={product} index={index} hidden={currentSlide !== index + 1} onImageClick={handleHeroImageClick} />)}</div>
       </div>
       <div className="carousel-bar"><div className="carousel-arrows"><button onClick={() => changeSlide(-1)} aria-label="Destaque anterior">←</button><button onClick={() => changeSlide(1)} aria-label="Próximo destaque">→</button></div><div className="carousel-progress" aria-hidden="true"><i key={currentSlide} className={carouselPaused ? "paused" : ""} /></div><span className="carousel-count">{String(currentSlide + 1).padStart(2, "0")} / {String(slideCount).padStart(2, "0")}</span><div className="carousel-dots">{Array.from({ length: slideCount }, (_, index) => <button key={index} className={currentSlide === index ? "active" : ""} aria-label={`Ir para o destaque ${index + 1}`} aria-current={currentSlide === index ? "true" : undefined} onClick={() => setCurrentSlide(index)} />)}</div></div>
@@ -430,11 +477,11 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
     </section>
 
     <section className="finds" id="achados" aria-busy={isLoading}>
-      <div className="section-heading"><div><p className="eyebrow">{showSaved ? "Seus salvos · viajam com você" : `Ofertas monitoradas · ${dateLabel}`}</p><h2>{showSaved ? "Seus salvos" : catalog.category === null ? "Destaques selecionados" : catalog.category}</h2><p className="mobile-result-count">{isLoading ? "atualizando…" : `${total} ofertas monitoradas · ${dateLabel}`}</p></div><button className="section-help" type="button" aria-label="Como ler os preços e o desconto" onClick={() => setMobileView("guide")}>?</button><p className="result-count">{isLoading ? "atualizando…" : showSaved ? `${savedProducts.length} salvos` : `Mostrando ${visibleFrom}–${visibleTo} de ${total} ofertas`}</p></div>
+      <div className="section-heading"><div><p className="eyebrow">{showSaved ? "Seus salvos · viajam com você" : `Ofertas monitoradas · ${dateLabel}`}</p><h2>{showSaved ? "Seus salvos" : "Catálogo de ofertas"}</h2><p className="mobile-result-count">{isLoading ? "atualizando…" : `${total} ofertas monitoradas · ${dateLabel}`}</p></div><button className="section-help" type="button" aria-label="Como ler os preços e o desconto" onClick={() => setMobileView("guide")}>?</button><p className="result-count">{isLoading ? "atualizando…" : showSaved ? `${savedProducts.length} salvos` : `Mostrando ${visibleFrom}–${visibleTo} de ${total} ofertas`}</p></div>
       {!showSaved && catalog.category === null && catalog.priceBand === "all" && !catalog.search && <p className="catalog-intro">{catalogGuide}</p>}
       {loadError && <p className="catalog-error" role="alert">{loadError} <button onClick={() => void fetchDeals(catalog, false)}>tentar de novo</button></p>}
-      <div className="desktop-catalog">{shownProducts.length ? <><div className="product-grid">{shownProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} />)}</div>{!showSaved && totalPages > 1 && <CatalogPagination current={catalog.page} total={totalPages} disabled={isLoading} onChange={changePage} />}</> : !isLoading && <EmptyState onClear={clearFilters} saved={showSaved} />}</div>
-      <div className="mobile-catalog"><div className="mobile-catalog-toolbar"><CategoryList className="category-list toolbar-chips" categories={categories} active={catalog.category} onChoose={chooseCategory} /><button className="toolbar-filters" aria-label={`Filtros${(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") ? " (ativos)" : ""}`} onClick={() => setMobileView("filters")}><span aria-hidden="true">⚙</span>{(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") && <em aria-hidden="true" />}</button></div>{mobileProducts.length ? <div className="mobile-product-grid">{mobileProducts.map((product, index) => <Fragment key={product.id}><ProductCard product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} featured={index === 0} />{index === 5 && discoveryCategories.length > 0 && <DiscoveryBreak categories={discoveryCategories} onChoose={chooseCategory} />}</Fragment>)}</div> : !isLoading && <EmptyState onClear={clearFilters} />}{mobileHasMore && <button className="mobile-load-more" type="button" disabled={isLoading} onClick={() => void loadMore()}>{isLoading ? "carregando…" : "carregar mais 24"}<span>{mobileProducts.length} de {total} ofertas</span></button>}</div>
+      <div className="desktop-catalog">{shownProducts.length ? <><div className="product-grid">{shownProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} editorialRationale={editorialRationales.get(product.id)} editorialPurchaseContents={editorialContents.get(product.id)} />)}</div>{!showSaved && totalPages > 1 && <CatalogPagination current={catalog.page} total={totalPages} disabled={isLoading} onChange={changePage} />}</> : !isLoading && <EmptyState onClear={clearFilters} saved={showSaved} />}</div>
+      <div className="mobile-catalog"><div className="mobile-catalog-toolbar"><CategoryList className="category-list toolbar-chips" categories={categories} active={catalog.category} onChoose={chooseCategory} /><button className="toolbar-filters" aria-label={`Filtros${(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") ? " (ativos)" : ""}`} onClick={() => setMobileView("filters")}><span aria-hidden="true">⚙</span>{(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") && <em aria-hidden="true" />}</button></div>{mobileProducts.length ? <div className="mobile-product-grid">{mobileProducts.map((product, index) => <Fragment key={product.id}><ProductCard product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} editorialRationale={editorialRationales.get(product.id)} editorialPurchaseContents={editorialContents.get(product.id)} featured={index === 0} />{index === 5 && discoveryCategories.length > 0 && <DiscoveryBreak categories={discoveryCategories} onChoose={chooseCategory} />}</Fragment>)}</div> : !isLoading && <EmptyState onClear={clearFilters} />}{mobileHasMore && <button className="mobile-load-more" type="button" disabled={isLoading} onClick={() => void loadMore()}>{isLoading ? "carregando…" : "carregar mais 24"}<span>{mobileProducts.length} de {total} ofertas</span></button>}</div>
     </section>
 
     <section className="price-radar" aria-label="Como avaliamos os preços"><div><p className="eyebrow">Histórico BizuMiner</p><h2>Desconto chama atenção.<br /><em>Histórico</em> ajuda a decidir.</h2></div><div className="radar-note"><span className="radar-orbit"><i>R$</i></span><p>Registramos o preço em cada captura. Enquanto o acompanhamento ainda é curto, mostramos exatamente quantos registros existem — sem transformar pouca informação em certeza.</p></div></section>
@@ -444,9 +491,9 @@ export default function Vitrine({ initialProducts, initialTotal, initialState, c
     <footer><a className="brand footer-brand" href="#topo" aria-label="BizuMiner, início"><Image src="/brand/bizuminer-icon-dark.svg" alt="" aria-hidden="true" width={30} height={30} className="brand-mark-img" /><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><p>A gente acompanha preços para trazer ofertas que valem a sua atenção.</p><div><a href="#criterios">transparência</a><a href="#vendedores">vendedores</a><a href="mailto:oi@bizuminer.com.br">contato</a></div><small>Alguns links são de afiliado. Podemos receber comissão sem custo adicional para você.</small></footer>
 
     {mobileView === "categories" && <MobilePanel view="categories" title="Categorias" onClose={() => setMobileView("home")}><p className="mobile-panel-intro">Explore por interesse e volte ao feed quando quiser.</p><label className="mobile-panel-search"><span aria-hidden="true">⌕</span><span className="sr-only">Buscar categoria</span><input value={categoryQuery} onChange={(event) => setCategoryQuery(event.target.value)} placeholder="Buscar uma categoria" /></label><div className="mobile-category-cards"><button onClick={() => chooseCategory(null)}><b>Todas as ofertas</b><span>Ver o catálogo completo</span><i>→</i></button>{filteredCategories.map((item) => <button key={item} onClick={() => chooseCategory(item)}><b>{item}</b><span>Ver ofertas monitoradas</span><i>→</i></button>)}</div></MobilePanel>}
-    {mobileView === "saved" && <MobilePanel view="saved" title="Seus salvos" meta={`${favorites.length}`} onClose={() => setMobileView("home")}><p className="mobile-panel-intro">Os seus salvos ficam na conta: na <a href="/minha-area">minha área</a> dá para acompanhar o preço de cada um.</p>{savedProducts.length ? <div className="mobile-product-grid mobile-saved-grid">{savedProducts.map((product) => <ProductCard key={product.id} product={product} favorite onFavorite={toggleFavorite} />)}</div> : <EmptyState onClear={() => setMobileView("home")} saved />}</MobilePanel>}
+    {mobileView === "saved" && <MobilePanel view="saved" title="Seus salvos" meta={`${favorites.length}`} onClose={() => setMobileView("home")}><p className="mobile-panel-intro">Os seus salvos ficam na conta: na <a href="/minha-area">minha área</a> dá para acompanhar o preço de cada um.</p>{savedProducts.length ? <div className="mobile-product-grid mobile-saved-grid">{savedProducts.map((product) => <ProductCard key={product.id} product={product} favorite onFavorite={toggleFavorite} editorialRationale={editorialRationales.get(product.id)} editorialPurchaseContents={editorialContents.get(product.id)} />)}</div> : <EmptyState onClear={() => setMobileView("home")} saved />}</MobilePanel>}
     {mobileView === "filters" && <MobilePanel view="filters" title="Filtros refinados" onClose={() => setMobileView("home")}><div className="mobile-filter-group"><h3>Faixa de preço</h3><div>{priceFilters.map((item) => <button key={item.value} className={catalog.priceBand === item.value ? "active" : ""} onClick={() => { trackInteraction("price_filter"); changeCatalog({ ...catalog, page: 1, priceBand: item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Frescura do preço</h3><div>{freshnessOptions.map((item) => <button key={item.value} className={catalog.freshness === item.value ? "active" : ""} onClick={() => { trackInteraction("freshness_filter"); changeCatalog({ ...catalog, page: 1, freshness: item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Avaliação mínima</h3><div>{ratingOptions.map((item) => <button key={item.value} className={catalog.minRating === item.value ? "active" : ""} onClick={() => { trackInteraction("rating_filter"); changeCatalog({ ...catalog, page: 1, minRating: catalog.minRating === item.value ? null : item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Desconto informado</h3><div>{discountOptions.map((item) => <button key={item.value} className={catalog.minDiscount === item.value ? "active" : ""} onClick={() => { trackInteraction("discount_filter"); changeCatalog({ ...catalog, page: 1, minDiscount: catalog.minDiscount === item.value ? null : item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Confiança BizuMiner</h3><div className="mobile-toggles"><button className={catalog.lowestOnly ? "active" : ""} onClick={() => { trackInteraction("confidence_filter"); changeCatalog({ ...catalog, page: 1, lowestOnly: !catalog.lowestOnly }, "replace", false); }}>menor preço verificado</button><button className={catalog.hasHistory ? "active" : ""} onClick={() => { trackInteraction("confidence_filter"); changeCatalog({ ...catalog, page: 1, hasHistory: !catalog.hasHistory }, "replace", false); }}>com histórico (3+ obs.)</button></div></div><label className="mobile-sort-control"><span>Ordenar por</span><select value={catalog.sort} onChange={(event) => { trackInteraction("sort"); changeCatalog({ ...catalog, page: 1, sort: event.target.value as DealSort }, "replace", false); }}>{sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><button className="mobile-clear-filters" onClick={clearFilters}>limpar filtros</button></MobilePanel>}
-    {mobileView === "guide" && <MobilePanel view="guide" title="Como ler os preços" onClose={() => setMobileView("home")}><p className="mobile-panel-intro">{catalogGuide}</p><ul className="guide-legend"><li><span className="signal-badge verified">menor preço que já vimos</span><p>O preço atual é o menor entre todos os registros que coletamos, e o acompanhamento já é longo o bastante para sustentar a comparação. É o estado mais forte que emitimos.</p></li><li><span className="signal-badge drop">caiu 12% desde o menor que vimos</span><p>O preço caiu abaixo do menor valor que tínhamos registrado. Mede o movimento contra o nosso histórico — não afirma que está barato no mercado.</p></li><li><span className="signal-badge unproven">ainda sem histórico</span><p>Vimos este produto uma vez só. Não há com o que comparar, então trate o desconto do anúncio com cautela extra.</p></li><li><span className="guide-discount">−38% no anúncio</span><p>Desconto informado pelo próprio anúncio no Mercado Livre — é alegação do vendedor, não cálculo nosso.</p></li><li><span className="guide-silence">sem selo</span><p>O preço não se moveu em relação ao que já tínhamos registrado. Silêncio aqui quer dizer que não há novidade — e é por isso que, quando um selo aparece, ele merece atenção.</p></li></ul></MobilePanel>}
+    {mobileView === "guide" && <MobilePanel view="guide" title="Como ler os preços" onClose={() => setMobileView("home")}><p className="mobile-panel-intro">{catalogGuide}</p><ul className="guide-legend"><li><span className="signal-badge verified">menor preço que já vimos</span><p>O preço atual é o menor observado para a mesma configuração confirmada, com pelo menos 3 registros distribuídos em 7 dias. Sem identificar a configuração, mostramos apenas o histórico do anúncio.</p></li><li><span className="signal-badge drop">caiu 12% desde o menor que vimos</span><p>O preço caiu abaixo do menor valor registrado para a mesma configuração confirmada. A comparação usa nosso histórico e não afirma que está barato no mercado.</p></li><li><span className="signal-badge unproven">ainda sem histórico</span><p>Vimos este produto uma vez só. Não há com o que comparar, então trate o desconto do anúncio com cautela extra.</p></li><li><span className="guide-discount">−38% no anúncio</span><p>Desconto informado pelo próprio anúncio no Mercado Livre — é alegação do vendedor, não cálculo nosso.</p></li><li><span className="guide-silence">sem selo</span><p>O preço não se moveu em relação ao que já tínhamos registrado. Silêncio aqui quer dizer que não há novidade — e é por isso que, quando um selo aparece, ele merece atenção.</p></li></ul></MobilePanel>}
     {mobileView === "menu" && <MobilePanel view="menu" title="Menu" onClose={() => setMobileView("home")}><div className="mobile-theme-row"><div><b>Aparência</b><span>Claro ou escuro, do seu jeito</span></div><ThemeToggle className="theme-toggle-wide" withLabel /></div><nav className="mobile-menu-links" aria-label="Menu mobile"><a href="/minha-area"><span>Minha área</span><b>→</b></a>{isUserAdmin && <a href="/admin"><span>⚡ Painel Admin</span><b>→</b></a>}<a href="#achados" onClick={() => setMobileView("home")}><span>Ofertas</span><b>→</b></a><a href="#criterios" onClick={() => setMobileView("home")}><span>Como escolhemos</span><b>→</b></a><a href="#vendedores" onClick={() => setMobileView("home")}><span>Para vendedores</span><b>→</b></a><a href="mailto:oi@bizuminer.com.br"><span>Contato</span><b>↗</b></a></nav></MobilePanel>}
 
     <nav className="mobile-bottom-nav" aria-label="Navegação mobile"><button className={mobileView === "home" ? "active" : ""} aria-current={mobileView === "home" ? "page" : undefined} onClick={() => { setMobileView("home"); document.querySelector("#topo")?.scrollIntoView({ behavior: "smooth" }); }}><span aria-hidden="true">⌂</span><b>Início</b></button><button className={mobileView === "categories" ? "active" : ""} aria-current={mobileView === "categories" ? "page" : undefined} onClick={() => setMobileView("categories")}><span aria-hidden="true">▦</span><b>Categorias</b></button><button className={mobileView === "saved" ? "active" : ""} aria-current={mobileView === "saved" ? "page" : undefined} onClick={() => setMobileView("saved")}><span aria-hidden="true">♡</span><b>Salvos</b>{favorites.length > 0 && <i>{favorites.length}</i>}</button><button className={mobileView === "menu" ? "active" : ""} aria-current={mobileView === "menu" ? "page" : undefined} onClick={() => setMobileView("menu")}><span aria-hidden="true">☰</span><b>Menu</b></button></nav>
@@ -471,7 +518,7 @@ function CatalogPagination({ current, total, disabled, onChange }: { current: nu
   return <nav className="catalog-pagination" aria-label="Paginação das ofertas"><button className="pagination-direction" type="button" disabled={disabled || current === 1} onClick={() => onChange(current - 1)}><span aria-hidden="true">←</span><b>anterior</b></button><div className="pagination-numbers">{items.map((item) => typeof item === "number" ? <button key={item} type="button" className={item === current ? "active" : ""} aria-current={item === current ? "page" : undefined} aria-label={`Ir para a página ${item}`} disabled={disabled} onClick={() => onChange(item)}>{item}</button> : <span key={item} aria-hidden="true">…</span>)}</div><span className="pagination-mobile-status" aria-live="polite">Página {current} de {total}</span><button className="pagination-direction next" type="button" disabled={disabled || current === total} onClick={() => onChange(current + 1)}><b>próxima</b><span aria-hidden="true">→</span></button></nav>;
 }
 
-function ProductCard({ product, favorite, onFavorite, featured = false }: { product: VitrineProduct; favorite: boolean; onFavorite: (product: VitrineProduct) => void; featured?: boolean }) {
+function ProductCard({ product, favorite, onFavorite, editorialRationale, editorialPurchaseContents, featured = false }: { product: VitrineProduct; favorite: boolean; onFavorite: (product: VitrineProduct) => void; editorialRationale?: string; editorialPurchaseContents?: string; featured?: boolean }) {
   const fresh = priceFreshness(product.evidenceObservedAt);
   const highlight = fresh === "current" ? priceHighlight(historyInput(product)) : null;
   const discountPct = fresh === "current" ? discountPercentOf(product) : null;
@@ -481,5 +528,5 @@ function ProductCard({ product, favorite, onFavorite, featured = false }: { prod
   const marketplaceLabel = marketplaceDefinition?.label ?? product.marketplace;
   const ctaLabel = marketplaceDefinition?.ctaLabel ?? `ver na ${marketplaceLabel}`;
   const marketplaceLogo = marketplaceDefinition?.logo;
-  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`}><div className="product-image"><a href={`/bizu/${product.slug}`} aria-label={`Abrir detalhes de ${product.title}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></a>{discountPct !== null && <span className="discount"><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${product.title}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><a href={`/bizu/${product.slug}`}>{product.title}</a></h3><MarketplaceEvidence product={product} /><p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div>{fresh === "current" ? <><small>{product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{brl(product.priceCents)}</strong>{freshness && <em>{freshness}</em>}</> : <span className="stale-price"><strong>{brl(product.priceCents)}</strong><em>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></div><CopyProductLink slug={product.slug} title={product.title} /></article>;
+  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`}><div className="product-image"><a href={`/bizu/${product.slug}`} aria-label={`Abrir detalhes de ${product.title}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></a>{discountPct !== null && <span className="discount"><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${product.title}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><a href={`/bizu/${product.slug}`}>{product.title}</a></h3><MarketplaceEvidence product={product} />{editorialRationale && <p className="product-editorial-rationale">{editorialRationale}</p>}{editorialPurchaseContents && <p className="product-editorial-contents"><b>O que vem:</b> {editorialPurchaseContents}</p>}<p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div>{fresh === "current" ? <><small>{product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{brl(product.priceCents)}</strong>{freshness && <em>{freshness}</em>}</> : <span className="stale-price"><strong>{brl(product.priceCents)}</strong><em>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></div><CopyProductLink slug={product.slug} title={product.title} /></article>;
 }

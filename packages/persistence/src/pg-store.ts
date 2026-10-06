@@ -11,6 +11,7 @@
 import postgres, { type Sql } from "postgres";
 import { RECENT_WINDOW_DAYS, type ActivityCounts } from "./activity.ts";
 import type { ProductFamilyInfo } from "./product-family.ts";
+import type { OfferEvidence } from "../../capture/src/types.ts";
 import type {
   FinishCaptureRunInput,
   OfferStore,
@@ -76,6 +77,7 @@ export class PostgresStore implements OfferStore {
     ratingStar?: number;
     salesLabel?: string;
     salesCount?: number;
+    offerEvidence?: OfferEvidence;
     observedAt: Date;
   }): Promise<UpsertResult> {
     const rows = await this.sql<UpsertRow[]>`
@@ -110,14 +112,15 @@ export class PostgresStore implements OfferStore {
           updated_at = now()
         returning id, (xmax = 0) as is_new
       ), ins as (
-        insert into ${this.sql(this.s)}.price_observation
+        insert into ${this.sql(this.s)}.price_observation as observation
           (id, tenant_id, capture_run_id, product_id, price_cents, original_price_cents,
            claimed_discount_rate, rating_star, sales_label, sales_count, observed_at,
-           title_snapshot, product_url_snapshot, image_url_snapshot, category_snapshot)
+           title_snapshot, product_url_snapshot, image_url_snapshot, category_snapshot, offer_evidence)
         select gen_random_uuid()::text, ${input.tenantId}, ${input.captureRunId}, id, ${input.priceCents},
                ${input.originalPriceCents ?? null}, ${input.claimedDiscountRate ?? null}, ${input.ratingStar ?? null},
                ${input.salesLabel ?? null}, ${input.salesCount ?? null}, ${input.observedAt},
-               ${input.title}, ${input.productUrl}, ${input.imageUrl ?? null}, ${input.category ?? null}
+               ${input.title}, ${input.productUrl}, ${input.imageUrl ?? null}, ${input.category ?? null},
+               ${input.offerEvidence ? this.sql.json({ ...input.offerEvidence }) : null}
         from up
         on conflict (capture_run_id, product_id) do update set
           price_cents = excluded.price_cents,
@@ -130,7 +133,16 @@ export class PostgresStore implements OfferStore {
           title_snapshot = excluded.title_snapshot,
           product_url_snapshot = excluded.product_url_snapshot,
           image_url_snapshot = excluded.image_url_snapshot,
-          category_snapshot = excluded.category_snapshot
+          category_snapshot = excluded.category_snapshot,
+          offer_evidence = case
+            when excluded.offer_evidence is not null then excluded.offer_evidence
+            when observation.title_snapshot is not distinct from excluded.title_snapshot
+             and observation.product_url_snapshot is not distinct from excluded.product_url_snapshot
+             and observation.image_url_snapshot is not distinct from excluded.image_url_snapshot
+             and observation.category_snapshot is not distinct from excluded.category_snapshot
+             and observation.price_cents = excluded.price_cents then observation.offer_evidence
+            else null
+          end
       )
       select up.id, up.is_new, prev.last_price_cents as previous_price_cents
       from up left join prev on true
@@ -193,11 +205,11 @@ export class PostgresStore implements OfferStore {
 
   async latestObservation(productId: string): Promise<PriceObservationRecord | null> {
     const rows = await this.sql<
-      { capture_run_id: string | null; price_cents: number; original_price_cents: number | null; claimed_discount_rate: number | null; rating_star: number | null; sales_label: string | null; sales_count: number | null; observed_at: Date; title_snapshot: string | null; product_url_snapshot: string | null; image_url_snapshot: string | null; category_snapshot: string | null }[]
+      { capture_run_id: string | null; price_cents: number; original_price_cents: number | null; claimed_discount_rate: number | null; rating_star: number | null; sales_label: string | null; sales_count: number | null; observed_at: Date; title_snapshot: string | null; product_url_snapshot: string | null; image_url_snapshot: string | null; category_snapshot: string | null; offer_evidence: OfferEvidence | null }[]
     >`
       select capture_run_id, price_cents, original_price_cents, claimed_discount_rate,
              rating_star, sales_label, sales_count, observed_at,
-             title_snapshot, product_url_snapshot, image_url_snapshot, category_snapshot
+             title_snapshot, product_url_snapshot, image_url_snapshot, category_snapshot, offer_evidence
       from ${this.sql(this.s)}.price_observation
       where product_id = ${productId}
       order by observed_at desc
@@ -214,6 +226,7 @@ export class PostgresStore implements OfferStore {
           ratingStar: row.rating_star ?? undefined,
           salesLabel: row.sales_label ?? undefined,
           salesCount: row.sales_count ?? undefined,
+          offerEvidence: row.offer_evidence ?? undefined,
           observedAt: row.observed_at,
           titleSnapshot: row.title_snapshot ?? "",
           productUrlSnapshot: row.product_url_snapshot ?? "",

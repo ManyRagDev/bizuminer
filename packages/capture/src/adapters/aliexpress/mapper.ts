@@ -162,6 +162,16 @@ export function mapProductNodes(
       // Shopee. Converter seria inventar equivalência que a loja não afirma —
       // e o produto inteiro se sustenta em não afirmar o que não se mediu.
       salesCount,
+      offerEvidence: {
+        version: 1,
+        source: {
+          marketplace: MARKETPLACE,
+          method: "official_api",
+          url: node.product_detail_url?.trim() || productUrl,
+          capturedAt: capturedAt.toISOString(),
+        },
+        positiveReviewRate: percentToRate(node.evaluate_rate),
+      },
       capturedAt,
       source: "official_api",
       raw: node,

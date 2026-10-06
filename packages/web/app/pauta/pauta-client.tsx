@@ -9,6 +9,10 @@ import { copyToClipboard } from "../../lib/clipboard";
 
 interface PautaProduct extends VitrineProduct {
   shareUrl: string;
+  editorialRationale: string;
+  editorialPurchaseContents: string;
+  editorialContext?: string | null;
+  isHeroHighlight?: boolean;
 }
 
 const brl = (cents: number) =>
@@ -19,6 +23,9 @@ const brl = (cents: number) =>
   });
 
 const STORAGE_KEY = "bm_pauta_copied";
+const localDay = () => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+}).format(new Date());
 
 function readDoneIds(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -26,7 +33,7 @@ function readDoneIds(): Set<string> {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return new Set();
     const data = JSON.parse(raw) as { date: string; ids: string[] };
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDay();
     if (data.date !== today) return new Set();
     return new Set(data.ids);
   } catch {
@@ -35,7 +42,7 @@ function readDoneIds(): Set<string> {
 }
 
 function writeDoneId(id: string) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDay();
   const existing = readDoneIds();
   existing.add(id);
   localStorage.setItem(
@@ -57,6 +64,12 @@ export default function PautaClient({
   const [products, setProducts] = useState<PautaProduct[]>([]);
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [selectionMode, setSelectionMode] = useState("unavailable");
+  const [selectionVersion, setSelectionVersion] = useState<number | null>(null);
+  const [selectionValidUntil, setSelectionValidUntil] = useState<string | null>(null);
+  const [heroValidUntil, setHeroValidUntil] = useState<string | null>(null);
+  const [heroBadgeCurrent, setHeroBadgeCurrent] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(true);
   const [activeTab, setActiveTab] = useState<"local" | "production">(
@@ -73,14 +86,51 @@ export default function PautaClient({
 
   useEffect(() => {
     setDoneIds(readDoneIds());
-    void fetch("/api/pauta")
-      .then((r) => r.json() as Promise<{ products: PautaProduct[] }>)
-      .then((data) => {
+    const controller = new AbortController();
+    let checking = false;
+    const load = async () => {
+      if (document.visibilityState === "hidden" || checking) return;
+      checking = true;
+      try {
+        const response = await fetch("/api/pauta", { cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error("pauta_failed");
+        const data = await response.json() as { products: PautaProduct[]; selectionMode: string; selectionVersion: number | null; validUntil: string | null; heroValidUntil: string | null };
+        if (controller.signal.aborted) return;
         setProducts(data.products);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+        setSelectionMode(data.selectionMode);
+        setSelectionVersion(data.selectionVersion);
+        setSelectionValidUntil(data.validUntil);
+        setHeroValidUntil(data.heroValidUntil);
+        setHeroBadgeCurrent(data.heroValidUntil !== null && Date.parse(data.heroValidUntil) > Date.now());
+        setLoadError("");
+      } catch {
+        if (!controller.signal.aborted) setLoadError("Não foi possível carregar a seleção. Atualize a página para tentar novamente.");
+      } finally { checking = false; if (!controller.signal.aborted) setLoading(false); }
+    };
+    void load();
+    const timer = window.setInterval(() => { void load(); }, 60_000);
+    const onVisible = () => { void load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      controller.abort(); window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
   }, []);
+
+  useEffect(() => {
+    const deadline = heroValidUntil ? Date.parse(heroValidUntil) : NaN;
+    if (!Number.isFinite(deadline)) return;
+    const timer = window.setTimeout(() => setHeroBadgeCurrent(false), Math.max(0, deadline - Date.now() + 50));
+    return () => window.clearTimeout(timer);
+  }, [heroValidUntil]);
+  useEffect(() => {
+    const deadline = selectionValidUntil ? Date.parse(selectionValidUntil) : NaN;
+    if (!Number.isFinite(deadline)) return;
+    const timer = window.setTimeout(() => { setProducts([]); setHeroBadgeCurrent(false); }, Math.max(0, deadline - Date.now() + 50));
+    return () => window.clearTimeout(timer);
+  }, [selectionValidUntil]);
 
   async function copyLink(product: PautaProduct) {
     const ok = await copyToClipboard(product.shareUrl);
@@ -132,6 +182,10 @@ export default function PautaClient({
             {done.length}/{products.length} links copiados neste aparelho
           </span>
         </div>
+        <p className="pauta-selection-note">
+          {selectionMode === "catalog" ? "Melhores disponíveis no catálogo aprovado, compartilhados com a página inicial" : "Seleção editorial compartilhada com a página inicial"}{selectionVersion !== null ? ` · versão ${selectionVersion}` : ""}.
+          Copiar um link não confirma divulgação.
+        </p>
         <div className="pauta-progress">
           <div
             className="pauta-progress-bar"
@@ -219,8 +273,9 @@ export default function PautaClient({
 
       {loading && <p className="pauta-loading">Carregando pauta…</p>}
 
-      {!loading && products.length === 0 && (
-        <p className="pauta-empty">Nenhum produto na pauta hoje.</p>
+      {loadError && <p className="pauta-empty" role="alert">{loadError}</p>}
+      {!loading && !loadError && products.length === 0 && (
+        <p className="pauta-empty">Nenhum destaque válido para divulgação agora. Confira os produtos e a seleção na curadoria.</p>
       )}
 
       {done.length > 0 && (
@@ -269,6 +324,10 @@ export default function PautaClient({
                       <span className="pauta-card-signal">PRÓXIMO</span>
                     )}
                     <h3>{product.title}</h3>
+                    <p className="pauta-editorial-rationale">{product.editorialRationale}</p>
+                    {product.isHeroHighlight && heroBadgeCurrent && <span className="pauta-card-signal">DESTAQUE DA HERO</span>}
+                    {product.editorialPurchaseContents && <p className="pauta-editorial-contents"><b>O que vem:</b> {product.editorialPurchaseContents}</p>}
+                    {product.editorialContext && <p className="pauta-editorial-context">{product.editorialContext}</p>}
                     <div className="pauta-card-meta">
                       <strong>{brl(product.priceCents)}</strong>
                       {mp && <span>{mp.stampLabel}</span>}

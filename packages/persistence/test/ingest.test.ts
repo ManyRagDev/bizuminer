@@ -13,6 +13,7 @@ import type {
   Credential,
   FetchParams,
   OfferPage,
+  OfferEvidence,
   RawOffer,
 } from "../../capture/src/types.ts";
 import { paginate } from "../../capture/src/types.ts";
@@ -71,6 +72,67 @@ function fakeAdapter(pages: RawOffer[][], marketplace = "mercadolivre"): Capture
 }
 
 describe("sweep", () => {
+  const evidence: OfferEvidence = {
+    version: 1 as const,
+    source: {
+      marketplace: "mercadolivre", method: "http_html" as const,
+      url: "https://www.mercadolivre.com.br/p/MLB1",
+      capturedAt: "2026-08-18T12:00:00.000Z",
+    },
+    variantKey: "one-bag", packageContents: ["1 saco organizador sem cobertor"],
+    packageQuantity: 1, dimensions: "60 × 40 × 35 cm", reviewCount: 120,
+  };
+
+  it("transporta evidência estruturada até a observação sem inferir campos ausentes", async () => {
+    const store = new InMemoryStore();
+    await sweep(fakeAdapter([[offer({ offerEvidence: evidence })]]), cred, store, { tenantId: "t1" }, ctx);
+    const observation = await store.latestObservation(store.allProducts[0]!.id);
+    assert.deepEqual(observation?.offerEvidence, evidence);
+    assert.equal(observation?.offerEvidence?.description, undefined);
+    assert.equal(observation?.offerEvidence?.positiveReviewRate, undefined);
+  });
+
+  it("repetição incompleta da mesma oferta na mesma execução conserva evidência", async () => {
+    const store = new InMemoryStore();
+    await sweep(fakeAdapter([[offer({ offerEvidence: evidence }), offer({})]]), cred, store, { tenantId: "t1" }, ctx);
+    const product = store.allProducts[0]!;
+    assert.deepEqual((await store.latestObservation(product.id))?.offerEvidence, evidence);
+    assert.equal((await store.priceRange(product.id))?.observations, 1);
+  });
+
+  it("mudança de título, URL, imagem ou preço não herda evidência anterior", async () => {
+    for (const changed of [
+      { title: "Kit com 3 sacos" },
+      { productUrl: "https://www.mercadolivre.com.br/p/MLB1?variant=kit" },
+      { priceCents: 25000 },
+      { imageUrl: "https://example.com/kit-de-tres.jpg" },
+    ]) {
+      const store = new InMemoryStore();
+      await sweep(fakeAdapter([[offer({ offerEvidence: evidence }), offer(changed)]]), cred, store, { tenantId: "t1" }, ctx);
+      assert.equal((await store.latestObservation(store.allProducts[0]!.id))?.offerEvidence, undefined);
+    }
+  });
+
+  it("mudança de categoria na repetição invalida evidência mesmo com título e preço iguais", async () => {
+    const store = new InMemoryStore();
+    const input = {
+      captureRunId: "same-run", tenantId: "t1", marketplace: "mercadolivre", externalId: "MLB1",
+      title: "Produto", productUrl: "https://www.mercadolivre.com.br/p/MLB1", priceCents: 10000,
+      category: "Casa", observedAt: new Date("2026-08-18T12:00:00Z"),
+    };
+    const { product } = await store.upsertProductWithObservation({ ...input, offerEvidence: evidence });
+    await store.upsertProductWithObservation({ ...input, category: "Tecnologia" });
+    assert.equal((await store.latestObservation(product.id))?.offerEvidence, undefined);
+  });
+
+  it("nova captura sem evidências preserva desconhecido, sem copiar afirmações antigas", async () => {
+    const store = new InMemoryStore();
+    await sweep(fakeAdapter([[offer({ offerEvidence: evidence })]]), cred, store, { tenantId: "t1" }, ctx);
+    await sweep(fakeAdapter([[offer({})]]), cred, store, { tenantId: "t1" }, ctx);
+    assert.equal((await store.latestObservation(store.allProducts[0]!.id))?.offerEvidence, undefined);
+    assert.equal((await store.priceRange(store.allProducts[0]!.id))?.observations, 2);
+  });
+
   it("persiste produtos e observações, conta novos e mudanças de preço", async () => {
     const store = new InMemoryStore();
     const adapter = fakeAdapter([
