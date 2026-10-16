@@ -734,10 +734,10 @@
     {
       "phase": "scoped_cutover",
       "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
-      "sha256": "1114987e4108745492af6c3457ec6850a999ed16be79d815d001c4b156669a21",
+      "sha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597",
       "lockTimeout": "5s",
       "statementTimeout": "45s",
-      "manualTransactionSha256": "c7719a418e873a04afdc8cf2faa5d7eda8690fdd3d4204c557b042889d7a3857",
+      "manualTransactionSha256": "a302de9d3d656bce934815326aa92a1213d3e845ffceb24924098230b9572581",
       "transactionRequired": true,
       "dependsOn": [
         "expansion"
