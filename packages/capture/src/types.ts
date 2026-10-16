@@ -21,13 +21,46 @@ export type CaptureSource = "official_api" | "http_json" | "http_html" | "browse
 /** Marketplace identificado por slug estável. Nunca use enum — ver README. */
 export type MarketplaceSlug = string;
 
+export type PriceType = "exact" | "from" | "range" | "unknown";
+export type VariantIdentityState = "source_verified" | "human_verified" | "inferred" | "unknown";
+export type FieldStateKind = "observed" | "source_claimed" | "absent" | "not_applicable";
+export type OriginalPriceKind = "source_claimed" | "derived_from_claim" | "unknown";
+export type ImageRightsStatus = "allowed" | "unknown" | "restricted";
+
+export interface VariantIdentity {
+  readonly state: VariantIdentityState;
+  readonly key?: string;
+  readonly attributes?: Readonly<Record<string, string>>;
+  readonly methodVersion?: string;
+  readonly sourceRefs?: readonly string[];
+}
+
+export interface OfferConditions {
+  readonly quantity?: number;
+  readonly payment?: string;
+  readonly shipping?: string;
+  readonly coupon?: string;
+  readonly region?: string;
+}
+
+export interface CommissionEstimate {
+  readonly rate?: number;
+  readonly cents?: number;
+  readonly sourceRef?: string;
+  readonly observedAt?: string;
+}
+
+export interface ImageRights {
+  readonly status: ImageRightsStatus;
+  readonly sourceRef?: string;
+  readonly scope?: string;
+  readonly expiresAt?: string;
+}
+
 /**
- * Evidências explicitamente fornecidas pela fonte, sem inferência do título.
- * Ausência significa desconhecido; não equivale a zero, pacote vazio ou
- * variante única. Strings preservam a descrição da fonte, sem padronização
- * que possa mudar o significado. Datas ISO permitem persistência em JSON.
+ * Evidências explicitamente fornecidas pela fonte (v1 legado).
  */
-export interface OfferEvidence {
+export interface OfferEvidenceV1 {
   readonly version: 1;
   readonly source: {
     readonly marketplace: MarketplaceSlug;
@@ -49,6 +82,40 @@ export interface OfferEvidence {
   readonly priceMinCents?: number;
   readonly priceMaxCents?: number;
 }
+
+/**
+ * Evidências explicitamente fornecidas pela fonte (v2 canônico C-02).
+ */
+export interface OfferEvidenceV2 {
+  readonly version: 2;
+  readonly source: {
+    readonly marketplace: MarketplaceSlug;
+    readonly method: CaptureSource;
+    readonly url: string;
+    readonly capturedAt: string;
+  };
+  readonly currency?: string;
+  readonly sellerId?: string;
+  readonly priceType?: PriceType;
+  readonly description?: string;
+  readonly variantKey?: string;
+  readonly variantLabel?: string;
+  readonly variantIdentity?: VariantIdentity;
+  readonly conditions?: OfferConditions;
+  readonly fieldStates?: Readonly<Record<string, FieldStateKind>>;
+  readonly originalPriceKind?: OriginalPriceKind;
+  readonly commissionEstimate?: CommissionEstimate;
+  readonly imageRights?: ImageRights;
+  readonly packageContents?: readonly string[];
+  readonly packageQuantity?: number;
+  readonly dimensions?: string;
+  readonly reviewCount?: number;
+  readonly positiveReviewRate?: number;
+  readonly priceMinCents?: number;
+  readonly priceMaxCents?: number;
+}
+
+export type OfferEvidence = OfferEvidenceV1 | OfferEvidenceV2;
 
 /**
  * Credencial de um marketplace. O formato varia por adapter, então o núcleo

@@ -47,4 +47,9 @@ describe("extractCard", () => {
     const card = extractCard(html)!;
     assert.equal(card.originalPriceCents, undefined);
   });
+
+  it("rejeita preço em faixa ('a partir de') para não virar preço exato", () => {
+    const html = CARD.replace("aria-label=\"137 reais\"", "aria-label=\"A partir de 137 reais\"");
+    assert.equal(extractCard(html), null);
+  });
 });

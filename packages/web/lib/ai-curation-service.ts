@@ -4,6 +4,13 @@ import {
   type AICurationItemInput,
   type AICurationItemOutput,
 } from "./ai-curation-contract.ts";
+import {
+  rubricShadowResponseSchema,
+  type RubricAssessment,
+  type RubricInputItem,
+  validateRubricAssessment,
+} from "./rubric-contract.ts";
+import { calculateRubricInputDigest } from "./rubric-db.ts";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 export const AI_CURATION_BATCH_SIZE = 25;
@@ -142,7 +149,10 @@ DIRETRIZES DE AVALIAÇÃO:
    - 'novidade': produtos curiosos, virais, presentes ou gadgets divertidos.
    - 'peca_chata': cabos genéricos sem diferencial, porcas, parafusos, mangueiras e peças de reposição.
    - 'outro': o que não se enquadrar nos anteriores.
-5. Justificativa (justification):
+5. Preço promocional e referência verificada:
+   - Um preço atual muito baixo não torna o produto sem valor. Quando houver verifiedPriceReference, ela informa o menor preço ANTERIOR observado da mesma configuração, não um preço riscado declarado pelo vendedor.
+   - Essa referência permite avaliar uma promoção abaixo do piso; não comprova qualidade, não garante aprovação e não substitui utilidade, segurança ou clareza da compra.
+6. Justificativa (justification):
    - Frase concisa e comercial (1 a 2 sentenças, máx 150 caracteres) sintetizando o apelo do produto para o curador.`;
 
 export interface EvaluationOptions {
@@ -275,4 +285,60 @@ export async function evaluateProductsBatch(
   }
 
   return results;
+}
+
+export async function evaluateRubricShadowItem(
+  item: RubricInputItem,
+  options?: { apiKey?: string; modelName?: string },
+): Promise<RubricAssessment> {
+  const apiKey = options?.apiKey ?? process.env.GEMINI_API_KEY;
+  const modelName = options?.modelName ?? process.env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL;
+  const digest = calculateRubricInputDigest(item);
+
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY ausente para avaliação de rubrica shadow.");
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: rubricShadowResponseSchema,
+      temperature: 0.1,
+    },
+    systemInstruction: `Você é o avaliador editorial de achadinhos do BizuMiner.
+Avalie o produto de forma estritamente factual com base nas dimensões:
+1. Qualidade física/utilidade (weak, adequate, strong, unknown)
+2. Valor/preço diante de alternativas (weak, adequate, strong, unknown)
+3. Aderência ao público consumidor (weak, adequate, strong, unknown)
+4. Confiança da evidência (weak, adequate, strong, unknown)
+Separe estritamente:
+- factsUsed: fatos explicitamente informados no anúncio
+- inferences: o que você deduziu mas não foi explicitamente dito
+- unknowns: o que não dá para saber pelo anúncio
+- safetyFlags: riscos evidentes (armas, adulto, promessa milagrosa, etc.)`,
+  });
+
+  const prompt = `Avalie o produto:\n${JSON.stringify(item, null, 2)}`;
+  const response = await model.generateContent(prompt);
+  const text = response.response.text();
+  const parsed = JSON.parse(text);
+
+  return validateRubricAssessment({
+    schemaVersion: 2,
+    quality: parsed.quality,
+    value: parsed.value,
+    audience: parsed.audience,
+    evidenceConfidence: parsed.evidenceConfidence,
+    factsUsed: parsed.factsUsed,
+    inferences: parsed.inferences,
+    unknowns: parsed.unknowns,
+    safetyFlags: parsed.safetyFlags,
+    policyVersion: "1.0.0",
+    modelVersion: modelName,
+    promptVersion: "rubric-v2-shadow",
+    evidenceDigest: digest,
+    createdAt: new Date().toISOString(),
+  });
 }

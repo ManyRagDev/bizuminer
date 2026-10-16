@@ -2,8 +2,9 @@
  * Captura de ofertas da página pública de Ofertas do Mercado Livre.
  *
  * A página https://www.mercadolivre.com.br/ofertas é renderizada no
- * servidor: um fetch simples devolve ~44 cards com título, preço, desconto
- * e o href real do produto. É a fonte de descoberta de produtos do ML.
+ * servidor, mas em 10/10/2026 o fetch deste coletor foi redirecionado para
+ * verificação de acesso. O executor tenta esta captura automaticamente;
+ * uma verificação confirmada habilita a contingência pelo navegador.
  *
  * Duas regras de ouro (ver docs/tecnico/mercadolivre-engenharia-reversa.md):
  *
@@ -148,13 +149,22 @@ function parseCard(chunk: string, capturedAt: Date): RawOffer | null {
 
   // externalId: o anúncio real. Em card de catálogo (/p/MLB...?wid=MLB...),
   // o item real vem em wid=; na vitrine e em anúncio direto, o ID está no path.
-  const externalId = url.searchParams.get("wid") ?? url.pathname.match(/(MLB\d{6,})/)?.[1];
+  if (url.protocol !== "https:" || !["www.mercadolivre.com.br", "produto.mercadolivre.com.br"].includes(url.hostname)) return null;
+  const fragment = new URLSearchParams(url.hash.slice(1));
+  const candidates = [
+    url.searchParams.get("wid"),
+    fragment.get("wid"),
+    url.searchParams.get("pdp_filters")?.match(/(?:^|[|,])item_id:(MLB\d{6,})(?:$|[|,])/)?.[1],
+    // A catalog ID identifies a product group, not the actual listing.
+    !url.pathname.includes("/p/") ? url.pathname.match(/(?:^|\/)MLB-?(\d{6,})(?:[-/]|$)/)?.[1]?.replace(/^(\d)/, "MLB$1") : undefined,
+  ];
+  const externalId = candidates.find((id) => id && /^MLB\d{6,}$/.test(id));
   if (!externalId) return null;
 
   // O query do card é tracking interno do ML (pdp_filters, position) e o
-  // fragment carrega deal_print_id — limpamos ambos; a afiliação adiciona
-  // os parâmetros dela em cima do path limpo.
-  const productUrl = `${url.origin}${url.pathname}`;
+  // fragment carrega tracking e pode carregar o anúncio real em wid.
+  // Preservamos esse anúncio em catálogo e removemos só o tracking.
+  const productUrl = `${url.origin}${url.pathname}${url.pathname.includes("/p/") ? `?wid=${externalId}` : ""}`;
 
   // Preço atual: dentro de poly-price__current (preço à vista/Pix). O
   // primeiro aria-label "N reais" a partir daquele índice é o preço atual —
@@ -346,14 +356,19 @@ export class MercadoLivreDealsAdapter implements CaptureAdapter {
         }
 
         const html = await response.text();
+        const finalPath = response.url ? new URL(response.url).pathname : "";
+        if (/\/gz\/account-verification|\/(?:login|registration)(?:\/|$)/.test(finalPath) ||
+            (/Para continuar/i.test(html) && /acesse[\s\S]{0,80}(?:sua[\s\S]{0,20})?conta/i.test(html) && !html.includes("poly-card--grid-card"))) {
+          throw new CaptureError({ kind: "auth", marketplace: ML_MARKETPLACE,
+            message: "Mercado Livre restringiu o acesso do coletor automático com uma verificação de conta" });
+        }
         const offers = parseDealsHtml(html);
         if (offers.length === 0 && page === 1) {
-          // Primeira página sem nenhum card parseável é sinal forte de
-          // mudança de layout — melhor gritar do que capturar zero em silêncio.
+          // Zero cards alone does not establish a layout change.
           throw new CaptureError({
             kind: "malformed_response",
             marketplace: ML_MARKETPLACE,
-            message: "nenhuma oferta extraída da página de ofertas — layout mudou?",
+            message: "listagem do Mercado Livre recebida sem ofertas reconhecíveis",
           });
         }
         return { offers };

@@ -19,6 +19,8 @@
  */
 
 import { db } from "./db.ts";
+import { currentAccount } from "./account-scope.ts";
+import { withAccountDb } from "./tenant-db.ts";
 
 export const MANUAL_BLOCK_VERSION = "BM1";
 
@@ -181,6 +183,7 @@ export async function persistManualCapture(
   payload: ManualCapturePayload,
   appUserId: string,
   tenantId = "local",
+  factory: typeof db=db,
 ): Promise<ManualCaptureResult> {
   const capturedAt = new Date(payload.c);
   const originalPriceCents =
@@ -188,8 +191,9 @@ export async function persistManualCapture(
   const claimedDiscountRate =
     originalPriceCents !== null ? 1 - payload.p / originalPriceCents : null;
 
-  const sql = db();
-  try {
+  const context=currentAccount();
+  if(!context || context.actor!=='human' || context.actorAppUserId!==appUserId || context.tenantId!==tenantId)throw new Error('affiliate_access_required');
+  return withAccountDb(context, async sql => {
     const rows = await sql<{
       id: string;
       is_new: boolean;
@@ -205,7 +209,7 @@ export async function persistManualCapture(
          and a.status = 'active'
         where aur.app_user_id = ${appUserId}
           and aur.role = 'afiliado'::garimpa.app_role
-          and aur.revoked_at is null
+          and aur.revoked_at is null and am.revoked_at is null
         limit 1
       ), prev as (
         select id, last_price_cents
@@ -256,7 +260,5 @@ export async function persistManualCapture(
       previousPriceCents: row.previous_price_cents,
       capturedAt,
     };
-  } finally {
-    await sql.end();
-  }
+  }, factory);
 }

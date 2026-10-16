@@ -1,3 +1,6 @@
+import { retiredLegacyMaintenance } from '../src/maintenance-cli.ts';
+retiredLegacyMaintenance('verify-tenant-isolation');
+
 /**
  * Verificação derivada de isolamento por tenant (E2, regra da evidência).
  *

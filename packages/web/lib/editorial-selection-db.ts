@@ -1,3 +1,4 @@
+import { scopedTenantId } from "./account-scope.ts";
 import { sameOfferConfigurationSql } from "./offer-history.ts";
 import { db } from "./db.ts";
 import { productSlug } from "./marketplaces.ts";
@@ -75,7 +76,7 @@ function toAssessment(row: AssessmentRow): EditorialAssessment {
 async function latestAssessments(sql: QueryClient, tenantId: string): Promise<Map<string, EditorialAssessment>> {
   const rows = await sql.unsafe<AssessmentRow[]>(`select distinct on (product_id)
     id, product_id, assessment, snapshot, policy_version, created_at from garimpa.editorial_assessment
-    where tenant_id=$1 order by product_id, created_at desc, id desc`, [tenantId]);
+    where tenant_id=$1 and coalesce(assessment->>'schemaVersion','1')<>'2' order by product_id, created_at desc, id desc`, [tenantId]);
   return new Map(rows.map((row) => [row.product_id, toAssessment(row)]));
 }
 
@@ -114,7 +115,7 @@ function highlightDeadline(candidates: EditorialCandidate[], editionValidUntil?:
   ]))).toISOString();
 }
 
-export async function getEditorialSelectionDesk(tenantId = "local", sqlFactory: typeof db = db): Promise<{
+export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<{
   schemaReady: boolean; selection: EditorialSelection | null; candidates: EditorialCandidate[]; catalogHeroActive: boolean;
 }> {
   if (!process.env.DATABASE_URL) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false };
@@ -123,6 +124,7 @@ export async function getEditorialSelectionDesk(tenantId = "local", sqlFactory: 
     if (!await editorialSelectionSchemaReady(sql)) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false };
     // One repeatable snapshot for desk state and optimistic version.
     return await sql.begin("isolation level repeatable read read only", async (tx) => {
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       const selection = await readSelection(tx, tenantId);
       const assessments = await latestAssessments(tx, tenantId);
       const rows = await candidateRows(tx, tenantId);
@@ -132,7 +134,7 @@ export async function getEditorialSelectionDesk(tenantId = "local", sqlFactory: 
   } finally { await sql.end(); }
 }
 
-export async function saveEditorialAssessment(input: EditorialAssessmentInput, reviewerId: string, tenantId = "local", sqlFactory: typeof db = db):
+export async function saveEditorialAssessment(input: EditorialAssessmentInput, reviewerId: string, tenantId = scopedTenantId(), sqlFactory: typeof db = db):
 Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: string }> {
   const validated = validateEditorialAssessment(input);
   if (!validated.ok) return validated;
@@ -141,7 +143,9 @@ Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: stri
   try {
     if (!await editorialSelectionSchemaReady(sql)) return { ok: false, error: "migration_required" };
     return await sql.begin(async (tx) => {
-      const actors = await tx`select id from garimpa.app_user where id=${reviewerId} and tenant_id=${tenantId}`;
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
+      const [columns]=await tx`select exists(select 1 from information_schema.columns where table_schema='garimpa' and table_name='affiliate_membership' and column_name='revoked_at') as revocation`;
+      const actors = await tx`select m.app_user_id as id from garimpa.affiliate_membership m join garimpa.affiliate_account a on a.id=m.affiliate_id where m.app_user_id=${reviewerId} and a.tenant_id=${tenantId} and ${tx.unsafe(columns?.revocation?"m.revoked_at is null":"true")}`;
       if (!actors.length) return { ok: false as const, error: "forbidden" };
       await tx`select id from garimpa.product where id=${validated.value.productId} and tenant_id=${tenantId} for no key update`;
       const rows = await candidateRows(tx, tenantId, [validated.value.productId]);
@@ -159,7 +163,7 @@ Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: stri
   } finally { await sql.end(); }
 }
 
-export async function replaceEditorialSelection(input: ReplaceEditorialSelectionInput, reviewerId: string, tenantId = "local", sqlFactory: typeof db = db):
+export async function replaceEditorialSelection(input: ReplaceEditorialSelectionInput, reviewerId: string, tenantId = scopedTenantId(), sqlFactory: typeof db = db):
 Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string }> {
   const validated = validateEditorialSelection(input);
   if (!validated.ok) return validated;
@@ -168,8 +172,10 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
   try {
     if (!await editorialSelectionSchemaReady(sql)) return { ok: false, error: "migration_required" };
     return await sql.begin(async (tx) => {
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       await tx`select pg_advisory_xact_lock(hashtextextended(${`editorial-selection:${tenantId}`}, 0))`;
-      const actors = await tx`select id from garimpa.app_user where id=${reviewerId} and tenant_id=${tenantId}`;
+      const [columns]=await tx`select exists(select 1 from information_schema.columns where table_schema='garimpa' and table_name='affiliate_membership' and column_name='revoked_at') as revocation`;
+      const actors = await tx`select m.app_user_id as id from garimpa.affiliate_membership m join garimpa.affiliate_account a on a.id=m.affiliate_id where m.app_user_id=${reviewerId} and a.tenant_id=${tenantId} and ${tx.unsafe(columns?.revocation?"m.revoked_at is null":"true")}`;
       if (!actors.length) return { ok: false as const, error: "forbidden" };
       const current = await readSelection(tx, tenantId);
       if ((current?.version ?? null) !== validated.value.expectedVersion) return { ok: false as const, error: "selection_conflict" };
@@ -213,13 +219,14 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
   } finally { await sql.end(); }
 }
 
-export async function getPublishedEditorialSelection(destination: EditorialDestination | "all", tenantId = "local", sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
+export async function getPublishedEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
   const empty: PublishedEditorialSelection = { mode: "unavailable", schemaReady: false, id: null, version: null, validUntil: null, products: [], heroProductIds: [], heroValidUntil: null };
   if (!process.env.DATABASE_URL) return empty;
   const sql = sqlFactory();
   try {
     if (!await editorialSelectionSchemaReady(sql)) return empty;
     return await sql.begin("isolation level repeatable read read only", async (tx) => {
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       const selection = await readSelection(tx, tenantId);
       const now = new Date();
       if (!selection) {
@@ -275,7 +282,7 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
   } finally { await sql.end(); }
 }
 
-export async function getEditorialProductPresentation(productId: string, tenantId = "local") {
+export async function getEditorialProductPresentation(productId: string, tenantId = scopedTenantId()) {
   const selection = await getPublishedEditorialSelection("all", tenantId);
   return selection.products.find((product) => product.id === productId) ?? null;
 }

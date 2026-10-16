@@ -28,10 +28,10 @@ import { shortCodeForSlug } from "./short-link-db.ts";
  * igual, e o prefixo custaria 12 caracteres na exibição — justamente o que
  * estamos tentando economizar.
  */
-export async function storyShareUrl(slug: string): Promise<string> {
-  const code = await shortCodeForSlug(slug);
+export async function storyShareUrl(slug: string, code?: string): Promise<string> {
+  const resolvedCode = code ?? (await shortCodeForSlug(slug));
   const host = shareBaseUrl().replace(/^https?:\/\//, "").replace(/^www\./, "");
-  return `${host}/p/${code}`;
+  return `${host}/p/${resolvedCode}`;
 }
 
 /**
@@ -41,8 +41,8 @@ export async function storyShareUrl(slug: string): Promise<string> {
  * o que o card de preview NÃO consegue transmitir sozinho. Tudo o mais que
  * daria para escrever aqui, a imagem já disse melhor.
  */
-export async function storyCaption(slug: string): Promise<string> {
-  return `acabou rápido → ${await storyShareUrl(slug)}`;
+export async function storyCaption(slug: string, code?: string): Promise<string> {
+  return `acabou rápido → ${await storyShareUrl(slug, code)}`;
 }
 
 /**

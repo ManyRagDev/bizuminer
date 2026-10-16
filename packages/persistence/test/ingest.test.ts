@@ -304,3 +304,13 @@ describe("sweep", () => {
     assert.equal(store.allProducts.some((product) => product.externalId === "CASA1"), false);
   });
 });
+
+// Regression: finishing a non-house run must keep its selected tenant under RLS.
+it('sweep forwards tenant to capture completion, including an empty source', async()=>{
+ const store=new InMemoryStore();
+ const original=store.finishCaptureRun.bind(store);
+ let completedTenant:string|undefined;
+ store.finishCaptureRun=async(id,input)=>{completedTenant=input.tenantId;await original(id,input);};
+ await sweep(fakeAdapter([]),cred,store,{tenantId:'tenant_b',maxPages:1},ctx);
+ assert.equal(completedTenant,'tenant_b');
+});

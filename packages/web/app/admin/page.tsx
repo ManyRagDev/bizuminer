@@ -1,3 +1,5 @@
+import { pageAccount } from "../../lib/page-account.ts";
+import { inAccountScope, scopedTenantId, currentAccount } from "../../lib/account-scope.ts";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
@@ -8,9 +10,10 @@ import { bookmarkletCompiles, bookmarkletHref } from "../../lib/bookmarklet";
 import { captureEnabled } from "../../lib/platform-gates";
 import { marketplaceCounts } from "../../lib/db";
 import { MARKETPLACES } from "../../lib/marketplaces";
-import { curationDecisionLoad, curationSummary, dailySuggestedCandidates } from "../../lib/curation-db";
-import { formatDecisionLoad } from "../../lib/curation-contract";
-import { getDailyAuditProgress, getEditorialGuideline } from "../../lib/editorial-compass";
+import { curationSummary } from "../../lib/curation-db";
+import { getAuditDesk, getEditorialGuideline } from "../../lib/editorial-compass";
+import { getPublishedEditorialSelection } from "../../lib/editorial-selection-db.ts";
+import { selectionWorkflowState } from "../../lib/curation-workflow.ts";
 import AdminPanel, { type AdminRun } from "./admin-panel";
 import { toAdminRun } from "../../lib/admin-run-groups";
 import AdminTabs from "./admin-tabs";
@@ -24,8 +27,9 @@ import TodayCommandCenter from "./today-command-center";
 import GithubMonitoringPanel from "./github-monitoring-panel";
 import { githubMonitoringRuns } from "../../lib/github-monitoring";
 import MonitoringPolicyPanel from "./monitoring-policy-panel";
+import DispatchPanel from "./dispatch-panel";
 import { houseMonitoringPolicies, houseMonitoringPolicyEvents } from "../../lib/affiliate-monitoring-db";
-import { getPageAuth, roleAccess } from "../../lib/auth";
+import { getPageAuth, roleAccess, resolveAccountContext } from "../../lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -65,9 +69,8 @@ const RUN_PANELS: Record<string, { triggerPath: string; disabledNotice: ReactNod
     triggerPath: "/api/admin/rodagem",
     disabledNotice: (
       <>
-        A varredura automatizada do Mercado Livre está <b>desligada</b> por default (limite técnico adotado para
-        reduzir risco). O caminho vigente de captura é o <b>manual</b> — aba “Captura manual”, ao lado. A tabela
-        acima mostra o histórico de rodagens anteriores.
+        A captura do Mercado Livre é realizada com segurança diretamente pelo seu navegador através da <b>Extensão BizuMiner</b>.
+        Clique em <b>“Abrir ofertas no Mercado Livre ↗”</b> acima, acione a extensão na página e importe os produtos com 1 clique para a triagem.
       </>
     ),
   },
@@ -99,38 +102,41 @@ function toAdminRuns(runs: Awaited<ReturnType<typeof captureRunHistory>>): Admin
   return runs.map(toAdminRun);
 }
 
-export default async function AdminPage({
+async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ aba?: string }>;
+  searchParams: Promise<{ aba?: string; conta?: string }>;
 }) {
   const { aba } = await searchParams;
   const authUser = await getPageAuth();
   const access = authUser ? await roleAccess(authUser.id, "afiliado") : null;
-  if (!access) redirect("/entrar?next=/admin");
+  if (!authUser || !access) redirect("/entrar?next=/admin");
   if (aba === "curadoria") {
     redirect("/admin/curadoria?aba=excecoes");
   }
+  const accountContext = currentAccount() ?? null;
+  const curationPromise = accountContext
+    ? curationSummary(accountContext.tenantId, undefined, accountContext)
+    : Promise.resolve({ awaiting: 0, newPending: 0, legacyVisible: 0, held: 0, approved: 0, rejected: 0, deferred: 0 });
   // Estado por plataforma derivado do REGISTRO, não de uma lista hardcoded:
   // acrescentar a AliExpress (M5) não exige tocar nesta página (M-R5).
-  const [overview, clicked, productCounts, curation, runsByMarketplace, decisionLoad, auditProgress, editorialConfig, suggestedCandidates] = await Promise.all([
+  const [overview, clicked, productCounts, curation, runsByMarketplace, auditDesk, editorialConfig, publishedSelection] = await Promise.all([
     adminOverview(),
     topClicked(7, 6),
     marketplaceCounts(),
-    curationSummary(),
+    curationPromise,
     Promise.all(
       MARKETPLACES.map(async (def) => {
         const [runs, running] = await Promise.all([
-          captureRunHistory(20, "local", def.slug),
-          runningRun("local", def.slug),
+          captureRunHistory(20, scopedTenantId(), def.slug),
+          runningRun(scopedTenantId(), def.slug),
         ]);
         return [def.slug, { runs, running }] as const;
       }),
     ).then((entries) => new Map(entries)),
-    curationDecisionLoad("local"),
-    getDailyAuditProgress("local"),
-    getEditorialGuideline("local"),
-    dailySuggestedCandidates("local", 50),
+    getAuditDesk(scopedTenantId()),
+    getEditorialGuideline(scopedTenantId()),
+    getPublishedEditorialSelection("all", scopedTenantId()),
   ]);
 
   // Afiliados (E1): a tabela só existe após a migration ser aplicada. Enquanto
@@ -180,19 +186,23 @@ export default async function AdminPage({
     };
   });
 
+  const selectionState = selectionWorkflowState({ schemaReady: publishedSelection.schemaReady,
+    mode: publishedSelection.mode, count: publishedSelection.products.length, validUntil: publishedSelection.validUntil });
+
   const overviewTab = (
     <>
       <TodayCommandCenter
         autoPublish={editorialConfig.autoPublish}
         minScore={editorialConfig.minScoreAutoPublish}
-        captureDoneToday={saoPauloDay(overview.lastOkRunAt) === saoPauloDay(new Date())}
-        triageDoneToday={saoPauloDay(overview.lastTriage?.finishedAt) === saoPauloDay(new Date())}
-        publishedToday={saoPauloDay(overview.lastTriage?.finishedAt) === saoPauloDay(new Date()) ? overview.lastTriage?.approvedCount ?? 0 : 0}
-        auditReviewed={auditProgress.reviewed}
-        auditTarget={auditProgress.target}
-        auditComplete={auditProgress.complete}
-        suggestedCandidateCount={suggestedCandidates.length}
-        suggestedCandidateExamples={suggestedCandidates.slice(0, 3).map((candidate) => candidate.title)}
+        captureDoneToday={saoPauloDay(overview.lastDiscoveryAt) === saoPauloDay(new Date())}
+        triageDoneToday={overview.lastTriage?.status === "ok" && saoPauloDay(overview.lastTriage.finishedAt) === saoPauloDay(new Date())}
+        approvedToday={saoPauloDay(overview.lastTriage?.finishedAt) === saoPauloDay(new Date()) ? overview.lastTriage?.approvedCount ?? 0 : 0}
+        selectionReady={selectionState.ready}
+        selectionLabel={selectionState.label}
+        awaiting={curation.awaiting}
+        held={curation.held}
+        deferred={curation.deferred}
+        auditRemaining={auditDesk.progress.remaining}
       />
       <div id="captura-hoje">
         <BatchCapturePanel
@@ -203,15 +213,11 @@ export default async function AdminPage({
           }))}
         />
       </div>
-      <section className="admin-section admin-curation-alert" aria-labelledby="curation-alert-title">
-        <div><p className="eyebrow">Pendências fora da rotina diária</p><h2 id="curation-alert-title">{formatDecisionLoad(decisionLoad)}</h2><p>Use a mesa de Curadoria quando quiser resolver exceções; esse backlog não impede a conclusão de hoje.</p></div>
-        <a className="admin-curation-secondary" href="/admin/curadoria?aba=excecoes">Abrir Curadoria →</a>
-      </section>
       <section className="admin-section" aria-label="Visão geral">
         <div className="metric-row">
           <div className="metric-card"><b>{overview.products.toLocaleString("pt-BR")}</b><span>produtos</span></div>
           <div className="metric-card"><b>{overview.observations.toLocaleString("pt-BR")}</b><span>registros de preço</span></div>
-          <div className="metric-card"><b>{overview.runs.toLocaleString("pt-BR")}</b><span>capturas nas lojas</span></div>
+          <div className="metric-card"><b>{overview.runs.toLocaleString("pt-BR")}</b><span>execuções nas lojas</span></div>
           <div className="metric-card"><b>{overview.triageRuns.toLocaleString("pt-BR")}</b><span>triagens IA</span></div>
           <div className="metric-card"><b>{overview.clicks7d.toLocaleString("pt-BR")}</b><span>cliques afiliados · 7d</span></div>
           <div className="metric-card"><b>{overview.publications.toLocaleString("pt-BR")}</b><span>publicações</span></div>
@@ -228,7 +234,7 @@ export default async function AdminPage({
           <div><dt>itens sob acompanhamento</dt><dd>{overview.activeWatches.toLocaleString("pt-BR")}</dd></div>
           <div><dt>perfis preenchidos</dt><dd>{overview.profiles.toLocaleString("pt-BR")}</dd></div>
           <div>
-            <dt>última captura nas lojas</dt>
+            <dt>última execução nas lojas</dt>
             <dd>
               {overview.lastOkRunAt
                 ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(overview.lastOkRunAt))
@@ -257,6 +263,7 @@ export default async function AdminPage({
       </nav>
       <GithubMonitoringPanel {...githubMonitoring} dispatchConfigured={Boolean(process.env.GITHUB_ACTIONS_WRITE_TOKEN)} />
       <MonitoringPolicyPanel initialPolicies={monitoringPolicies} initialEvents={monitoringPolicyEvents} />
+      <DispatchPanel tenantId={accountContext?.tenantId ?? scopedTenantId()} />
       {MARKETPLACES.filter((def) => def.slug in RUN_PANELS).map((def) => {
         const panel = RUN_PANELS[def.slug]!;
         const state = runsByMarketplace.get(def.slug);
@@ -338,4 +345,11 @@ export default async function AdminPage({
       ]}
     />
   );
+}
+
+export default async function ScopedPage(props: Parameters<typeof AdminPage>[0]) {
+ const params=await props.searchParams;
+ const account=await pageAccount(params?.conta);
+ if(!account) return <section><p>Nenhuma conta autorizada disponível.</p></section>;
+ return inAccountScope(account,()=>AdminPage(props));
 }

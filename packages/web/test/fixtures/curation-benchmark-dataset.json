@@ -138,7 +138,7 @@
     "salesCount": 50,
     "category": "Cabos",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -150,7 +150,7 @@
     "salesCount": 120,
     "category": "Acessórios",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -162,7 +162,7 @@
     "salesCount": 800,
     "category": "Celulares",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -174,7 +174,7 @@
     "salesCount": 300,
     "category": "Papelaria",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -186,7 +186,7 @@
     "salesCount": 90,
     "category": "Áudio",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -198,7 +198,7 @@
     "salesCount": 400,
     "category": "Beleza",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -210,7 +210,7 @@
     "salesCount": 150,
     "category": "Cozinha",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -222,7 +222,7 @@
     "salesCount": 60,
     "category": "Beleza",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -234,7 +234,7 @@
     "salesCount": 110,
     "category": "Lavanderia",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {
@@ -246,7 +246,7 @@
     "salesCount": 45,
     "category": "Papelaria",
     "expectedStatus": "held",
-    "expectedReason": "weak_offer",
+    "expectedReason": "insufficient_evidence",
     "expectedActor": "rule"
   },
   {

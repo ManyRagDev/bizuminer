@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRouteAuth, roleAccess, resolveAppUserId, type AuthUser } from "./auth.ts";
+import { getRouteAuth, roleAccess, resolveAppUserId, resolveAccountContext, type AuthUser } from "./auth.ts";
 import { mergeAnonymousIntoAuth } from "./auth-merge.ts";
 import { validUserId } from "./member-contract.ts";
 import { attachSink, createCookieSink } from "./supabase.ts";
+import type { AccountContext } from "./tenant-db.ts";
 
 /**
  * Identidade e autorização das APIs (AL-3, 22/08/2026).
@@ -40,7 +41,7 @@ export async function resolveMemberIdentity(request: NextRequest): Promise<Membe
 }
 
 export type AffiliateCheck =
-  | { kind: "ok"; user: AuthUser; appUserId: string; sink: NextResponse }
+  | { kind: "ok"; context: AccountContext; user: AuthUser; appUserId: string; sink: NextResponse }
   | { kind: "no_session" }
   | { kind: "forbidden" };
 
@@ -50,10 +51,43 @@ export async function checkAffiliateUser(request: NextRequest): Promise<Affiliat
   if (!auth) return { kind: "no_session" };
   const access = await roleAccess(auth.id, "afiliado");
   if (!access) return { kind: "forbidden" };
-  return { kind: "ok", user: auth, appUserId: access.appUserId, sink };
+  const requestedAccount = request.headers.get("x-bm-account") ?? request.nextUrl.searchParams.get("conta") ?? request.cookies.get("bm_account")?.value;
+  const context = await resolveAccountContext({ authUserId: auth.id, requestedAccount });
+  if (!context) return { kind: "forbidden" };
+  return { kind: "ok", context, user: auth, appUserId: access.appUserId, sink };
 }
 
 /** Resposta JSON com os cookies de sessão do sink aplicados. */
 export function sinkJson(sink: NextResponse, body: unknown, init?: ResponseInit): NextResponse {
   return attachSink(sink, NextResponse.json(body, init));
+}
+
+export type AuthorizedAccountResult =
+  | { kind: "ok"; context: AccountContext; user: AuthUser; sink: NextResponse }
+  | { kind: "no_session" }
+  | { kind: "forbidden" };
+
+/**
+ * Resolve e autoriza o AccountContext para a requisição de API.
+ * Requer autenticação, role 'afiliado' e membership ativa na conta solicitada (C-01).
+ * Falha fechada (403 forbidden) se o usuário requisitar conta sem autorização.
+ */
+export async function resolveAuthorizedAccount(
+  request: NextRequest,
+  requestedAccount?: string | null,
+): Promise<AuthorizedAccountResult> {
+  const sink = createCookieSink();
+  const auth = await getRouteAuth(request, sink);
+  if (!auth) return { kind: "no_session" };
+  const access = await roleAccess(auth.id, "afiliado");
+  if (!access) return { kind: "forbidden" };
+
+  const targetAccount = requestedAccount ?? request.headers.get("x-bm-account") ?? request.nextUrl.searchParams.get("account");
+  const context = await resolveAccountContext({
+    authUserId: auth.id,
+    requestedAccount: targetAccount,
+  });
+
+  if (!context) return { kind: "forbidden" };
+  return { kind: "ok", context, user: auth, sink };
 }

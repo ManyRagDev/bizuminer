@@ -16,6 +16,7 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { MercadoLivreDealsAdapter } from "../../capture/src/adapters/mercadolivre/deals.ts";
+import { CaptureError } from "../../capture/src/errors.ts";
 import { mlAutomatedCaptureEnabled } from "../../capture/src/automated-capture.ts";
 import { sweep } from "../src/ingest.ts";
 import { InMemoryStore } from "../src/store.ts";
@@ -39,7 +40,7 @@ if (!mlAutomatedCaptureEnabled()) {
     "[bloqueado] A varredura automatizada do Mercado Livre está desligada (ML_AUTOMATED_CAPTURE_ENABLED).\n" +
       "Nenhuma requisição foi feita e nenhuma rodagem foi registrada.\n" +
       "Para liberar explicitamente em desenvolvimento: ML_AUTOMATED_CAPTURE_ENABLED=true NODE_ENV=development node --experimental-strip-types bin/sweep.ts\n" +
-      "O caminho vigente de captura é o manual (bookmarklet/extensão no painel).",
+      "O painel pode autorizar a captura automática para um lote específico.",
   );
   process.exit(1);
 }
@@ -77,7 +78,16 @@ const summary = await sweep(
     operationBatchId,
   },
   ctx,
-);
+).catch(async (error: unknown) => {
+  // Machine contract: no vendor URL, body, session or credential crosses the process boundary.
+  console.log("CAPTURE_FAILURE=" + JSON.stringify({
+    version: 1,
+    marketplace: "mercadolivre",
+    kind: error instanceof CaptureError ? error.kind : "internal",
+  }));
+  if (pg) await pg.close();
+  process.exit(1);
+});
 
 console.log("\n=== Resumo ===");
 console.log(`marketplace:    ${summary.marketplace}`);

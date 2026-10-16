@@ -18,7 +18,7 @@ const version = pkg.version;
 const distDir = path.join(root, "dist");
 const releaseDir = path.join(root, "release", `bizuminer-extension-v${version}`);
 
-await rm(path.join(root, "release"), { recursive: true, force: true });
+await rm(releaseDir, { recursive: true, force: true });
 await mkdir(releaseDir, { recursive: true });
 
 // Rebuild garantido (idempotente).

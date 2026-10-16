@@ -1,3 +1,6 @@
+import { retiredLegacyMaintenance } from '../src/maintenance-cli.ts';
+retiredLegacyMaintenance('curate-initial-catalog');
+
 import postgres from "postgres";
 
 type Decision = {

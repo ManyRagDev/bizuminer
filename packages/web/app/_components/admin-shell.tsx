@@ -19,13 +19,17 @@ interface NavGroup {
 }
 
 function resolveActiveId(pathname: string, search: string): string {
+  if (pathname.startsWith("/admin/campanhas")) return "campanhas";
+  if (pathname.startsWith("/admin/financeiro")) return "financeiro";
+  if (pathname.startsWith("/admin/experimentos")) return "experimentos";
   if (pathname === "/pauta") return "publicar";
+  if (pathname.startsWith("/admin/marketing")) return "marketing";
 
   if (pathname.startsWith("/admin/curadoria") || pathname.startsWith("/admin/direcionamento")) {
     const params = new URLSearchParams(search);
     const aba = params.get("aba");
     if (aba === "bussola" || pathname.startsWith("/admin/direcionamento")) return "configuracoes";
-    if (aba === "pipeline" || aba === "lotes") return "operacao";
+    if (aba === "pipeline" || aba === "lotes") return "curadoria";
     return "curadoria";
   }
 
@@ -46,6 +50,10 @@ function resolveSectionTitle(activeId: string): string {
     case "hoje": return "Painel · Hoje";
     case "curadoria": return "Painel · Curadoria";
     case "publicar": return "Painel · Publicar";
+    case "marketing": return "Painel · Marketing";
+    case "campanhas": return "Painel · Campanhas";
+    case "financeiro": return "Painel · Resultados";
+    case "experimentos": return "Painel · Experimentos de Políticas";
     case "operacao": return "Painel · Operação";
     case "configuracoes": return "Painel · Configurações";
     default:
@@ -98,9 +106,12 @@ export default function AdminShell({
     {
       groupTitle: "Trabalho",
       items: [
+        { id: "marketing", href: "/admin/marketing", label: "Marketing", icon: "✦" },
+        { id: "campanhas", href: "/admin/campanhas", label: "Campanhas", icon: "▣" },
+        { id: "financeiro", href: "/admin/financeiro", label: "Resultados", icon: "↗" },
         {
           id: "curadoria",
-          href: "/admin/curadoria?aba=excecoes",
+          href: "/admin/curadoria?aba=selecao",
           label: "Curadoria",
           icon: "🎯",
           badge: curationCount > 0 ? curationCount : undefined,
@@ -118,6 +129,7 @@ export default function AdminShell({
       groupTitle: "Sistema",
       items: [
         { id: "operacao", href: "/admin?aba=rodagens", label: "Operação", icon: "🔄" },
+        { id: "experimentos", href: "/admin/experimentos", label: "Experimentos A/B", icon: "🧪" },
         { id: "configuracoes", href: "/admin/curadoria?aba=bussola", label: "Configurações", icon: "⚙️" },
       ],
     },
@@ -147,7 +159,7 @@ export default function AdminShell({
         </div>
 
         <div className="detail-header-actions">
-          {!onPauta && (
+          {!onPauta && activeId !== "marketing" && (
             <a
               href="/pauta"
               className="admin-shell-pauta-link"

@@ -24,7 +24,7 @@ test("Benchmark: dataset canônico possui exatamente 50 casos estruturados", () 
   );
 });
 
-test("Benchmark: 10/10 casos de sub-ticket (< R$ 20) são retidos deterministamente como weak_offer", async () => {
+test("Benchmark: 10/10 preços abaixo de R$ 20 sem histórico aguardam evidência", async () => {
   const cheapJunkItems = benchmarkData.filter((d) => d.group === "cheap_junk");
   assert.equal(cheapJunkItems.length, 10);
 
@@ -46,7 +46,7 @@ test("Benchmark: 10/10 casos de sub-ticket (< R$ 20) são retidos deterministame
   assert.equal(decisions.length, 10);
   for (const dec of decisions) {
     assert.equal(dec.status, "held");
-    assert.equal(dec.reasonCode, "weak_offer");
+    assert.equal(dec.reasonCode, "insufficient_evidence");
     assert.equal(dec.actorType, "rule");
   }
 });
@@ -163,11 +163,11 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
     assert.equal(dec?.status, "rejected", "Item de risco deve ser rejeitado: " + riskId);
   }
 
-  // 2. NENHUM produto < R$ 20 foi aprovado
+  // 2. Preços abaixo de R$ 20 sem referência comparável continuam em revisão
   for (const junkId of benchmarkData.filter((b) => b.group === "cheap_junk").map((b) => b.id)) {
     const dec = decisions.find((d) => d.productId === junkId);
-    assert.equal(dec?.status, "held", "Item sub-ticket deve ser retido: " + junkId);
-    assert.equal(dec?.reasonCode, "weak_offer");
+    assert.equal(dec?.status, "held", "Preço baixo sem referência deve ser verificado: " + junkId);
+    assert.equal(dec?.reasonCode, "insufficient_evidence");
   }
 
   // 3. Nenhum produto com nota regular (score < 4) foi aprovado no piloto automático

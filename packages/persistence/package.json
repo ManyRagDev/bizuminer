@@ -9,6 +9,7 @@
   "scripts": {
     "test": "node --test --experimental-strip-types test/*.test.ts",
     "typecheck": "tsc --noEmit",
+    "verify:remote-compatibility": "node --experimental-strip-types bin/verify-remote-compatibility.ts",
     "verify:lowest": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-lowest.ts",
     "verify:capture-audit": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-capture-audit.ts",
     "verify:capture-plan": "node --env-file=../web/.env.local --experimental-strip-types bin/verify-capture-plan.ts",
@@ -27,7 +28,9 @@
     "backfill:family": "node --env-file=../web/.env.local --experimental-strip-types bin/backfill-family.ts",
     "curate:initial": "node --env-file=../web/.env.local --experimental-strip-types bin/curate-initial-catalog.ts",
     "bootstrap:affiliate-house": "node --env-file=../web/.env.local --experimental-strip-types bin/bootstrap-affiliate-house.ts",
-    "seed:house-config": "node --env-file=../web/.env.local --experimental-strip-types bin/seed-house-marketplace-config.ts"
+    "seed:house-config": "node --env-file=../web/.env.local --experimental-strip-types bin/seed-house-marketplace-config.ts",
+    "purge:catalog": "node --env-file=../web/.env.local --experimental-strip-types bin/purge-catalog.ts",
+    "cleanup:lifecycle": "node --env-file=../web/.env.local --experimental-strip-types bin/cleanup-lifecycle.ts"
   },
   "devDependencies": {
     "typescript": "5.6"

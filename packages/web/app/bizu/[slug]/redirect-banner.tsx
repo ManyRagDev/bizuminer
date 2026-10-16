@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DIRECT_COUNTDOWN_SECONDS, flagKey, nextCountdown, shouldFire } from "../../../lib/direct-flow";
+import { campaignExitPath } from "../../../lib/campaign-exit";
 
 /**
  * Banner de passagem do link direto (`?direto=1`): redireciona para o
@@ -13,7 +14,7 @@ import { DIRECT_COUNTDOWN_SECONDS, flagKey, nextCountdown, shouldFire } from "..
  * - Sem animação de contagem (números trocados por estado): `prefers-reduced-motion`
  *   não exige tratamento especial, não há movimento além da mudança de texto.
  */
-export default function RedirectBanner({ slug }: { slug: string }) {
+export default function RedirectBanner({ slug, campaignCode }: { slug: string; campaignCode?: string }) {
   const [countdown, setCountdown] = useState(DIRECT_COUNTDOWN_SECONDS);
   const [redirected, setRedirected] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -43,7 +44,7 @@ export default function RedirectBanner({ slug }: { slug: string }) {
         if (shouldFire(next) && !doneRef.current) {
           doneRef.current = true;
           sessionStorage.setItem(flagKey(slug), "1");
-          window.location.assign(`/go/${slug}`);
+          window.location.assign(campaignExitPath(slug, campaignCode));
           return 0;
         }
         return next;
@@ -56,7 +57,7 @@ export default function RedirectBanner({ slug }: { slug: string }) {
         window.removeEventListener(event, cancel, { capture: true });
       }
     };
-  }, [slug]);
+  }, [slug, campaignCode]);
 
   if (dismissed) return null;
 
@@ -66,7 +67,7 @@ export default function RedirectBanner({ slug }: { slug: string }) {
         <>
           <p>Este dispositivo já foi redirecionado para o Mercado Livre. Sem repeteco.</p>
           <div className="direct-actions">
-            <a href={`/go/${slug}`}>ir de novo ↗</a>
+            <a href={campaignExitPath(slug, campaignCode)}>ir de novo ↗</a>
             <button type="button" onClick={() => setDismissed(true)}>continuar no BizuMiner</button>
           </div>
         </>

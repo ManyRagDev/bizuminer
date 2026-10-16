@@ -26,10 +26,18 @@ test("getLocalNetworkIp returns valid IPv4 or localhost and respects LOCAL_IP en
 });
 
 test("resolveLocalNetworkUrl converts localhost host header to local network IP", () => {
-  const url = resolveLocalNetworkUrl("localhost:3100");
-  assert.ok(url.startsWith("http://"), "Must start with http://");
-  assert.ok(url.endsWith(":3100/pauta"), "Must retain port 3100 and /pauta path");
-  assert.ok(!url.includes("localhost"), "Must replace localhost with actual IP");
+  const original = process.env.LOCAL_IP;
+  try {
+    process.env.LOCAL_IP = "192.168.1.100";
+    const url = resolveLocalNetworkUrl("localhost:3100");
+    assert.ok(url.startsWith("http://"), "Must start with http://");
+    assert.ok(url.endsWith(":3100/pauta"), "Must retain port 3100 and /pauta path");
+    assert.ok(!url.includes("localhost"), "Must replace localhost with actual IP");
+    assert.equal(url, "http://192.168.1.100:3100/pauta");
+  } finally {
+    if (original) process.env.LOCAL_IP = original;
+    else delete process.env.LOCAL_IP;
+  }
 });
 
 test("resolveProductionUrl points to canonical or configured domain", () => {

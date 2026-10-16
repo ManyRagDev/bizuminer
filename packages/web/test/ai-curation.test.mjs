@@ -9,7 +9,7 @@ import {
 } from "../lib/ai-curation-service.ts";
 import { processIngestionPipeline } from "../lib/curation-pipeline.ts";
 
-test("Estágio 1: produto com ticket abaixo do mínimo (R$ 20,00) é retido como weak_offer", async () => {
+test("Estágio 1: preço abaixo de R$ 20 sem referência é retido por falta de evidência", async () => {
   const products = [
     {
       id: "prod_cheap",
@@ -30,8 +30,8 @@ test("Estágio 1: produto com ticket abaixo do mínimo (R$ 20,00) é retido como
   assert.equal(decisions.length, 1);
   assert.equal(decisions[0].productId, "prod_cheap");
   assert.equal(decisions[0].status, "held");
-  assert.equal(decisions[0].reasonCode, "weak_offer");
-  assert.equal(decisions[0].reasonDetail, null);
+  assert.equal(decisions[0].reasonCode, "insufficient_evidence");
+  assert.match(decisions[0].reasonDetail, /falta histórico comparável/);
   assert.equal(decisions[0].actorType, "rule");
 });
 

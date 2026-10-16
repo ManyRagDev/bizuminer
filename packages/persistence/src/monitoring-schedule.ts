@@ -18,7 +18,10 @@ export async function monitoringScheduleDecision(
 ): Promise<ScheduleDecision> {
   let rows: Array<{ affiliate_id: string; account_status: string; enabled: boolean | null }>;
   try {
-    rows = await sql<{ affiliate_id: string; account_status: string; enabled: boolean | null }[]>`
+    const [projection]=await sql<{ready:boolean}[]>`select to_regprocedure('garimpa.monitoring_account_state(text,text)') is not null as ready`;
+    rows = projection?.ready ? await sql<{affiliate_id:string;account_status:string;enabled:boolean|null}[]>`
+      select * from garimpa.monitoring_account_state(${tenantId},${marketplace})`
+    : await sql<{ affiliate_id: string; account_status: string; enabled: boolean | null }[]>`
       select account.id as affiliate_id, account.status as account_status, policy.enabled
       from garimpa.affiliate_account account
       left join garimpa.affiliate_monitoring_policy policy
@@ -50,6 +53,11 @@ export async function recordMonitoringSkip(
   sql: Sql, affiliateId: string, marketplace: MonitorMarketplace,
   githubRunId: string, reason: "policy_disabled" | "account_suspended",
 ): Promise<void> {
+  const [projection]=await sql<{ready:boolean}[]>`select to_regprocedure('garimpa.monitoring_record_skip(text,text,text,text)') is not null as ready`;
+  if(projection?.ready){
+    await sql`select garimpa.monitoring_record_skip(${affiliateId},${marketplace},${githubRunId},${reason})`;
+    return;
+  }
   await sql`
     insert into garimpa.affiliate_monitoring_skip
       (affiliate_id, marketplace, github_run_id, reason)

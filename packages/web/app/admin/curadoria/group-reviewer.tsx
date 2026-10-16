@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { REJECTION_REASONS, type CurationReason } from "../../../lib/curation-contract.ts";
 import type { CurationGroupCard, CurationQueueProduct } from "../../../lib/curation-db.ts";
@@ -12,7 +13,6 @@ interface LastBulkAction {
   bulkActionId: string;
   affectedCount: number;
   groupTitle: string;
-  previousGroupCard: CurationGroupCard;
 }
 
 export default function GroupReviewer({
@@ -20,7 +20,8 @@ export default function GroupReviewer({
 }: {
   initialCards: CurationGroupCard[];
 }) {
-  const [cards, setCards] = useState<CurationGroupCard[]>(initialCards);
+  const router = useRouter();
+  const cards = initialCards;
   const [selectedRepsByGroup, setSelectedRepsByGroup] = useState<Record<string, string[]>>(() => {
     // Por padrão, pré-seleciona os 2 primeiros representantes de cada grupo (ou o primeiro)
     const initial: Record<string, string[]> = {};
@@ -67,7 +68,7 @@ export default function GroupReviewer({
     const groupCard = cards.find((c) => c.groupId === groupId);
     if (!groupCard) return;
 
-    const selectedIds = selectedRepsByGroup[groupId] ?? [];
+    const selectedIds = action === "hold" ? [] : selectedRepsByGroup[groupId] ?? [];
     if (selectedIds.length === 0 && !retainRemaining) {
       setMessage("Selecione ao menos um representante ou use a retenção dos semelhantes.");
       return;
@@ -91,17 +92,18 @@ export default function GroupReviewer({
         return;
       }
 
-      setCards((prev) => prev.filter((c) => c.groupId !== groupId));
+      router.refresh();
+      setSelectedRepsByGroup((prev) => ({ ...prev, [groupId]: [] }));
       setLastBulkAction({
         bulkActionId: result.bulkActionId,
         affectedCount: result.affectedCount,
         groupTitle: groupCard.familyLabel,
-        previousGroupCard: groupCard,
       });
       setMessage(`Lote concluído: ${result.affectedCount} produtos resolvidos em "${groupCard.familyLabel}".`);
       setRejectionModalGroup(null);
       setReasonCode(null);
       setReasonDetail("");
+      setExpandedGroupMembers(null);
     });
   }
 
@@ -114,8 +116,9 @@ export default function GroupReviewer({
         setMessage("A ação em lote não pôde ser desfeita (conflito de estado).");
         return;
       }
-      setCards((prev) => [actionToUndo.previousGroupCard, ...prev]);
+      router.refresh();
       setLastBulkAction(null);
+      setExpandedGroupMembers(null);
       setMessage(`Ação em lote desfeita: ${actionToUndo.affectedCount} produtos restaurados em "${actionToUndo.groupTitle}".`);
     });
   }
@@ -138,12 +141,15 @@ export default function GroupReviewer({
   if (cards.length === 0) {
     return (
       <section className="curation-empty">
+        {message && <p role="status">{message}</p>}
+        {lastBulkAction && <button type="button" disabled={isPending} onClick={handleUndoBulk}>Desfazer última ação em lote ({lastBulkAction.affectedCount} produtos)</button>}
         <span className="curation-proof">GRUPOS<br />ZERADOS</span>
         <p className="eyebrow">Curadoria</p>
         <h1>Nenhum grupo repetitivo pendente.</h1>
         <p>Todos os grupos com produtos semelhantes foram avaliados ou não há ofertas repetitivas na fila.</p>
         <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
-          <a className="admin-curation-start" href="/admin/curadoria?aba=hoje">Ir para mesa individual →</a>
+          <a className="admin-curation-start" href="/admin/curadoria?aba=excecoes&sub=singulars">Revisar item a item →</a>
+          <button type="button" onClick={() => router.refresh()}>Atualizar grupos</button>
           <a className="admin-curation-start" href="/admin">← Voltar ao painel</a>
         </div>
       </section>
@@ -176,7 +182,7 @@ export default function GroupReviewer({
             <article key={card.groupId} className="curation-group-card" aria-labelledby={`grp-title-${card.groupId}`}>
               <header className="group-card-header">
                 <div className="group-card-title">
-                  <span className="group-reason">{card.groupingReason}</span>
+                  <span className="group-reason">Semelhantes na mesma família</span>
                   <h2 id={`grp-title-${card.groupId}`}>{card.familyLabel}</h2>
                   <div className="group-meta-badges">
                     <span className="group-badge highlight"><b>{card.totalCount}</b> produtos</span>
@@ -188,11 +194,6 @@ export default function GroupReviewer({
                     </div>
                   </div>
                 </div>
-                {card.withoutFamilyCount > 0 && (
-                  <div className="without-family-badge" title="Produtos sem família não entram em balde e são avaliados como singulares">
-                    <span>{card.withoutFamilyCount} sem família no catálogo</span>
-                  </div>
-                )}
               </header>
 
               <div className="group-reps-section">
@@ -361,7 +362,7 @@ export default function GroupReviewer({
                     onClick={() => handleGroupAction(card.groupId, "hold", true)}
                     title="Retém todos os produtos deste grupo como saturação de família"
                   >
-                    Reter semelhantes não selecionados (saturação)
+                    Reter todo o grupo por saturação
                   </button>
                 </div>
 
@@ -375,11 +376,11 @@ export default function GroupReviewer({
                     {isLoadingMembers ? "Carregando…" : isExpanded ? "Ocultar todos os produtos" : `Abrir todos os produtos do grupo (${card.totalCount})`}
                   </button>
                   <a
-                    href={`/admin/curadoria?aba=hoje&grupo=${encodeURIComponent(card.groupId)}`}
+                    href="/admin/curadoria?aba=excecoes&sub=singulars"
                     className="action-desk-link"
-                    title="Avaliar os representantes na mesa individual"
+                    title="Abrir a fila completa de produtos pendentes"
                   >
-                    Avaliar na mesa individual →
+                    Abrir revisão item a item →
                   </a>
                 </div>
               </footer>

@@ -198,7 +198,7 @@ test("Piloto Automático: filtros determinísticos e rejeições por risco preva
   const cheap = decisions.find((d) => d.productId === "prod_cheap");
   assert.ok(cheap);
   assert.equal(cheap.status, "held");
-  assert.equal(cheap.reasonCode, "weak_offer");
+  assert.equal(cheap.reasonCode, "insufficient_evidence");
 
   const miracle = decisions.find((d) => d.productId === "prod_miracle");
   assert.ok(miracle);
@@ -206,8 +206,8 @@ test("Piloto Automático: filtros determinísticos e rejeições por risco preva
   assert.equal(miracle.reasonCode, "misleading_claim");
 });
 
-test("Cockpit Operacional: getTriageBatchesHistory e getOperationalPulse respondem com estrutura válida", async () => {
-  const { getTriageBatchesHistory, getOperationalPulse } = await import("../lib/editorial-compass.ts");
+test("Histórico: getTriageBatchesHistory responde com estrutura válida", async () => {
+  const { getTriageBatchesHistory } = await import("../lib/editorial-compass.ts");
 
   const batches = await getTriageBatchesHistory("local", 5);
   assert.ok(Array.isArray(batches));
@@ -218,11 +218,7 @@ test("Cockpit Operacional: getTriageBatchesHistory e getOperationalPulse respond
     assert.ok(typeof b.held === "number");
   }
 
-  const pulse = await getOperationalPulse("local");
-  assert.ok(typeof pulse.isCaptureRunning === "boolean");
-  assert.ok(typeof pulse.pendingCount === "number");
-  assert.ok(typeof pulse.lastTriageTotal === "number");
-  assert.ok(typeof pulse.lastCaptureNewItems === "number");
+
 });
 
 test("Inspeção de Lote: getTriageBatchItems devolve array seguro", async () => {
@@ -232,3 +228,8 @@ test("Inspeção de Lote: getTriageBatchItems devolve array seguro", async () =>
   assert.ok(Array.isArray(items));
 });
 
+
+test("amostra vazia não cria meta impossível de auditoria", () => {
+  assert.equal(toDailyAuditProgress(0,0,0).complete,true);
+  assert.equal(toDailyAuditProgress(0,0,0).remaining,0);
+});

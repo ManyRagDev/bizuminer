@@ -1,3 +1,4 @@
+import { inAccountScope } from "../../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { houseMonitoringPolicies, houseMonitoringPolicyEvents, setHouseMonitoringPolicy } from "../../../../../lib/affiliate-monitoring-db";
@@ -8,6 +9,7 @@ export async function GET(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ return inAccountScope(check.context, async () => {
   try {
     const [policies, events] = await Promise.all([houseMonitoringPolicies(), houseMonitoringPolicyEvents()]);
     return sinkJson(check.sink, { ok: true, policies, events },
@@ -15,12 +17,15 @@ export async function GET(request: NextRequest) {
   } catch {
     return sinkJson(check.sink, { ok: false, error: "policy_unavailable" }, { status: 503 });
   }
+
+ });
 }
 
 export async function POST(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ return inAccountScope(check.context, async () => {
   if (request.headers.get("origin") !== request.nextUrl.origin) {
     return sinkJson(check.sink, { ok: false, error: "invalid_origin" }, { status: 403 });
   }
@@ -36,4 +41,6 @@ export async function POST(request: NextRequest) {
   } catch {
     return sinkJson(check.sink, { ok: false, error: "policy_unavailable" }, { status: 503 });
   }
+
+ });
 }

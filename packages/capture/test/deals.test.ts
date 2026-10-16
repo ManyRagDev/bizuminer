@@ -36,12 +36,15 @@ describe("parseDealsHtml (fixture real)", () => {
     assert.equal(offers.length, 3);
   });
 
-  it("usa o href real do card como productUrl, limpo de query/fragment", () => {
+  it("usa o href real e preserva o anúncio de catálogo, removendo tracking", () => {
     for (const o of offers) {
       assert.ok(o.productUrl.startsWith("https://"), o.productUrl);
-      assert.ok(!o.productUrl.includes("?"), `query vazou: ${o.productUrl}`);
       assert.ok(!o.productUrl.includes("#"), `fragment vazou: ${o.productUrl}`);
       assert.ok(/(MLB\d{6,}|\/p\/)/.test(o.productUrl), o.productUrl);
+      const url = new URL(o.productUrl);
+      if (url.pathname.includes("/p/")) assert.equal(url.searchParams.get("wid"), o.externalId);
+      else assert.equal(url.search, "");
+      assert.ok([...url.searchParams.keys()].every((key) => key === "wid"));
     }
   });
 
@@ -107,6 +110,23 @@ describe("parseDealsHtml (fixture real)", () => {
   it("HTML sem cards devolve lista vazia (sem lançar)", () => {
     assert.deepEqual(parseDealsHtml("<html>manutenção</html>"), []);
   });
+
+  it("identifica anúncio no fragmento, filtros e link direto sem usar o ID de catálogo", () => {
+    const card = (href: string) => `<div class="poly-card poly-card--grid-card"><a href="${href}" class="poly-component__title">Oferta</a><div class="poly-price__current"><span aria-label="11 reais"></span></div></div>`;
+    for (const href of [
+      "https://www.mercadolivre.com.br/nome/p/MLB12345678#polycard_client=offers&wid=MLB9876543210&position=1",
+      "https://www.mercadolivre.com.br/nome/p/MLB12345678?pdp_filters=item_id%3AMLB9876543210&position=1",
+    ]) {
+      const [offer] = parseDealsHtml(card(href));
+      assert.equal(offer?.externalId, "MLB9876543210");
+      assert.equal(offer?.productUrl, "https://www.mercadolivre.com.br/nome/p/MLB12345678?wid=MLB9876543210");
+    }
+    const [direct] = parseDealsHtml(card("https://produto.mercadolivre.com.br/MLB-9876543210-nome-_JM#tracking=1"));
+    assert.equal(direct?.externalId, "MLB9876543210");
+    assert.equal(direct?.productUrl, "https://produto.mercadolivre.com.br/MLB-9876543210-nome-_JM");
+    assert.deepEqual(parseDealsHtml(card("https://www.mercadolivre.com.br/nome/p/MLB12345678")), []);
+    assert.deepEqual(parseDealsHtml(card("https://example.com/MLB9876543210")), []);
+  });
 });
 
 describe("MercadoLivreDealsAdapter", () => {
@@ -159,6 +179,14 @@ describe("MercadoLivreDealsAdapter", () => {
       () => a.fetchOffers(cred, {}, ctx),
       (err: unknown) => err instanceof CaptureError && err.kind === "malformed_response",
     );
+  });
+
+  it("verificação de conta com HTTP 200 é erro de acesso, sem retry ou hipótese de layout", async () => {
+    const response = new Response("<html>Olá! Para continuar, acesse sua conta</html>", { status: 200 });
+    Object.defineProperty(response, "url", { value: "https://www.mercadolivre.com.br/gz/account-verification?go=private" });
+    const { adapter: a, urls } = adapter([response]);
+    await assert.rejects(() => a.fetchOffers(cred, {}, ctx), (err: unknown) => err instanceof CaptureError && err.kind === "auth" && !err.retryable && !err.message.includes("private"));
+    assert.equal(urls.length, 1);
   });
 
   it("validateCredential ok quando a página tem ofertas", async () => {

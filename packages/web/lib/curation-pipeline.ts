@@ -2,9 +2,11 @@ import {
   type AICurationItemInput,
   type AICurationItemOutput,
   type TriageDecision,
+  type TriageInputVersion,
 } from "./ai-curation-contract.ts";
 import { evaluateProductsBatch } from "./ai-curation-service.ts";
 import { selectRepresentatives, type GroupMemberProduct } from "./editorial-groups.ts";
+import { evaluateTriageValue, MIN_PRODUCT_VALUE_CENTS_DEFAULT, type ComparablePriceHistory } from "./triage-value-policy.ts";
 
 export interface CandidateProduct {
   id: string;
@@ -15,6 +17,8 @@ export interface CandidateProduct {
   salesCount: number | null;
   familyKey: string | null;
   category: string | null;
+  comparablePriceHistory?: ComparablePriceHistory | null;
+  inputVersion?: TriageInputVersion;
 }
 
 export interface PipelineOptions {
@@ -47,7 +51,7 @@ export interface PipelineOptions {
   }>;
 }
 
-export const MIN_PRICE_CENTS_DEFAULT = 2000; // R$ 20,00
+export const MIN_PRICE_CENTS_DEFAULT = MIN_PRODUCT_VALUE_CENTS_DEFAULT; // Piso de valor, com exceção por histórico.
 export const MAX_REPRESENTATIVES_DEFAULT = 3;
 
 export const ADULT_TERMS_RE =
@@ -65,19 +69,26 @@ export async function processIngestionPipeline(
   const evaluator = options?.evaluator ?? evaluateProductsBatch;
 
   const decisions: TriageDecision[] = [];
+  const pricePolicies = new Map(products.map((p) => [p.id, evaluateTriageValue(p.priceCents, p.comparablePriceHistory, minPriceCents)]));
   const survivorsStage1: CandidateProduct[] = [];
 
   // ----------------------------------------------------
   // Estágio 1: Hard Filters Determinísticos (Custo Zero IA)
   // ----------------------------------------------------
   for (const p of products) {
-    if (p.priceCents < minPriceCents) {
+    const pricePolicy = pricePolicies.get(p.id)!;
+    if (!["current_price", "verified_discount"].includes(pricePolicy.outcome)) {
+      const rationale = pricePolicy.outcome === "low_value"
+        ? `Valor anterior comparável R$ ${(pricePolicy.comparableHistory!.referencePriceCents! / 100).toFixed(2)} abaixo do piso de valor R$ ${(minPriceCents / 100).toFixed(2)}`
+        : pricePolicy.outcome === "invalid_price"
+          ? "Preço atual inválido; confirme o valor antes da triagem"
+          : `Preço promocional R$ ${(p.priceCents / 100).toFixed(2)} abaixo de R$ ${(minPriceCents / 100).toFixed(2)}; falta histórico comparável suficiente para verificar o valor habitual`;
       decisions.push({
         productId: p.id,
         status: "held",
-        reasonCode: "weak_offer",
-        reasonDetail: null,
-        rationale: `Preço R$ ${(p.priceCents / 100).toFixed(2)} abaixo do piso de ticket mínimo`,
+        reasonCode: pricePolicy.outcome === "low_value" ? "weak_offer" : "insufficient_evidence",
+        reasonDetail: rationale,
+        rationale,
         actorType: "rule",
       });
       continue;
@@ -189,6 +200,11 @@ export async function processIngestionPipeline(
       title: p.title,
       category: p.category ?? "Geral",
       priceFormatted: `R$ ${(p.priceCents / 100).toFixed(2)}`,
+      ...(pricePolicies.get(p.id)!.outcome === "verified_discount" ? {
+        verifiedPriceReference: { source: "comparable_history" as const,
+          minimumPriceFormatted: `R$ ${(p.comparablePriceHistory!.referencePriceCents! / 100).toFixed(2)}`,
+          observationCount: p.comparablePriceHistory!.observationCount, historyDays: p.comparablePriceHistory!.historyDays },
+      } : {}),
     }));
 
     const aiResults = await evaluator(aiPayload, {
@@ -262,5 +278,7 @@ export async function processIngestionPipeline(
     }
   }
 
-  return decisions;
+  const inputVersions = new Map(products.map((p) => [p.id, p.inputVersion]));
+  return decisions.map((decision) => ({ ...decision,
+    pricePolicy: pricePolicies.get(decision.productId), inputVersion: inputVersions.get(decision.productId) }));
 }

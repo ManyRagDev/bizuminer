@@ -1,3 +1,4 @@
+import { withMonitoringDb } from "../src/monitoring-db.ts";
 /**
  * Retenção por ID exato, separada da descoberta por palavra-chave.
  * Sem --execute: somente lê o banco e mostra a fila. Com --execute: consulta
@@ -28,6 +29,9 @@ const limit = Number(flag("limit") ?? "20");
 if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("--limit deve ser inteiro entre 1 e 100");
 const execute = args.includes("--execute");
 const tenantId = process.env.MONITOR_TENANT_ID ?? "local";
+// Global API credentials configured by the current cron belong to the house.
+// Another account needs its own credential resolver before enabling external calls.
+if (execute && tenantId !== "local") throw new Error("monitoring_account_credentials_required");
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL não definido");
 
@@ -36,21 +40,23 @@ const sql = postgres(connectionString, {
   max: 1,
   ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false },
 });
-const scheduleDecision = await monitoringScheduleDecision(
-  sql, tenantId, marketplace, process.env.GITHUB_EVENT_NAME,
-);
+const scheduleDecision = await withMonitoringDb(sql,tenantId,tx=>monitoringScheduleDecision(
+  tx, tenantId, marketplace, process.env.GITHUB_EVENT_NAME,
+));
 if (!scheduleDecision.allowed) {
   if (scheduleDecision.affiliateId && process.env.GITHUB_RUN_ID && scheduleDecision.reason) {
-    await recordMonitoringSkip(sql, scheduleDecision.affiliateId, marketplace,
-      process.env.GITHUB_RUN_ID, scheduleDecision.reason);
+    await withMonitoringDb(sql,tenantId,tx=>recordMonitoringSkip(tx, scheduleDecision.affiliateId!, marketplace,
+      process.env.GITHUB_RUN_ID!, scheduleDecision.reason!));
   }
   await sql.end();
   console.log(JSON.stringify({ marketplace, mode: "schedule", tenantId,
     skipped: scheduleDecision.reason }));
   process.exit(0);
 }
-const candidates = await loadMonitoringCandidates(sql, tenantId);
-const suppressed = await suppressedMonitoringIds(sql, tenantId, marketplace, candidates);
+const {candidates,suppressed} = await withMonitoringDb(sql,tenantId,async tx=>{
+ const candidates=await loadMonitoringCandidates(tx,tenantId);
+ return {candidates,suppressed:await suppressedMonitoringIds(tx,tenantId,marketplace,candidates)};
+});
 await sql.end();
 const selected = monitoringQueue(candidates.filter((candidate) => !suppressed.has(candidate.productId)), marketplace, limit);
 const byId = new Map(candidates.map((candidate) => [candidate.productId, candidate]));
@@ -141,6 +147,7 @@ try {
         originalPriceCents: offer.originalPriceCents,
         claimedDiscountRate: offer.claimedDiscountRate, ratingStar: offer.ratingStar,
         salesLabel: offer.salesLabel, salesCount: offer.salesCount, observedAt: offer.capturedAt,
+        offerEvidence: offer.offerEvidence,
       });
       matched++;
       if (result.previousPriceCents !== undefined && result.previousPriceCents !== offer.priceCents) priceChanges++;
