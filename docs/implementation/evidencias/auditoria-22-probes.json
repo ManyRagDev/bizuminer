@@ -1,0 +1,104 @@
+{
+  "environment": "PGlite memory only; synthetic data; no remote writes; diagnostics, not acceptance",
+  "results": [
+    {
+      "name": "M1 runtime legacy product read without context",
+      "result": [
+        {
+          "n": 2
+        }
+      ]
+    },
+    {
+      "name": "M2 runtime legacy product read without context",
+      "result": [
+        {
+          "n": 0
+        }
+      ]
+    },
+    {
+      "name": "M2 public projection unavailable",
+      "result": [
+        {
+          "ready": false
+        }
+      ]
+    },
+    {
+      "name": "M2 login bootstrap select no context",
+      "result": []
+    },
+    {
+      "name": "M2 login bootstrap insert no context",
+      "error": "new row violates row-level security policy for table \"app_user\"",
+      "code": "42501"
+    },
+    {
+      "name": "M2 legitimate cross-home member cannot record curation",
+      "error": "insert or update on table \"product_curation\" violates foreign key constraint \"product_curation_reviewer_tenant_fkey\"",
+      "code": "23503"
+    },
+    {
+      "name": "M11 owner B can insert invitation naming affiliate A",
+      "result": [
+        {
+          "tenant_id": "b",
+          "affiliate_id": "aff_a"
+        }
+      ]
+    },
+    {
+      "name": "M11 forged invitation grants owner membership in A",
+      "result": [
+        {
+          "accepted": true,
+          "tenant_id": "b",
+          "affiliate_id": "aff_a",
+          "role": "owner"
+        }
+      ]
+    },
+    {
+      "name": "M11 resolver exposes acquired A membership",
+      "result": [
+        {
+          "tenant_id": "a",
+          "membership_role": "owner"
+        },
+        {
+          "tenant_id": "b",
+          "membership_role": "owner"
+        }
+      ]
+    },
+    {
+      "name": "M12 dispatch attempt FK catalogue",
+      "result": {
+        "rows": [
+          {
+            "conname": "dispatch_attempt_account_tenant_fk",
+            "definition": "FOREIGN KEY (tenant_id) REFERENCES garimpa.affiliate_account(tenant_id) ON DELETE RESTRICT"
+          },
+          {
+            "conname": "dispatch_attempt_job_id_fkey",
+            "definition": "FOREIGN KEY (job_id) REFERENCES garimpa.dispatch_job(id) ON DELETE CASCADE"
+          }
+        ],
+        "fields": [
+          {
+            "name": "conname",
+            "dataTypeID": 19
+          },
+          {
+            "name": "definition",
+            "dataTypeID": 25
+          }
+        ],
+        "command": "SELECT",
+        "affectedRows": 0,
+        "rowCount": 2
+      }
+    }
+  ]
+}

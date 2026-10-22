@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-15",
+  "sourceFilesBefore": 509,
+  "sourceFilesChangedFromInventory": 68,
+  "sourceFilesRemoved": 0,
+  "historicalMigrationsUnchanged": true,
+  "ownedTrackedDiffCheckExit": 0,
+  "fullDiffCheckWarningsUnchangedFromInitialInventory": [
+    "packages/persistence/test/monitoring-policy.test.ts",
+    "packages/web/app/globals.css",
+    "packages/web/lib/offer-history.ts"
+  ],
+  "cliHelpExit": 0,
+  "pngVisualInspection": "1080x1920; owned synthetic image; accents/price/disclosure/QR/contrast reviewed; not commercial rights approval",
+  "remoteWrites": 0,
+  "stagingHomologation": "blocked: staging target and authorization not supplied",
+  "finalizedAtUtc": "2026-10-15T03:20:34.860392+00:00",
+  "currentDocumentLinksValid": true,
+  "requirementsMapped": 62,
+  "correctiveFindingsMapped": 18,
+  "correctiveDeliveriesMapped": 15,
+  "originalDeliveriesMapped": 15,
+  "finalChecks": {
+    "commands": 26,
+    "passed": 26,
+    "failed": 0,
+    "unitTests": 557,
+    "sqlSuites": 17,
+    "typechecks": 4,
+    "builds": 1,
+    "workflowScenarios": 13,
+    "upgradeChecks": 3,
+    "externalHomologation": "not_executed"
+  },
+  "sourceFingerprintFinalized": true
+}

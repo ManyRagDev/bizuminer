@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-14",
+  "artifact": "docs/implementation/15-PLANO-DE-CONCLUSAO-SEQUENCIAL.md",
+  "sha256": "358db773c09681923d379192dbfcab88c72746011b2ae4e795b128e8530d6c34",
+  "checks": {
+    "sections_1_to_7": true,
+    "ordered_deliveries_D00_to_D14": true,
+    "all_13_epics_referenced": true,
+    "all_7_findings_referenced": true,
+    "local_links_exist": true,
+    "eleven_real_migration_names": true,
+    "executor_prompt_present": true,
+    "no_invisible_chars": true,
+    "listed_commands_exist": true
+  },
+  "missing_links": [],
+  "commands": [
+    {
+      "command": "npm test --prefix packages/web",
+      "script_exists": true
+    },
+    {
+      "command": "npm test --prefix packages/capture",
+      "script_exists": true
+    },
+    {
+      "command": "npm test --prefix packages/persistence",
+      "script_exists": true
+    },
+    {
+      "command": "npm test --prefix packages/extension",
+      "script_exists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/web -- --incremental false",
+      "script_exists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/capture -- --incremental false",
+      "script_exists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/persistence -- --incremental false",
+      "script_exists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/extension -- --incremental false",
+      "script_exists": true
+    },
+    {
+      "command": "npm test --prefix tools/editorial-tests",
+      "script_exists": true
+    },
+    {
+      "command": "npm run test:triage-price --prefix tools/editorial-tests",
+      "script_exists": true
+    },
+    {
+      "command": "npm run test:capture-batch --prefix tools/editorial-tests",
+      "script_exists": true
+    },
+    {
+      "command": "npm run test:commercial --prefix tools/editorial-tests",
+      "script_exists": true
+    },
+    {
+      "command": "npm run build --prefix packages/web",
+      "script_exists": true
+    }
+  ],
+  "limitations": [
+    "Validação documental; nenhuma implementação, migration remota ou teste funcional executado nesta rodada.",
+    "Prontidão local não equivale a homologação ou ativação."
+  ],
+  "changed_artifacts": [
+    "docs/implementation/15-PLANO-DE-CONCLUSAO-SEQUENCIAL.md",
+    "docs/implementation/README.md",
+    "docs/implementation/evidencias/validacao-plano-15.json"
+  ]
+}

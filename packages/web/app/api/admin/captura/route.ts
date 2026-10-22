@@ -1,3 +1,4 @@
+import { inAccountScope } from "../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 import { decodeManualCaptureBlock, persistManualCapture } from "../../../../lib/manual-capture";
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ return inAccountScope(check.context, async () => {
 
   let body: { block?: unknown };
   try {
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await persistManualCapture(payload, check.appUserId);
+    const result = await persistManualCapture(payload, check.appUserId, check.context.tenantId);
     return sinkJson(check.sink, { ok: true, ...result }, { status: 200 });
   } catch (err) {
     return sinkJson(
@@ -46,4 +48,6 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+
+ });
 }

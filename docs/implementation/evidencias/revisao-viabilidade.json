@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-14",
+  "scope": "Revisão documental. Sem testes de aplicação, consultas remotas ou migrations nesta rodada.",
+  "source_files_checked": 410,
+  "source_files_changed": [],
+  "spec_count": 13,
+  "status_counts": {
+    "PRONTA": 4,
+    "CONDICIONAL": 7,
+    "BLOQUEADA": 2
+  },
+  "local_markdown_links_checked": 353,
+  "blueprint_source_unchanged": true,
+  "worktree_status_outside_planning_matches_original_baseline": false,
+  "worktree_status_difference": {
+    "removed": [
+      " M archive/site"
+    ],
+    "added": [
+      " m archive/site"
+    ]
+  },
+  "worktree_note": "A diferença de status M/m do submódulo archive/site já constava na primeira leitura desta revisão. Nenhuma ação foi executada nesse submódulo. O manifesto de 410 fontes confere integralmente; arquivos fora desse manifesto não recebem garantia de hash.",
+  "changes_scope": "Somente docs/implementation/ foi editado nesta revisão.",
+  "errors": []
+}

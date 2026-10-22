@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-15T20:31:46.352032+00:00",
+  "status": "REPLACEMENT_CANDIDATE_APPROVED_FOR_ISOLATED_REHEARSAL_ONLY",
+  "newProductionWrites": 0,
+  "newDeploys": 0,
+  "newMigrationsCreated": 3,
+  "productionApproved": false,
+  "audit": "27-AUDITORIA-INDEPENDENTE-ROLLOUT.md",
+  "native": {
+    "engine": "postgres (PostgreSQL) 17.6",
+    "functionalChecksPassed": 23,
+    "localUnitApplicationsPassed": 6,
+    "evidence": "execucao-27-replacement-native.json"
+  },
+  "generalChecks": {
+    "commandsPassed": 26,
+    "commandsFailed": 0,
+    "sqlSuitesPassed": 21,
+    "webTestsPassed": 379,
+    "persistenceTestsPassed": 35,
+    "typechecksPassed": [
+      "web",
+      "persistence"
+    ],
+    "webBuildPassed": true,
+    "evidence": "execucao-27-fechamento-checks.json"
+  },
+  "rolloutVerifier": {
+    "result": "PASS",
+    "scope": "local files only; no production authorization",
+    "units": [
+      {
+        "phase": "foundation",
+        "file": "20261015194719_garimpa_v2_foundation.sql",
+        "sha256": "579fa86e8696d7bfcee701ed61e6c8b43b9538dfafa93f146883633bd3682c57"
+      },
+      {
+        "phase": "expansion",
+        "file": "20261015194748_garimpa_v2_expansion.sql",
+        "sha256": "e2c2dc82c2a9fd562d326f68414bf7337541f86cfc26c5126e36a11e88a75611"
+      },
+      {
+        "phase": "scoped_cutover",
+        "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
+        "sha256": "28e08ebbb89d4d453eb0149d93f22d0e4084ea93e3ca60a87b38a5963367fa8b"
+      }
+    ],
+    "installedSubsetPreserved": 3,
+    "supersededOriginals": 11,
+    "replacedLegacyPolicies": 28,
+    "newCommercialTables": 37
+  },
+  "historicalMigrationFilesComparedWithRound26": 15,
+  "v2HistoricalMigrationFiles": 14,
+  "historicalMigrationsUnchanged": true,
+  "limitations": [
+    "No current remote baseline: Supabase MCP tools unavailable after OAuth failure",
+    "Synthetic reconstructed fixture, not full production dump; legacy seed trigger not installed",
+    "Supabase Auth/Storage/Supavisor and actual published artifacts not homologated",
+    "Four manual maintenance/bootstrap CLIs not validated after C",
+    "Production writers, staging recovery, volume and lock behavior still require proof"
+  ],
+  "intermediateOccurrences": "execucao-27-ocorrencias-intermediarias.json"
+}

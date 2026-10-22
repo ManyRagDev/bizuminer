@@ -1,0 +1,71 @@
+1. Resumo das Correções por Entrega
+Entrega A — Baseline e Contratos Quebrados (RX-01 e RX-02)
+RX-01 (Ledger Financeiro & Autorização de Conta):
+Assinaturas de recordManualConversion, recordCommissionEntry e recordSaaSRevenueEntry em packages/web/lib/commercial-financial-db.ts agora exigem AccountContext validado pelo servidor.
+Qualquer tentativa de gravar evento financeiro com tenantId divergente do contexto da requisição é barrada no banco e no runtime (assertAuthorizedTenant).
+Criadas Server Actions em packages/web/app/admin/financeiro/actions.ts integrando sessão/perfil, resolução de conta e escrita transacional com garimpa.tenant_id.
+RX-02 (Rota /p/[code] e Preservação de Links):
+resolveCampaignLinkByCode foi atualizado com suporte transparente para chamadas diretas ou transacionais via overload.
+A rota packages/web/app/p/[code]/route.ts agora consome resolved.slug diretamente e efetua redirect 302 para /bizu/<slug>?c=<code>.
+Fallback legado mantido intacto para links curtos de 4 caracteres (/bizu/<slug>), preservando a visualização de cards Open Graph no WhatsApp e impedindo contaminação de telemetria de cliques por robôs de redes sociais.
+Resultado do Typecheck: npm run typecheck --prefix packages/web -- --incremental false concluído com 0 erros (de 5 erros anteriores para 0).
+Entrega B — Segredos, Contexto e Isolamento (RX-04, RX-03 e RX-05)
+RX-04 (Chave Mestra de Segredos e Comportamento Fail-Closed):
+Removido o fallback de chave de desenvolvimento estática em packages/web/lib/affiliate-secret.ts.
+Em ambiente de produção (NODE_ENV === "production"), a ausência ou invalidade da chave interrompe a operação com erro fatal explícito.
+Adicionado suporte a chaves sintéticas explícitas para suítes de teste e rotação por versão (resolveKeyForVersion).
+RX-03 (Purga de Políticas Permissivas e Resolução de Contexto):
+Migration 20261014101000_garimpa_tenant_rls_scoped.sql (M-10A2) atualizada com bloco explícito para remoção de todas as políticas ${rel}_app_access (USING (true) WITH CHECK (true)).
+packages/web/lib/account-context.ts atualizado para invocar a função SECURITY DEFINER garimpa.resolve_actor_accounts (M-10A1), eliminando a dependência cíclica no bootstrap inicial de conta antes da definição do GUC de tenant.
+RX-05 (Unificação do Contrato de GUC, Tipos FK e Composite Keys):
+GUC Unificado: Todas as migrations (M-10A2, M-02, M-03, M-04, M-08, M-07, M-09, M-11, M-12) e o helper packages/web/lib/tenant-db.ts utilizam exclusivamente nullif(current_setting('garimpa.tenant_id', true), '').
+Correção de Tipos FK: Colunas campaign_publication_id, kit_revision_id, destination_id e campaign_link_id corrigidas de uuid para text, alinhadas às chaves primárias das tabelas de origem.
+Composite Keys: Chaves estrangeiras compostas com tenant_id adicionadas em tabelas filhas e grants atribuídos à role runtime garimpa_app.
+Entrega C — Evidência e Alegações E3 (RX-07)
+RX-07 (Cálculo Canônico SQL e Proteção de Alegações de Preço):
+A view garimpa.curation_queue_facts na migration 20261014102000_garimpa_price_evidence_canonical.sql exige estritamente status = 'approved' para políticas de audiência; políticas em draft ou pendentes nunca ativam E3.
+Filtros temporais aplicados: janela histórica configurável (observed_at >= latest - window_days), frescor da oferta (now() - observed_at <= max_age_hours) e contagem mínima de dias distintos de observação.
+Suíte packages/web/test/price-evidence.test.mjs expandida para comprovar que draft não habilita E3 e observações fora da janela são descartadas.
+Entrega D — Integrações, Oráculo Real e Auditoria (RX-06 e RX-08)
+RX-06 (Oráculo Real de Isolamento e Tokens de Campanha):
+packages/web/lib/campaign-attribution.ts permite injeção de sqlFactory.
+packages/web/test/security-isolation-matrix.test.mjs atualizado com banco mock: tokens válidos retornam valid: true, e tokens adulterados retornam valid: false (mismatched_or_inactive_token), eliminando o oráculo falso que aceitava falha de infraestrutura (db_lookup_unavailable).
+RX-08 (Ações de Kit, Auditoria CLI e Teste Ponta a Ponta):
+Criadas Server Actions para o ciclo de vida de marketing em packages/web/app/admin/marketing/kit-actions.ts: criação de campanha, geração de kit, validação, aprovação humana, reserva de link e revalidação estrita contra deriva de preço antes da exportação.
+Criado script CLI de auditoria estrutural e compatibilidade remota: packages/persistence/bin/verify-remote-compatibility.ts (executável via npm run verify:remote-compatibility em packages/persistence).
+Criada suíte de testes de integração ponta a ponta: packages/web/test/e2e-commercial-flow.test.mjs, validando os quatro fluxos comerciais e de segurança em conjunto.
+2. Evidências de Verificação
+Pacote / Suíte	Comando	Resultado
+Typecheck Web	npm run typecheck --prefix packages/web -- --incremental false	0 erros
+Typecheck Persistence	npm run typecheck --prefix packages/persistence	0 erros
+Suíte Web	npm test --prefix packages/web	363/363 passaram (100% verde)
+Suíte Persistence	npm test --prefix packages/persistence	35/35 passaram (100% verde)
+Suíte Extension	npm test --prefix packages/extension	16/16 passaram (100% verde)
+Testes Editoriais	npm test --prefix tools/editorial-tests	29/29 cenários passaram (100% verde)
+Total Geral	—	443 testes automatizados passando
+
+Nota: O documento docs/implementation/STATUS-EXECUCAO.md foi devidamente atualizado com o histórico da rodada, tabela de entregas e inventário de migrations.
+
+3. Estado das Migrations e Gates Operacionais
+
+Em conformidade estrita com as restrições do prompt, nenhuma migration foi aplicada em banco remoto ou de produção.
+
+Todas as 11 migrations estão reconciliadas e prontas no diretório local packages/persistence/supabase/migrations/:
+
+M-10A1: 20261014100000_garimpa_account_context_and_membership.sql
+M-10A2: 20261014101000_garimpa_tenant_rls_scoped.sql
+M-01: 20261014102000_garimpa_price_evidence_canonical.sql
+M-02: 20261014103000_garimpa_rubric_assessment_shadow.sql
+M-03: 20261014104000_garimpa_audience_policy_and_opportunity.sql
+M-04: 20261014105000_garimpa_commerce_and_campaign_link.sql
+M-08: 20261014106000_garimpa_commercial_financial_ledger.sql
+M-07: 20261014107000_garimpa_click_attribution_and_channels.sql
+M-09: 20261014108000_garimpa_policy_experiments.sql
+M-11: 20261014109000_garimpa_dispatch_jobs_outbox.sql
+M-12: 20261014110000_garimpa_saas_onboarding_entitlements.sql
+Próximos Passos Operacionais (Dependem de Autorização do Usuário):
+G-ENV / Deploy: Autorização para aplicar as migrations reconciliadas em banco de staging isolado e executar npm run verify:remote-compatibility antes do rollout em produção.
+G-PRICE / OPEN-03: Calibração editorial de cobertura antes da aprovação de políticas com e3Enabled: true.
+G-RIGHTS / OPEN-08: Confirmação da política formal de uso de imagens dos marketplaces parceiros para banners de marketing.
+G-FIN / OPEN-05: Fornecimento de relatório real sanitizado de comissões para construção do parser específico de lote (08-B). O módulo manual (08-A/C) já está operacional.
+G-CHANNEL & G-PILOT: Homologação de canais de mensageria e definição de termos comerciais do SaaS antes da emissão de convites a afiliados externos.

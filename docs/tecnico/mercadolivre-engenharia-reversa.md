@@ -13,7 +13,7 @@ Como descobrimos, por engenharia reversa ética (observação + experimento cont
 | Dá para gerar link de afiliado por código? | **Sim** — permalink + `matt_word` + `matt_tool` + `forceInApp` | ✅ Provado em campo |
 | O `ref` criptografado é necessário? | **Não** — link sem ele contabilizou clique | ✅ Provado em campo |
 | Dá para rastrear por publicação? | **Sim** — sufixo `_subid` no `matt_word` passou junto | ✅ Provado em campo |
-| Dá para descobrir produtos automaticamente? | **Sim** — página pública `/ofertas` renderiza ofertas no servidor | ✅ Funcionando |
+| Dá para descobrir produtos automaticamente? | Funcionou historicamente por `/ofertas`; em 10/10/2026 o coletor HTTP recebe verificação de acesso | ⚠️ Acesso automático ainda não recuperado; checkpoints 13, 18 e 19 |
 | O painel conta cliques em tempo real? | **Não** — atualiza em lotes com atraso de segundos a horas | ✅ Provado em campo |
 
 ---
@@ -60,7 +60,7 @@ GET https://www.mercadolivre.com.br/ofertas        (HTML público, sem login)
 GET .../ofertas?page=2                              (paginação funciona)
 ```
 
-- Renderizado no servidor: **fetch simples resolve**, sem navegador/headless.
+- Validação histórica de agosto: renderizado no servidor; **fetch simples resolveu** sem navegador/headless. **Ressalva de 10/10/2026:** uma requisição Node com os cabeçalhos do adaptador foi redirecionada da própria listagem para `/gz/account-verification` (302, resposta final 200 sem ofertas), enquanto o navegador normal abriu 48 cards. Não assumir disponibilidade permanente por fetch simples. Ver [checkpoint 13 da investigação](avaliacao-triagem-fluxos-2026-10-10.md#checkpoint-13-investigação-aprofundada-do-mercado-livre--concluída) e evidências vinculadas.
 - Cards usam componentes `poly-card` / `poly-component__*` (padrão Andes do ML).
 - **Conformidade E0 (25/08/2026):** o acesso automatizado a esta página está **desligado por default** (kill switch `ML_AUTOMATED_CAPTURE_ENABLED`, só development). O texto original desta seção planejava "varredura a cada 30–60 min" como cadência aceitável — essa recomendação foi **suplantada**: a captura vigente é humana (bookmarklet/extensão). O parser/fixtures permanecem como ferramenta offline.
 
@@ -78,7 +78,7 @@ GET .../ofertas?page=2                              (paginação funciona)
 
 ## 5. Restrições e armadilhas conhecidas
 
-- **Anti-bot**: acesso automatizado a páginas de produto responde `302 → /gz/account-verification`. O parser de Ofertas lê HTML de **listagem** (sem esse bloqueio), mas **nunca devemos clicar/abrir links de produção por código** — validação de clique é sempre manual.
+- **Verificação de acesso**: historicamente, o acesso automatizado a páginas de produto respondeu `302 → /gz/account-verification`. Em **10/10/2026**, o mesmo destino foi observado no fetch da própria **listagem** `/ofertas`. A página pede acesso à conta; o gatilho exato do fornecedor não foi identificado. A listagem não deve ser presumida imune à verificação. **Nunca devemos clicar/abrir links de produção por código** — validação de clique é sempre manual.
 - **API de listas/favoritos**: não existe endpoint público (`/users/{id}/bookmarks`, `/lists` etc. = 404). A vitrine `/social/{usuario}` é alimentada por serviço interno não documentado. **Decisão: não usar a vitrine como fila** — as Ofertas a tornam desnecessária.
 - **Certificação da app**: única via para `/search` oficial. Solicitar no DevCenter quando o volume justificar.
 - **Puppeteer/headless**: tecnicamente viável para busca, mas **decidido não usar** (ToS, risco recai sobre a conta do cliente, custo de manutenção).
@@ -175,4 +175,3 @@ Com a app não certificada, a API oficial **não substitui** o scraping de `/ofe
 ### Caminho para destravar `/search` e `/items`
 
 Certificação da app (Developer Partner Program). Enquanto `certification_status` for `not_certified`, os endpoints de anúncio ficam fechados. Status consultável em `GET /applications/{app_id}` → campo `certification_status` (também `blocked`, `disabled` e `scopes` — útil para debug de 403).
-

@@ -1,3 +1,5 @@
+import postgres from "postgres";
+import { resolveWorkerCredential, accountCaptureAdapter } from "../src/account-credentials.ts";
 /**
  * CLI de varredura da Shopee: Open API oficial → PostgresStore + resumo no console.
  *
@@ -38,6 +40,8 @@ const flag = (name: string): string | undefined => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 
+const tenantId = flag("tenant") ?? "local";
+if(!/^[a-z0-9._-]{1,64}$/.test(tenantId)) throw new Error("invalid_capture_tenant");
 const pages = Number(flag("pages") ?? 1);
 const minDiscount = flag("min-discount") ? Number(flag("min-discount")) : undefined;
 const keyword = flag("keyword");
@@ -74,7 +78,7 @@ if (dryRun) {
 }
 
 // Gate M1: aborta antes de instanciar adapter/store e de qualquer rede.
-if (!shopeeCaptureEnabled()) {
+if (process.env.SHOPEE_CAPTURE_ENABLED !== "true") {
   console.error(
     "[bloqueado] A captura da Shopee está desligada (SHOPEE_CAPTURE_ENABLED e/ou credencial ausente).\n" +
       "Nenhuma requisição foi feita e nenhuma rodagem foi registrada.\n" +
@@ -88,6 +92,8 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+const credentialSql=postgres(process.env.DATABASE_URL!,{prepare:false,max:1,ssl:process.env.DATABASE_URL!.includes("localhost")?false:{rejectUnauthorized:false}});
+try {
 const ctx: CaptureContext = {
   runId: `sweep-shopee-${Date.now()}`,
   log: (e) => {
@@ -95,17 +101,11 @@ const ctx: CaptureContext = {
   },
 };
 
-const cred: Credential = {
-  marketplace: "shopee",
-  secret: {
-    appId: process.env.SHOPEE_APP_ID!,
-    appSecret: process.env.SHOPEE_APP_SECRET!,
-  },
-};
+const cred = await resolveWorkerCredential(credentialSql,tenantId,"shopee");
 
 const store = new PostgresStore({ connectionString: process.env.DATABASE_URL });
 console.log("store: Postgres (Supabase, schema garimpa)");
-const adapter = new ShopeeAdapter();
+const adapter = accountCaptureAdapter(credentialSql,tenantId,new ShopeeAdapter());
 
 console.log(`Executando plano ${plan.id} na Shopee (${entriesForMode(plan, mode).length} consultas, até ${pages} página(s) por consulta)...`);
 const summary = await runCapturePlan(
@@ -113,7 +113,7 @@ const summary = await runCapturePlan(
   cred,
   store,
   {
-    tenantId: "local",
+    tenantId,
     plan,
     mode,
     maxPagesPerQuery: pages,
@@ -134,7 +134,7 @@ console.log(`mudanças preço: ${summary.priceChanges}`);
 console.log(`limitados:      ${summary.itemsSkippedByPolicy}`);
 console.log(`duração:        ${summary.durationMs}ms`);
 
-const activity = await store.productActivity("local", null);
+const activity = await store.productActivity(tenantId, null);
 console.log("\n=== Estado de vida do catálogo geral após o plano ===");
 console.log(`recentes (últimos 14d): ${activity.recente}`);
 console.log(`dormentes (histórico):  ${activity.dormente}`);
@@ -146,7 +146,7 @@ if (summary.queriesFailed > 0) process.exitCode = 1;
 // shopee-links.ts). Idempotente — só processa publications sem affiliate_url.
 console.log("\n=== Links de afiliado (M3) ===");
 const linkSummary = await ensureShopeeAffiliateLinks(
-  { connectionString: process.env.DATABASE_URL, tenantId: "local", credential: cred },
+  { connectionString: process.env.DATABASE_URL, tenantId, credential: cred },
   ctx,
 );
 console.log(`candidatos: ${linkSummary.candidates}`);
@@ -158,7 +158,7 @@ if (args.includes("--trigger-triage")) {
   const triageScript = path.resolve(import.meta.dirname, "../../web/bin/run-triage.ts");
   const child = spawn(
     process.execPath,
-    ["--env-file=../web/.env.local", "--experimental-strip-types", triageScript, "--limit", "100"],
+    ["--experimental-strip-types", triageScript, "--limit", "100", "--tenant", tenantId],
     { stdio: "inherit", cwd: path.resolve(import.meta.dirname, "..") }
   );
   await new Promise<void>((resolve) => {
@@ -172,3 +172,5 @@ if (args.includes("--trigger-triage")) {
     });
   });
 }
+
+} finally {await credentialSql.end();}

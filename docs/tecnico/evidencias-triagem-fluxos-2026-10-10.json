@@ -1,0 +1,1916 @@
+{
+  "checkedAt": "2026-10-10T15:28:39.130Z",
+  "readOnly": true,
+  "environment": {
+    "geminiKeyConfigured": true,
+    "configuredModel": "gemini-2.5-flash",
+    "mlAutomatedCaptureFlag": true,
+    "mlProductionCaptureFlag": false
+  },
+  "config": [
+    {
+      "tenant_id": "local",
+      "guideline": "Foco em utilidades práticas de casa, cozinha e gadgets.",
+      "auto_publish": true,
+      "min_score_auto_publish": 4,
+      "updated_at": "2026-09-07T20:15:47.816Z"
+    }
+  ],
+  "runs": [
+    {
+      "id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "status": "ok",
+      "started_at": "2026-10-10T15:19:16.237Z",
+      "finished_at": "2026-10-10T15:19:28.456Z",
+      "total_input": 44,
+      "approved_count": 0,
+      "held_count": 41,
+      "rejected_count": 3,
+      "annotated_count": 0,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "6d4f9a09-d2a5-4bd1-965b-c46a89a0a385",
+      "status": "ok",
+      "started_at": "2026-10-06T15:27:56.336Z",
+      "finished_at": "2026-10-06T15:28:36.787Z",
+      "total_input": 40,
+      "approved_count": 0,
+      "held_count": 40,
+      "rejected_count": 0,
+      "annotated_count": 0,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "d945ee1b-7e90-4e53-b715-5eb9f89e9652",
+      "status": "ok",
+      "started_at": "2026-10-06T01:24:25.877Z",
+      "finished_at": "2026-10-06T01:24:37.185Z",
+      "total_input": 50,
+      "approved_count": 4,
+      "held_count": 46,
+      "rejected_count": 0,
+      "annotated_count": 0,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "status": "ok",
+      "started_at": "2026-09-29T12:53:17.049Z",
+      "finished_at": "2026-09-29T12:55:11.838Z",
+      "total_input": 50,
+      "approved_count": 10,
+      "held_count": 5,
+      "rejected_count": 28,
+      "annotated_count": 7,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "status": "ok",
+      "started_at": "2026-09-24T18:17:15.068Z",
+      "finished_at": "2026-09-24T18:22:20.102Z",
+      "total_input": 100,
+      "approved_count": 23,
+      "held_count": 25,
+      "rejected_count": 31,
+      "annotated_count": 21,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "status": "ok",
+      "started_at": "2026-09-24T03:10:35.274Z",
+      "finished_at": "2026-09-24T03:12:20.823Z",
+      "total_input": 100,
+      "approved_count": 28,
+      "held_count": 31,
+      "rejected_count": 21,
+      "annotated_count": 20,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "status": "ok",
+      "started_at": "2026-09-22T03:51:05.701Z",
+      "finished_at": "2026-09-22T03:53:09.995Z",
+      "total_input": 100,
+      "approved_count": 27,
+      "held_count": 19,
+      "rejected_count": 36,
+      "annotated_count": 18,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "status": "ok",
+      "started_at": "2026-09-19T21:39:16.450Z",
+      "finished_at": "2026-09-19T21:41:22.855Z",
+      "total_input": 100,
+      "approved_count": 37,
+      "held_count": 10,
+      "rejected_count": 31,
+      "annotated_count": 22,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "67471f23-cd2a-4045-9257-8372f025812c",
+      "status": "ok",
+      "started_at": "2026-09-18T03:18:41.980Z",
+      "finished_at": "2026-09-18T03:26:56.012Z",
+      "total_input": 75,
+      "approved_count": 22,
+      "held_count": 14,
+      "rejected_count": 25,
+      "annotated_count": 14,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "300cf8a8-8e36-4a9b-a5ff-2f6fd71b9e40",
+      "status": "ok",
+      "started_at": "2026-09-18T02:25:15.216Z",
+      "finished_at": "2026-09-18T02:28:30.411Z",
+      "total_input": 49,
+      "approved_count": 13,
+      "held_count": 0,
+      "rejected_count": 21,
+      "annotated_count": 15,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "3b4ce4bc-5808-4028-a600-441942c42220",
+      "status": "ok",
+      "started_at": "2026-09-17T18:48:27.826Z",
+      "finished_at": "2026-09-17T18:56:39.514Z",
+      "total_input": 74,
+      "approved_count": 26,
+      "held_count": 15,
+      "rejected_count": 21,
+      "annotated_count": 12,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "e69ef8f1-0704-4378-af04-6f9508cc35d4",
+      "status": "ok",
+      "started_at": "2026-09-10T23:28:38.047Z",
+      "finished_at": "2026-09-10T23:34:03.183Z",
+      "total_input": 99,
+      "approved_count": 39,
+      "held_count": 12,
+      "rejected_count": 22,
+      "annotated_count": 26,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "b557b062-f589-47c5-94ee-5b66ad9474fb",
+      "status": "ok",
+      "started_at": "2026-09-10T01:55:55.527Z",
+      "finished_at": "2026-09-10T01:59:09.001Z",
+      "total_input": 61,
+      "approved_count": 20,
+      "held_count": 12,
+      "rejected_count": 23,
+      "annotated_count": 6,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    },
+    {
+      "id": "b750498f-bab3-40ae-ac37-258ab52e911e",
+      "status": "ok",
+      "started_at": "2026-09-08T18:02:59.336Z",
+      "finished_at": "2026-09-08T18:06:22.297Z",
+      "total_input": 75,
+      "approved_count": 23,
+      "held_count": 8,
+      "rejected_count": 18,
+      "annotated_count": 26,
+      "model_name": "gemini-2.5-flash",
+      "pipeline_version": "curation-pipeline-v2"
+    }
+  ],
+  "statuses": [
+    {
+      "status": "legacy_visible",
+      "reason_code": null,
+      "count": 499
+    },
+    {
+      "status": "pending",
+      "reason_code": null,
+      "count": 488
+    },
+    {
+      "status": "approved",
+      "reason_code": null,
+      "count": 299
+    },
+    {
+      "status": "rejected",
+      "reason_code": "low_utility",
+      "count": 260
+    },
+    {
+      "status": "held",
+      "reason_code": "weak_offer",
+      "count": 185
+    },
+    {
+      "status": "held",
+      "reason_code": "family_saturation",
+      "count": 178
+    },
+    {
+      "status": "rejected",
+      "reason_code": "misleading_claim",
+      "count": 21
+    },
+    {
+      "status": "rejected",
+      "reason_code": "audience_mismatch",
+      "count": 13
+    },
+    {
+      "status": "rejected",
+      "reason_code": "other",
+      "count": 9
+    },
+    {
+      "status": "held",
+      "reason_code": "insufficient_evidence",
+      "count": 3
+    },
+    {
+      "status": "rejected",
+      "reason_code": "unsafe_restricted",
+      "count": 1
+    },
+    {
+      "status": "rejected",
+      "reason_code": "adult_sexual",
+      "count": 1
+    },
+    {
+      "status": "rejected",
+      "reason_code": "low_quality_listing",
+      "count": 1
+    }
+  ],
+  "automatedOutcomes": [
+    {
+      "actor_type": "llm",
+      "to_status": "approved",
+      "reason_code": null,
+      "ai_score": "4",
+      "count": 205
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "pending",
+      "reason_code": null,
+      "ai_score": "3",
+      "count": 187
+    },
+    {
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "count": 181
+    },
+    {
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "family_saturation",
+      "ai_score": null,
+      "count": 151
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "2",
+      "count": 140
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "1",
+      "count": 108
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "approved",
+      "reason_code": null,
+      "ai_score": "5",
+      "count": 67
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "held",
+      "reason_code": "family_saturation",
+      "ai_score": null,
+      "count": 27
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "misleading_claim",
+      "ai_score": "1",
+      "count": 17
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "audience_mismatch",
+      "ai_score": null,
+      "count": 10
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "3",
+      "count": 10
+    },
+    {
+      "actor_type": "rule",
+      "to_status": "rejected",
+      "reason_code": "low_quality_listing",
+      "ai_score": null,
+      "count": 4
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "count": 4
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "misleading_claim",
+      "ai_score": null,
+      "count": 2
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "misleading_claim",
+      "ai_score": "2",
+      "count": 2
+    },
+    {
+      "actor_type": "rule",
+      "to_status": "rejected",
+      "reason_code": "adult_sexual",
+      "ai_score": null,
+      "count": 1
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "held",
+      "reason_code": "insufficient_evidence",
+      "ai_score": null,
+      "count": 1
+    },
+    {
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "unsafe_restricted",
+      "ai_score": "1",
+      "count": 1
+    }
+  ],
+  "queue": [
+    {
+      "status": "approved",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 2
+    },
+    {
+      "status": "approved",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 9
+    },
+    {
+      "status": "approved",
+      "marketplace": "aliexpress",
+      "fresh": true,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 10
+    },
+    {
+      "status": "approved",
+      "marketplace": "aliexpress",
+      "fresh": true,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 125
+    },
+    {
+      "status": "approved",
+      "marketplace": "mercadolivre",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 8
+    },
+    {
+      "status": "approved",
+      "marketplace": "mercadolivre",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 36
+    },
+    {
+      "status": "approved",
+      "marketplace": "shopee",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 3
+    },
+    {
+      "status": "approved",
+      "marketplace": "shopee",
+      "fresh": true,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 14
+    },
+    {
+      "status": "approved",
+      "marketplace": "shopee",
+      "fresh": true,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 92
+    },
+    {
+      "status": "held",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 1
+    },
+    {
+      "status": "held",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 162
+    },
+    {
+      "status": "held",
+      "marketplace": "aliexpress",
+      "fresh": true,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 27
+    },
+    {
+      "status": "held",
+      "marketplace": "shopee",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 1
+    },
+    {
+      "status": "held",
+      "marketplace": "shopee",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 119
+    },
+    {
+      "status": "held",
+      "marketplace": "shopee",
+      "fresh": true,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 56
+    },
+    {
+      "status": "legacy_visible",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 49
+    },
+    {
+      "status": "legacy_visible",
+      "marketplace": "mercadolivre",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 354
+    },
+    {
+      "status": "legacy_visible",
+      "marketplace": "shopee",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 96
+    },
+    {
+      "status": "pending",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 192
+    },
+    {
+      "status": "pending",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 71
+    },
+    {
+      "status": "pending",
+      "marketplace": "aliexpress",
+      "fresh": true,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 5
+    },
+    {
+      "status": "pending",
+      "marketplace": "mercadolivre",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 1
+    },
+    {
+      "status": "pending",
+      "marketplace": "mercadolivre",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 46
+    },
+    {
+      "status": "pending",
+      "marketplace": "shopee",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 105
+    },
+    {
+      "status": "pending",
+      "marketplace": "shopee",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 44
+    },
+    {
+      "status": "pending",
+      "marketplace": "shopee",
+      "fresh": true,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 24
+    },
+    {
+      "status": "rejected",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": false,
+      "deferred": false,
+      "count": 7
+    },
+    {
+      "status": "rejected",
+      "marketplace": "aliexpress",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 168
+    },
+    {
+      "status": "rejected",
+      "marketplace": "mercadolivre",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 46
+    },
+    {
+      "status": "rejected",
+      "marketplace": "shopee",
+      "fresh": false,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 82
+    },
+    {
+      "status": "rejected",
+      "marketplace": "shopee",
+      "fresh": true,
+      "has_automated_event": true,
+      "deferred": false,
+      "count": 3
+    }
+  ],
+  "latestCaptureRuns": [
+    {
+      "id": "68ca3236-9c3f-4f4c-9e0b-9c790e0a07ba",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-10T09:43:19.662Z",
+      "finished_at": "2026-10-10T09:43:38.229Z",
+      "items_captured": 18,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "6ccec6cd-a4a5-4d35-88a2-bb1af8ada134",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-10T09:43:15.287Z",
+      "finished_at": "2026-10-10T09:44:04.621Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "5d526e03-95fb-4708-b4aa-47a154893376",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-10T00:42:56.443Z",
+      "finished_at": "2026-10-10T00:44:16.575Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "098c77f7-ece7-400f-aea0-ccf5e33a0185",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-10T00:42:53.478Z",
+      "finished_at": "2026-10-10T00:43:13.190Z",
+      "items_captured": 19,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "144bd7b4-48ed-4788-b206-3251bcc0e282",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-09T20:04:30.393Z",
+      "finished_at": "2026-10-09T20:06:12.946Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "270f720d-dd39-482c-a371-58e45ab20087",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-09T20:04:30.074Z",
+      "finished_at": "2026-10-09T20:04:45.307Z",
+      "items_captured": 14,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "43a306b8-9e32-4437-9f14-af9d65c91462",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-09T10:23:47.945Z",
+      "finished_at": "2026-10-09T10:24:38.401Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "be330f5b-a524-4c6a-9b91-c92cf15b64ab",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-09T10:23:34.196Z",
+      "finished_at": "2026-10-09T10:23:55.217Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "d28eecbf-4235-41aa-9aeb-8f22ee582e09",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-09T01:09:59.465Z",
+      "finished_at": "2026-10-09T01:11:47.399Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "13409dc2-6ccf-467b-8d8c-e70ae2961ad8",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-09T01:09:53.196Z",
+      "finished_at": "2026-10-09T01:10:13.813Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "a937bfaf-7e12-4de6-91cb-c7d75972300a",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-08T20:39:49.646Z",
+      "finished_at": "2026-10-08T20:40:11.031Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "dea7de7f-7feb-43ab-90bb-da9a01881a7c",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-08T20:39:40.150Z",
+      "finished_at": "2026-10-08T20:40:49.663Z",
+      "items_captured": 19,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "7e292a37-c4e9-4dc7-afe7-8615073a35be",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-08T10:25:11.457Z",
+      "finished_at": "2026-10-08T10:26:03.938Z",
+      "items_captured": 19,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "d9f886ab-5dd8-4a88-b3ca-808175239560",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-08T10:25:11.312Z",
+      "finished_at": "2026-10-08T10:25:32.294Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "9a2fa47b-a1da-4ff8-b6cb-8ebb2c1bbc69",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-08T00:55:42.308Z",
+      "finished_at": "2026-10-08T00:56:03.328Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "463127c4-ba32-40dd-9d9f-72550d7b8673",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-08T00:55:40.130Z",
+      "finished_at": "2026-10-08T00:56:52.421Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "4d11fb79-7aee-4245-932f-0ddcb9ae3c0a",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-07T20:33:51.320Z",
+      "finished_at": "2026-10-07T20:34:12.556Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "96885ac9-9155-4be3-9d1d-fc8d10496931",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-07T20:33:51.288Z",
+      "finished_at": "2026-10-07T20:35:23.962Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "d7a5a127-2996-4fc1-86ea-70d21ceefad7",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-07T10:08:40.731Z",
+      "finished_at": "2026-10-07T10:10:16.056Z",
+      "items_captured": 18,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "444bbd1d-c383-4bc2-9810-456ba1b2306a",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-07T10:08:40.006Z",
+      "finished_at": "2026-10-07T10:09:00.762Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "1baaaf35-27ee-4613-ab24-1e1524bc58be",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-07T00:36:36.552Z",
+      "finished_at": "2026-10-07T00:36:58.208Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "e816888f-cfdb-4f90-a2ed-8ed2e4edc928",
+      "marketplace": "aliexpress",
+      "status": "error",
+      "started_at": "2026-10-07T00:36:35.477Z",
+      "finished_at": "2026-10-07T00:38:10.516Z",
+      "items_captured": 18,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "5aae50ce-0ef2-4918-8778-fa08e4729896",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-06T20:10:32.349Z",
+      "finished_at": "2026-10-06T20:10:53.085Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "58f960b9-da1a-4518-949b-7cdefa29537d",
+      "marketplace": "aliexpress",
+      "status": "error",
+      "started_at": "2026-10-06T20:10:31.312Z",
+      "finished_at": "2026-10-06T20:13:10.892Z",
+      "items_captured": 14,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "cecc7949-a631-4ad3-ae82-a2fae475d81c",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-06T10:06:23.430Z",
+      "finished_at": "2026-10-06T10:06:44.539Z",
+      "items_captured": 18,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "0fb94e37-c4bf-4e6a-8c4e-87af28ab276e",
+      "marketplace": "aliexpress",
+      "status": "ok",
+      "started_at": "2026-10-06T10:06:22.389Z",
+      "finished_at": "2026-10-06T10:08:26.966Z",
+      "items_captured": 19,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "8f049779-ef4d-45d7-89c6-bc7a6b836dae",
+      "marketplace": "aliexpress",
+      "status": "error",
+      "started_at": "2026-10-05T21:57:50.827Z",
+      "finished_at": "2026-10-05T21:59:25.504Z",
+      "items_captured": 11,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "f861f5d8-0071-4fa8-a7f9-ccd08c007910",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-05T21:57:50.208Z",
+      "finished_at": "2026-10-05T21:58:10.861Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "6ec36d59-f223-4212-8760-194e5e1cd3f6",
+      "marketplace": "aliexpress",
+      "status": "error",
+      "started_at": "2026-10-05T10:18:28.282Z",
+      "finished_at": "2026-10-05T10:20:35.835Z",
+      "items_captured": 18,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    },
+    {
+      "id": "3d21d8a5-3c74-4138-82bd-dd88872adde6",
+      "marketplace": "shopee",
+      "status": "ok",
+      "started_at": "2026-10-05T10:18:27.690Z",
+      "finished_at": "2026-10-05T10:18:48.306Z",
+      "items_captured": 20,
+      "operation_batch_id": null,
+      "query": null,
+      "capture_mode": "monitoring"
+    }
+  ],
+  "captureBatches": [
+    {
+      "id": "c5c334a3-3783-4e3b-ae8c-2e35e6b4c1d0",
+      "requested_marketplaces": [
+        "mercadolivre"
+      ],
+      "pages": 1,
+      "status": "running",
+      "started_at": "2026-09-25T16:22:15.618Z",
+      "finished_at": null
+    },
+    {
+      "id": "dd1d03ac-64bf-4fc5-964b-057c35e91b53",
+      "requested_marketplaces": [
+        "mercadolivre",
+        "shopee",
+        "aliexpress"
+      ],
+      "pages": 1,
+      "status": "ok",
+      "started_at": "2026-09-24T18:16:45.038Z",
+      "finished_at": "2026-09-24T18:17:13.548Z"
+    },
+    {
+      "id": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "requested_marketplaces": [
+        "mercadolivre",
+        "shopee",
+        "aliexpress"
+      ],
+      "pages": 1,
+      "status": "ok",
+      "started_at": "2026-09-24T03:10:02.560Z",
+      "finished_at": "2026-09-24T03:10:34.180Z"
+    },
+    {
+      "id": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "requested_marketplaces": [
+        "mercadolivre",
+        "shopee",
+        "aliexpress"
+      ],
+      "pages": 1,
+      "status": "ok",
+      "started_at": "2026-09-22T03:50:26.740Z",
+      "finished_at": "2026-09-22T03:51:04.485Z"
+    },
+    {
+      "id": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "requested_marketplaces": [
+        "mercadolivre",
+        "shopee",
+        "aliexpress"
+      ],
+      "pages": 1,
+      "status": "ok",
+      "started_at": "2026-09-19T21:38:48.071Z",
+      "finished_at": "2026-09-19T21:39:15.532Z"
+    },
+    {
+      "id": "6bd72202-720a-4351-856e-61ed852344a9",
+      "requested_marketplaces": [
+        "mercadolivre",
+        "shopee",
+        "aliexpress"
+      ],
+      "pages": 1,
+      "status": "ok",
+      "started_at": "2026-09-18T03:18:13.950Z",
+      "finished_at": "2026-09-18T03:18:41.251Z"
+    },
+    {
+      "id": "69087174-0993-4533-b580-e3171dc0923c",
+      "requested_marketplaces": [
+        "mercadolivre",
+        "shopee",
+        "aliexpress"
+      ],
+      "pages": 1,
+      "status": "ok",
+      "started_at": "2026-09-18T02:24:19.220Z",
+      "finished_at": "2026-09-18T02:24:51.547Z"
+    }
+  ],
+  "selections": [],
+  "assessments": [],
+  "recentDecisionSamples": [
+    {
+      "id": "1263",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "3",
+      "rationale": "Adaptador útil para compatibilidade, mas não possui apelo de novidade ou gadget inovador para a vitrine.",
+      "title": "Electro Nest Adaptador Conversor OTG Cabo Usb Tipo-C Para Lightning ZHQ-25",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "3198"
+    },
+    {
+      "id": "1262",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "3",
+      "rationale": "Cabo USB-C genérico, útil mas sem diferencial. Não se destaca como um achadinho inovador ou criativo.",
+      "title": "Cabo Tipo C para Tipo C USB-C – Carga Rápida – Compatível iPhone 15/16/17",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "2179"
+    },
+    {
+      "id": "1261",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "3",
+      "rationale": "Cabo genérico, útil mas sem diferencial para ser um achadinho de vitrine. Item comum no dia a dia.",
+      "title": "CABO PARA IOS USB-C LIGHTNING DE CARREGAMENTO RÁPIDO DADOS DE 1M OU 2M PARA IOS",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "2189"
+    },
+    {
+      "id": "1260",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 10.99 abaixo do piso de ticket mínimo",
+      "title": "2 unidades para EJEAS V6 Pro/3,5 mm V4 PLUS ​ Clipe de montagem base de fita dupla face capacete da motocicleta fone de ouvido intercomunicador bluetooth",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1099"
+    },
+    {
+      "id": "1259",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 10.01 abaixo do piso de ticket mínimo",
+      "title": "Saco para sapatos com cordão, estampado com o personagem Crayon Shin-chan, portátil, impermeável, ideal para viagens, para guardar e organizar sapatos e roupas.",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1001"
+    },
+    {
+      "id": "1258",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 8.69 abaixo do piso de ticket mínimo",
+      "title": "Adesivos faciais em formato de capivara para espinhas - Sem fragrância, sem parabenos - Unissex adulto, compatível com todos os tipos de pele, adesivo para cuidados com a pele.",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "869"
+    },
+    {
+      "id": "1257",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 17.27 abaixo do piso de ticket mínimo",
+      "title": "100 unidades de máscara descartável para os olhos, em papel ultrafino, com adesivos de algodão natural para cuidados com a pele dos olhos, hidratantes, para SPA e ferramentas de beleza.",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1727"
+    },
+    {
+      "id": "1256",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 16.94 abaixo do piso de ticket mínimo",
+      "title": "2x Lâmpadas LED W5W T10 3014 18SMD Canbus para Iluminação Interna Automotiva, Luz de Posição, Luz de Mapa e Luz de Teto para Leitura",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1694"
+    },
+    {
+      "id": "1255",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 17.99 abaixo do piso de ticket mínimo",
+      "title": "13 TWS Sem Fio Bluetooth 5.0 Air Pro 3 Fone De Ouvido Esportivo Com Microfone MING",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1799"
+    },
+    {
+      "id": "1254",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 15.98 abaixo do piso de ticket mínimo",
+      "title": "Carregador Turbo 35W iPhone USB C Original Fonte PD Carregador iPhone 15 16 Carregamento rápido",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1598"
+    },
+    {
+      "id": "1253",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 14.59 abaixo do piso de ticket mínimo",
+      "title": "Broche Personalizado de Aço Inoxidável com Nome Gravado Tema Chef, Acabamento Dourado Elegante, Design de Utensílio de Cozinha, Ideal para Festas",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1459"
+    },
+    {
+      "id": "1252",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 19.08 abaixo do piso de ticket mínimo",
+      "title": "Cesto de Drenagem de Frutas Dopamine, Utensílio de Lavagem de Frutas, Cesto de Frutas de Parede Dupla, Grau Alimentício, Parede Grossa, Suspenso, para Cozinha",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1908"
+    },
+    {
+      "id": "1251",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 18.90 abaixo do piso de ticket mínimo",
+      "title": "Batedor Misturador Mixer Elétrico para Bebidas Leite Café Clara de Ovo 2 em 1",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1890"
+    },
+    {
+      "id": "1250",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 19.99 abaixo do piso de ticket mínimo",
+      "title": "Carregador Turbo 40W USB-C com Cabo Tipo C 1M, Carregamento Rápido para iPhone 15/16/17/18",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1999"
+    },
+    {
+      "id": "1249",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 14.99 abaixo do piso de ticket mínimo",
+      "title": "Suporte Adesivo para Fones de Ouvido, Montagem na Parede, Suporte Universal para Fones de Ouvido de Jogos, Organizador para Casa e Escritório",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1499"
+    },
+    {
+      "id": "1248",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 11.69 abaixo do piso de ticket mínimo",
+      "title": "Kit 3 Espátulas Alisadoras de Creme com Dentes Irregulares para Decoração de Bolos, Fondant e Confeitaria, Ferramentas de Culinária, Várias Cores",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1169"
+    },
+    {
+      "id": "1247",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 10.79 abaixo do piso de ticket mínimo",
+      "title": "Módulo Transmissor de Áudio Bluetooth 5.3 KCX_EMITER 3.5-5V, Placa de Fone de Ouvido, Módulo Estéreo para Caixa de Som Sem Fio",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1079"
+    },
+    {
+      "id": "1246",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 13.79 abaixo do piso de ticket mínimo",
+      "title": "Carregador de Carro Mini 100W/200W QC3.0 PD 12-24V, Carregador Rápido USB Tipo C para Xiaomi, Samsung, Huawei, iPhone",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1379"
+    },
+    {
+      "id": "1245",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 12.44 abaixo do piso de ticket mínimo",
+      "title": "Carregador de Carro Mini 200W 2026 com Carregamento Rápido para iPhone QC3.0 e USB Tipo C para Xiaomi Samsung Huawei",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1244"
+    },
+    {
+      "id": "1244",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 10.00 abaixo do piso de ticket mínimo",
+      "title": "Fone de Ouvido entrada lightning P2 para Iphone e Android Microfone Bluetooth",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1000"
+    },
+    {
+      "id": "1243",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 18.97 abaixo do piso de ticket mínimo",
+      "title": "Fone P47 Bluetooth 5.0 Sem Fio | Estéreo Premium com Microfone para Celular, Escola e Gamer",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1897"
+    },
+    {
+      "id": "1242",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 8.99 abaixo do piso de ticket mínimo",
+      "title": "Cabo Carregador Iphone Lightning Usb-C Tipo C 1m USB de Carregamento Rápido/Dados para Iphone",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "899"
+    },
+    {
+      "id": "1241",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 11.89 abaixo do piso de ticket mínimo",
+      "title": "Caixa Organizadora Transparente para Cabos de Dados de Celular e Fones de Ouvido com Fio, Carregador e Acessórios para Casa e Escritório",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1189"
+    },
+    {
+      "id": "1240",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 12.05 abaixo do piso de ticket mínimo",
+      "title": "Conjunto de organizadores de cabos com 10 peças, suporte de cabos para secretária, organizador de cabos adesivo, adequado para casa, escritório, parede, mesa de cabeceira, cabos de carregamento para carro – uma ferrame",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1205"
+    },
+    {
+      "id": "1239",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 16.99 abaixo do piso de ticket mínimo",
+      "title": "Produtos mais vendidos: marca Spe, porta-sapatos unissex, largura ajustável, conjunto de duas peças, modelo: FE WJQK.",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1699"
+    },
+    {
+      "id": "1238",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 10.99 abaixo do piso de ticket mínimo",
+      "title": "Cabo Tipo C Carregamento  6A",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1099"
+    },
+    {
+      "id": "1237",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 15.88 abaixo do piso de ticket mínimo",
+      "title": "Cabo De Carregador 3 Em 1 100W 6A Tipo C Lightning Micro USB Carga Rápida Liga De Zinco 1,2M",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1588"
+    },
+    {
+      "id": "1236",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 19.90 abaixo do piso de ticket mínimo",
+      "title": "Cabide De Porta 6 Ganchos Para Porta Pendurar Toalha Roupas Sem Furar Metal 45cm",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1990"
+    },
+    {
+      "id": "1235",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 19.90 abaixo do piso de ticket mínimo",
+      "title": "Suporte De Papel Higiênico De Parede À Prova D 'Água Multifuncional",
+      "marketplace": "shopee",
+      "snapshot_price_cents": "1990"
+    },
+    {
+      "id": "1234",
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "created_at": "2026-10-10T15:19:25.108Z",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "rationale": "Preço R$ 15.38 abaixo do piso de ticket mínimo",
+      "title": "2-10 peças para Realme C75: Conector de Porta de Carregamento USB Tipo C (Plug-in) / Pino de Carregamento / Conector de Soquete",
+      "marketplace": "aliexpress",
+      "snapshot_price_cents": "1538"
+    }
+  ],
+  "annotatedHighScores": [],
+  "crossCaptureTriage": [
+    {
+      "triage_run_id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "count": 13
+    },
+    {
+      "triage_run_id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "dd1d03ac-64bf-4fc5-964b-057c35e91b53",
+      "count": 38
+    },
+    {
+      "triage_run_id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "count": 8
+    },
+    {
+      "triage_run_id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "count": 7
+    },
+    {
+      "triage_run_id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "count": 17
+    },
+    {
+      "triage_run_id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "marketplace": "shopee",
+      "latest_observation_batch": "dd1d03ac-64bf-4fc5-964b-057c35e91b53",
+      "count": 16
+    },
+    {
+      "triage_run_id": "0865ac7d-8c7c-4b35-9cdd-1085180e6c21",
+      "marketplace": "shopee",
+      "latest_observation_batch": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "count": 1
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "69087174-0993-4533-b580-e3171dc0923c",
+      "count": 1
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 11
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 35
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": null,
+      "count": 7
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 2
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 1
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": null,
+      "count": 5
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "shopee",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 1
+    },
+    {
+      "triage_run_id": "239a2f4d-8d94-4ede-92e9-9ae451a32530",
+      "marketplace": "shopee",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 37
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "count": 13
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 2
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 18
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "count": 32
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "count": 2
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 14
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "count": 1
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "shopee",
+      "latest_observation_batch": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "count": 3
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "shopee",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 2
+    },
+    {
+      "triage_run_id": "4dfdc402-4bac-4688-b54d-857ba1768317",
+      "marketplace": "shopee",
+      "latest_observation_batch": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "count": 13
+    },
+    {
+      "triage_run_id": "6d4f9a09-d2a5-4bd1-965b-c46a89a0a385",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": null,
+      "count": 13
+    },
+    {
+      "triage_run_id": "6d4f9a09-d2a5-4bd1-965b-c46a89a0a385",
+      "marketplace": "shopee",
+      "latest_observation_batch": null,
+      "count": 27
+    },
+    {
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": null,
+      "count": 20
+    },
+    {
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "marketplace": "shopee",
+      "latest_observation_batch": null,
+      "count": 24
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "dd1d03ac-64bf-4fc5-964b-057c35e91b53",
+      "count": 6
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "fd9f1834-4b22-4c67-9e84-d4c7c8e2f936",
+      "count": 6
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": null,
+      "count": 22
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "dd1d03ac-64bf-4fc5-964b-057c35e91b53",
+      "count": 14
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "marketplace": "shopee",
+      "latest_observation_batch": "dd1d03ac-64bf-4fc5-964b-057c35e91b53",
+      "count": 1
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "marketplace": "shopee",
+      "latest_observation_batch": null,
+      "count": 1
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "count": 50
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 5
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 7
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": null,
+      "count": 5
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "69087174-0993-4533-b580-e3171dc0923c",
+      "count": 1
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 5
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 1
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "mercadolivre",
+      "latest_observation_batch": null,
+      "count": 2
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "shopee",
+      "latest_observation_batch": "57454615-1d43-4812-806d-a50a87cc21e6",
+      "count": 18
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "shopee",
+      "latest_observation_batch": "69087174-0993-4533-b580-e3171dc0923c",
+      "count": 3
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "shopee",
+      "latest_observation_batch": "6bd72202-720a-4351-856e-61ed852344a9",
+      "count": 1
+    },
+    {
+      "triage_run_id": "ca726a59-a501-4044-8ce4-d252f936de87",
+      "marketplace": "shopee",
+      "latest_observation_batch": "a7f1654a-6dc8-4bcf-baf7-c1a55b6b680b",
+      "count": 2
+    },
+    {
+      "triage_run_id": "d945ee1b-7e90-4e53-b715-5eb9f89e9652",
+      "marketplace": "aliexpress",
+      "latest_observation_batch": null,
+      "count": 5
+    },
+    {
+      "triage_run_id": "d945ee1b-7e90-4e53-b715-5eb9f89e9652",
+      "marketplace": "shopee",
+      "latest_observation_batch": null,
+      "count": 45
+    }
+  ],
+  "recentRunReasons": [
+    {
+      "triage_run_id": "6d4f9a09-d2a5-4bd1-965b-c46a89a0a385",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "count": 40,
+      "min_snapshot_price_cents": 498,
+      "max_snapshot_price_cents": 1998
+    },
+    {
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "3",
+      "count": 3,
+      "min_snapshot_price_cents": 2179,
+      "max_snapshot_price_cents": 3198
+    },
+    {
+      "triage_run_id": "a20d3501-27db-4f51-a28f-fc8e724cb349",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "count": 41,
+      "min_snapshot_price_cents": 441,
+      "max_snapshot_price_cents": 1999
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "actor_type": "llm",
+      "to_status": "approved",
+      "reason_code": null,
+      "ai_score": "4",
+      "count": 7,
+      "min_snapshot_price_cents": 2419,
+      "max_snapshot_price_cents": 31259
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "actor_type": "llm",
+      "to_status": "approved",
+      "reason_code": null,
+      "ai_score": "5",
+      "count": 3,
+      "min_snapshot_price_cents": 2036,
+      "max_snapshot_price_cents": 14999
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "actor_type": "llm",
+      "to_status": "pending",
+      "reason_code": null,
+      "ai_score": "3",
+      "count": 7,
+      "min_snapshot_price_cents": 2489,
+      "max_snapshot_price_cents": 27835
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "1",
+      "count": 14,
+      "min_snapshot_price_cents": 2490,
+      "max_snapshot_price_cents": 319300
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "2",
+      "count": 14,
+      "min_snapshot_price_cents": 2289,
+      "max_snapshot_price_cents": 317900
+    },
+    {
+      "triage_run_id": "a2cf2638-4eb3-42e8-82ed-d9cf55af391a",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "family_saturation",
+      "ai_score": null,
+      "count": 5,
+      "min_snapshot_price_cents": 3239,
+      "max_snapshot_price_cents": 15859
+    },
+    {
+      "triage_run_id": "d945ee1b-7e90-4e53-b715-5eb9f89e9652",
+      "actor_type": "llm",
+      "to_status": "approved",
+      "reason_code": null,
+      "ai_score": "4",
+      "count": 4,
+      "min_snapshot_price_cents": 2099,
+      "max_snapshot_price_cents": 3099
+    },
+    {
+      "triage_run_id": "d945ee1b-7e90-4e53-b715-5eb9f89e9652",
+      "actor_type": "rule",
+      "to_status": "held",
+      "reason_code": "weak_offer",
+      "ai_score": null,
+      "count": 46,
+      "min_snapshot_price_cents": 99,
+      "max_snapshot_price_cents": 1999
+    }
+  ],
+  "captureSourceCounts": [
+    {
+      "marketplace": "aliexpress",
+      "capture_mode": "monitoring",
+      "has_operation_batch": false,
+      "status": "error",
+      "runs": 13,
+      "first_started_at": "2026-09-27T23:46:20.414Z",
+      "last_started_at": "2026-10-07T00:36:35.477Z",
+      "captured_observations": 163
+    },
+    {
+      "marketplace": "aliexpress",
+      "capture_mode": "monitoring",
+      "has_operation_batch": false,
+      "status": "ok",
+      "runs": 32,
+      "first_started_at": "2026-09-25T19:13:12.291Z",
+      "last_started_at": "2026-10-10T09:43:15.287Z",
+      "captured_observations": 541
+    },
+    {
+      "marketplace": "shopee",
+      "capture_mode": "monitoring",
+      "has_operation_batch": false,
+      "status": "ok",
+      "runs": 45,
+      "first_started_at": "2026-09-25T19:13:12.644Z",
+      "last_started_at": "2026-10-10T09:43:19.662Z",
+      "captured_observations": 784
+    }
+  ],
+  "activeBatchChildren": [
+    {
+      "id": "c5c334a3-3783-4e3b-ae8c-2e35e6b4c1d0",
+      "requested_marketplaces": [
+        "mercadolivre"
+      ],
+      "started_at": "2026-09-25T16:22:15.618Z",
+      "child_runs": 0,
+      "last_child_finished_at": null
+    }
+  ]
+}

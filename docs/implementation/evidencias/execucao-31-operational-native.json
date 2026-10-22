@@ -1,0 +1,107 @@
+{
+  "at": "2026-10-16T02:03:06.598Z",
+  "engine": "postgres (PostgreSQL) 17.6",
+  "environment": "synthetic localhost; reconstructed baseline plus exact legacy seed trigger; no Supabase/deployment proof",
+  "productionWrites": 0,
+  "productionApproved": false,
+  "units": [
+    {
+      "file": "20261015194719_garimpa_v2_foundation.sql",
+      "sha256": "33e03729f9e058169844fc353cba083cb3d5fe270b98ea890dafd0fb0a87c40c"
+    },
+    {
+      "file": "20261015194748_garimpa_v2_expansion.sql",
+      "sha256": "02810325f1eecc16dfc05121f44b75a64c5ce0655b9329f2662ffb0d74cbecaa"
+    },
+    {
+      "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
+      "sha256": "1114987e4108745492af6c3457ec6850a999ed16be79d815d001c4b156669a21"
+    }
+  ],
+  "results": [
+    {
+      "name": "legacy seed trigger creates pending curation without explicit application seed",
+      "result": "PASS"
+    },
+    {
+      "name": "S0: backfill preview/apply is tenant-scoped, idempotent and does not approve curation",
+      "result": "PASS"
+    },
+    {
+      "name": "S0: house commands refuse runtime; administrator preview does not mutate",
+      "result": "PASS"
+    },
+    {
+      "name": "foundation: backfill preview/apply is tenant-scoped, idempotent and does not approve curation",
+      "result": "PASS"
+    },
+    {
+      "name": "foundation: house commands refuse runtime; administrator preview does not mutate",
+      "result": "PASS"
+    },
+    {
+      "name": "expansion: backfill preview/apply is tenant-scoped, idempotent and does not approve curation",
+      "result": "PASS"
+    },
+    {
+      "name": "expansion: house commands refuse runtime; administrator preview does not mutate",
+      "result": "PASS"
+    },
+    {
+      "name": "scoped_cutover: backfill preview/apply is tenant-scoped, idempotent and does not approve curation",
+      "result": "PASS"
+    },
+    {
+      "name": "scoped_cutover: house commands refuse runtime; administrator preview does not mutate",
+      "result": "PASS"
+    },
+    {
+      "name": "bootstrap preserves global home, requires authenticated affiliate and rejects conflicting memberships",
+      "result": "PASS"
+    },
+    {
+      "name": "house config writes only house, resets validation and never returns tracking/tool",
+      "result": "PASS"
+    },
+    {
+      "name": "suspended account denies scoped backfill and all house maintenance",
+      "result": "PASS"
+    },
+    {
+      "name": "real worker capture still seeds pending curation with legacy trigger after cutover",
+      "result": "PASS"
+    },
+    {
+      "name": "browser pending/import/retry works as real runtime and keeps capture pending under legacy trigger",
+      "result": "PASS"
+    },
+    {
+      "name": "manual capture uses authenticated selected account and denies a revoked membership",
+      "result": "PASS"
+    },
+    {
+      "name": "owner pairing creation scopes to chosen account; concurrent code exchange issues exactly one token",
+      "result": "PASS"
+    },
+    {
+      "name": "paired device captures idempotently and touches only its own use without owner identity",
+      "result": "PASS"
+    },
+    {
+      "name": "pairing rejects expired/revoked/operator/role-revoked authority and malformed hashes",
+      "result": "PASS"
+    },
+    {
+      "name": "administrative CLI has no DATABASE_URL fallback; retired commands stop before any connection",
+      "result": "PASS"
+    },
+    {
+      "name": "malformed CLI database URLs do not disclose supplied credentials",
+      "result": "PASS"
+    },
+    {
+      "name": "automatic capture refuses another account before dispatching or reading house credentials",
+      "result": "PASS"
+    }
+  ]
+}

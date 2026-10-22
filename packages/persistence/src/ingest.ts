@@ -213,6 +213,7 @@ export async function sweep(
     throw err;
   } finally {
     await store.finishCaptureRun(runId, {
+      tenantId: opts.tenantId,
       finishedAt: new Date(),
       status: errorMessage ? "error" : itemsSeen === 0 ? "error" : "ok",
       itemsCaptured,

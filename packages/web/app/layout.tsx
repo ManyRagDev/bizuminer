@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     ],
   },
   manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BizuMiner",
+  },
   openGraph: {
     title: "BizuMiner — Um bizu bom vale ouro",
     description:

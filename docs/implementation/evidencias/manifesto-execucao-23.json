@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-15",
+  "candidate": "local repairs after independent audit22; no application deploy",
+  "files": [
+    {
+      "path": "packages/persistence/supabase/migrations/20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014101000_garimpa_tenant_rls_scoped.sql",
+      "sha256": "57e737818e44266dc7e59d6a4b8637cd3d83fba1637a0cc0837df3674c88e8a0"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014102000_garimpa_price_evidence_canonical.sql",
+      "sha256": "5663b934ce2240efcafa8b069e54376f08cc392ec07d87d62d4c4c98deceb2b6"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014103000_garimpa_rubric_assessment_shadow.sql",
+      "sha256": "fc2ebbd70c0c31f9a416b2026d1a0789aafa908b68031710fec41ba5e7483139"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014104000_garimpa_audience_policy_and_opportunity.sql",
+      "sha256": "f7891a8b351f3efe3da146e520c1a2a0c2c05afd0a6e8d848c2f34302331341a"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014105000_garimpa_commerce_and_campaign_link.sql",
+      "sha256": "0ac1aac79763568890d0ea5a6f8785898f338da0d981d3e49aa87e569763e648"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014106000_garimpa_commercial_financial_ledger.sql",
+      "sha256": "64e3695d1defc2dc28b69fa61f3ea2eea71a2d8bffb3f4aac0475079618ed038"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014107000_garimpa_click_attribution_and_channels.sql",
+      "sha256": "45da44abba0327b4d7c78c39f3f9ba29040f937ff291a6f9aa2961ba27686da9"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014108000_garimpa_policy_experiments.sql",
+      "sha256": "4dee052305d5d0d10a73e7139de358f2bfc9af54b9de5ae53dec4cb7e12e0f08"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014109000_garimpa_dispatch_jobs_outbox.sql",
+      "sha256": "89165a429250169ec34f11bd7db62d306fdcb429aacaa70ac6bb9a0e481225ff"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014110000_garimpa_saas_onboarding_entitlements.sql",
+      "sha256": "0c247052eb42a56ac97edf845fda5d548f0c7194d5745d4d51ed2739d9978a7b"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015021300_garimpa_verified_workflows.sql",
+      "sha256": "f2566ff5f61b5ad605bb28ae40ed7062e81f773ca3937fe22311730525182038"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23"
+    },
+    {
+      "path": "packages/web/lib/auth-merge.ts",
+      "sha256": "85b118c1c887bab41cf5239886c97cd2d4ac8b6278b543f70d530ca4a8e37810"
+    },
+    {
+      "path": "packages/web/lib/editorial-selection-db.ts",
+      "sha256": "16ca404003de2b9c603e2f778cb2e848ac16c523a9785b5560ffe6a62507eb77"
+    },
+    {
+      "path": "packages/web/lib/public-offer-db.ts",
+      "sha256": "64ceea3416a9414575e8c0ef88e51142187904a4bba1b6de20ab9bdb4b893cbd"
+    },
+    {
+      "path": "tools/editorial-tests/auth-merge-flow.test.ts",
+      "sha256": "08f2f34c79d719f551e6aace24ca6f97fe2c86f054d28bc775cbdcb939979932"
+    },
+    {
+      "path": "tools/editorial-tests/commercial-fixture.ts",
+      "sha256": "fa0a03da3f7cd83d40aa201136df57d8510be19fdbfe301756f3a8be74448512"
+    },
+    {
+      "path": "tools/editorial-tests/commercial-flow.test.ts",
+      "sha256": "d33094b58e376d2d001476a90f7261b984e1939ea295f118eb8de8de5e5bbac5"
+    },
+    {
+      "path": "tools/editorial-tests/dispatch-worker-flow.test.ts",
+      "sha256": "b614c7594f9e1bb135471b25f9199c641139ac3ab83c3b72c7891b4441f88c57"
+    },
+    {
+      "path": "tools/editorial-tests/migration-integrity-flow.test.ts",
+      "sha256": "f9f2b7a6339770f7bbf3934e80c9c8dbf8f96a494018450dee4289172a3c79d9"
+    },
+    {
+      "path": "tools/editorial-tests/package.json",
+      "sha256": "68278bedf00397d4d1cb1ed98e0bf97261fdeafee902e5c1b5058ec31b29b17b"
+    },
+    {
+      "path": "tools/editorial-tests/public-readiness-flow.test.ts",
+      "sha256": "06ad56083007023d21a0572f0a39e441c5bed8a95e72bccad4692b8a4030df30"
+    },
+    {
+      "path": "tools/editorial-tests/secret-bootstrap-flow.test.ts",
+      "sha256": "c24572b915dba566ff7804bf3f71cf2cb67f928a429971c7e659748d028447b5"
+    },
+    {
+      "path": "tools/editorial-tests/README.md",
+      "sha256": "ba3a138e2b4817fb65c71d4687500872ed4276b262d2ad95309b7acb9173fbca"
+    }
+  ]
+}

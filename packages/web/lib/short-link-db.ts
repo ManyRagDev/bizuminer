@@ -28,6 +28,8 @@ const MAX_ATTEMPTS = 5;
  * perdedora relê o vencedor.
  */
 export async function shortCodeForSlug(slug: string, tenantId = "local"): Promise<string> {
+  const reader=await import("./public-offer-db.ts");
+  if(await reader.publicProjectionReady()) return (await mintPublicCodes([slug],tenantId)).get(slug)!;
   const sql = db();
   try {
     const existing = await sql<{ code: string }[]>`
@@ -69,6 +71,8 @@ export async function slugForShortCode(code: string, tenantId = "local"): Promis
   // Formato conferido antes de tocar o banco: `/p/[code]` recebe o que o mundo
   // mandar, e string arbitrária não vira consulta.
   if (!isValidShortCode(code)) return null;
+  const publicReader=await import("./public-offer-db.ts");
+  if(await publicReader.publicProjectionReady()) return publicReader.publicShortLink(code,tenantId);
 
   const sql = db();
   try {
@@ -95,6 +99,8 @@ export async function slugForShortCode(code: string, tenantId = "local"): Promis
 export async function shortCodesForSlugs(slugs: string[], tenantId = "local"): Promise<Map<string, string>> {
   const unique = [...new Set(slugs)];
   if (unique.length === 0) return new Map();
+  const reader=await import("./public-offer-db.ts");
+  if(await reader.publicProjectionReady()) return mintPublicCodes(unique,tenantId);
   const sql = db();
   try {
     const result = new Map<string, string>();
@@ -135,4 +141,19 @@ export async function shortCodesForSlugs(slugs: string[], tenantId = "local"): P
   } finally {
     await sql.end();
   }
+}
+
+async function mintPublicCodes(slugs:string[],tenantId:string) {
+ const {withPublicDb}=await import("./public-offer-db.ts");
+ return withPublicDb(async tx=>{
+  const result=new Map<string,string>();
+  for(const slug of slugs) {
+   for(let attempt=0;attempt<MAX_ATTEMPTS;attempt++) {
+    const [r]=await tx<{code:string|null}[]>`select garimpa.public_mint_short_link(${slug},${tenantId},${generateShortCode()}) as code`;
+    if(r?.code){result.set(slug,r.code);break;}
+   }
+   if(!result.has(slug)) throw new Error("short_link_unavailable");
+  }
+  return result;
+ });
 }

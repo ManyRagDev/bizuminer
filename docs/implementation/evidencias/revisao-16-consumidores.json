@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-14",
+  "scope": "Areas ativas de aplicacao, servicos e CLI; testes excluidos",
+  "references": {
+    "submitHumanRubricReviewAction": [
+      {
+        "path": "packages/web/app/admin/curadoria/actions.ts",
+        "line": 266,
+        "text": "export async function submitHumanRubricReviewAction(input: {"
+      }
+    ],
+    "runShadowEvaluationAction": [
+      {
+        "path": "packages/web/app/admin/curadoria/actions.ts",
+        "line": 356,
+        "text": "export async function runShadowEvaluationAction(input: {"
+      }
+    ],
+    "fetchRadarOpportunitiesAction": [
+      {
+        "path": "packages/web/app/admin/direcionamento/opportunity-actions.ts",
+        "line": 83,
+        "text": "export async function fetchRadarOpportunitiesAction(options?: {"
+      }
+    ],
+    "prioritizeMonitoringQueue": [
+      {
+        "path": "packages/web/lib/opportunity-db.ts",
+        "line": 579,
+        "text": "export function prioritizeMonitoringQueue<T extends { id: string; observationCount?: number; historyDays?: number }>("
+      }
+    ],
+    "createPolicyExperiment": [
+      {
+        "path": "packages/web/lib/experiment-db.ts",
+        "line": 50,
+        "text": "export async function createPolicyExperiment("
+      }
+    ],
+    "executeDispatchCycle": [
+      {
+        "path": "packages/web/lib/dispatch-worker.ts",
+        "line": 48,
+        "text": "export async function executeDispatchCycle("
+      }
+    ],
+    "provisionPilotAccountByPlatformAdmin": [
+      {
+        "path": "packages/web/lib/saas-onboarding-db.ts",
+        "line": 434,
+        "text": "export async function provisionPilotAccountByPlatformAdmin("
+      }
+    ],
+    "recordOnboardingProgress": [
+      {
+        "path": "packages/web/lib/saas-onboarding-db.ts",
+        "line": 235,
+        "text": "export async function recordOnboardingProgress("
+      }
+    ],
+    "submitImportBatchPreview": [
+      {
+        "path": "packages/web/app/admin/financeiro/actions.ts",
+        "line": 130,
+        "text": "export async function submitImportBatchPreview("
+      },
+      {
+        "path": "packages/web/app/admin/financeiro/workspace.tsx",
+        "line": 11,
+        "text": "submitImportBatchPreview,"
+      },
+      {
+        "path": "packages/web/app/admin/financeiro/workspace.tsx",
+        "line": 33,
+        "text": "const res=await submitImportBatchPreview({tenantId,marketplace:importMarketplace,csvContent:csvText});"
+      }
+    ],
+    "submitCommitImportBatch": [
+      {
+        "path": "packages/web/app/admin/financeiro/actions.ts",
+        "line": 159,
+        "text": "export async function submitCommitImportBatch("
+      },
+      {
+        "path": "packages/web/app/admin/financeiro/workspace.tsx",
+        "line": 12,
+        "text": "submitCommitImportBatch,"
+      },
+      {
+        "path": "packages/web/app/admin/financeiro/workspace.tsx",
+        "line": 40,
+        "text": "const res=await submitCommitImportBatch({tenantId,batchId:importPreview.batchId,expectedDigest:importPreview.preview.fileDigest});"
+      }
+    ]
+  }
+}

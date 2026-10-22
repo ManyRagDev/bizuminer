@@ -1,0 +1,2231 @@
+{
+  "order": "OS-01",
+  "state": "CONCLUIDO",
+  "recordedAt": "2026-10-16T18:45:09.122988+00:00",
+  "base": {
+    "root": "/home/many/Documentos/Projetos linux/Garimpa",
+    "branch": "main",
+    "head": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+    "stagedPaths": 0,
+    "initialStatusPathCount": 619
+  },
+  "acceptance": {
+    "AC-1": "PASS: exact 462 sources/archive, target and relevant installed subset identified. Detailed sealed remote preflights remain for later orders.",
+    "AC-2": "PASS PREPARATION: inventory and project-specific pause/protection/job/device plan documented; actual closure and reserved access must be verified by OS-02 before DDL.",
+    "AC-3": "PASS: actual 28-table export restored, counts/digests/FKs/policies verified; identical permanent copy created at explicitly approved private destination.",
+    "AC-4": "PASS LOCAL ONLY: 16 commands after fixture/environment corrections and both native suites; publication not performed."
+  },
+  "remoteReadEvidence": {
+    "startedAt": "2026-10-16 18:07:20 UTC",
+    "project": {
+      "url": "https://spbuwcwmxlycchuwhfir.supabase.co"
+    },
+    "migrations": [
+      {
+        "version": "20261015034755",
+        "name": "garimpa_account_context_and_membership"
+      },
+      {
+        "version": "20261015035126",
+        "name": "garimpa_affiliate_secret_bootstrap_rls"
+      },
+      {
+        "version": "20261015041540",
+        "name": "garimpa_curation_membership_author"
+      }
+    ],
+    "catalog": [
+      {
+        "database": "postgres",
+        "inspector": "postgres",
+        "serverVersion": "17.6",
+        "tables": 28,
+        "policies": 29,
+        "rolloutControl": null,
+        "ownBucketPresent": false,
+        "externalFK": null,
+        "runtimeTableAccess": [
+          {
+            "rls": true,
+            "force": false,
+            "table": "affiliate_account",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "affiliate_marketplace_config",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "affiliate_membership",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "affiliate_monitoring_policy",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "affiliate_monitoring_policy_event",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "affiliate_monitoring_skip",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "affiliate_secret",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "app_user",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": true,
+            "table": "app_user_role",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "buyer_profile",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "capture_batch",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "capture_run",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "click_event",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "curation_event",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "editorial_assessment",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "editorial_guideline",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "editorial_selection",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "editorial_selection_item",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "extension_device",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "favorite",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "price_observation",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "price_watch",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "product",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "product_curation",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "publication",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "short_link",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "subscriber",
+            "can_select": true
+          },
+          {
+            "rls": true,
+            "force": false,
+            "table": "triage_run",
+            "can_select": true
+          }
+        ]
+      }
+    ],
+    "vercel": {
+      "id": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+      "teamId": "team_CdqNeIvhoe03YClNYUpP6C1w",
+      "name": "web",
+      "nodeVersion": "24.x",
+      "latestDeployment": {
+        "id": "dpl_FtFtkK1C91T6Z38H5985mYe2RGRL",
+        "url": "web-e3twr6aqn-emanuels-projects-aa92a126.vercel.app",
+        "createdAt": 1791302922407,
+        "readyState": "READY",
+        "target": "production"
+      },
+      "ssoProtection": {
+        "enabled": true,
+        "deploymentType": "all_except_custom_domains"
+      },
+      "env": [
+        {
+          "key": "GITHUB_ACTIONS_WRITE_TOKEN",
+          "target": [
+            "production"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "ML_AUTOMATED_CAPTURE_PRODUCTION",
+          "target": [
+            "production"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "ML_AUTOMATED_CAPTURE_ENABLED",
+          "target": [
+            "production"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "SUPABASE_PUBLISHABLE_KEY",
+          "target": [
+            "preview",
+            "production"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "NEXT_PUBLIC_SUPABASE_URL",
+          "target": [
+            "preview",
+            "production"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+          "target": [
+            "preview",
+            "production"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "ADMIN_EMAIL",
+          "target": [
+            "preview",
+            "production"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "NEXT_PUBLIC_SITE_URL",
+          "target": [
+            "preview",
+            "production"
+          ],
+          "type": "encrypted"
+        },
+        {
+          "key": "GEMINI_API_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "PORT",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "JWT_SECRET",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "SCREENSHOT_SERVICE_URL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "DATABASE_URL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "ML_TRACKING_ID",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "ML_TOOL_ID",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "VITE_SUPABASE_URL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "VITE_SUPABASE_ANON_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "SUPABASE_ANON_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "POLLINATIONS_API_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "GOOGLE_API_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "GROQ_API_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "SUPABASE_URL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "SUPABASE_SERVICE_ROLE_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_SECRET_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_WEBHOOK_SECRET",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_PRICE_PRO_MONTHLY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_PRICE_PRO_ANNUAL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_PRICE_AGENCY_MONTHLY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_PRICE_AGENCY_ANNUAL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_PRICE_TOPUP_STARTER",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_PRICE_TOPUP_POWER",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "STRIPE_PRICE_TOPUP_MEGA",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "OPENROUTER_API_KEY",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "OPENROUTER_SITE_URL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "OPENROUTER_APP_NAME",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "OPENROUTER_TEXT_MODEL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "OPENROUTER_VISION_MODEL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "OPENROUTER_IMAGE_MODEL",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "OPENROUTER_PLATFORM_FEE_PERCENT",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        },
+        {
+          "key": "AI_GRAPH_SHADOW",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "type": "sensitive"
+        }
+      ]
+    }
+  },
+  "github": {
+    "repo": {
+      "status": 200,
+      "name": "ManyRagDev/bizuminer",
+      "default_branch": "main",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      }
+    },
+    "workflows": {
+      "status": 200,
+      "total": 1,
+      "workflows": [
+        {
+          "id": 366364369,
+          "name": "Acompanhar preços por ID",
+          "path": ".github/workflows/monitor-prices.yml",
+          "state": "active"
+        }
+      ]
+    },
+    "recentRuns": [
+      {
+        "id": 38911462095,
+        "path": ".github/workflows/monitor-prices.yml",
+        "event": "schedule",
+        "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+        "head_branch": "main",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T13:54:11Z"
+      },
+      {
+        "id": 38871220122,
+        "path": ".github/workflows/monitor-prices.yml",
+        "event": "schedule",
+        "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+        "head_branch": "main",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-16T08:04:06Z"
+      },
+      {
+        "id": 38824852680,
+        "path": ".github/workflows/monitor-prices.yml",
+        "event": "schedule",
+        "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+        "head_branch": "main",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-15T23:39:10Z"
+      },
+      {
+        "id": 38790685043,
+        "path": ".github/workflows/monitor-prices.yml",
+        "event": "schedule",
+        "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+        "head_branch": "main",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-15T19:03:01Z"
+      },
+      {
+        "id": 38748649404,
+        "path": ".github/workflows/monitor-prices.yml",
+        "event": "schedule",
+        "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+        "head_branch": "main",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-15T14:07:49Z"
+      }
+    ],
+    "operationalMetadataViaGitHubCLI": {
+      "variables": {
+        "exitCode": 0,
+        "variables": [
+          {
+            "name": "ALIEXPRESS_CAPTURE_ENABLED",
+            "value": "true"
+          },
+          {
+            "name": "MONITORING_ENABLED",
+            "value": "true"
+          },
+          {
+            "name": "MONITOR_PLAN_BUDGET"
+          },
+          {
+            "name": "SHOPEE_CAPTURE_ENABLED",
+            "value": "true"
+          }
+        ]
+      },
+      "hooks": {
+        "exitCode": 0,
+        "count": 0,
+        "hooks": []
+      }
+    },
+    "initialProjectTokenMetadataDenied": {
+      "variables": 403,
+      "hooks": 403
+    },
+    "noMutations": true
+  },
+  "vercelConfiguration": {
+    "id": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+    "name": "web",
+    "rootDirectory": "packages/web",
+    "nodeVersion": "24.x",
+    "framework": "nextjs"
+  },
+  "preliminaryCountsObservedDuringExecution": {
+    "products": 1657,
+    "observations": 9300,
+    "publications": 1495,
+    "shortlinks": 172,
+    "affiliateSecrets": 0,
+    "devices": 3,
+    "consistentMaintenanceBaseline": false
+  },
+  "checks": {
+    "initialAttempts": [
+      {
+        "command": "npm run rollout:verify --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 1,
+        "seconds": 0.21,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/01.log"
+      },
+      {
+        "command": "npm test --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 1,
+        "seconds": 1.38,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/02.log"
+      },
+      {
+        "command": "npm test --prefix packages/persistence",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.32,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/03.log"
+      },
+      {
+        "command": "npm test --prefix packages/capture",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 6.23,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/04.log"
+      },
+      {
+        "command": "npm test --prefix packages/extension",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.21,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/05.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 4.92,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/06.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/persistence",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 1.17,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/07.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/capture",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.87,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/08.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/extension",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.77,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/09.log"
+      },
+      {
+        "command": "npm run build --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 1,
+        "seconds": 6.53,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/10.log"
+      },
+      {
+        "command": "npm run build --prefix packages/extension",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.16,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/11.log"
+      },
+      {
+        "command": "npm test --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 3.27,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/12.log"
+      },
+      {
+        "command": "npm run test:commercial --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 1,
+        "seconds": 0.46,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/13.log"
+      },
+      {
+        "command": "npm run test:public-readiness --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 1,
+        "seconds": 0.31,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/14.log"
+      },
+      {
+        "command": "npm run test:verified-upgrade --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 1,
+        "seconds": 0.41,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/15.log"
+      },
+      {
+        "command": "npm run test:cf-regressions --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 1,
+        "seconds": 0.41,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/16.log"
+      }
+    ],
+    "rechecks": [
+      {
+        "command": "npm run rollout:verify --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.21,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-01.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm test --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 1.27,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-02.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run build --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 19.66,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-03.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run test:commercial --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 2.57,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-04.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run test:public-readiness --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 4.43,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-05.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run test:verified-upgrade --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 3.12,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-06.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run test:cf-regressions --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 2.47,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-07.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      }
+    ],
+    "effectiveCommands": [
+      {
+        "command": "npm run rollout:verify --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.21,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-01.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm test --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 1.27,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-02.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm test --prefix packages/persistence",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.32,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/03.log"
+      },
+      {
+        "command": "npm test --prefix packages/capture",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 6.23,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/04.log"
+      },
+      {
+        "command": "npm test --prefix packages/extension",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.21,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/05.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 4.92,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/06.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/persistence",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 1.17,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/07.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/capture",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.87,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/08.log"
+      },
+      {
+        "command": "npm run typecheck --prefix packages/extension",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.77,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/09.log"
+      },
+      {
+        "command": "npm run build --prefix packages/web",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 19.66,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-03.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run build --prefix packages/extension",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 0.16,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/11.log"
+      },
+      {
+        "command": "npm test --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 3.27,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/12.log"
+      },
+      {
+        "command": "npm run test:commercial --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 2.57,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-04.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run test:public-readiness --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 4.43,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-05.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run test:verified-upgrade --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 3.12,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-06.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      },
+      {
+        "command": "npm run test:cf-regressions --prefix tools/editorial-tests",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "exitCode": 0,
+        "seconds": 2.47,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/recheck-07.log",
+        "reason": "input fixtures copied unchanged; sandbox limits for system interfaces/child stdout/build"
+      }
+    ],
+    "nativeSuites": [
+      {
+        "command": "npm run test:replacement-rollout --prefix tools/editorial-tests",
+        "exitCode": 0,
+        "seconds": 2.62,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/native-replacement-rollout.log",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "engine": "PostgreSQL17.11 native loopback only; no managed services"
+      },
+      {
+        "command": "npm run test:operational-maintenance --prefix tools/editorial-tests",
+        "exitCode": 0,
+        "seconds": 2.67,
+        "log": "/tmp/bizuminer-finalizacao/os-01/checks/native-operational-maintenance.log",
+        "cwd": "/tmp/bizuminer-finalizacao/os-01/source",
+        "engine": "PostgreSQL17.11 native loopback only; no managed services"
+      }
+    ],
+    "packageTestTotals": {
+      "web": 379,
+      "persistence": 8,
+      "capture": 8,
+      "extension": 4
+    },
+    "nativeResultTotals": {
+      "replacement": 39,
+      "operational": 21
+    },
+    "reusedHistory": {
+      "node24Build": "docs/implementation/evidencias/execucao-31-build-node24-unsandboxed.log",
+      "otherSQLSuites": "docs/implementation/evidencias/execucao-31-final-checks.json",
+      "editorialSourcesIdenticalToHistoricManifest": 36
+    },
+    "limits": "No Supabase Auth/Storage/pooler or published runtime end-to-end certification; no actual-data restore."
+  },
+  "preparedTools": {
+    "directory": "/tmp/bizuminer-finalizacao/os-01/pg-tools/root/usr/lib/postgresql/17/bin",
+    "versions": {
+      "pg_dump": "17.11",
+      "pg_restore": "17.11",
+      "postgres": "17.11"
+    },
+    "officialOrigin": "https://apt.postgresql.org/",
+    "packages": [
+      {
+        "Package": "libpq5",
+        "Version": "18.6-1.pgdg24.04+2",
+        "Filename": "pool/main/p/postgresql-18/libpq5_18.6-1.pgdg24.04+2_amd64.deb",
+        "SHA256": "b487c5ed2ceb9244c6a9d6ae65818ed6707c3c44a2e14488394ae4194c52c53b",
+        "Depends": "libc6 (>= 2.38), libgssapi-krb5-2 (>= 1.17), libldap2 (>= 2.6.2), libssl3t64 (>= 3.0.0)",
+        "Size": "264072"
+      },
+      {
+        "Package": "postgresql-17",
+        "Version": "17.11-1.pgdg24.04+2",
+        "Filename": "pool/main/p/postgresql-17/postgresql-17_17.11-1.pgdg24.04+2_amd64.deb",
+        "SHA256": "d5b58058a82a3f344f832aea2cc54badc4f6265c25c960752cb1f5df5d2180ee",
+        "Depends": "locales | locales-all, postgresql-client-17, postgresql-common (>= 252~), ssl-cert, tzdata, debconf (>= 0.5) | debconf-2.0, libc6 (>= 2.38), libgcc-s1 (>= 3.3.1), libgssapi-krb5-2 (>= 1.14+dfsg), libicu74 (>= 74.1-1~), libldap2 (>= 2.6.2), libllvm19, liblz4-1 (>= 0.0~r130), libpam0g (>= 0.99.7.1), libpq5 (>= 17~~), libselinux1 (>= 3.1~), libssl3t64 (>= 3.0.0), libstdc++6 (>= 5.2), libsystemd0, libuuid1 (>= 2.16), libxml2 (>= 2.7.4), libxslt1.1 (>= 1.1.25), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)",
+        "Size": "16949784"
+      },
+      {
+        "Package": "postgresql-client-17",
+        "Version": "17.11-1.pgdg24.04+2",
+        "Filename": "pool/main/p/postgresql-17/postgresql-client-17_17.11-1.pgdg24.04+2_amd64.deb",
+        "SHA256": "b3b071b67a814a382516d6f6241b529c52f909672457e2f48083acce047b634f",
+        "Depends": "libpq5 (>= 17.11), postgresql-client-common (>= 182~), sensible-utils, libc6 (>= 2.38), liblz4-1 (>= 0.0~r127), libreadline8t64 (>= 6.0), libssl3t64 (>= 3.0.0), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)",
+        "Size": "2052656"
+      }
+    ],
+    "systemInstall": false,
+    "applicationDependenciesInstalled": false
+  },
+  "blockers": [],
+  "maintenancePlan": {
+    "web": "Project-specific pause blocks active production; existing SSO all_except_custom_domains protects immutable/preview endpoints. Coverage, old URLs and reserved candidate access must be verified before A in OS-02. No settings changed.",
+    "jobs": "Disable only monitor-prices existing workflow and capture-offers if published, cancel/drain current runs; record state and preserve MONITORING_ENABLED=true. No jobs dispatched here.",
+    "devices": "Three existing devices; owner capture must be stopped/drained. No token or device row altered.",
+    "database": "No global Supabase pause, Auth change or shared role revocation.",
+    "gitTriggers": "Two local workflows contain no migration command; remote repository has only monitoring workflow and no repository webhooks. GitHub App/Supabase integrations still require exact check before push in OS-05; absence of hooks alone is not proof."
+  },
+  "preservation": {
+    "sourceDifferences": [],
+    "preserved": {
+      "head": true,
+      "branch": true,
+      "diff": true,
+      "staged": true
+    },
+    "checksPassing": 16,
+    "checksTotal": 16,
+    "nativePassing": 2,
+    "dumpExists": false,
+    "resultExists": false
+  },
+  "remoteWrites": 0,
+  "productionMigrationsApplied": [],
+  "publishedDeployment": null,
+  "authorizedRepoWrites": [
+    "docs/implementation/contratos-finalizacao/resultados/01-preparacao.md",
+    "docs/implementation/contratos-finalizacao/resultados/01-preparacao.json"
+  ],
+  "nextStep": "Execute OS-02 sequentially under latest explicit autonomous-execution authorization; no new generic approval needed.",
+  "blockerHistory": [
+    {
+      "code": "B-EXPORT",
+      "status": "BLOQUEADO",
+      "cause": "Automatic approval review rejected exporting sensitive garimpa data to /tmp because previous authorization did not specify payload and destination.",
+      "actionExecuted": false,
+      "requestedApproval": "28 garimpa tables to /tmp/bizuminer-finalizacao/os-01/private/garimpa-ensaio.dump; private directory, outside Git, restore only disposable local PostgreSQL.",
+      "approvalState": "PENDING explicit user response",
+      "dumpCreated": false,
+      "restoreDemonstrated": false
+    },
+    {
+      "code": "B-RECOVERY-POINT",
+      "status": "NAO_VERIFICADO",
+      "cause": "No real export/restore or protected persistent backup copy demonstrated; AC-3 cannot pass. No production DDL permitted."
+    },
+    {
+      "code": "B-PERSISTENT-DESTINATION",
+      "status": "BLOQUEADO",
+      "reason": "Automatic review rejected copying sensitive dump to /home/many/.local/share/bizuminer/backups/20261016-os01-preparacao.dump because previous exact authorization covered /tmp only.",
+      "actionExecuted": false,
+      "approvalRequested": true,
+      "approvalState": "PENDING explicit user response",
+      "requiredBeforeProductionDDL": true
+    }
+  ],
+  "resume": {
+    "at": "2026-10-16T18:43:18.084537+00:00",
+    "humanAuthorizationReceived": "User answered yes to 28 garimpa tables exported to exact /tmp dump and disposable local restore, and asked autonomous execution through finalization.",
+    "export": {
+      "identity": {
+        "role": "garimpa_app",
+        "rolsuper": false,
+        "rolbypassrls": false,
+        "server_version": "17.6"
+      },
+      "tables": [
+        {
+          "table": "affiliate_account",
+          "count": "1",
+          "digest": "16660c10887b8344b198c9532ec98461"
+        },
+        {
+          "table": "affiliate_marketplace_config",
+          "count": "1",
+          "digest": "697623cce8e55b9ce65bb2d519f188a0"
+        },
+        {
+          "table": "affiliate_membership",
+          "count": "1",
+          "digest": "fbbe370ca82c367a4f9f386e6e2a9006"
+        },
+        {
+          "table": "affiliate_monitoring_policy",
+          "count": "3",
+          "digest": "61515ca504c7965a29d047f237b7b026"
+        },
+        {
+          "table": "affiliate_monitoring_policy_event",
+          "count": "2",
+          "digest": "dda50f9f54157099f3785f0ecc3fff19"
+        },
+        {
+          "table": "affiliate_monitoring_skip",
+          "count": "1",
+          "digest": "8ee73e8b0e32b0efec4c841eb2e64528"
+        },
+        {
+          "table": "affiliate_secret",
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "table": "app_user",
+          "count": "3",
+          "digest": "5bef55d92ec5e035e74212ee9c843a41"
+        },
+        {
+          "table": "app_user_role",
+          "count": "1",
+          "digest": "34d21b0d168ec389c84c7da3f9a34766"
+        },
+        {
+          "table": "buyer_profile",
+          "count": "1",
+          "digest": "5d47c34be8d8218d357a4490e4099771"
+        },
+        {
+          "table": "capture_batch",
+          "count": "11",
+          "digest": "f638c74f8ac93002232ee925de81c12e"
+        },
+        {
+          "table": "capture_run",
+          "count": "405",
+          "digest": "e6612b6d2c7e8f8622bd1e4b75127567"
+        },
+        {
+          "table": "click_event",
+          "count": "767",
+          "digest": "07f980021780b09c6a76af4601a9d352"
+        },
+        {
+          "table": "curation_event",
+          "count": "1330",
+          "digest": "b9a9f42fa32025f21afcffc41b9843ab"
+        },
+        {
+          "table": "editorial_assessment",
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "table": "editorial_guideline",
+          "count": "1",
+          "digest": "3ee9194952c474ff464926802d4f9c66"
+        },
+        {
+          "table": "editorial_selection",
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "table": "editorial_selection_item",
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "table": "extension_device",
+          "count": "3",
+          "digest": "000cf2831336c2235fda7cf9f574844d"
+        },
+        {
+          "table": "favorite",
+          "count": "7",
+          "digest": "d654bd1351426bfe6e830d5c7b8be8ad"
+        },
+        {
+          "table": "price_observation",
+          "count": "9300",
+          "digest": "3afaf74bff901a86cbbdcc936f66311a"
+        },
+        {
+          "table": "price_watch",
+          "count": "4",
+          "digest": "6ac6f68672df64b9c6d5753cf8877df8"
+        },
+        {
+          "table": "product",
+          "count": "1657",
+          "digest": "ee52f591a7ed1468d51a5b7a2bd5d1c2"
+        },
+        {
+          "table": "product_curation",
+          "count": "1657",
+          "digest": "86acda6da338acf66d02f1897562e1d1"
+        },
+        {
+          "table": "publication",
+          "count": "1495",
+          "digest": "3e961f135d9cc688e7a6a79fe7a68897"
+        },
+        {
+          "table": "short_link",
+          "count": "172",
+          "digest": "3825b3f38bbd786fc6d99f828f7e56d6"
+        },
+        {
+          "table": "subscriber",
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "table": "triage_run",
+          "count": "17",
+          "digest": "2880c2561d91fa80d40afb99888c41e6"
+        }
+      ],
+      "snapshotShared": true,
+      "pgDump": {
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 4.519,
+        "stderrPresent": false,
+        "permissionError": false,
+        "schemaOnly": false,
+        "format": "custom",
+        "rowSecurityEnabled": true,
+        "inserts": true
+      },
+      "backupPath": "/tmp/bizuminer-finalizacao/os-01/private/garimpa-ensaio.dump",
+      "completeExportNotYetProven": true
+    },
+    "restore": {
+      "result": "PASS",
+      "restoredRealData": true,
+      "target": "isolated localhost PostgreSQL17.11; SCRAM auth; no production writes",
+      "sourceEngine": "17.6",
+      "dump": "/tmp/bizuminer-finalizacao/os-01/private/garimpa-ensaio.dump",
+      "tables": [
+        {
+          "table": "affiliate_account",
+          "count": "1",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "affiliate_marketplace_config",
+          "count": "1",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "affiliate_membership",
+          "count": "1",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "affiliate_monitoring_policy",
+          "count": "3",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "affiliate_monitoring_policy_event",
+          "count": "2",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "affiliate_monitoring_skip",
+          "count": "1",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "affiliate_secret",
+          "count": "0",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "app_user",
+          "count": "3",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "app_user_role",
+          "count": "1",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "buyer_profile",
+          "count": "1",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "capture_batch",
+          "count": "11",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "capture_run",
+          "count": "405",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "click_event",
+          "count": "767",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "curation_event",
+          "count": "1330",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "editorial_assessment",
+          "count": "0",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "editorial_guideline",
+          "count": "1",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "editorial_selection",
+          "count": "0",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "editorial_selection_item",
+          "count": "0",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "extension_device",
+          "count": "3",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "favorite",
+          "count": "7",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "price_observation",
+          "count": "9300",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "price_watch",
+          "count": "4",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "product",
+          "count": "1657",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "product_curation",
+          "count": "1657",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "publication",
+          "count": "1495",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "short_link",
+          "count": "172",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "subscriber",
+          "count": "0",
+          "countMatch": true,
+          "digestMatch": true
+        },
+        {
+          "table": "triage_run",
+          "count": "17",
+          "countMatch": true,
+          "digestMatch": true
+        }
+      ],
+      "catalog": {
+        "tables": 28,
+        "policies": 29,
+        "constraintsNotValid": 0,
+        "foreignKeys": 51
+      },
+      "steps": [
+        {
+          "step": "initdb",
+          "exitCode": 0,
+          "log": "/tmp/bizuminer-finalizacao/os-01/private/initdb.log"
+        },
+        {
+          "step": "start",
+          "exitCode": 0,
+          "log": "/tmp/bizuminer-finalizacao/os-01/private/start.log"
+        },
+        {
+          "step": "local-roles",
+          "exitCode": 0,
+          "log": "/tmp/bizuminer-finalizacao/os-01/private/local-roles.log"
+        },
+        {
+          "step": "restore",
+          "exitCode": 0,
+          "log": "/tmp/bizuminer-finalizacao/os-01/private/restore.log"
+        },
+        {
+          "step": "restored-catalog",
+          "exitCode": 0,
+          "log": "/tmp/bizuminer-finalizacao/os-01/private/restored-catalog.log"
+        }
+      ],
+      "limits": "Local postgres superuser differs from managed inspector; no managed Auth/Storage/pooler certification.",
+      "serialization": "UTC, extra_float_digits=0 matching exported reference; binary ordering C",
+      "floatBinaryProof": {
+        "remote": {
+          "count": "9300",
+          "binaryFloatDigest": "f57b9d5fba67c1432fb4221964f59d50"
+        },
+        "restored": {
+          "count": "9300",
+          "binaryFloatDigest": "f57b9d5fba67c1432fb4221964f59d50"
+        }
+      },
+      "previousAttempt": "restore-result-first-attempt.json",
+      "diagnosis": "Only claimed_discount_rate serialization differed at default extra_float_digits1 vs remote0; actual IEEE754 bytes and all columns matched; no data modified."
+    },
+    "floatDiagnosis": {
+      "binaryFloat": {
+        "remote": {
+          "count": "9300",
+          "binaryFloatDigest": "f57b9d5fba67c1432fb4221964f59d50"
+        },
+        "restored": {
+          "count": "9300",
+          "binaryFloatDigest": "f57b9d5fba67c1432fb4221964f59d50"
+        }
+      },
+      "settings": {
+        "lc_collate": "en_US.UTF-8",
+        "float_digits": "0",
+        "timezone": "UTC"
+      },
+      "columns": [
+        {
+          "column": "id",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "tenant_id",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "product_id",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "price_cents",
+          "type": "integer",
+          "same": true
+        },
+        {
+          "column": "original_price_cents",
+          "type": "integer",
+          "same": true
+        },
+        {
+          "column": "claimed_discount_rate",
+          "type": "double precision",
+          "same": true
+        },
+        {
+          "column": "observed_at",
+          "type": "timestamp with time zone",
+          "same": true
+        },
+        {
+          "column": "rating_star",
+          "type": "double precision",
+          "same": true
+        },
+        {
+          "column": "sales_label",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "sales_count",
+          "type": "integer",
+          "same": true
+        },
+        {
+          "column": "capture_run_id",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "title_snapshot",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "product_url_snapshot",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "image_url_snapshot",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "category_snapshot",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "capture_source",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "extension_device_id",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "client_request_id",
+          "type": "uuid",
+          "same": true
+        },
+        {
+          "column": "source_page_url",
+          "type": "text",
+          "same": true
+        },
+        {
+          "column": "client_captured_at",
+          "type": "timestamp with time zone",
+          "same": true
+        },
+        {
+          "column": "received_at",
+          "type": "timestamp with time zone",
+          "same": true
+        },
+        {
+          "column": "offer_evidence",
+          "type": "jsonb",
+          "same": true
+        }
+      ],
+      "currentRemote": {
+        "count": "9300",
+        "defaultDigest": "3afaf74bff901a86cbbdcc936f66311a",
+        "binaryDigest": "3afaf74bff901a86cbbdcc936f66311a"
+      },
+      "restored": {
+        "count": "9300",
+        "defaultDigest": "3afaf74bff901a86cbbdcc936f66311a",
+        "binaryDigest": "3afaf74bff901a86cbbdcc936f66311a"
+      },
+      "localSettings": {
+        "lc_collate": "C",
+        "float_digits": "1",
+        "timezone": "America/Sao_Paulo"
+      }
+    },
+    "sourceCatalog": {
+      "roles": [
+        {
+          "version": "17.6",
+          "secret_rows": 0,
+          "nonrevoked_devices": 3,
+          "roles": [
+            {
+              "role": "anon",
+              "login": false,
+              "super": false,
+              "bypass": false,
+              "inherit": true,
+              "createDb": false,
+              "createRole": false,
+              "replication": false
+            },
+            {
+              "role": "authenticated",
+              "login": false,
+              "super": false,
+              "bypass": false,
+              "inherit": true,
+              "createDb": false,
+              "createRole": false,
+              "replication": false
+            },
+            {
+              "role": "garimpa_app",
+              "login": true,
+              "super": false,
+              "bypass": false,
+              "inherit": true,
+              "createDb": false,
+              "createRole": false,
+              "replication": false
+            },
+            {
+              "role": "postgres",
+              "login": true,
+              "super": false,
+              "bypass": true,
+              "inherit": true,
+              "createDb": true,
+              "createRole": true,
+              "replication": true
+            },
+            {
+              "role": "service_role",
+              "login": false,
+              "super": false,
+              "bypass": true,
+              "inherit": true,
+              "createDb": false,
+              "createRole": false,
+              "replication": false
+            }
+          ],
+          "tables": [
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "affiliate_account"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "affiliate_marketplace_config"
+            },
+            {
+              "rows": 1,
+              "owner": "postgres",
+              "table": "affiliate_membership"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "affiliate_monitoring_policy"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "affiliate_monitoring_policy_event"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "affiliate_monitoring_skip"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "affiliate_secret"
+            },
+            {
+              "rows": 3,
+              "owner": "postgres",
+              "table": "app_user"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "app_user_role"
+            },
+            {
+              "rows": 1,
+              "owner": "postgres",
+              "table": "buyer_profile"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "capture_batch"
+            },
+            {
+              "rows": 376,
+              "owner": "postgres",
+              "table": "capture_run"
+            },
+            {
+              "rows": 752,
+              "owner": "postgres",
+              "table": "click_event"
+            },
+            {
+              "rows": 1328,
+              "owner": "postgres",
+              "table": "curation_event"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "editorial_assessment"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "editorial_guideline"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "editorial_selection"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "editorial_selection_item"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "extension_device"
+            },
+            {
+              "rows": 7,
+              "owner": "postgres",
+              "table": "favorite"
+            },
+            {
+              "rows": 8818,
+              "owner": "postgres",
+              "table": "price_observation"
+            },
+            {
+              "rows": 4,
+              "owner": "postgres",
+              "table": "price_watch"
+            },
+            {
+              "rows": 1657,
+              "owner": "postgres",
+              "table": "product"
+            },
+            {
+              "rows": 1611,
+              "owner": "postgres",
+              "table": "product_curation"
+            },
+            {
+              "rows": 1492,
+              "owner": "postgres",
+              "table": "publication"
+            },
+            {
+              "rows": 154,
+              "owner": "postgres",
+              "table": "short_link"
+            },
+            {
+              "rows": -1,
+              "owner": "postgres",
+              "table": "subscriber"
+            },
+            {
+              "rows": 4,
+              "owner": "postgres",
+              "table": "triage_run"
+            }
+          ]
+        }
+      ],
+      "completeness": [
+        {
+          "policies": [
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "affiliate_account",
+              "policy": "affiliate_account_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "affiliate_marketplace_config",
+              "policy": "affiliate_marketplace_config_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "affiliate_membership",
+              "policy": "affiliate_membership_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "affiliate_monitoring_policy",
+              "policy": "affiliate_monitoring_policy_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "affiliate_monitoring_policy_event",
+              "policy": "affiliate_monitoring_policy_event_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "affiliate_monitoring_skip",
+              "policy": "affiliate_monitoring_skip_app_access"
+            },
+            {
+              "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)) AND (EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.tenant_id = affiliate_secret.tenant_id) AND (a.status = 'active'::text)))))",
+              "check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)) AND (EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.tenant_id = affiliate_secret.tenant_id) AND (a.status = 'active'::text)))))",
+              "table": "affiliate_secret",
+              "policy": "affiliate_secret_bootstrap_scope"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "app_user",
+              "policy": "app_user_app_access"
+            },
+            {
+              "qual": "true",
+              "check": null,
+              "table": "app_user_role",
+              "policy": "app_user_role_runtime_read"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "buyer_profile",
+              "policy": "buyer_profile_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "capture_batch",
+              "policy": "capture_batch_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "capture_run",
+              "policy": "capture_run_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "click_event",
+              "policy": "click_event_app_access"
+            },
+            {
+              "qual": "true",
+              "check": null,
+              "table": "curation_event",
+              "policy": "curation_event_app_access"
+            },
+            {
+              "qual": null,
+              "check": "true",
+              "table": "curation_event",
+              "policy": "curation_event_app_insert"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "editorial_assessment",
+              "policy": "editorial_assessment_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "editorial_guideline",
+              "policy": "editorial_guideline_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "editorial_selection",
+              "policy": "editorial_selection_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "editorial_selection_item",
+              "policy": "editorial_selection_item_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "extension_device",
+              "policy": "extension_device_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "favorite",
+              "policy": "favorite_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "price_observation",
+              "policy": "price_observation_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "price_watch",
+              "policy": "price_watch_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "product",
+              "policy": "product_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "product_curation",
+              "policy": "product_curation_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "publication",
+              "policy": "publication_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "short_link",
+              "policy": "short_link_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "subscriber",
+              "policy": "subscriber_app_access"
+            },
+            {
+              "qual": "true",
+              "check": "true",
+              "table": "triage_run",
+              "policy": "triage_run_app_access"
+            }
+          ],
+          "secret_rows": 0,
+          "foreign_keys": 51,
+          "invalid_constraints": 0,
+          "default_acl": [
+            {
+              "acl": "{garimpa_app=arwd/postgres}",
+              "type": "r",
+              "owner": "postgres",
+              "schema": "garimpa"
+            }
+          ]
+        }
+      ],
+      "adminBaseline": [
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "affiliate_account",
+          "row_count": 1,
+          "original_columns_digest": "53abf21fd227918591561f55b5dc8f9e"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "affiliate_marketplace_config",
+          "row_count": 1,
+          "original_columns_digest": "17cfb59b66a8e2c3e28a5ef6482ea2d1"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "affiliate_membership",
+          "row_count": 1,
+          "original_columns_digest": "1ac57bcb38b170c34fd4fed807bee207"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "affiliate_monitoring_policy",
+          "row_count": 3,
+          "original_columns_digest": "32c01c2e3f0fa209f29e6428f82c5856"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "affiliate_monitoring_policy_event",
+          "row_count": 2,
+          "original_columns_digest": "7c89097ebfbc7e28194c3f5d1ccf659b"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "affiliate_monitoring_skip",
+          "row_count": 1,
+          "original_columns_digest": "4f23d8476079771a480c81e432bf0435"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "affiliate_secret",
+          "row_count": 0,
+          "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "app_user",
+          "row_count": 3,
+          "original_columns_digest": "bc6bba6478b00e0f57326329998f2112"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "app_user_role",
+          "row_count": 1,
+          "original_columns_digest": "cd10fc0c77a641d6a4ec19946945ef1d"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "buyer_profile",
+          "row_count": 1,
+          "original_columns_digest": "4101cdd017e96634014fd92e6d66f8d7"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "capture_batch",
+          "row_count": 11,
+          "original_columns_digest": "157a5bf406e744df4173c1ace82b10bd"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "capture_run",
+          "row_count": 405,
+          "original_columns_digest": "769637fdd65310a55d35dfb73a8fc63f"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "click_event",
+          "row_count": 767,
+          "original_columns_digest": "3149f7c356e63b567c32dc13b6268d0f"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "curation_event",
+          "row_count": 1330,
+          "original_columns_digest": "b50629030d73f29f792f765fb6b3f269"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "editorial_assessment",
+          "row_count": 0,
+          "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "editorial_guideline",
+          "row_count": 1,
+          "original_columns_digest": "8fae2478ac2ffdb6fb94e5447ef03e6a"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "editorial_selection",
+          "row_count": 0,
+          "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "editorial_selection_item",
+          "row_count": 0,
+          "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "extension_device",
+          "row_count": 3,
+          "original_columns_digest": "fd3dd785d523a6f3da967268b50ee7f3"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "favorite",
+          "row_count": 7,
+          "original_columns_digest": "7d8d803b8630a4a0d4a1657e0fc48f66"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "price_observation",
+          "row_count": 9300,
+          "original_columns_digest": "1e06dd010dff37c4e0fa63909e9208e4"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "price_watch",
+          "row_count": 4,
+          "original_columns_digest": "da310d69508a666b0a0e559f90665728"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "product",
+          "row_count": 1657,
+          "original_columns_digest": "780ca968e2a5013bc108831df8c3399d"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "product_curation",
+          "row_count": 1657,
+          "original_columns_digest": "57bc5470d3397f87305cee2911da8cb0"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "publication",
+          "row_count": 1495,
+          "original_columns_digest": "898c81137e924fc2262ea480f15adcfa"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "short_link",
+          "row_count": 172,
+          "original_columns_digest": "ecdaa73fe77efa03848794139c5e9d14"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "subscriber",
+          "row_count": 0,
+          "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "inspected_at": "2026-10-16 18:41:46.838684+00",
+          "table_name": "triage_run",
+          "row_count": 17,
+          "original_columns_digest": "cc204394f790be7935cca92872386395"
+        }
+      ]
+    },
+    "runtimeVersusAdminCounts": {
+      "differences": {},
+      "scope": "admin read after export; mutable production, not shared snapshot; all28 policies reviewed, only scoped secret table empty per inspector"
+    },
+    "persistentBackup": {
+      "path": "/home/many/.local/share/bizuminer/backups/20261016-os01-preparacao.dump",
+      "directoryMode": "0o700",
+      "fileMode": "0o600",
+      "bytes": 6281275,
+      "copyVerified": true,
+      "responsible": "proprietário BizuMiner / usuário local many",
+      "outsideGit": true,
+      "persistentHomeLocation": true,
+      "at": "2026-10-16T18:44:36.703271+00:00",
+      "explicitHumanApproval": "autorizo. Pode usar"
+    },
+    "productionWrites": 0,
+    "maintenanceOpened": false,
+    "managedServicesCertified": false
+  },
+  "laterPublicationLimitation": {
+    "discoveredIn": "OS-05",
+    "oldReservedDeploymentAccessible": true,
+    "newBuildWhileProjectPaused": false,
+    "cause": "Vercel refuses new builds while project paused",
+    "supersedingResult": "05-publicacao.md",
+    "backupAndPreservationEvidenceRemainsValid": true
+  }
+}

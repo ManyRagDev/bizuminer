@@ -7,7 +7,7 @@ import { validUserId } from "./member-contract.ts";
 
 /** Roles de aplicação reconhecidas. A autorização real é consultada no
  * banco; nunca vem de user_metadata nem de um valor enviado pelo cliente. */
-export const APP_ROLES = ["afiliado"] as const;
+export const APP_ROLES = ["afiliado", "platform_admin"] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
 export function isAppRole(value: unknown): value is AppRole {

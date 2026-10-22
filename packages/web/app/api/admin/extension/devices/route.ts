@@ -1,3 +1,4 @@
+import { inAccountScope } from "../../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { listDevices, revokeDevice, renameDevice } from "../../../../../lib/extension-admin";
@@ -14,6 +15,8 @@ export async function GET(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ if(check.context.membershipRole !== 'owner')return sinkJson(check.sink,{ok:false,error:'affiliate_owner_required'},{status:403});
+ return inAccountScope(check.context, async () => {
 
   try {
     const devices = await listDevices(check.appUserId);
@@ -21,12 +24,16 @@ export async function GET(request: NextRequest) {
   } catch {
     return sinkJson(check.sink, { ok: false, error: "server_error" }, { status: 500 });
   }
+
+ });
 }
 
 export async function POST(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ if(check.context.membershipRole !== 'owner')return sinkJson(check.sink,{ok:false,error:'affiliate_owner_required'},{status:403});
+ return inAccountScope(check.context, async () => {
 
   let body: { action?: unknown; deviceId?: unknown; name?: unknown };
   try {
@@ -54,4 +61,6 @@ export async function POST(request: NextRequest) {
   } catch {
     return sinkJson(check.sink, { ok: false, error: "server_error" }, { status: 500 });
   }
+
+ });
 }

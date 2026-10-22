@@ -1,0 +1,20 @@
+[
+  {
+    "script": "test:secret-bootstrap",
+    "exitCode": 0,
+    "log": "docs/implementation/evidencias/mcp-21-test-secret-bootstrap.log",
+    "seconds": 3.52
+  },
+  {
+    "script": "test:commercial",
+    "exitCode": 0,
+    "log": "docs/implementation/evidencias/mcp-21-test-commercial.log",
+    "seconds": 2.57
+  },
+  {
+    "script": "test:cf-regressions",
+    "exitCode": 0,
+    "log": "docs/implementation/evidencias/mcp-21-test-cf-regressions.log",
+    "seconds": 2.42
+  }
+]

@@ -1,0 +1,57 @@
+{
+  "environment": "isolated PGlite; synthetic object store/transport; not staging",
+  "results": [
+    {
+      "name": "request scope refuses cross-account tenant and forged membership; own and global identity stay usable",
+      "status": "passed"
+    },
+    {
+      "name": "verified invitation identity crosses accounts, rejects typed recipient, and token is single-use",
+      "status": "passed"
+    },
+    {
+      "name": "human v2 round trip, stable replay, multi-account author and no automatic ratification",
+      "status": "passed"
+    },
+    {
+      "name": "private original, explicit empty selection, four revisions, replay and event conflict",
+      "status": "passed"
+    },
+    {
+      "name": "unresolved references cannot finish onboarding; administrator can suspend/reactivate B preserving A",
+      "status": "passed"
+    },
+    {
+      "name": "ratification requires distinct evidence, exact version, owner and immutable explicit decision",
+      "status": "passed"
+    },
+    {
+      "name": "calibration requires private report and persisted observations; incomplete or synthetic run cannot enable E3",
+      "status": "passed"
+    },
+    {
+      "name": "immutable Story 1080x1920, private bytes, asset provenance and stale revision conflict",
+      "status": "passed"
+    },
+    {
+      "name": "durable worker commits marker before synthetic I/O and keeps attribution link",
+      "status": "passed"
+    },
+    {
+      "name": "assisted mode, revoked credential, persistent switch and cancellation block I/O",
+      "status": "passed"
+    },
+    {
+      "name": "credential revoked after destination validation blocks the committed marker",
+      "status": "passed"
+    },
+    {
+      "name": "uncertain transport stays unknown, has marker and cannot be blindly retried",
+      "status": "passed"
+    },
+    {
+      "name": "orphan reconciliation verifies the private object and export retains business evidence without credentials",
+      "status": "passed"
+    }
+  ]
+}

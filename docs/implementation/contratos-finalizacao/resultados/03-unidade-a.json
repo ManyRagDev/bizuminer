@@ -1,0 +1,304 @@
+{
+  "order": "OS-03",
+  "state": "CONCLUIDO",
+  "intent": {
+    "file": "packages/persistence/supabase/rollouts/v2/20261015194719_garimpa_v2_foundation.sql",
+    "sha256": "33e03729f9e058169844fc353cba083cb3d5fe270b98ea890dafd0fb0a87c40c",
+    "name": "garimpa_v2_foundation",
+    "at": "2026-10-16 18:55:16 UTC"
+  },
+  "toolResult": {
+    "success": true
+  },
+  "post": [
+    {
+      "table_count": 29,
+      "policy_count": 30,
+      "rollout_control": [
+        {
+          "id": "bizuminer-v2",
+          "enabled": false
+        }
+      ],
+      "roles": [
+        {
+          "name": "garimpa_app",
+          "login": true,
+          "super": false,
+          "bypass": false,
+          "createDb": false,
+          "createRole": false
+        },
+        {
+          "name": "garimpa_public_runtime",
+          "login": false,
+          "super": false,
+          "bypass": false,
+          "createDb": false,
+          "createRole": false
+        }
+      ],
+      "public_direct_selects": 0,
+      "runtime_can_mutate_control": false,
+      "migration": [
+        {
+          "name": "garimpa_v2_foundation",
+          "sha256": "33e03729f9e058169844fc353cba083cb3d5fe270b98ea890dafd0fb0a87c40c",
+          "version": "20261016185521",
+          "statementCount": 1
+        }
+      ]
+    }
+  ],
+  "originalColumnComparison": {
+    "tables": 28,
+    "result": "PASS"
+  },
+  "otherSchemasComparison": {
+    "schemas": 8,
+    "result": "PASS"
+  },
+  "originalColumns": [
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "affiliate_account",
+      "row_count": 1,
+      "original_columns_digest": "53abf21fd227918591561f55b5dc8f9e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "affiliate_marketplace_config",
+      "row_count": 1,
+      "original_columns_digest": "17cfb59b66a8e2c3e28a5ef6482ea2d1"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "affiliate_membership",
+      "row_count": 1,
+      "original_columns_digest": "1ac57bcb38b170c34fd4fed807bee207"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "affiliate_monitoring_policy",
+      "row_count": 3,
+      "original_columns_digest": "32c01c2e3f0fa209f29e6428f82c5856"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "affiliate_monitoring_policy_event",
+      "row_count": 2,
+      "original_columns_digest": "7c89097ebfbc7e28194c3f5d1ccf659b"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "affiliate_monitoring_skip",
+      "row_count": 1,
+      "original_columns_digest": "4f23d8476079771a480c81e432bf0435"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "affiliate_secret",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "app_user",
+      "row_count": 3,
+      "original_columns_digest": "bc6bba6478b00e0f57326329998f2112"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "app_user_role",
+      "row_count": 1,
+      "original_columns_digest": "cd10fc0c77a641d6a4ec19946945ef1d"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "buyer_profile",
+      "row_count": 1,
+      "original_columns_digest": "4101cdd017e96634014fd92e6d66f8d7"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "capture_batch",
+      "row_count": 11,
+      "original_columns_digest": "157a5bf406e744df4173c1ace82b10bd"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "capture_run",
+      "row_count": 407,
+      "original_columns_digest": "e673a2c5b9ad62b5dbf4e9d762b79329"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "click_event",
+      "row_count": 767,
+      "original_columns_digest": "3149f7c356e63b567c32dc13b6268d0f"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "curation_event",
+      "row_count": 1330,
+      "original_columns_digest": "b50629030d73f29f792f765fb6b3f269"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "editorial_assessment",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "editorial_guideline",
+      "row_count": 1,
+      "original_columns_digest": "8fae2478ac2ffdb6fb94e5447ef03e6a"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "editorial_selection",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "editorial_selection_item",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "extension_device",
+      "row_count": 3,
+      "original_columns_digest": "fd3dd785d523a6f3da967268b50ee7f3"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "favorite",
+      "row_count": 7,
+      "original_columns_digest": "7d8d803b8630a4a0d4a1657e0fc48f66"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "price_observation",
+      "row_count": 9338,
+      "original_columns_digest": "e78c90d7e727f66747bde350d13e4737"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "price_watch",
+      "row_count": 4,
+      "original_columns_digest": "da310d69508a666b0a0e559f90665728"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "product",
+      "row_count": 1657,
+      "original_columns_digest": "eb47369453be48fc147330cf8f4e2b46"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "product_curation",
+      "row_count": 1657,
+      "original_columns_digest": "57bc5470d3397f87305cee2911da8cb0"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "publication",
+      "row_count": 1495,
+      "original_columns_digest": "898c81137e924fc2262ea480f15adcfa"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "short_link",
+      "row_count": 172,
+      "original_columns_digest": "ecdaa73fe77efa03848794139c5e9d14"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "subscriber",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:55:55.412222+00",
+      "table_name": "triage_run",
+      "row_count": 17,
+      "original_columns_digest": "cc204394f790be7935cca92872386395"
+    }
+  ],
+  "otherSchemas": [
+    {
+      "schema_name": "auth",
+      "relations": 28,
+      "catalog_fingerprint": "56f9a83a675fcdf8a1d32f120f1e4857"
+    },
+    {
+      "schema_name": "brincareducando",
+      "relations": 26,
+      "catalog_fingerprint": "8f4e76a95574ebb6ba2c9bb819df681f"
+    },
+    {
+      "schema_name": "jacomprei",
+      "relations": 8,
+      "catalog_fingerprint": "28a5df0052fadb4e97135bd05d69481d"
+    },
+    {
+      "schema_name": "manylabs",
+      "relations": 9,
+      "catalog_fingerprint": "1e611465b3c59473f83dbc7dab5f298c"
+    },
+    {
+      "schema_name": "navegantes",
+      "relations": 15,
+      "catalog_fingerprint": "051328afee0032f1398eddcdc1b9de07"
+    },
+    {
+      "schema_name": "postspark",
+      "relations": 53,
+      "catalog_fingerprint": "51d5d2be46fc1a278a125511e25b243e"
+    },
+    {
+      "schema_name": "public",
+      "relations": 2,
+      "catalog_fingerprint": "979b141b28853cb968ba3298fa00dfc3"
+    },
+    {
+      "schema_name": "storage",
+      "relations": 8,
+      "catalog_fingerprint": "dab938b1558a022243f39251fb8eb104"
+    }
+  ],
+  "preflight": [
+    {
+      "tables": 28,
+      "policies": 29,
+      "default_acl": [
+        {
+          "acl": "{garimpa_app=arwd/postgres}",
+          "schema": "garimpa",
+          "object_type": "r"
+        }
+      ],
+      "public_role_exists": false,
+      "identity_resolver": "garimpa.resolve_actor_identity(text)",
+      "authorship_constraints": 2,
+      "initial_role_memberships": 0,
+      "active_runtime_sessions": 0
+    }
+  ],
+  "runtime": {
+    "identity": {
+      "role": "garimpa_app",
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "counts": {
+      "products": "1657",
+      "observations": "9338",
+      "publications": "1495",
+      "shortlinks": "172"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "fixture": "Synthetic components with hooks/services stubbed; real TSX logic, no network/DB",
+  "radarLink": "/admin/campanhas?conta=tenant_fixture&productId=product_fixture",
+  "submittedDraft": {
+    "tenantId": "tenant_fixture",
+    "campaignId": "campaign_fixture",
+    "productId": "product_fixture",
+    "channel": "telegram_channel",
+    "reason": "Motivo digitado novamente",
+    "requestId": "002ffc95-bac4-4229-8eeb-03ad1a95b9a6"
+  },
+  "contextPreserved": {
+    "productId": true,
+    "opportunityId": false,
+    "audienceKey": false
+  },
+  "pageRequestedRadar": {
+    "selectedRead": 1,
+    "radarRead": 0,
+    "headings": [
+      "Curadoria",
+      "Sem produtos selecionados"
+    ]
+  }
+}

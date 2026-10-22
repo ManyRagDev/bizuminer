@@ -1,0 +1,143 @@
+{
+  "at": "2026-10-15T20:28:00.105Z",
+  "engine": "postgres (PostgreSQL) 17.6",
+  "environment": "disposable localhost PostgreSQL; synthetic data; no Auth/Storage/Supavisor or published runtime proof",
+  "productionWrites": 0,
+  "productionApproved": false,
+  "results": [
+    {
+      "name": "apply installedSubset",
+      "result": "PASS",
+      "file": "20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345",
+      "milliseconds": 10
+    },
+    {
+      "name": "apply installedSubset",
+      "result": "PASS",
+      "file": "20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693",
+      "milliseconds": 2
+    },
+    {
+      "name": "apply installedSubset",
+      "result": "PASS",
+      "file": "20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23",
+      "milliseconds": 2
+    },
+    {
+      "name": "S0: legacy reads work; new backend denies an uninstalled rollout",
+      "result": "PASS"
+    },
+    {
+      "name": "apply foundation",
+      "result": "PASS",
+      "file": "20261015194719_garimpa_v2_foundation.sql",
+      "sha256": "579fa86e8696d7bfcee701ed61e6c8b43b9538dfafa93f146883633bd3682c57",
+      "milliseconds": 12
+    },
+    {
+      "name": "A: all pre-existing policies and legacy reads preserved, public surface remains unready",
+      "result": "PASS"
+    },
+    {
+      "name": "A: runtime cannot enable the persisted switch by DML",
+      "result": "PASS"
+    },
+    {
+      "name": "B: injected end failure rolls back all expansion DDL; exact candidate can resume",
+      "result": "PASS"
+    },
+    {
+      "name": "apply expansion",
+      "result": "PASS",
+      "file": "20261015194748_garimpa_v2_expansion.sql",
+      "sha256": "e2c2dc82c2a9fd562d326f68414bf7337541f86cfc26c5126e36a11e88a75611",
+      "milliseconds": 123
+    },
+    {
+      "name": "B: legacy catalogue remains visible; complete public functions execute with monetization",
+      "result": "PASS"
+    },
+    {
+      "name": "B: monitoring preserves its own aggregate interests while new commerce is disabled",
+      "result": "PASS"
+    },
+    {
+      "name": "B: new backend, human review, raw SQL, invitation definer and enabling switch are blocked",
+      "result": "PASS"
+    },
+    {
+      "name": "C: unexpected policy aborts before legacy removal and leaves gate closed",
+      "result": "PASS"
+    },
+    {
+      "name": "C: unexpected role privilege aborts, without erasing any policy",
+      "result": "PASS"
+    },
+    {
+      "name": "C: column-only grant cannot bypass gate protection or public data isolation",
+      "result": "PASS"
+    },
+    {
+      "name": "C: private view grants and canonical view definition/options drift abort before cutover",
+      "result": "PASS"
+    },
+    {
+      "name": "C: complete function definition and overload inventory are sealed",
+      "result": "PASS"
+    },
+    {
+      "name": "C: public runtime requires effective SET ROLE and schema USAGE, not just membership",
+      "result": "PASS"
+    },
+    {
+      "name": "C: inherited privileged role cannot bypass the private runtime boundary",
+      "result": "PASS"
+    },
+    {
+      "name": "C: missing administrative singleton, RLS flags, FK and trigger drift abort before mutation",
+      "result": "PASS"
+    },
+    {
+      "name": "apply scoped_cutover",
+      "result": "PASS",
+      "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
+      "sha256": "28e08ebbb89d4d453eb0149d93f22d0e4084ea93e3ca60a87b38a5963367fa8b",
+      "milliseconds": 83
+    },
+    {
+      "name": "C: only frozen legacy policies replaced; all specialized policies retained byte-for-value",
+      "result": "PASS"
+    },
+    {
+      "name": "C: two real runtime sessions isolate A/B/A and leave no context after commit/rollback",
+      "result": "PASS"
+    },
+    {
+      "name": "C: operator still cannot approve governance and platform can reactivate suspended account",
+      "result": "PASS"
+    },
+    {
+      "name": "C: real monitoring workers keep own counts without owner identity or raw buyer access",
+      "result": "PASS"
+    },
+    {
+      "name": "C: monitoring skips use checked reasons, account scope and idempotent writes, including suspension",
+      "result": "PASS"
+    },
+    {
+      "name": "C: concurrent campaign creation admits exactly one last quota",
+      "result": "PASS"
+    },
+    {
+      "name": "C: one invitation accepts exactly once across independent sessions",
+      "result": "PASS"
+    },
+    {
+      "name": "recovery disables new capabilities without reopening private data or breaking public offers",
+      "result": "PASS"
+    }
+  ]
+}

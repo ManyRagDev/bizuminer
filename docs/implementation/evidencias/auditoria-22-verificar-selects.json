@@ -1,0 +1,97 @@
+{
+  "environment": "isolated fixture; empty new tables; syntax/catalogue check only",
+  "applied": [
+    "20261014100000_garimpa_account_context_and_membership.sql",
+    "20261014101000_garimpa_tenant_rls_scoped.sql",
+    "20261014102000_garimpa_price_evidence_canonical.sql",
+    "20261014103000_garimpa_rubric_assessment_shadow.sql",
+    "20261014104000_garimpa_audience_policy_and_opportunity.sql",
+    "20261014105000_garimpa_commerce_and_campaign_link.sql",
+    "20261014106000_garimpa_commercial_financial_ledger.sql",
+    "20261014107000_garimpa_click_attribution_and_channels.sql",
+    "20261014108000_garimpa_policy_experiments.sql",
+    "20261014109000_garimpa_dispatch_jobs_outbox.sql",
+    "20261014110000_garimpa_saas_onboarding_entitlements.sql",
+    "20261015021300_garimpa_verified_workflows.sql",
+    "20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+    "20261015040727_garimpa_curation_membership_author.sql"
+  ],
+  "results": [
+    {
+      "sql": "select tenant_id,version,status,config->>'e3Enabled' e3,approved_at is not null approved\n from garimpa.price_evidence_policy_version order by tenant_id,version",
+      "ok": true,
+      "rowCount": 0
+    },
+    {
+      "sql": "select attnum,attname,format_type(atttypid,atttypmod) type from pg_attribute\n where attrelid='garimpa.curation_queue_facts'::regclass and attnum>0 and not attisdropped order by attnum",
+      "ok": true,
+      "rowCount": 39
+    },
+    {
+      "sql": "select count(*) invalid_comparisons from garimpa.comparison_review c\n join garimpa.analysis_assessment a on a.id=c.analysis_assessment_id\n left join garimpa.editorial_assessment e on e.id::text=c.editorial_assessment_id\n where a.tenant_id<>c.tenant_id or a.product_id<>c.product_id\n or (c.editorial_assessment_id is not null and (e.id is null or e.tenant_id<>c.tenant_id or e.product_id<>c.product_id))",
+      "ok": true,
+      "rowCount": 1
+    },
+    {
+      "sql": "select count(*) invalid_opportunities from garimpa.opportunity o\n join garimpa.audience_policy_version p on p.id=o.policy_version_id\n where o.tenant_id<>p.tenant_id",
+      "ok": true,
+      "rowCount": 1
+    },
+    {
+      "sql": "select count(*) invalid_campaign_links from garimpa.campaign_link l\n join garimpa.campaign_publication p on p.id=l.publication_id\n where l.tenant_id<>p.tenant_id or length(l.code)<>12",
+      "ok": true,
+      "rowCount": 1
+    },
+    {
+      "sql": "select p.proname,p.prosecdef,p.proconfig,p.proacl,\n has_function_privilege('anon',p.oid,'execute') anon_execute,\n has_function_privilege('authenticated',p.oid,'execute') authenticated_execute\n from pg_proc p join pg_namespace n on n.oid=p.pronamespace\n where n.nspname='garimpa' order by p.proname",
+      "ok": true,
+      "rowCount": 19
+    },
+    {
+      "sql": "select count(*) invalid_commissions from garimpa.commission_entry c\n left join garimpa.conversion v on v.id=c.conversion_id\n left join garimpa.commission_entry p on p.id=c.predecessor_id\n where (v.id is not null and v.tenant_id<>c.tenant_id) or (p.id is not null and p.tenant_id<>c.tenant_id)",
+      "ok": true,
+      "rowCount": 1
+    },
+    {
+      "sql": "select count(*) unassigned_evaluations from garimpa.experiment_evaluation e\n left join garimpa.experiment_assignment a on a.tenant_id=e.tenant_id and a.experiment_id=e.experiment_id and a.unit_id=e.unit_id\n where a.id is null",
+      "ok": true,
+      "rowCount": 1
+    },
+    {
+      "sql": "select count(*) cross_tenant_attempts from garimpa.dispatch_attempt a\n join garimpa.dispatch_job j on j.id=a.job_id where a.tenant_id<>j.tenant_id",
+      "ok": true,
+      "rowCount": 1
+    },
+    {
+      "sql": "select conname,pg_get_constraintdef(oid) from pg_constraint\n where conrelid='garimpa.dispatch_attempt'::regclass and contype='f'",
+      "ok": true,
+      "rowCount": 2
+    },
+    {
+      "sql": "select 'invitation' kind,count(*) bad from garimpa.account_invitation i\n join garimpa.affiliate_account a on a.id=i.affiliate_id where a.tenant_id<>i.tenant_id\n union all select 'entitlement',count(*) from garimpa.account_entitlement i join garimpa.affiliate_account a on a.id=i.affiliate_id where a.tenant_id<>i.tenant_id\n union all select 'progress',count(*) from garimpa.onboarding_progress i join garimpa.affiliate_account a on a.id=i.affiliate_id where a.tenant_id<>i.tenant_id\n union all select 'lifecycle',count(*) from garimpa.account_lifecycle_event i join garimpa.affiliate_account a on a.id=i.affiliate_id where a.tenant_id<>i.tenant_id",
+      "ok": true,
+      "rowCount": 4
+    },
+    {
+      "sql": "select tenant_id,version,status,config->>'e3Enabled' effective_e3 from garimpa.effective_price_evidence_policy",
+      "ok": true,
+      "rowCount": 0
+    },
+    {
+      "sql": "select tenant_id,kill_switch from garimpa.dispatch_control",
+      "ok": true,
+      "rowCount": 0
+    },
+    {
+      "sql": "select conrelid::regclass,conname,convalidated from pg_constraint\n where connamespace='garimpa'::regnamespace and not convalidated",
+      "ok": true,
+      "rowCount": 1
+    },
+    {
+      "sql": "select id,public from storage.buckets where id='bizuminer-private'",
+      "ok": false,
+      "error": "relation \"storage.buckets\" does not exist",
+      "code": "42P01"
+    }
+  ]
+}

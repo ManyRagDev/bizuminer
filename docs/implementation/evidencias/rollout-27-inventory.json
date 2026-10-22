@@ -1,0 +1,2126 @@
+{
+  "beforeM11": [
+    {
+      "table_name": "affiliate_account"
+    },
+    {
+      "table_name": "affiliate_secret"
+    },
+    {
+      "table_name": "analysis_assessment"
+    },
+    {
+      "table_name": "app_user"
+    },
+    {
+      "table_name": "audience_policy"
+    },
+    {
+      "table_name": "audience_policy_version"
+    },
+    {
+      "table_name": "buyer_profile"
+    },
+    {
+      "table_name": "campaign"
+    },
+    {
+      "table_name": "campaign_link"
+    },
+    {
+      "table_name": "campaign_publication"
+    },
+    {
+      "table_name": "capture_batch"
+    },
+    {
+      "table_name": "capture_run"
+    },
+    {
+      "table_name": "click_event"
+    },
+    {
+      "table_name": "commercial_kit"
+    },
+    {
+      "table_name": "commercial_kit_revision"
+    },
+    {
+      "table_name": "commission_entry"
+    },
+    {
+      "table_name": "comparison_review"
+    },
+    {
+      "table_name": "conversion"
+    },
+    {
+      "table_name": "conversion_attribution"
+    },
+    {
+      "table_name": "curation_event"
+    },
+    {
+      "table_name": "curation_queue_facts"
+    },
+    {
+      "table_name": "destination"
+    },
+    {
+      "table_name": "dispatch_attempt"
+    },
+    {
+      "table_name": "dispatch_job"
+    },
+    {
+      "table_name": "domain_event"
+    },
+    {
+      "table_name": "editorial_assessment"
+    },
+    {
+      "table_name": "editorial_guideline"
+    },
+    {
+      "table_name": "editorial_selection"
+    },
+    {
+      "table_name": "editorial_selection_item"
+    },
+    {
+      "table_name": "experiment_assignment"
+    },
+    {
+      "table_name": "experiment_evaluation"
+    },
+    {
+      "table_name": "favorite"
+    },
+    {
+      "table_name": "import_batch"
+    },
+    {
+      "table_name": "import_row"
+    },
+    {
+      "table_name": "kit_approval"
+    },
+    {
+      "table_name": "kit_validation"
+    },
+    {
+      "table_name": "operational_cost"
+    },
+    {
+      "table_name": "opportunity"
+    },
+    {
+      "table_name": "policy_experiment"
+    },
+    {
+      "table_name": "price_evidence_policy_version"
+    },
+    {
+      "table_name": "price_observation"
+    },
+    {
+      "table_name": "price_watch"
+    },
+    {
+      "table_name": "product"
+    },
+    {
+      "table_name": "product_curation"
+    },
+    {
+      "table_name": "publication"
+    },
+    {
+      "table_name": "saas_revenue_entry"
+    },
+    {
+      "table_name": "short_link"
+    },
+    {
+      "table_name": "subscriber"
+    },
+    {
+      "table_name": "triage_run"
+    }
+  ],
+  "tables": [
+    {
+      "tablename": "account_entitlement"
+    },
+    {
+      "tablename": "account_invitation"
+    },
+    {
+      "tablename": "account_lifecycle_event"
+    },
+    {
+      "tablename": "affiliate_account"
+    },
+    {
+      "tablename": "affiliate_marketplace_config"
+    },
+    {
+      "tablename": "affiliate_membership"
+    },
+    {
+      "tablename": "affiliate_monitoring_policy"
+    },
+    {
+      "tablename": "affiliate_monitoring_policy_event"
+    },
+    {
+      "tablename": "affiliate_monitoring_skip"
+    },
+    {
+      "tablename": "affiliate_secret"
+    },
+    {
+      "tablename": "analysis_assessment"
+    },
+    {
+      "tablename": "app_user"
+    },
+    {
+      "tablename": "app_user_role"
+    },
+    {
+      "tablename": "audience_policy"
+    },
+    {
+      "tablename": "audience_policy_version"
+    },
+    {
+      "tablename": "buyer_profile"
+    },
+    {
+      "tablename": "campaign"
+    },
+    {
+      "tablename": "campaign_link"
+    },
+    {
+      "tablename": "campaign_publication"
+    },
+    {
+      "tablename": "capture_batch"
+    },
+    {
+      "tablename": "capture_run"
+    },
+    {
+      "tablename": "click_event"
+    },
+    {
+      "tablename": "commercial_kit"
+    },
+    {
+      "tablename": "commercial_kit_revision"
+    },
+    {
+      "tablename": "commission_entry"
+    },
+    {
+      "tablename": "comparison_review"
+    },
+    {
+      "tablename": "conversion"
+    },
+    {
+      "tablename": "conversion_attribution"
+    },
+    {
+      "tablename": "curation_event"
+    },
+    {
+      "tablename": "destination"
+    },
+    {
+      "tablename": "dispatch_attempt"
+    },
+    {
+      "tablename": "dispatch_control"
+    },
+    {
+      "tablename": "dispatch_job"
+    },
+    {
+      "tablename": "dispatch_reservation"
+    },
+    {
+      "tablename": "domain_event"
+    },
+    {
+      "tablename": "editorial_assessment"
+    },
+    {
+      "tablename": "editorial_guideline"
+    },
+    {
+      "tablename": "editorial_selection"
+    },
+    {
+      "tablename": "editorial_selection_item"
+    },
+    {
+      "tablename": "experiment_assignment"
+    },
+    {
+      "tablename": "experiment_evaluation"
+    },
+    {
+      "tablename": "extension_device"
+    },
+    {
+      "tablename": "favorite"
+    },
+    {
+      "tablename": "governance_decision"
+    },
+    {
+      "tablename": "import_batch"
+    },
+    {
+      "tablename": "import_row"
+    },
+    {
+      "tablename": "kit_approval"
+    },
+    {
+      "tablename": "kit_validation"
+    },
+    {
+      "tablename": "onboarding_progress"
+    },
+    {
+      "tablename": "operational_cost"
+    },
+    {
+      "tablename": "opportunity"
+    },
+    {
+      "tablename": "policy_experiment"
+    },
+    {
+      "tablename": "price_calibration_run"
+    },
+    {
+      "tablename": "price_evidence_policy_version"
+    },
+    {
+      "tablename": "price_observation"
+    },
+    {
+      "tablename": "price_watch"
+    },
+    {
+      "tablename": "private_artifact"
+    },
+    {
+      "tablename": "product"
+    },
+    {
+      "tablename": "product_curation"
+    },
+    {
+      "tablename": "publication"
+    },
+    {
+      "tablename": "saas_revenue_entry"
+    },
+    {
+      "tablename": "short_link"
+    },
+    {
+      "tablename": "subscriber"
+    },
+    {
+      "tablename": "triage_run"
+    },
+    {
+      "tablename": "usage_event"
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_entitlement",
+      "policyname": "account_entitlement_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_entitlement",
+      "policyname": "account_entitlement_platform_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text]))",
+      "with_check": "(NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text]))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_entitlement",
+      "policyname": "account_entitlement_tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_invitation",
+      "policyname": "account_invitation_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_invitation",
+      "policyname": "account_invitation_platform_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text]))",
+      "with_check": "(NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text]))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_invitation",
+      "policyname": "account_invitation_tenant_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_lifecycle_event",
+      "policyname": "account_lifecycle_event_platform_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "account_lifecycle_event",
+      "policyname": "account_lifecycle_event_tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_account",
+      "policyname": "affiliate_account_platform_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text]))",
+      "with_check": "(NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text]))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_account",
+      "policyname": "affiliate_account_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_marketplace_config",
+      "policyname": "affiliate_marketplace_config_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_marketplace_config.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_marketplace_config.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_marketplace_config",
+      "policyname": "affiliate_marketplace_config_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_marketplace_config.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_membership",
+      "policyname": "affiliate_membership_claim_or_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])) OR (current_setting('garimpa.invitation_claim'::text, true) = 'active'::text))",
+      "with_check": "((NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])) OR (current_setting('garimpa.invitation_claim'::text, true) = 'active'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_membership",
+      "policyname": "affiliate_membership_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_membership.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_membership.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_membership",
+      "policyname": "affiliate_membership_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_membership.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_monitoring_policy",
+      "policyname": "affiliate_monitoring_policy_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_policy.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_policy.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_monitoring_policy",
+      "policyname": "affiliate_monitoring_policy_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_policy.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_monitoring_policy_event",
+      "policyname": "affiliate_monitoring_policy_event_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_policy_event.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_policy_event.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_monitoring_policy_event",
+      "policyname": "affiliate_monitoring_policy_event_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_policy_event.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_monitoring_skip",
+      "policyname": "affiliate_monitoring_skip_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_skip.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_skip.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_monitoring_skip",
+      "policyname": "affiliate_monitoring_skip_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = affiliate_monitoring_skip.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_secret",
+      "policyname": "affiliate_secret_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_secret",
+      "policyname": "affiliate_secret_bootstrap_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)) AND (EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.tenant_id = affiliate_secret.tenant_id) AND (a.status = 'active'::text)))))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)) AND (EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.tenant_id = affiliate_secret.tenant_id) AND (a.status = 'active'::text)))))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "affiliate_secret",
+      "policyname": "affiliate_secret_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "analysis_assessment",
+      "policyname": "analysis_assessment_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "analysis_assessment",
+      "policyname": "analysis_assessment_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "app_user",
+      "policyname": "app_user_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "app_user",
+      "policyname": "app_user_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "app_user_role",
+      "policyname": "app_user_role_claim_or_platform",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(((current_setting('garimpa.invitation_claim'::text, true) = 'active'::text) AND (role = 'afiliado'::garimpa.app_role)) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "app_user_role",
+      "policyname": "app_user_role_runtime_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(app_user_id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "audience_policy",
+      "policyname": "audience_policy_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "audience_policy",
+      "policyname": "audience_policy_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "audience_policy_version",
+      "policyname": "audience_candidate_owner",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(current_setting('garimpa.membership_role'::text, true) = 'owner'::text)",
+      "with_check": "(current_setting('garimpa.membership_role'::text, true) = 'owner'::text)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "audience_policy_version",
+      "policyname": "audience_policy_version_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "audience_policy_version",
+      "policyname": "audience_policy_version_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "buyer_profile",
+      "policyname": "buyer_profile_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "buyer_profile",
+      "policyname": "buyer_profile_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (user_id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (user_id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "campaign",
+      "policyname": "campaign_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "campaign",
+      "policyname": "campaign_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "campaign_link",
+      "policyname": "campaign_link_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "campaign_link",
+      "policyname": "campaign_link_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "campaign_publication",
+      "policyname": "campaign_publication_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "campaign_publication",
+      "policyname": "campaign_publication_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "capture_batch",
+      "policyname": "capture_batch_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant((tenant_id)::text) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant((tenant_id)::text) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "capture_batch",
+      "policyname": "capture_batch_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(((tenant_id)::text = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant((tenant_id)::text))",
+      "with_check": "(((tenant_id)::text = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant((tenant_id)::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "capture_run",
+      "policyname": "capture_run_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "capture_run",
+      "policyname": "capture_run_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "click_event",
+      "policyname": "click_event_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "click_event",
+      "policyname": "click_event_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "commercial_kit",
+      "policyname": "commercial_kit_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "commercial_kit",
+      "policyname": "commercial_kit_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "commercial_kit_revision",
+      "policyname": "commercial_kit_revision_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "commercial_kit_revision",
+      "policyname": "commercial_kit_revision_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "commission_entry",
+      "policyname": "commission_entry_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "commission_entry",
+      "policyname": "commission_entry_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "comparison_review",
+      "policyname": "comparison_review_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "comparison_review",
+      "policyname": "comparison_review_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM (garimpa.affiliate_membership m\n     JOIN garimpa.affiliate_account a ON ((a.id = m.affiliate_id)))\n  WHERE ((m.app_user_id = comparison_review.reviewed_by_app_user_id) AND (a.tenant_id = comparison_review.tenant_id) AND (m.revoked_at IS NULL)))))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "conversion",
+      "policyname": "conversion_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "conversion",
+      "policyname": "conversion_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "conversion_attribution",
+      "policyname": "conversion_attribution_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "conversion_attribution",
+      "policyname": "conversion_attribution_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "curation_event",
+      "policyname": "curation_event_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "curation_event",
+      "policyname": "curation_event_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "destination",
+      "policyname": "destination_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "destination",
+      "policyname": "destination_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_attempt",
+      "policyname": "dispatch_attempt_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_attempt",
+      "policyname": "dispatch_attempt_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_control",
+      "policyname": "active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "garimpa.active_tenant(tenant_id)",
+      "with_check": "garimpa.active_tenant(tenant_id)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_control",
+      "policyname": "control_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_control",
+      "policyname": "owner_write",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(current_setting('garimpa.membership_role'::text, true) = 'owner'::text)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_control",
+      "policyname": "tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_control",
+      "policyname": "tenant_write",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_job",
+      "policyname": "dispatch_job_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_job",
+      "policyname": "dispatch_job_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_reservation",
+      "policyname": "active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "garimpa.active_tenant(tenant_id)",
+      "with_check": "garimpa.active_tenant(tenant_id)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_reservation",
+      "policyname": "reservation_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_reservation",
+      "policyname": "tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "dispatch_reservation",
+      "policyname": "tenant_write",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "domain_event",
+      "policyname": "domain_event_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "domain_event",
+      "policyname": "domain_event_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_assessment",
+      "policyname": "editorial_assessment_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_assessment",
+      "policyname": "editorial_assessment_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_guideline",
+      "policyname": "editorial_guideline_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_guideline",
+      "policyname": "editorial_guideline_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_selection",
+      "policyname": "editorial_selection_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_selection",
+      "policyname": "editorial_selection_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_selection_item",
+      "policyname": "editorial_selection_item_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "editorial_selection_item",
+      "policyname": "editorial_selection_item_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "experiment_assignment",
+      "policyname": "experiment_assignment_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "experiment_assignment",
+      "policyname": "experiment_assignment_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "experiment_evaluation",
+      "policyname": "experiment_evaluation_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "experiment_evaluation",
+      "policyname": "experiment_evaluation_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "extension_device",
+      "policyname": "extension_device_manage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = extension_device.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = extension_device.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))))) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "extension_device",
+      "policyname": "extension_device_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.id = extension_device.affiliate_id) AND (a.tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "favorite",
+      "policyname": "favorite_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "favorite",
+      "policyname": "favorite_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (user_id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (user_id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "governance_decision",
+      "policyname": "active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "garimpa.active_tenant(tenant_id)",
+      "with_check": "garimpa.active_tenant(tenant_id)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "governance_decision",
+      "policyname": "owner_write",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(current_setting('garimpa.membership_role'::text, true) = 'owner'::text)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "governance_decision",
+      "policyname": "tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "governance_decision",
+      "policyname": "tenant_write",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "import_batch",
+      "policyname": "import_batch_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "import_batch",
+      "policyname": "import_batch_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "import_row",
+      "policyname": "import_row_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "import_row",
+      "policyname": "import_row_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "kit_approval",
+      "policyname": "kit_approval_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "kit_approval",
+      "policyname": "kit_approval_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "kit_validation",
+      "policyname": "kit_validation_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "kit_validation",
+      "policyname": "kit_validation_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "onboarding_progress",
+      "policyname": "onboarding_progress_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "onboarding_progress",
+      "policyname": "onboarding_progress_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "operational_cost",
+      "policyname": "operational_cost_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "operational_cost",
+      "policyname": "operational_cost_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "opportunity",
+      "policyname": "opportunity_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "opportunity",
+      "policyname": "opportunity_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "policy_experiment",
+      "policyname": "policy_experiment_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "policy_experiment",
+      "policyname": "policy_experiment_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_calibration_run",
+      "policyname": "active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "garimpa.active_tenant(tenant_id)",
+      "with_check": "garimpa.active_tenant(tenant_id)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_calibration_run",
+      "policyname": "owner_write",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(current_setting('garimpa.membership_role'::text, true) = 'owner'::text)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_calibration_run",
+      "policyname": "tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_calibration_run",
+      "policyname": "tenant_write",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_evidence_policy_version",
+      "policyname": "price_evidence_policy_owner",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND (current_setting('garimpa.membership_role'::text, true) = 'owner'::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_evidence_policy_version",
+      "policyname": "price_evidence_policy_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_evidence_policy_version",
+      "policyname": "price_evidence_policy_version_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_observation",
+      "policyname": "price_observation_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_observation",
+      "policyname": "price_observation_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_watch",
+      "policyname": "price_watch_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "price_watch",
+      "policyname": "price_watch_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (user_id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id) AND (user_id = NULLIF(current_setting('garimpa.actor_app_user_id'::text, true), ''::text)))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "private_artifact",
+      "policyname": "active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "garimpa.active_tenant(tenant_id)",
+      "with_check": "garimpa.active_tenant(tenant_id)"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "private_artifact",
+      "policyname": "artifact_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "private_artifact",
+      "policyname": "tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "private_artifact",
+      "policyname": "tenant_write",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "product",
+      "policyname": "product_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "product",
+      "policyname": "product_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "product_curation",
+      "policyname": "product_curation_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "product_curation",
+      "policyname": "product_curation_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "publication",
+      "policyname": "publication_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "publication",
+      "policyname": "publication_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "saas_revenue_entry",
+      "policyname": "saas_revenue_entry_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "saas_revenue_entry",
+      "policyname": "saas_revenue_entry_tenant_isolation",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((NULLIF(current_setting('app.is_platform_operator'::text, true), ''::text) = 'true'::text) OR (NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text) = ANY (ARRAY['local'::text, 'house'::text]))))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((NULLIF(current_setting('app.is_platform_operator'::text, true), ''::text) = 'true'::text) OR (NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text) = ANY (ARRAY['local'::text, 'house'::text]))))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "short_link",
+      "policyname": "short_link_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "short_link",
+      "policyname": "short_link_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "subscriber",
+      "policyname": "subscriber_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "subscriber",
+      "policyname": "subscriber_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant(tenant_id))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "triage_run",
+      "policyname": "triage_run_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant((tenant_id)::text) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant((tenant_id)::text) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "triage_run",
+      "policyname": "triage_run_tenant_scope",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(((tenant_id)::text = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant((tenant_id)::text))",
+      "with_check": "(((tenant_id)::text = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND garimpa.active_tenant((tenant_id)::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "usage_event",
+      "policyname": "usage_event_active_account",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "ALL",
+      "qual": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))",
+      "with_check": "(garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY (ARRAY['platform_admin'::text, 'service_role'::text])))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "usage_event",
+      "policyname": "usage_event_tenant_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))"
+    },
+    {
+      "schemaname": "garimpa",
+      "tablename": "usage_event",
+      "policyname": "usage_event_tenant_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "garimpa_app"
+      ],
+      "cmd": "SELECT",
+      "qual": "(tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text))",
+      "with_check": null
+    }
+  ]
+}

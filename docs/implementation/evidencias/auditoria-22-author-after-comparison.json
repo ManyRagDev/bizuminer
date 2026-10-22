@@ -1,0 +1,14 @@
+{
+  "baseline_values_equal": true,
+  "policies_equal": true,
+  "policy_count": 29,
+  "grants_equal": true,
+  "grant_count": 317,
+  "old_fks_absent": true,
+  "new_fks_validated": {
+    "editorial_selection_actor_user_fkey": true,
+    "product_curation_reviewer_user_fkey": true
+  },
+  "other_foreign_keys_equal": true,
+  "migration_sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23"
+}

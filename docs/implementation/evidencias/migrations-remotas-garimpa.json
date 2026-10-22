@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-14",
+  "note": "Filtro por nomes relevantes; não é histórico completo do projeto compartilhado, nem prova de igualdade SQL com arquivos locais.",
+  "migrations": [
+    {
+      "version": "20260720164434",
+      "name": "brincareducando_phase2_editorial_content"
+    },
+    {
+      "version": "20260818000000",
+      "name": "garimpa_initial"
+    },
+    {
+      "version": "20260818010000",
+      "name": "garimpa_app_role"
+    },
+    {
+      "version": "20260818213323",
+      "name": "marketplace_evidence"
+    },
+    {
+      "version": "20260818213943",
+      "name": "decode_existing_titles"
+    },
+    {
+      "version": "20260818225119",
+      "name": "product_category"
+    },
+    {
+      "version": "20260818225240",
+      "name": "category_taxonomy_expansion"
+    },
+    {
+      "version": "20260819024349",
+      "name": "capture_audit_flow"
+    },
+    {
+      "version": "20260820012056",
+      "name": "garimpa_subscriber_repair"
+    },
+    {
+      "version": "20260820012136",
+      "name": "garimpa_member_area"
+    },
+    {
+      "version": "20260822104738",
+      "name": "garimpa_auth_link"
+    },
+    {
+      "version": "20260826231216",
+      "name": "garimpa_affiliates"
+    },
+    {
+      "version": "20260826231240",
+      "name": "garimpa_tenant_integrity"
+    },
+    {
+      "version": "20260826231254",
+      "name": "garimpa_publication_affiliate"
+    },
+    {
+      "version": "20260826231311",
+      "name": "garimpa_extension_device"
+    },
+    {
+      "version": "20260826234042",
+      "name": "garimpa_backfill_publications"
+    },
+    {
+      "version": "20260827000311",
+      "name": "garimpa_rls_defense"
+    },
+    {
+      "version": "20260827015009",
+      "name": "garimpa_publication_shopee_link"
+    },
+    {
+      "version": "20260829153507",
+      "name": "garimpa_short_link"
+    },
+    {
+      "version": "20260901025640",
+      "name": "garimpa_curation"
+    },
+    {
+      "version": "20260904012521",
+      "name": "20260903200000_garimpa_editorial_context"
+    },
+    {
+      "version": "20260904173316",
+      "name": "harden_editorial_context"
+    },
+    {
+      "version": "20260907201531",
+      "name": "editorial_guideline"
+    },
+    {
+      "version": "20260917193244",
+      "name": "operational_batches"
+    },
+    {
+      "version": "20260925114255",
+      "name": "affiliate_monitoring_policy"
+    },
+    {
+      "version": "20260925121744",
+      "name": "secure_triage_and_editorial"
+    },
+    {
+      "version": "20260929015526",
+      "name": "affiliate_access_role"
+    },
+    {
+      "version": "20261005235546",
+      "name": "editorial_selection"
+    }
+  ]
+}

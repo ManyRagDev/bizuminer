@@ -1,93 +1,31 @@
-import { spawn } from "node:child_process";
-import path from "node:path";
+import { inAccountScope } from "../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
-import { runningRun } from "../../../../lib/admin-db";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
-import { mlAutomatedCaptureEnabled, mlCaptureAllowedWithConsent } from "../../../../lib/automated-capture";
 
 export const runtime = "nodejs";
 
-const MAX_PAGES = 3;
-
 /**
- * Aciona uma rodagem do robô: dispara o CLI real (`packages/persistence/bin/sweep.ts`)
- * como processo separado. Quem registra a execução é o próprio sweep — o
- * capture_run nasce `running` antes da busca e fecha como ok/erro (fluxo
- * auditável de 18/08). Esta rota não inventa registro nenhum: se o processo
- * morrer antes do primeiro insert, nenhuma linha aparece e o painel avisa.
- *
- * Só quem possui a role `afiliado` pode acionar a rodagem.
+ * Rota legada de rodagem direta: Mercado Livre é exclusivamente manual.
+ * Retorna instrução manual sem criar lote e sem disparar execuções automatizadas.
  */
 export async function POST(request: NextRequest) {
   const check = await checkAffiliateUser(request);
-  if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
-  if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+  if (check.kind === "no_session")
+    return Response.json({ ok: false, error: "no_session" }, { status: 401 });
+  if (check.kind === "forbidden")
+    return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
 
-  // Kill switch E0: a rodagem automatizada do ML é bloqueada por default.
-  // Em produção, exige consentimento explícito do admin (checkbox) OU a flag
-  // de ambiente ML_AUTOMATED_CAPTURE_PRODUCTION (decisão consciente do dono).
-  let consent = false;
-  let pages = 1;
-  let bodyParseFailed = false;
-  try {
-    const body = (await request.json()) as { pages?: number; consent?: boolean };
-    if (typeof body.pages === "number" && Number.isInteger(body.pages)) {
-      pages = Math.min(Math.max(body.pages, 1), MAX_PAGES);
-    }
-    consent = body.consent === true;
-  } catch {
-    bodyParseFailed = true;
-    // corpo vazio ou ilegível = 1 página, sem consentimento
-  }
-
-  if (!mlCaptureAllowedWithConsent(consent)) {
+  return inAccountScope(check.context, async () => {
     return sinkJson(
       check.sink,
       {
         ok: false,
-        error: "ml_automated_capture_disabled",
+        error: "manual_capture_only",
         message:
-          "A varredura automatizada do Mercado Livre está desligada. Marque 'Entendo os riscos' para habilitar, ou use a captura manual (bookmarklet).",
-        received: { consent, bodyParseFailed },
+          "A captura do Mercado Livre é exclusivamente manual. Utilize a extensão ou o bookmarklet no navegador.",
       },
       { status: 409 },
     );
-  }
-
-  try {
-    const active = await runningRun();
-    if (active) {
-      return sinkJson(
-        check.sink,
-        { ok: false, error: "run_in_progress", runId: active.id },
-        { status: 409 },
-      );
-    }
-  } catch {
-    return sinkJson(check.sink, { ok: false, error: "server_error" }, { status: 500 });
-  }
-
-  if (!process.env.DATABASE_URL) {
-    return sinkJson(check.sink, { ok: false, error: "no_database_url" }, { status: 500 });
-  }
-
-  const persistenceDir = path.resolve(process.cwd(), "..", "persistence");
-  try {
-    const child = spawn(
-      process.execPath,
-      ["--experimental-strip-types", "bin/sweep.ts", "--pages", String(pages)],
-      {
-        cwd: persistenceDir,
-        env: process.env,
-        detached: true,
-        stdio: "ignore",
-        windowsHide: true,
-      },
-    );
-    child.unref();
-  } catch {
-    return sinkJson(check.sink, { ok: false, error: "spawn_failed" }, { status: 500 });
-  }
-
-  return sinkJson(check.sink, { ok: true, pages }, { status: 202 });
+  });
 }
+

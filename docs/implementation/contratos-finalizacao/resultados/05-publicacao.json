@@ -1,0 +1,187 @@
+{
+  "order": "OS-05",
+  "state": "CONCLUIDO",
+  "baseline": "main43700c59 + approved source package31 + authorized OS12 delta",
+  "github": {
+    "repo": "ManyRagDev/bizuminer",
+    "main": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9",
+    "push": "fast-forward from isolated clone only",
+    "monitorWorkflow": "disabled_manually",
+    "captureWorkflow": "disabled_manually",
+    "captureRef": "GITHUB_CAPTURE_REF absent; existing fallback main now resolves audited commit",
+    "noWriterRunTriggered": true
+  },
+  "deployment": {
+    "id": "dpl_EwDxnLU8t7BLFrNFVjsnxbWQVuhp",
+    "url": "https://web-ksp090vwr-emanuels-projects-aa92a126.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "commitMetadata": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9",
+    "sourceUploadCount": 460,
+    "approvedGitignoreOmissions": 2,
+    "extraUploadCount": 0,
+    "canonicalAliasConfirmed": true,
+    "promotionFailedAliases": 0,
+    "runtime": "Node24.x project setting, remote Next15.5.23 build completed"
+  },
+  "maintenance": {
+    "ssoProtection": "all",
+    "paused": false,
+    "autoAssignCustomDomains": false,
+    "publicStillClosed": true,
+    "workflowWritersSuspended": true
+  },
+  "functionalProbe": {
+    "exitCode": 0,
+    "httpStatus": "200",
+    "title": "BizuMiner — Um bizu bom vale ouro",
+    "bytes": 242485,
+    "bizuminerPresent": true,
+    "buildingPage": false,
+    "detailPaths": [
+      "/bizu/shp-49107392414",
+      "/bizu/shp-22593398069",
+      "/bizu/shp-23093044369"
+    ]
+  },
+  "recovery": {
+    "compatibleSourceCommit": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9",
+    "immutableDeployment": "dpl_EwDxnLU8t7BLFrNFVjsnxbWQVuhp",
+    "compatibilityEvidence": "B runtime real + native B/C suites OS12; selective backup OS02",
+    "postCFailureRequiresMaintenanceAndScopedRepair": true
+  },
+  "extension": {
+    "sourcesPublished": true,
+    "newDeviceDistributionPerformed": false,
+    "deviceSmokePendingInOS06": true
+  },
+  "next": "OS06 real Google owner login and operational smokes; C remains absent/controlfalse",
+  "previousBlockedResult": {
+    "order": "OS-05",
+    "state": "BLOQUEADO",
+    "candidateCommit": "0b9b1468d4774b7e5014f09e1775695ddbea005f",
+    "commitOnlyInIsolatedClone": true,
+    "pushed": false,
+    "sources": {
+      "approvedCount": 462,
+      "allOriginalHashesMatch": true,
+      "uploadedFiles": 460,
+      "ignoredApprovedFiles": [
+        ".gitignore",
+        "packages/web/.gitignore"
+      ],
+      "extraUploadedFiles": 0,
+      "secretsUploaded": false
+    },
+    "checks": [
+      {
+        "name": "typecheck",
+        "environment": "isolated sources, Node22.23.2",
+        "exitCode": 0
+      },
+      {
+        "name": "web build",
+        "environment": "isolated sources, Node22.23.2",
+        "exitCode": 0
+      },
+      {
+        "name": "first sandbox build",
+        "exitCode": 1,
+        "diagnosis": "webpack reported failure without actionable detail; identical isolated build with required runtime permissions passed"
+      }
+    ],
+    "deployments": [
+      {
+        "id": "dpl_99SnFf3VGpxHoRGrToR8KPBLT2Ry",
+        "url": "https://web-oz5ug69fw-emanuels-projects-aa92a126.vercel.app",
+        "target": "production",
+        "skipDomain": true,
+        "state": "BLOCKED",
+        "buildSkipped": true,
+        "alwaysRefuseToBuild": true,
+        "reason": "This deployment couldn’t be built because the project was paused."
+      },
+      {
+        "id": "dpl_2dNkpAtGec4qVUmz5eVKNsMdN76b",
+        "url": "https://web-4pb5rmynj-emanuels-projects-aa92a126.vercel.app",
+        "target": "preview",
+        "state": "BLOCKED",
+        "buildSkipped": true,
+        "alwaysRefuseToBuild": true,
+        "reason": "This deployment couldn’t be built because the project was paused."
+      }
+    ],
+    "candidateHttpProbe": {
+      "status": 200,
+      "title": "Deployment is building",
+      "applicationVerified": false
+    },
+    "legacyReservedProbe": {
+      "url": "https://web-1zhwnn9dy-emanuels-projects-aa92a126.vercel.app",
+      "httpStatus": 200,
+      "title": "BizuMiner — Um bizu bom vale ouro",
+      "bytes": 214625,
+      "note": "Legacy compatibility smoke only; not candidate publication proof."
+    },
+    "github": {
+      "defaultBranch": "main",
+      "sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+      "monitorWorkflow": "disabled_manually",
+      "repositoryHooks": 0,
+      "otherWorkflows": 0,
+      "noPushPerformed": true
+    },
+    "supabaseBranches": [],
+    "dbFinal": [
+      {
+        "database": "postgres",
+        "lc_collate": "en_US.UTF-8",
+        "commercial_enabled": false,
+        "products": 1657,
+        "observations": 9338,
+        "publications": 1495,
+        "short_links": 172,
+        "cutover_history_count": 0
+      }
+    ],
+    "technicalAudit": {
+      "cutover": "BLOQUEADO",
+      "inventoryFunctionCount": 26,
+      "defaultOrderMatches": false,
+      "binaryOrderMatches": true,
+      "otherInventoriesMatch": true,
+      "expectedTriggers": 58,
+      "allExpectedTriggersMatch": true,
+      "legacyExtraTriggerPreserved": true,
+      "proposedFix": "ORDER BY p.oid::regprocedure::text COLLATE \"C\"",
+      "sqlBytesUnchanged": true
+    },
+    "frontiers": [
+      {
+        "kind": "SQL",
+        "needed": "Explicit localized correction authorization/order for C guard, generator and hash envelope; fresh focused auditor approval before application."
+      },
+      {
+        "kind": "maintenance",
+        "needed": "Localized order to protect ALL project URLs using Vercel Authentication before unpausing for builds; verify public access denied, keep writers disabled, restore old protection only after acceptance.",
+        "status": "PROPOSTA_NAO_EXECUTADA",
+        "officialReference": "https://vercel.com/docs/deployment-protection",
+        "noPaidAddonRequired": true
+      }
+    ],
+    "protectedState": {
+      "commercialEnabled": false,
+      "CInstalled": false,
+      "productionProjectPaused": true,
+      "writersDisabled": true,
+      "otherProjectsUntouched": true
+    },
+    "finalWorkspaceCheck": {
+      "headUnchanged": true,
+      "stagedUnchanged": true,
+      "trackedDiffLinesUnchanged": true,
+      "approved462SourcesUnchanged": true,
+      "privateBackupsModes": "directory0700/files0600"
+    }
+  }
+}

@@ -13,6 +13,8 @@
  * M4-E pode substituir o critério sem mudar o contrato.
  */
 
+import { compareReviewEvidence } from "./comparison-evidence.ts";
+
 export const GROUP_REPRESENTATIVE_LIMIT = 5;
 
 export interface GroupMemberProduct {
@@ -30,10 +32,20 @@ export interface GroupMemberProduct {
   readonly observedAt: string;
   readonly priceCents: number;
   readonly ratingStar: number | null;
+  readonly reviewCount?: number | null;
   readonly salesLabel: string | null;
   readonly salesCount: number | null;
   readonly observationCount: number;
   readonly lowestVerified: boolean;
+  readonly variant?: {
+    readonly key?: string | null;
+    readonly label?: string | null;
+    readonly variantKey?: string | null;
+    readonly variantLabel?: string | null;
+    readonly confirmed: boolean;
+    readonly description: string;
+  } | null;
+  readonly offerEvidence?: unknown;
 }
 
 export interface EditorialGroup {
@@ -94,8 +106,42 @@ export function matchesEditorialGroup(
 }
 
 function compareEvidence(a: GroupMemberProduct, b: GroupMemberProduct): number {
+  const lowA = a.lowestVerified ? 1 : 0;
+  const lowB = b.lowestVerified ? 1 : 0;
+  if (lowA !== lowB) return lowB - lowA;
+
+  if (a.marketplace === b.marketplace && (a.reviewCount !== undefined || b.reviewCount !== undefined)) {
+    const reviewOrder = compareReviewEvidence(
+      {
+        id: a.productId,
+        marketplace: a.marketplace,
+        ratingStar: a.ratingStar,
+        reviewCount: a.reviewCount,
+        salesCount: a.salesCount,
+        salesLabel: a.salesLabel,
+        observedAt: a.observedAt,
+        lowestVerified: a.lowestVerified,
+        priceCents: a.priceCents,
+      },
+      {
+        id: b.productId,
+        marketplace: b.marketplace,
+        ratingStar: b.ratingStar,
+        reviewCount: b.reviewCount,
+        salesCount: b.salesCount,
+        salesLabel: b.salesLabel,
+        observedAt: b.observedAt,
+        lowestVerified: b.lowestVerified,
+        priceCents: b.priceCents,
+      },
+    );
+    if (reviewOrder !== 0) return reviewOrder;
+  }
+
+  // BUG-018: Lojas distintas não possuem denominador comparável de vendas.
+  // Vendas brutas só podem desempatar produtos do MESMO marketplace.
   const rank = (p: GroupMemberProduct) =>
-    [p.lowestVerified ? 1 : 0, p.ratingStar ?? 0, p.salesCount ?? 0, p.observationCount];
+    [p.ratingStar ?? 0, a.marketplace === b.marketplace ? (p.salesCount ?? 0) : 0, p.observationCount];
   const ra = rank(a);
   const rb = rank(b);
   for (let i = 0; i < ra.length; i++) {

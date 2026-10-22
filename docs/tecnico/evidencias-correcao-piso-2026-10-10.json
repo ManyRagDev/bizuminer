@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-10T16:33:21.264Z",
+  "readOnly": true,
+  "policyVersion": "triage-value-v1",
+  "candidateLimit": 200,
+  "returnedCandidates": 0,
+  "candidateOutcomes": {},
+  "recoveredAutomaticPriceHolds": 0,
+  "freshQueueCoverage": [
+    {
+      "status": "held",
+      "products": 83,
+      "below_value_floor": 83,
+      "identified_configurations": 0
+    },
+    {
+      "status": "pending",
+      "products": 29,
+      "below_value_floor": 1,
+      "identified_configurations": 0
+    }
+  ]
+}

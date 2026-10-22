@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-10T22:53:47.578Z",
+  "scope": "Leitura pública pelo adaptador HTTP real; sem banco, ingestão, IA, login ou cookies do usuário",
+  "automationRestored": false,
+  "probe": {
+    "ok": false,
+    "kind": "auth",
+    "requests": [{
+      "status": 200,
+      "finalOrigin": "https://www.mercadolivre.com.br",
+      "finalPath": "/gz/account-verification",
+      "bytes": 41327,
+      "cards": 0
+    }]
+  },
+  "localCorrections": [
+    "Lote ML tenta o coletor automático antes de oferecer importação",
+    "Somente falha auth tipada do CLI habilita contingência; timeout, transporte, parser e spawn não são login",
+    "Parser HTTP preserva identidade do anúncio em query, fragmento e link direto; catálogo sem anúncio é descartado",
+    "Painel apresenta importação como contingência opcional"
+  ],
+  "validation": {
+    "isolatedPostgresScenarios": 20,
+    "captureProcessTests": 5,
+    "realCaptureOrTriageStarted": false
+  },
+  "userConstraint": "Mercado Livre sob demanda no site; não executar pelo GitHub",
+  "pending": [
+    "Definir se o site inclui o deploy publicado ou somente o ambiente local",
+    "Ajustar executor de produção: a versão anterior ainda escolhe GitHub para todo lote de produção",
+    "Validar um coletor automático que obtenha ofertas no ambiente de execução escolhido"
+  ]
+}

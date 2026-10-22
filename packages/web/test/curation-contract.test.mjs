@@ -4,6 +4,7 @@ import {
   validateCurationBulk,
   validateCurationDeferral,
   validateCurationDecision,
+  validateGroupAction,
 } from "../lib/curation-contract.ts";
 
 const productId = "0d539916-c495-41ea-b569-a3b3f714d3e1";
@@ -148,4 +149,108 @@ test("ação em lote falha fechado em lote vazio, grande demais ou decisão inv�
     }),
     { ok: false, error: "invalid_context_id" },
   );
+});
+
+test("AC-035.1: validateGroupAction com retenção exige expectedMemberProductIds completo, válido e não vazio", () => {
+  const groupId = "grp_0123456789abcdef";
+  const selected = ["prod_1"];
+
+  // 1. Falha: expectedMemberProductIds ausente
+  const noExpected = validateGroupAction({
+    groupId,
+    selectedProductIds: selected,
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+  });
+  assert.equal(noExpected.ok, false);
+  assert.equal(noExpected.error, "expected_members_required");
+
+  // 2. Falha: expectedMemberProductIds nulo
+  const nullExpected = validateGroupAction({
+    groupId,
+    selectedProductIds: selected,
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+    expectedMemberProductIds: null,
+  });
+  assert.equal(nullExpected.ok, false);
+  assert.equal(nullExpected.error, "expected_members_required");
+
+  // 3. Falha: expectedMemberProductIds vazio
+  const emptyExpected = validateGroupAction({
+    groupId,
+    selectedProductIds: selected,
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+    expectedMemberProductIds: [],
+  });
+  assert.equal(emptyExpected.ok, false);
+  assert.equal(emptyExpected.error, "expected_members_required");
+
+  // 4. Falha: expectedMemberProductIds com duplicatas
+  const dupExpected = validateGroupAction({
+    groupId,
+    selectedProductIds: selected,
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+    expectedMemberProductIds: ["prod_1", "prod_2", "prod_1"],
+  });
+  assert.equal(dupExpected.ok, false);
+  assert.equal(dupExpected.error, "bulk_duplicate_product");
+
+  // 5. Falha: expectedMemberProductIds com ID inválido
+  const invalidIdExpected = validateGroupAction({
+    groupId,
+    selectedProductIds: selected,
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+    expectedMemberProductIds: ["prod_1", "../invalido"],
+  });
+  assert.equal(invalidIdExpected.ok, false);
+  assert.equal(invalidIdExpected.error, "invalid_product");
+
+  // 6. Falha: expectedMemberProductIds omite produto selecionado
+  const omitSelectedExpected = validateGroupAction({
+    groupId,
+    selectedProductIds: ["prod_1", "prod_2"],
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+    expectedMemberProductIds: ["prod_1", "prod_3"],
+  });
+  assert.equal(omitSelectedExpected.ok, false);
+  assert.equal(omitSelectedExpected.error, "expected_members_must_include_selected");
+
+  // 7. Sucesso com retenção: lista completa e justificativa válida
+  const validRetention = validateGroupAction({
+    groupId,
+    selectedProductIds: ["prod_1"],
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+    expectedMemberProductIds: ["prod_1", "prod_2", "prod_3"],
+  });
+  assert.equal(validRetention.ok, true);
+  if (validRetention.ok) {
+    assert.deepEqual(validRetention.value.expectedMemberProductIds, ["prod_1", "prod_2", "prod_3"]);
+    assert.equal(validRetention.value.retainRemainingAsSaturation, true);
+  }
+
+  // 8. Sucesso sem retenção: expectedMemberProductIds é opcional
+  const validNoRetention = validateGroupAction({
+    groupId,
+    selectedProductIds: ["prod_1"],
+    action: "approve",
+    retainRemainingAsSaturation: false,
+  });
+  assert.equal(validNoRetention.ok, true);
+  if (validNoRetention.ok) {
+    assert.equal(validNoRetention.value.expectedMemberProductIds, null);
+    assert.equal(validNoRetention.value.retainRemainingAsSaturation, false);
+  }
 });

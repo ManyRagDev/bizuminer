@@ -1,24 +1,33 @@
-export type BatchMarketplace = "mercadolivre" | "shopee" | "aliexpress";
+export type BatchMarketplace = "shopee" | "aliexpress";
 
 const ORDERED_MARKETPLACES: readonly BatchMarketplace[] = [
-  "mercadolivre",
   "shopee",
   "aliexpress",
 ];
 
+export class ManualCaptureOnlyError extends Error {
+  readonly code = "manual_capture_only";
+  constructor(message = "manual_capture_only") {
+    super(message);
+    this.name = "ManualCaptureOnlyError";
+  }
+}
+
 /**
- * Normaliza a seleção feita no painel. Sem seleção explícita, preserva o
- * comportamento legado (duas APIs e ML somente com consentimento).
+ * Normaliza a seleção feita no painel. Aceita somente lojas com automação direta
+ * por API (Shopee e AliExpress). O Mercado Livre é de captura exclusivamente manual;
+ * pedidos explícitos de ML (isolados ou em lote misto) recebem erro seguro manual_capture_only.
  */
 export function batchCapturePlan(
-  consent: boolean,
+  _consent?: boolean,
   requested?: readonly string[],
 ): BatchMarketplace[] {
-  const allowed = new Set(
-    consent ? ORDERED_MARKETPLACES : ORDERED_MARKETPLACES.filter((slug) => slug !== "mercadolivre"),
-  );
-  if (!requested) return ORDERED_MARKETPLACES.filter((slug) => allowed.has(slug));
+  if (requested && requested.includes("mercadolivre")) {
+    throw new ManualCaptureOnlyError("manual_capture_only");
+  }
+  if (!requested) return [...ORDERED_MARKETPLACES];
 
   const selected = new Set(requested);
-  return ORDERED_MARKETPLACES.filter((slug) => allowed.has(slug) && selected.has(slug));
+  return ORDERED_MARKETPLACES.filter((slug) => selected.has(slug));
 }
+

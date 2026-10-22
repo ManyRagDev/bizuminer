@@ -1,0 +1,122 @@
+{
+  "at": "2026-10-16T01:14:12.822848+00:00",
+  "repository": "ManyRagDev/bizuminer",
+  "localHead": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+  "localBranch": "main",
+  "writes": 0,
+  "comparisonRef": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+  "scope": "selected operational files at observed cron revision, not all published artifacts",
+  "files": [
+    {
+      "path": ".github/workflows/monitor-prices.yml",
+      "localSha256": "60a2572ac74526a449bbb700c8f3dc5564b95fdc646306f5db40a60988862900",
+      "remoteContentAvailable": true,
+      "remoteBlobSha": "cbe9c5e8e694d7fe577bf15add853853fb898dc3",
+      "remoteSha256": "60a2572ac74526a449bbb700c8f3dc5564b95fdc646306f5db40a60988862900",
+      "matchesLocal": true
+    },
+    {
+      "path": ".github/workflows/capture-offers.yml",
+      "localSha256": "8c0a9386008e832aa1dad434418b3483ca30b254c4045b3c659130067505de6b",
+      "remoteContentAvailable": false,
+      "conclusion": "not confirmed in published revision"
+    },
+    {
+      "path": "packages/persistence/bin/monitor-prices.ts",
+      "localSha256": "2b1fbcf10b374f5c6d67618dce04952b733aba1326cf90c3b053ee497d9ed54e",
+      "remoteContentAvailable": true,
+      "remoteBlobSha": "7148dd479fb40997190f8952ae284f1840eaf5d6",
+      "remoteSha256": "1e63906308012dfc43ff1ebdbdc41cfc3bfb744afc5908aba163dacd707e0406",
+      "matchesLocal": false
+    },
+    {
+      "path": "packages/persistence/src/monitoring-db.ts",
+      "localSha256": "d395f38ad7d940980d8de392242d075e37858b0d43884e7f80c121e9c10386b7",
+      "remoteContentAvailable": false,
+      "conclusion": "not confirmed in published revision"
+    },
+    {
+      "path": "packages/persistence/src/pg-store.ts",
+      "localSha256": "bb03c640cd9a5c20805352aa5da428d997aa683b70b407cadd8f6827e8ba52c1",
+      "remoteContentAvailable": true,
+      "remoteBlobSha": "1e04c9ed8ca4c1171e5ac702f6b4026710f4397f",
+      "remoteSha256": "84dc2ec79739087cb7e34e37476ea7ef8a4506013f6406cbb2455063bc1f2363",
+      "matchesLocal": false
+    },
+    {
+      "path": "packages/persistence/src/ingest.ts",
+      "localSha256": "a91fe6951ce84b5e77d280ff901c3e9a1f8ff735f55890fada19f9ead937f685",
+      "remoteContentAvailable": true,
+      "remoteBlobSha": "f77445cbf38f182b0c7a565c9f2374fd17818705",
+      "remoteSha256": "b5cb4bc033328d37c1532f227a828426e39462607bb6651af2a676b4d9f5fc4e",
+      "matchesLocal": false
+    },
+    {
+      "path": "packages/web/bin/run-capture-batch.ts",
+      "localSha256": "0080b15175646f2afecea7bba9b091ff2f5e465cd02502f642e034113a96a51f",
+      "remoteContentAvailable": false,
+      "conclusion": "not confirmed in published revision"
+    },
+    {
+      "path": "packages/web/bin/run-triage.ts",
+      "localSha256": "26129a5a0bb7dd006b9a5b8d3107bb0c43b5510ef25c69819e8f7a8e8755edc9",
+      "remoteContentAvailable": true,
+      "remoteBlobSha": "7889785c2cef4c0387db55d86fffde4e55597e7d",
+      "remoteSha256": "be984f562836cabeeb374fa3ade0360d21a2d796295dddfb37ffd349f300afea",
+      "matchesLocal": false
+    },
+    {
+      "path": "packages/web/lib/capture-dispatch.ts",
+      "localSha256": "f80daae8cf55044eb0ea422f3bf11a86ad16d93f42e79ce39ba58fb8a479978d",
+      "remoteContentAvailable": false,
+      "conclusion": "not confirmed in published revision"
+    },
+    {
+      "path": "packages/web/lib/browser-capture-db.ts",
+      "localSha256": "ad7fb6b7f11e217c9629423e980c5925bdf6d1fcc06b182363f8aae138337b7b",
+      "remoteContentAvailable": false,
+      "conclusion": "not confirmed in published revision"
+    },
+    {
+      "path": "packages/web/lib/tenant-db.ts",
+      "localSha256": "8db3761ca6dc6fc970f6cac3513165b1e883ca82dabae4adfae8170062a37051",
+      "remoteContentAvailable": true,
+      "remoteBlobSha": "01e5d8ce9ca182d1f52e2959f18c1e74a20d3bc1",
+      "remoteSha256": "1565977b2b50b83fde32f43f64b42f29e191b51e9be8d6e9bd7e54ab0deb6bc3",
+      "matchesLocal": false
+    }
+  ],
+  "workflows": {
+    "monitor-prices.yml": {
+      "available": true,
+      "totalCount": 70,
+      "runs": [
+        {
+          "id": 38824852680,
+          "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+          "head_branch": "main",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ManyRagDev/bizuminer/actions/runs/38824852680",
+          "created_at": "2026-10-15T23:39:10Z"
+        },
+        {
+          "id": 38790685043,
+          "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+          "head_branch": "main",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ManyRagDev/bizuminer/actions/runs/38790685043",
+          "created_at": "2026-10-15T19:03:01Z"
+        }
+      ]
+    },
+    "capture-offers.yml": {
+      "available": false,
+      "totalCount": null,
+      "runs": []
+    }
+  },
+  "vercelDeploymentConfirmed": false,
+  "candidatePublished": false
+}

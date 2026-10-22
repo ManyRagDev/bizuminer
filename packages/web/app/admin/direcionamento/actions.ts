@@ -1,4 +1,6 @@
 "use server";
+import { accountOperation } from "../../../lib/page-account.ts";
+import { scopedTenantId } from "../../../lib/account-scope.ts";
 
 import { revalidatePath } from "next/cache";
 import { getPageAuth, isAffiliate, resolveAppUserId } from "../../../lib/auth.ts";
@@ -11,17 +13,9 @@ import {
   type EditorialGuidelineConfig,
   type TriageBatchItem,
 } from "../../../lib/editorial-compass.ts";
-import {
-  runPendingAutomatedTriage,
-  type TriageApplicationSummary,
-} from "../../../lib/curation-db.ts";
 
 export type SaveGuidelineResult =
   | { ok: true; config: EditorialGuidelineConfig }
-  | { ok: false; error: string };
-
-export type TriggerAutoPilotResult =
-  | { ok: true; summary: TriageApplicationSummary }
   | { ok: false; error: string };
 
 export type RejectSpotCheckResult =
@@ -50,48 +44,24 @@ export async function saveEditorialGuidelineAction(input: {
   autoPublish: boolean;
   minScore?: number;
 }): Promise<SaveGuidelineResult> {
+  return accountOperation(async () => {
   const reviewer = await getReviewerAppUserId();
   if (!reviewer) return { ok: false, error: "forbidden" };
 
   const minScore = Math.min(Math.max(input.minScore ?? 4, 1), 5);
-  const success = await saveEditorialGuideline("local", input.guideline, input.autoPublish, minScore);
+  const success = await saveEditorialGuideline(scopedTenantId(), input.guideline, input.autoPublish, minScore);
   if (!success) {
     return { ok: false, error: "database_error" };
   }
 
-  const updated = await getEditorialGuideline("local");
+  const updated = await getEditorialGuideline(scopedTenantId());
 
   revalidatePath("/admin/direcionamento");
   revalidatePath("/admin/curadoria");
   revalidatePath("/admin");
 
   return { ok: true, config: updated };
-}
-
-/**
- * Executa a triagem automatizada dos produtos pendentes utilizando
- * o funil de 4 estágios com Gemini 2.5 Flash, Bússola e Piloto Automático.
- */
-export async function triggerAutoPilotTriageAction(limit = 50): Promise<TriggerAutoPilotResult> {
-  const reviewer = await getReviewerAppUserId();
-  if (!reviewer) return { ok: false, error: "forbidden" };
-
-  let summary;
-  try {
-    summary = await runPendingAutomatedTriage("local", limit);
-  } catch (error) {
-    if (error instanceof Error && error.message === "triage_in_progress") {
-      return { ok: false, error: "triage_in_progress" };
-    }
-    throw error;
-  }
-
-  revalidatePath("/admin/direcionamento");
-  revalidatePath("/admin/curadoria");
-  revalidatePath("/admin");
-  revalidatePath("/");
-
-  return { ok: true, summary };
+  });
 }
 
 /**
@@ -100,8 +70,10 @@ export async function triggerAutoPilotTriageAction(limit = 50): Promise<TriggerA
  */
 export async function rejectSpotCheckAction(input: {
   productId: string;
+  sourceEventId: string;
   feedback: string;
 }): Promise<RejectSpotCheckResult> {
+  return accountOperation(async () => {
   const reviewer = await getReviewerAppUserId();
   if (!reviewer) return { ok: false, error: "forbidden" };
 
@@ -113,7 +85,8 @@ export async function rejectSpotCheckAction(input: {
     input.productId,
     input.feedback,
     reviewer,
-    "local",
+    scopedTenantId(),
+    input.sourceEventId,
   );
 
   if (!success) {
@@ -123,8 +96,11 @@ export async function rejectSpotCheckAction(input: {
   revalidatePath("/admin/direcionamento");
   revalidatePath("/admin/curadoria");
   revalidatePath("/");
+  revalidatePath("/pauta");
+  revalidatePath("/admin");
 
   return { ok: true };
+  });
 }
 
 /**
@@ -133,7 +109,9 @@ export async function rejectSpotCheckAction(input: {
  */
 export async function confirmSpotCheckAction(input: {
   productId: string;
+  sourceEventId: string;
 }): Promise<ConfirmSpotCheckResult> {
+  return accountOperation(async () => {
   const reviewer = await getReviewerAppUserId();
   if (!reviewer) return { ok: false, error: "forbidden" };
 
@@ -141,7 +119,7 @@ export async function confirmSpotCheckAction(input: {
     return { ok: false, error: "missing_product_id" };
   }
 
-  const success = await confirmSpotCheck(input.productId, reviewer, "local");
+  const success = await confirmSpotCheck(input.productId, reviewer, scopedTenantId(), input.sourceEventId);
 
   if (!success) {
     return { ok: false, error: "not_found_or_cannot_confirm" };
@@ -150,8 +128,11 @@ export async function confirmSpotCheckAction(input: {
   revalidatePath("/admin/direcionamento");
   revalidatePath("/admin/curadoria");
   revalidatePath("/");
+  revalidatePath("/pauta");
+  revalidatePath("/admin");
 
   return { ok: true };
+  });
 }
 
 /**
@@ -160,6 +141,7 @@ export async function confirmSpotCheckAction(input: {
 export async function getTriageBatchItemsAction(
   runTimeMinute: string,
 ): Promise<GetBatchItemsResult> {
+  return accountOperation(async () => {
   const reviewer = await getReviewerAppUserId();
   if (!reviewer) return { ok: false, error: "forbidden" };
 
@@ -168,9 +150,10 @@ export async function getTriageBatchItemsAction(
   }
 
   try {
-    const items = await getTriageBatchItems(runTimeMinute, "local");
+    const items = await getTriageBatchItems(runTimeMinute, scopedTenantId());
     return { ok: true, items };
   } catch (error) {
     return { ok: false, error: "database_error" };
   }
+  });
 }

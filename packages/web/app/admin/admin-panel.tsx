@@ -172,36 +172,68 @@ export default function AdminPanel({
       <div className="admin-runs-head">
         <h2 id={`runs-title-${marketplace}`}>Rodagens · {marketplaceLabel}</h2>
         <div className="admin-trigger">
-          {requiresConsent && (
-            <label className="admin-consent">
-              <input
-                type="checkbox"
-                checked={consented}
-                onChange={(event) => setConsented(event.target.checked)}
-                disabled={requesting || busy}
-              />
-              entendo os riscos de rodar automático
-            </label>
+          {marketplace === "mercadolivre" ? (
+            <a
+              href="https://www.mercadolivre.com.br/ofertas"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="admin-trigger-open-link"
+            >
+              Abrir ofertas no Mercado Livre ↗
+            </a>
+          ) : (
+            <>
+              {requiresConsent && (
+                <label className="admin-consent">
+                  <input
+                    type="checkbox"
+                    checked={consented}
+                    onChange={(event) => setConsented(event.target.checked)}
+                    disabled={requesting || busy}
+                  />
+                  entendo os riscos de rodar automático
+                </label>
+              )}
+              <label>
+                páginas
+                <select value={pages} onChange={(event) => setPages(Number(event.target.value))} disabled={requesting || busy || !canTrigger}>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                </select>
+              </label>
+              <button type="button" disabled={requesting || busy || !canTrigger} onClick={() => void trigger()}>
+                {busy ? "rodagem em andamento…" : requesting ? "acionando…" : "nova rodagem ▸"}
+              </button>
+            </>
           )}
-          <label>
-            páginas
-            <select value={pages} onChange={(event) => setPages(Number(event.target.value))} disabled={requesting || busy || !canTrigger}>
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-            </select>
-          </label>
-          <button type="button" disabled={requesting || busy || !canTrigger} onClick={() => void trigger()}>
-            {busy ? "rodagem em andamento…" : requesting ? "acionando…" : "nova rodagem ▸"}
-          </button>
         </div>
       </div>
-      {!enabled && !consented && (
+      {marketplace === "mercadolivre" && (
+        <div className="admin-ml-guide-card">
+          <div className="admin-ml-guide-header">
+            <strong>Como capturar ofertas do Mercado Livre com a extensão:</strong>
+          </div>
+          <ol className="admin-ml-guide-steps">
+            <li>
+              <b>1. Baixe e ative a extensão:</b> No seu navegador (Opera, Chrome ou Edge), carregue a extensão BizuMiner descompactada.{" "}
+              <a href="/admin?aba=captura-manual#devices-title">Ver dispositivos e pareamento →</a>
+            </li>
+            <li>
+              <b>2. Abra o Mercado Livre:</b> Clique no botão <b>“Abrir ofertas no Mercado Livre ↗”</b> acima.
+            </li>
+            <li>
+              <b>3. Importe com 1 clique:</b> Na página de ofertas aberta, clique no ícone da extensão BizuMiner e selecione <b>“Importar ofertas e continuar”</b>. Todos os produtos serão enviados diretamente para a triagem.
+            </li>
+          </ol>
+        </div>
+      )}
+      {marketplace !== "mercadolivre" && !enabled && !consented && (
         <p className="admin-message admin-message--notice" role="status">
           {disabledNotice}
         </p>
       )}
-      {!enabled && consented && (
+      {marketplace !== "mercadolivre" && !enabled && consented && (
         <p className="admin-message admin-message--ok" role="status">
           Rodagem habilitada por consentimento. O robô será acionado ao clicar em "nova rodagem".
         </p>

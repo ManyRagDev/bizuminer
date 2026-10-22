@@ -1,0 +1,1333 @@
+{
+  "order": "OS-02",
+  "state": "CONCLUIDO",
+  "at": "2026-10-16T18:54:53.802246+00:00",
+  "target": {
+    "supabase": "spbuwcwmxlycchuwhfir",
+    "schema": "garimpa",
+    "vercel": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+    "team": "team_CdqNeIvhoe03YClNYUpP6C1w",
+    "github": "ManyRagDev/bizuminer"
+  },
+  "githubMaintenance": {
+    "before": {
+      "workflow": {
+        "id": 366364369,
+        "path": ".github/workflows/monitor-prices.yml",
+        "state": "active"
+      },
+      "monitoringEnabled": "true",
+      "activeRuns": [
+        {
+          "id": 38949720805,
+          "status": "in_progress",
+          "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd"
+        }
+      ],
+      "at": "2026-10-16T18:45:59.711282+00:00"
+    },
+    "afterState": "disabled_manually",
+    "cancelledRuns": [
+      38949720805
+    ],
+    "variablesChanged": false
+  },
+  "cancelledRun": {
+    "id": 38949720805,
+    "status": "completed",
+    "conclusion": "cancelled",
+    "head_sha": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+    "path": ".github/workflows/monitor-prices.yml"
+  },
+  "endpoints": [
+    {
+      "host": "bizuminer.com.br",
+      "status": 503,
+      "error": "DEPLOYMENT_PAUSED",
+      "redirectHost": null,
+      "protectedRedirect": false
+    },
+    {
+      "host": "www.bizuminer.com.br",
+      "status": 503,
+      "error": "DEPLOYMENT_PAUSED",
+      "redirectHost": null,
+      "protectedRedirect": false
+    },
+    {
+      "host": "web-khaki-beta-l29v7h3o33.vercel.app",
+      "status": 503,
+      "error": "DEPLOYMENT_PAUSED",
+      "redirectHost": null,
+      "protectedRedirect": false
+    },
+    {
+      "host": "web-e3twr6aqn-emanuels-projects-aa92a126.vercel.app",
+      "status": 503,
+      "error": "DEPLOYMENT_PAUSED",
+      "redirectHost": null,
+      "protectedRedirect": false
+    },
+    {
+      "host": "web-1zhwnn9dy-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-6sxicaaw8-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-k5mlahwnw-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-oafmex3gk-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-n6iyj35iz-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-1eswxn3se-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-9vzqrn7hk-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-d9xf82a27-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-fg7mmrf8d-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-ciethyvfh-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-38dta4777-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-1x20uq6v8-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-fm5riqeah-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-c19gt8loh-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-bkbc0lyxr-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    },
+    {
+      "host": "web-dyp2n6x36-emanuels-projects-aa92a126.vercel.app",
+      "status": 302,
+      "error": null,
+      "redirectHost": "vercel.com",
+      "protectedRedirect": true
+    }
+  ],
+  "reservedAccess": {
+    "activeProductionAuthenticated": 503,
+    "previousProtectedDeploymentAuthenticated": 200,
+    "method": "Vercel CLI supported authenticated HEAD; temporary project-scoped protection bypass credential generated automatically by CLI; value not logged or committed; SSO protection remains enabled",
+    "futureCandidate": "Publish compatible non-active deployment while public production paused; verify app auth separately before C"
+  },
+  "localWriters": [],
+  "drainedSessions": [
+    {
+      "active_runtime_sessions": 0
+    }
+  ],
+  "backup": {
+    "dump": "/home/many/.local/share/bizuminer/backups/20261016-os02-antes-rollout.dump",
+    "metadata": "/home/many/.local/share/bizuminer/backups/20261016-os02-antes-rollout.metadata.json",
+    "bytes": 6300642,
+    "mode": "0o600",
+    "copyVerified": true,
+    "restoredTables": 28,
+    "result": "PASS"
+  },
+  "restore": {
+    "result": "PASS",
+    "restoredRealData": true,
+    "target": "isolated localhost PostgreSQL17.11; SCRAM auth; no production writes",
+    "sourceEngine": "17.6",
+    "dump": "/tmp/bizuminer-finalizacao/os-02/private/garimpa-final.dump",
+    "tables": [
+      {
+        "table": "affiliate_account",
+        "sourceCount": "1",
+        "restoredCount": "1",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "affiliate_marketplace_config",
+        "sourceCount": "1",
+        "restoredCount": "1",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "affiliate_membership",
+        "sourceCount": "1",
+        "restoredCount": "1",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "affiliate_monitoring_policy",
+        "sourceCount": "3",
+        "restoredCount": "3",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "affiliate_monitoring_policy_event",
+        "sourceCount": "2",
+        "restoredCount": "2",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "affiliate_monitoring_skip",
+        "sourceCount": "1",
+        "restoredCount": "1",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "affiliate_secret",
+        "sourceCount": "0",
+        "restoredCount": "0",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "app_user",
+        "sourceCount": "3",
+        "restoredCount": "3",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "app_user_role",
+        "sourceCount": "1",
+        "restoredCount": "1",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "buyer_profile",
+        "sourceCount": "1",
+        "restoredCount": "1",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "capture_batch",
+        "sourceCount": "11",
+        "restoredCount": "11",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "capture_run",
+        "sourceCount": "407",
+        "restoredCount": "407",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "click_event",
+        "sourceCount": "767",
+        "restoredCount": "767",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "curation_event",
+        "sourceCount": "1330",
+        "restoredCount": "1330",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "editorial_assessment",
+        "sourceCount": "0",
+        "restoredCount": "0",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "editorial_guideline",
+        "sourceCount": "1",
+        "restoredCount": "1",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "editorial_selection",
+        "sourceCount": "0",
+        "restoredCount": "0",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "editorial_selection_item",
+        "sourceCount": "0",
+        "restoredCount": "0",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "extension_device",
+        "sourceCount": "3",
+        "restoredCount": "3",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "favorite",
+        "sourceCount": "7",
+        "restoredCount": "7",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "price_observation",
+        "sourceCount": "9338",
+        "restoredCount": "9338",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "price_watch",
+        "sourceCount": "4",
+        "restoredCount": "4",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "product",
+        "sourceCount": "1657",
+        "restoredCount": "1657",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "product_curation",
+        "sourceCount": "1657",
+        "restoredCount": "1657",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "publication",
+        "sourceCount": "1495",
+        "restoredCount": "1495",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "short_link",
+        "sourceCount": "172",
+        "restoredCount": "172",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "subscriber",
+        "sourceCount": "0",
+        "restoredCount": "0",
+        "digestMatch": true,
+        "countMatch": true
+      },
+      {
+        "table": "triage_run",
+        "sourceCount": "17",
+        "restoredCount": "17",
+        "digestMatch": true,
+        "countMatch": true
+      }
+    ],
+    "catalog": {
+      "tables": 28,
+      "policies": 29,
+      "constraintsNotValid": 0,
+      "foreignKeys": 51
+    },
+    "steps": [
+      {
+        "step": "initdb",
+        "exitCode": 0,
+        "log": "/tmp/bizuminer-finalizacao/os-02/private/initdb.log"
+      },
+      {
+        "step": "start",
+        "exitCode": 0,
+        "log": "/tmp/bizuminer-finalizacao/os-02/private/start.log"
+      },
+      {
+        "step": "local-roles",
+        "exitCode": 0,
+        "log": "/tmp/bizuminer-finalizacao/os-02/private/local-roles.log"
+      },
+      {
+        "step": "restore",
+        "exitCode": 0,
+        "log": "/tmp/bizuminer-finalizacao/os-02/private/restore.log"
+      },
+      {
+        "step": "restored-catalog",
+        "exitCode": 0,
+        "log": "/tmp/bizuminer-finalizacao/os-02/private/restored-catalog.log"
+      }
+    ],
+    "limits": "Local postgres superuser differs from managed inspector; no managed Auth/Storage/pooler certification."
+  },
+  "runtimeSnapshot": {
+    "identity": {
+      "role": "garimpa_app",
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "server_version": "17.6"
+    },
+    "tables": [
+      {
+        "table": "affiliate_account",
+        "count": "1",
+        "digest": "16660c10887b8344b198c9532ec98461"
+      },
+      {
+        "table": "affiliate_marketplace_config",
+        "count": "1",
+        "digest": "697623cce8e55b9ce65bb2d519f188a0"
+      },
+      {
+        "table": "affiliate_membership",
+        "count": "1",
+        "digest": "fbbe370ca82c367a4f9f386e6e2a9006"
+      },
+      {
+        "table": "affiliate_monitoring_policy",
+        "count": "3",
+        "digest": "61515ca504c7965a29d047f237b7b026"
+      },
+      {
+        "table": "affiliate_monitoring_policy_event",
+        "count": "2",
+        "digest": "dda50f9f54157099f3785f0ecc3fff19"
+      },
+      {
+        "table": "affiliate_monitoring_skip",
+        "count": "1",
+        "digest": "8ee73e8b0e32b0efec4c841eb2e64528"
+      },
+      {
+        "table": "affiliate_secret",
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table": "app_user",
+        "count": "3",
+        "digest": "5bef55d92ec5e035e74212ee9c843a41"
+      },
+      {
+        "table": "app_user_role",
+        "count": "1",
+        "digest": "34d21b0d168ec389c84c7da3f9a34766"
+      },
+      {
+        "table": "buyer_profile",
+        "count": "1",
+        "digest": "5d47c34be8d8218d357a4490e4099771"
+      },
+      {
+        "table": "capture_batch",
+        "count": "11",
+        "digest": "f638c74f8ac93002232ee925de81c12e"
+      },
+      {
+        "table": "capture_run",
+        "count": "407",
+        "digest": "2a3056c52d48430ce3dae26d051e71bb"
+      },
+      {
+        "table": "click_event",
+        "count": "767",
+        "digest": "07f980021780b09c6a76af4601a9d352"
+      },
+      {
+        "table": "curation_event",
+        "count": "1330",
+        "digest": "b9a9f42fa32025f21afcffc41b9843ab"
+      },
+      {
+        "table": "editorial_assessment",
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table": "editorial_guideline",
+        "count": "1",
+        "digest": "3ee9194952c474ff464926802d4f9c66"
+      },
+      {
+        "table": "editorial_selection",
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table": "editorial_selection_item",
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table": "extension_device",
+        "count": "3",
+        "digest": "000cf2831336c2235fda7cf9f574844d"
+      },
+      {
+        "table": "favorite",
+        "count": "7",
+        "digest": "d654bd1351426bfe6e830d5c7b8be8ad"
+      },
+      {
+        "table": "price_observation",
+        "count": "9338",
+        "digest": "d4e2b4e8091b7c127730d1d829dddc3e"
+      },
+      {
+        "table": "price_watch",
+        "count": "4",
+        "digest": "6ac6f68672df64b9c6d5753cf8877df8"
+      },
+      {
+        "table": "product",
+        "count": "1657",
+        "digest": "377432fee3ed2ed9b6e27ab07b0e9d10"
+      },
+      {
+        "table": "product_curation",
+        "count": "1657",
+        "digest": "86acda6da338acf66d02f1897562e1d1"
+      },
+      {
+        "table": "publication",
+        "count": "1495",
+        "digest": "3e961f135d9cc688e7a6a79fe7a68897"
+      },
+      {
+        "table": "short_link",
+        "count": "172",
+        "digest": "3825b3f38bbd786fc6d99f828f7e56d6"
+      },
+      {
+        "table": "subscriber",
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table": "triage_run",
+        "count": "17",
+        "digest": "2880c2561d91fa80d40afb99888c41e6"
+      }
+    ],
+    "snapshotShared": true,
+    "pgDump": {
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 4.332,
+      "stderrPresent": false,
+      "permissionError": false,
+      "schemaOnly": false,
+      "format": "custom",
+      "rowSecurityEnabled": true,
+      "inserts": true
+    },
+    "backupPath": "/tmp/bizuminer-finalizacao/os-02/private/garimpa-final.dump",
+    "completeExportNotYetProven": true
+  },
+  "originalColumnBaseline": [
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "affiliate_account",
+      "row_count": 1,
+      "original_columns_digest": "53abf21fd227918591561f55b5dc8f9e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "affiliate_marketplace_config",
+      "row_count": 1,
+      "original_columns_digest": "17cfb59b66a8e2c3e28a5ef6482ea2d1"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "affiliate_membership",
+      "row_count": 1,
+      "original_columns_digest": "1ac57bcb38b170c34fd4fed807bee207"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "affiliate_monitoring_policy",
+      "row_count": 3,
+      "original_columns_digest": "32c01c2e3f0fa209f29e6428f82c5856"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "affiliate_monitoring_policy_event",
+      "row_count": 2,
+      "original_columns_digest": "7c89097ebfbc7e28194c3f5d1ccf659b"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "affiliate_monitoring_skip",
+      "row_count": 1,
+      "original_columns_digest": "4f23d8476079771a480c81e432bf0435"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "affiliate_secret",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "app_user",
+      "row_count": 3,
+      "original_columns_digest": "bc6bba6478b00e0f57326329998f2112"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "app_user_role",
+      "row_count": 1,
+      "original_columns_digest": "cd10fc0c77a641d6a4ec19946945ef1d"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "buyer_profile",
+      "row_count": 1,
+      "original_columns_digest": "4101cdd017e96634014fd92e6d66f8d7"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "capture_batch",
+      "row_count": 11,
+      "original_columns_digest": "157a5bf406e744df4173c1ace82b10bd"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "capture_run",
+      "row_count": 407,
+      "original_columns_digest": "e673a2c5b9ad62b5dbf4e9d762b79329"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "click_event",
+      "row_count": 767,
+      "original_columns_digest": "3149f7c356e63b567c32dc13b6268d0f"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "curation_event",
+      "row_count": 1330,
+      "original_columns_digest": "b50629030d73f29f792f765fb6b3f269"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "editorial_assessment",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "editorial_guideline",
+      "row_count": 1,
+      "original_columns_digest": "8fae2478ac2ffdb6fb94e5447ef03e6a"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "editorial_selection",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "editorial_selection_item",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "extension_device",
+      "row_count": 3,
+      "original_columns_digest": "fd3dd785d523a6f3da967268b50ee7f3"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "favorite",
+      "row_count": 7,
+      "original_columns_digest": "7d8d803b8630a4a0d4a1657e0fc48f66"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "price_observation",
+      "row_count": 9338,
+      "original_columns_digest": "e78c90d7e727f66747bde350d13e4737"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "price_watch",
+      "row_count": 4,
+      "original_columns_digest": "da310d69508a666b0a0e559f90665728"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "product",
+      "row_count": 1657,
+      "original_columns_digest": "eb47369453be48fc147330cf8f4e2b46"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "product_curation",
+      "row_count": 1657,
+      "original_columns_digest": "57bc5470d3397f87305cee2911da8cb0"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "publication",
+      "row_count": 1495,
+      "original_columns_digest": "898c81137e924fc2262ea480f15adcfa"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "short_link",
+      "row_count": 172,
+      "original_columns_digest": "ecdaa73fe77efa03848794139c5e9d14"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "subscriber",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 18:52:43.028745+00",
+      "table_name": "triage_run",
+      "row_count": 17,
+      "original_columns_digest": "cc204394f790be7935cca92872386395"
+    }
+  ],
+  "otherAppFingerprints": [
+    {
+      "schema_name": "auth",
+      "relations": 28,
+      "catalog_fingerprint": "56f9a83a675fcdf8a1d32f120f1e4857"
+    },
+    {
+      "schema_name": "brincareducando",
+      "relations": 26,
+      "catalog_fingerprint": "8f4e76a95574ebb6ba2c9bb819df681f"
+    },
+    {
+      "schema_name": "jacomprei",
+      "relations": 8,
+      "catalog_fingerprint": "28a5df0052fadb4e97135bd05d69481d"
+    },
+    {
+      "schema_name": "manylabs",
+      "relations": 9,
+      "catalog_fingerprint": "1e611465b3c59473f83dbc7dab5f298c"
+    },
+    {
+      "schema_name": "navegantes",
+      "relations": 15,
+      "catalog_fingerprint": "051328afee0032f1398eddcdc1b9de07"
+    },
+    {
+      "schema_name": "postspark",
+      "relations": 53,
+      "catalog_fingerprint": "51d5d2be46fc1a278a125511e25b243e"
+    },
+    {
+      "schema_name": "public",
+      "relations": 2,
+      "catalog_fingerprint": "979b141b28853cb968ba3298fa00dfc3"
+    },
+    {
+      "schema_name": "storage",
+      "relations": 8,
+      "catalog_fingerprint": "dab938b1558a022243f39251fb8eb104"
+    }
+  ],
+  "existingBucketFingerprint": [
+    {
+      "existing_bucket_count": 8,
+      "existing_buckets_fingerprint": "62e66bd4091497654fd0e25f8b5372da"
+    }
+  ],
+  "historyBefore": {
+    "migrations": [
+      {
+        "version": "20250926042943",
+        "name": ""
+      },
+      {
+        "version": "20250926043009",
+        "name": ""
+      },
+      {
+        "version": "20250926070827",
+        "name": ""
+      },
+      {
+        "version": "20250927123519",
+        "name": ""
+      },
+      {
+        "version": "20250930102849",
+        "name": ""
+      },
+      {
+        "version": "20251003101432",
+        "name": ""
+      },
+      {
+        "version": "20260212234446",
+        "name": "init_brincareducando_schema_v2"
+      },
+      {
+        "version": "20260213002331",
+        "name": "fix_auth_trigger_syntax_v2"
+      },
+      {
+        "version": "20260213003758",
+        "name": "add_favorite_color_to_children"
+      },
+      {
+        "version": "20260213005029",
+        "name": "upsert_user_profile_and_child"
+      },
+      {
+        "version": "20260213175955",
+        "name": "expand_atividades_schema"
+      },
+      {
+        "version": "20260213180056",
+        "name": "add_unique_constraint_titulo_atividades"
+      },
+      {
+        "version": "20260213180144",
+        "name": "add_codigo_externo_atividades"
+      },
+      {
+        "version": "20260214154344",
+        "name": "create_diario_entradas"
+      },
+      {
+        "version": "20260214162109",
+        "name": "add_slug_to_atividades"
+      },
+      {
+        "version": "20260220161141",
+        "name": "0000_overrated_lucky_pierre"
+      },
+      {
+        "version": "20260220161149",
+        "name": "0001_strange_riptide"
+      },
+      {
+        "version": "20260220183603",
+        "name": "fix_handle_new_user_150_sparks"
+      },
+      {
+        "version": "20260220183619",
+        "name": "create_subscriptions_table"
+      },
+      {
+        "version": "20260220183637",
+        "name": "create_trials_table"
+      },
+      {
+        "version": "20260220183657",
+        "name": "create_topup_tables"
+      },
+      {
+        "version": "20260220183712",
+        "name": "add_stripe_customer_id_to_profiles"
+      },
+      {
+        "version": "20260220183737",
+        "name": "create_trial_and_topup_functions"
+      },
+      {
+        "version": "20260220183802",
+        "name": "fix_refill_monthly_sparks_rollover"
+      },
+      {
+        "version": "20260220184735",
+        "name": "add_founder_plan_to_enum"
+      },
+      {
+        "version": "20260220184754",
+        "name": "create_founders_table"
+      },
+      {
+        "version": "20260220184823",
+        "name": "create_founder_functions"
+      },
+      {
+        "version": "20260220184843",
+        "name": "update_debit_sparks_founder_bypass"
+      },
+      {
+        "version": "20260311001520",
+        "name": "align_pricing_strategy_launch"
+      },
+      {
+        "version": "20260312190557",
+        "name": "post_save_quota_and_user_uuid_alignment"
+      },
+      {
+        "version": "20260312204000",
+        "name": "grant_posts_sequence_usage"
+      },
+      {
+        "version": "20260313131437",
+        "name": "add_copy_angle_to_posts"
+      },
+      {
+        "version": "20260313144432",
+        "name": "create_background_assets_library"
+      },
+      {
+        "version": "20260331162554",
+        "name": "add_rbac_role_to_profiles"
+      },
+      {
+        "version": "20260402011629",
+        "name": "init_navegantes_schema"
+      },
+      {
+        "version": "20260429230336",
+        "name": "manylabs_base"
+      },
+      {
+        "version": "20260429230506",
+        "name": "manylabs_advisor_cleanup"
+      },
+      {
+        "version": "20260429231428",
+        "name": "manylabs_backfill_initial"
+      },
+      {
+        "version": "20260429231701",
+        "name": "manylabs_backfill_finalize_run"
+      },
+      {
+        "version": "20260429232609",
+        "name": "postspark_rls_hardening"
+      },
+      {
+        "version": "20260430003345",
+        "name": "postspark_manylabs_rpc_wrappers"
+      },
+      {
+        "version": "20260509192417",
+        "name": "fix_postspark_manylabs_rpc_sources"
+      },
+      {
+        "version": "20260510025352",
+        "name": "postspark_add_posts_caption"
+      },
+      {
+        "version": "20260510032238",
+        "name": "postspark_add_variation_snapshot"
+      },
+      {
+        "version": "20260514203028",
+        "name": "brincareducando_manylabs_wrappers"
+      },
+      {
+        "version": "20260619224931",
+        "name": "create_generation_runs_table"
+      },
+      {
+        "version": "20260707042551",
+        "name": "postspark_high_ticket_pipeline_foundation"
+      },
+      {
+        "version": "20260707042640",
+        "name": "postspark_high_ticket_policy_index_cleanup"
+      },
+      {
+        "version": "20260717233827",
+        "name": "jacomprei_secure_credit_operations"
+      },
+      {
+        "version": "20260718024451",
+        "name": "jacomprei_generation_observability"
+      },
+      {
+        "version": "20260718033517",
+        "name": "jacomprei_recipes_rpc"
+      },
+      {
+        "version": "20260719155958",
+        "name": "postspark_next_core_tables"
+      },
+      {
+        "version": "20260719160622",
+        "name": "postspark_next_billing_rpcs"
+      },
+      {
+        "version": "20260719160702",
+        "name": "postspark_next_reserve_fix_ambiguous_status"
+      },
+      {
+        "version": "20260719160735",
+        "name": "postspark_next_reserve_fix_ambiguous_status_2"
+      },
+      {
+        "version": "20260719161057",
+        "name": "postspark_next_billing_rpcs_pin_search_path"
+      },
+      {
+        "version": "20260719171318",
+        "name": "postspark_next_storage_buckets"
+      },
+      {
+        "version": "20260720040017",
+        "name": "postspark_next_onboarding_sessions"
+      },
+      {
+        "version": "20260720160603",
+        "name": "brincareducando_phase0_security_hardening"
+      },
+      {
+        "version": "20260720161850",
+        "name": "brincareducando_phase0_advisor_cleanup"
+      },
+      {
+        "version": "20260720162505",
+        "name": "brincareducando_phase1_recommendation_events"
+      },
+      {
+        "version": "20260720164434",
+        "name": "brincareducando_phase2_editorial_content"
+      },
+      {
+        "version": "20260720170227",
+        "name": "brincareducando_phase3_private_diary"
+      },
+      {
+        "version": "20260720172530",
+        "name": "brincareducando_phase4_brincontos"
+      },
+      {
+        "version": "20260720173655",
+        "name": "brincareducando_phase5_quality_governance"
+      },
+      {
+        "version": "20260720174150",
+        "name": "brincareducando_phase5_advisor_cleanup"
+      },
+      {
+        "version": "20260725135007",
+        "name": "postspark_next_privacy_lgpd_tables"
+      },
+      {
+        "version": "20260818000000",
+        "name": "garimpa_initial"
+      },
+      {
+        "version": "20260818010000",
+        "name": "garimpa_app_role"
+      },
+      {
+        "version": "20260818213323",
+        "name": "marketplace_evidence"
+      },
+      {
+        "version": "20260818213943",
+        "name": "decode_existing_titles"
+      },
+      {
+        "version": "20260818225119",
+        "name": "product_category"
+      },
+      {
+        "version": "20260818225240",
+        "name": "category_taxonomy_expansion"
+      },
+      {
+        "version": "20260819024349",
+        "name": "capture_audit_flow"
+      },
+      {
+        "version": "20260820012056",
+        "name": "garimpa_subscriber_repair"
+      },
+      {
+        "version": "20260820012136",
+        "name": "garimpa_member_area"
+      },
+      {
+        "version": "20260822104738",
+        "name": "garimpa_auth_link"
+      },
+      {
+        "version": "20260822141407",
+        "name": "navegantes_auth_uuid_users"
+      },
+      {
+        "version": "20260822141913",
+        "name": "navegantes_harden_grants"
+      },
+      {
+        "version": "20260826231216",
+        "name": "garimpa_affiliates"
+      },
+      {
+        "version": "20260826231240",
+        "name": "garimpa_tenant_integrity"
+      },
+      {
+        "version": "20260826231254",
+        "name": "garimpa_publication_affiliate"
+      },
+      {
+        "version": "20260826231311",
+        "name": "garimpa_extension_device"
+      },
+      {
+        "version": "20260826234042",
+        "name": "garimpa_backfill_publications"
+      },
+      {
+        "version": "20260827000311",
+        "name": "garimpa_rls_defense"
+      },
+      {
+        "version": "20260827015009",
+        "name": "garimpa_publication_shopee_link"
+      },
+      {
+        "version": "20260829153507",
+        "name": "garimpa_short_link"
+      },
+      {
+        "version": "20260901025640",
+        "name": "garimpa_curation"
+      },
+      {
+        "version": "20260904012521",
+        "name": "20260903200000_garimpa_editorial_context"
+      },
+      {
+        "version": "20260904173316",
+        "name": "harden_editorial_context"
+      },
+      {
+        "version": "20260907201531",
+        "name": "editorial_guideline"
+      },
+      {
+        "version": "20260917193244",
+        "name": "operational_batches"
+      },
+      {
+        "version": "20260925114255",
+        "name": "affiliate_monitoring_policy"
+      },
+      {
+        "version": "20260925121744",
+        "name": "secure_triage_and_editorial"
+      },
+      {
+        "version": "20260929015526",
+        "name": "affiliate_access_role"
+      },
+      {
+        "version": "20260930154457",
+        "name": "postspark_design_catalog"
+      },
+      {
+        "version": "20261001205515",
+        "name": "postspark_design_arsenal_v2"
+      },
+      {
+        "version": "20261001212651",
+        "name": "postspark_design_arsenal_brand_fonts"
+      },
+      {
+        "version": "20261001213432",
+        "name": "postspark_design_arsenal_publication_presence"
+      },
+      {
+        "version": "20261001213658",
+        "name": "postspark_design_arsenal_native_l1"
+      },
+      {
+        "version": "20261001220228",
+        "name": "postspark_arsenal_generation_trace_columns"
+      },
+      {
+        "version": "20261001232448",
+        "name": "postspark_design_arsenal_variable_content"
+      },
+      {
+        "version": "20261005235546",
+        "name": "editorial_selection"
+      },
+      {
+        "version": "20261006004149",
+        "name": "postspark_component_arsenal"
+      },
+      {
+        "version": "20261006004655",
+        "name": "postspark_component_arsenal_validation"
+      },
+      {
+        "version": "20261006010039",
+        "name": "postspark_component_document_types"
+      },
+      {
+        "version": "20261006010502",
+        "name": "postspark_component_brand_fonts"
+      },
+      {
+        "version": "20261006013510",
+        "name": "postspark_component_shortlist_diversity"
+      },
+      {
+        "version": "20261006231259",
+        "name": "component_visual_traits"
+      },
+      {
+        "version": "20261006231712",
+        "name": "studio_preferences"
+      },
+      {
+        "version": "20261006231718",
+        "name": "component_personal_ranking"
+      },
+      {
+        "version": "20261006233318",
+        "name": "component_authored_variants"
+      },
+      {
+        "version": "20261008183601",
+        "name": "postspark_orchestrated_generation"
+      },
+      {
+        "version": "20261008184246",
+        "name": "postspark_generation_lease_conflict"
+      },
+      {
+        "version": "20261010194757",
+        "name": "generation_recent_selections_replay"
+      },
+      {
+        "version": "20261015034755",
+        "name": "garimpa_account_context_and_membership"
+      },
+      {
+        "version": "20261015035126",
+        "name": "garimpa_affiliate_secret_bootstrap_rls"
+      },
+      {
+        "version": "20261015041540",
+        "name": "garimpa_curation_membership_author"
+      }
+    ]
+  },
+  "verificationCommands": [
+    {
+      "command": "npm run rollout:verify --prefix tools/editorial-tests",
+      "cwd": "/home/many/Documentos/Projetos linux/Garimpa",
+      "exitCode": 0
+    },
+    {
+      "command": "node /tmp/bizuminer-finalizacao/os-02/runtime-export.cjs",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 /tmp/bizuminer-finalizacao/os-02/restore-rehearsal.py",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "No Google login or managed Storage/pooler behavior certification yet; these are required before capability activation/cutover.",
+    "Existing protected deployments remain accessible only to authenticated authorized testers; no ordinary writers on public paused domains; owner maintenance participation required.",
+    "CLI protocol generated access credential for reserved testing; no SSO disable or application-role grant."
+  ],
+  "productionDatabaseWrites": 0,
+  "migrationApplied": null,
+  "nextOrder": "OS-03; exact audited A only",
+  "laterPublicationLimitation": {
+    "discoveredIn": "OS-05",
+    "oldReservedDeploymentAccessible": true,
+    "newBuildWhileProjectPaused": false,
+    "cause": "Vercel refuses new builds while project paused",
+    "supersedingResult": "05-publicacao.md",
+    "backupAndPreservationEvidenceRemainsValid": true
+  }
+}

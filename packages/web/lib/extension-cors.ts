@@ -13,7 +13,17 @@ export function extensionAllowedOrigins(env: Record<string, string | undefined> 
 /** Origem exata é permitida? (sem wildcard, comparação exata, case-sensitive). */
 export function isAllowedExtensionOrigin(origin: string | null, env: Record<string, string | undefined> = process.env): boolean {
   if (!origin) return false;
-  return extensionAllowedOrigins(env).includes(origin);
+  const allowed = extensionAllowedOrigins(env);
+  if (allowed.includes("*")) return true;
+  if (
+    env.NODE_ENV === "development" &&
+    (origin.startsWith("chrome-extension://") ||
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:"))
+  ) {
+    return true;
+  }
+  return allowed.includes(origin);
 }
 
 /** Cabeçalhos CORS quando a origem é permitida; caso contrário, sem ACAO. */

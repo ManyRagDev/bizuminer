@@ -83,6 +83,9 @@ await pg.exec(`
       from garimpa.price_observation x where x.product_id=p.id and x.tenant_id=p.tenant_id) stats on true;
   insert into garimpa.affiliate_account values('local'),('other');
   insert into garimpa.app_user values('reviewer','local'),('outsider','other');
+  alter table garimpa.affiliate_account add column id text generated always as(tenant_id) stored;
+  create table garimpa.affiliate_membership(affiliate_id text,app_user_id text,revoked_at timestamptz);
+  insert into garimpa.affiliate_membership values('local','reviewer',null),('other','outsider',null);
   grant usage on schema garimpa to garimpa_app;
   grant select on all tables in schema garimpa to garimpa_app;
 `);

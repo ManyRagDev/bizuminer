@@ -11,7 +11,7 @@
  * `buildSnapshotMetadata`; nunca o contrário.
  */
 
-export const CURATION_SNAPSHOT_VERSION = 1;
+export const CURATION_SNAPSHOT_VERSION = 2;
 
 export type FamilySnapshot = {
   readonly key: string;
@@ -30,6 +30,20 @@ export type CurationSnapshotProvenance = {
   readonly targetFamily: string | null;
 }
 
+export type OfferEvidenceSourceSnapshot = {
+  readonly marketplace: string;
+  readonly method?: string | null;
+  readonly url?: string | null;
+  readonly capturedAt?: string | null;
+}
+
+export type VariantSnapshot = {
+  readonly variantKey: string | null;
+  readonly variantLabel: string | null;
+  readonly confirmed: boolean;
+  readonly description: string;
+}
+
 /** Fatos que a mesa exibiu e que sustentam a decisão. */
 export type CurationSnapshotFacts = {
   readonly productId: string;
@@ -46,8 +60,11 @@ export type CurationSnapshotFacts = {
   readonly originalPriceCents: number | null;
   readonly claimedDiscountRate: number | null;
   readonly ratingStar: number | null;
+  readonly reviewCount?: number | null;
   readonly salesLabel: string | null;
   readonly salesCount: number | null;
+  readonly variant?: VariantSnapshot | null;
+  readonly offerEvidenceSource?: OfferEvidenceSourceSnapshot | null;
   readonly observedAt: string;
   readonly observationCount: number;
   readonly historyDays: number;

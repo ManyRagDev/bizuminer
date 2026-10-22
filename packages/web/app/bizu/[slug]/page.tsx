@@ -16,10 +16,11 @@ import CopyProductLink from "../../_components/copy-product-link";
 import DetailHeader from "../../_components/detail-header";
 import SaveDealButton from "./save-deal-button";
 import RedirectBanner from "./redirect-banner";
+import { campaignExitPath } from "../../../lib/campaign-exit";
 
 export const dynamic = "force-dynamic";
 
-type PageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ direto?: string }> };
+type PageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ direto?: string; c?: string }> };
 
 const brl = (cents: number) => (cents / 100)
   .toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 });
@@ -60,7 +61,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function DealPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { direto } = await searchParams;
+  const { direto, c } = await searchParams;
   const detail = await dealDetail(slug);
   if (!detail) notFound();
 
@@ -83,7 +84,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
-    {direto === "1" && <RedirectBanner slug={deal.slug} />}
+    {direto === "1" && <RedirectBanner slug={deal.slug} campaignCode={c} />}
     <DetailHeader
       actions={
         <>
@@ -111,13 +112,13 @@ export default async function DealPage({ params, searchParams }: PageProps) {
             ⚠️ <strong>Atenção:</strong> Esta oferta foi verificada {seenAgo(deal.evidence_observed_at)}. O preço e estoque podem ter variado no marketplace.
           </div>
         )}
-        <a className="deal-cta" href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a>
+        <a className="deal-cta" href={campaignExitPath(deal.slug, c)} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a>
         <CopyProductLink slug={deal.slug} title={deal.title} />
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       </section>
     </article>
-    <section className="history-section" aria-labelledby="history-title"><div><p className="eyebrow">Histórico disponível</p><h2 id="history-title">Preço com contexto, não só com etiqueta.</h2><p>Há {deal.observation_count} registro{deal.observation_count === 1 ? "" : "s"} do anúncio em {deal.history_days} dia{deal.history_days === 1 ? "" : "s"} de acompanhamento. A comparação de menor preço exige a mesma configuração confirmada e pelo menos 3 registros distribuídos em 7 dias. Sem essa identificação, os valores representam o histórico do anúncio e podem corresponder a variantes diferentes.</p></div><div className="history-card"><Chart points={history} /><dl><div><dt>menor preço observado no anúncio</dt><dd>{low === null ? "—" : brl(low)}</dd></div><div><dt>maior preço observado no anúncio</dt><dd>{high === null ? "—" : brl(high)}</dd></div><div><dt>última atualização</dt><dd>{freshnessLabel(deal.evidence_observed_at) ?? "sem data"}</dd></div></dl></div></section>
+    <section className="history-section" aria-labelledby="history-title"><div><p className="eyebrow">Histórico disponível</p><h2 id="history-title">Preço com contexto, não só com etiqueta.</h2><p>Há {deal.observation_count} registro{deal.observation_count === 1 ? "" : "s"} do anúncio em {deal.history_days} dia{deal.history_days === 1 ? "" : "s"} de acompanhamento. A alegação de menor preço exige a mesma configuração confirmada, moeda e condições comparáveis, além de cobertura e frescor suficientes pela política homologada. Quando não há essa comprovação, não apresentamos uma alegação de recorde.</p></div><div className="history-card"><Chart points={history} /><dl><div><dt>menor preço observado no anúncio</dt><dd>{low === null ? "—" : brl(low)}</dd></div><div><dt>maior preço observado no anúncio</dt><dd>{high === null ? "—" : brl(high)}</dd></div><div><dt>última atualização</dt><dd>{freshnessLabel(deal.evidence_observed_at) ?? "sem data"}</dd></div></dl></div></section>
     {related.length > 0 && <section className="related-section" aria-labelledby="related-title"><div className="related-heading"><p className="eyebrow">Continue descobrindo</p><h2 id="related-title">Mais em {deal.category}</h2></div><div className="related-rail">{related.map((item) => <article key={item.id} className="related-card"><a className="related-image" href={`/bizu/${item.slug}`}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill sizes="(max-width: 820px) 68vw, 22vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</a><p>{item.category}</p><h3><a href={`/bizu/${item.slug}`}>{item.title}</a></h3><strong>{brl(item.priceCents)}</strong><a className="related-link" href={`/bizu/${item.slug}`}>ver detalhes <span>→</span></a></article>)}</div></section>}
-    <div className="deal-sticky-cta"><a href={`/go/${deal.slug}`} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a></div>
+    <div className="deal-sticky-cta"><a href={campaignExitPath(deal.slug, c)} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a></div>
   </main>;
 }

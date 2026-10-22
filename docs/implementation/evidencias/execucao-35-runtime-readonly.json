@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "phase": "before migrations; legacy runtime read access only",
+  "identity": {
+    "role": "garimpa_app",
+    "database": "postgres",
+    "rolsuper": false,
+    "rolbypassrls": false
+  },
+  "counts": {
+    "inspected_at": "2026-10-16T13:25:25.502Z",
+    "products": 1657,
+    "observations": 9261,
+    "publications": 1495,
+    "shortlinks": 172
+  },
+  "databaseWrites": 0,
+  "limits": "Does not certify Google session, deployed routes or post-migration behavior."
+}

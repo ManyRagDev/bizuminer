@@ -130,3 +130,99 @@ test("M4-E: editorialGroupsFor calcula marketplaceDistribution, priceRange e gro
   assert.equal(group.groupingReason, "Palavras-chave do título (title-keywords v1)");
 });
 
+test("AC-028.1: duas cafeteiras de marcas/preços diferentes ficam no mesmo grupo com IDs, lojas e configurações separados", () => {
+  const cafeteiras = { key: "cafeteiras", label: "Cafeteiras", method: "title-keywords", version: "v2" };
+  const c1 = product({
+    productId: "caf_mondial",
+    family: cafeteiras,
+    marketplace: "mercadolivre",
+    priceCents: 12900,
+    variant: { key: "110v_preta", label: "110V Preta", confirmed: true, description: "110V Preta" },
+  });
+  const c2 = product({
+    productId: "caf_oster",
+    family: cafeteiras,
+    marketplace: "shopee",
+    priceCents: 79900,
+    variant: { key: null, label: null, confirmed: false, description: "não confirmada" },
+  });
+
+  const overview = editorialGroupsFor([c1, c2]);
+  assert.equal(overview.groups.length, 1);
+  const group = overview.groups[0];
+  assert.equal(group.familyKey, "cafeteiras");
+  assert.equal(group.familyVersion, "v2");
+  assert.equal(group.memberCount, 2);
+  assert.deepEqual(group.memberProductIds, ["caf_mondial", "caf_oster"]);
+  assert.deepEqual(group.marketplaceDistribution, { mercadolivre: 1, shopee: 1 });
+  assert.deepEqual(group.priceRange, { minCents: 12900, maxCents: 79900 });
+
+  // Ambas são representantes e mantêm configurações e lojas separadas
+  const reps = selectRepresentatives([c1, c2]);
+  assert.equal(reps.length, 2);
+  assert.ok(reps.includes("caf_mondial"));
+  assert.ok(reps.includes("caf_oster"));
+  assert.equal(c2.variant.confirmed, false);
+  assert.equal(c2.variant.description, "não confirmada");
+});
+
+test("AC-028.2: 4,9★/8 avaliações vs 4,6★/1.500 avaliações no mesmo marketplace prioriza a segunda para exame", () => {
+  const cafeteiras = { key: "cafeteiras", label: "Cafeteiras", method: "title-keywords", version: "v2" };
+  const smallSample = product({
+    productId: "caf_small_sample",
+    family: cafeteiras,
+    marketplace: "mercadolivre",
+    priceCents: 15000,
+    ratingStar: 4.9,
+    reviewCount: 8,
+    salesCount: 15,
+  });
+  const robustSample = product({
+    productId: "caf_robust_sample",
+    family: cafeteiras,
+    marketplace: "mercadolivre",
+    priceCents: 15000,
+    ratingStar: 4.6,
+    reviewCount: 1500,
+    salesCount: 5000,
+  });
+
+  const reps = selectRepresentatives([smallSample, robustSample]);
+  assert.equal(reps.length, 2);
+  // O de amostra robusta (4,6 com 1500 avaliações) é priorizado para exame humano sobre o de 4,9 com 8 avaliações
+  assert.equal(reps[0], "caf_robust_sample");
+  assert.equal(reps[1], "caf_small_sample");
+});
+
+test("BUG-018: representantes de marketplaces distintos não desempatam por vendas brutas entre lojas", () => {
+  const cafeteiras = { key: "cafeteiras", label: "Cafeteiras", method: "title-keywords", version: "v2" };
+  // Ambos com mesma nota, mesma contagem de observação, mas lojas diferentes e vendas 10 vs 10.000
+  const mlItem = product({
+    productId: "caf_ml_low_sales",
+    family: cafeteiras,
+    marketplace: "mercadolivre",
+    priceCents: 15000,
+    ratingStar: 4.5,
+    reviewCount: 50,
+    salesCount: 10,
+    observationCount: 3,
+  });
+  const shopeeItem = product({
+    productId: "caf_shopee_high_sales",
+    family: cafeteiras,
+    marketplace: "shopee",
+    priceCents: 15000,
+    ratingStar: 4.5,
+    reviewCount: 50,
+    salesCount: 10000,
+    observationCount: 3,
+  });
+
+  // Ambos devem ser mantidos como representantes respeitando a diversidade de marketplace
+  const reps = selectRepresentatives([mlItem, shopeeItem], 2);
+  assert.equal(reps.length, 2);
+  assert.ok(reps.includes("caf_ml_low_sales"));
+  assert.ok(reps.includes("caf_shopee_high_sales"));
+});
+
+

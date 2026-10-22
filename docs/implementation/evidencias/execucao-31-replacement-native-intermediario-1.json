@@ -1,0 +1,76 @@
+{
+  "at": "2026-10-16T02:01:35.917Z",
+  "engine": "postgres (PostgreSQL) 17.6",
+  "environment": "disposable localhost PostgreSQL; synthetic data with observed defaults/grants/FORCE RLS; no Auth/Storage/Supavisor or published runtime proof",
+  "productionWrites": 0,
+  "productionApproved": false,
+  "results": [
+    {
+      "name": "apply installedSubset",
+      "result": "PASS",
+      "file": "20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345",
+      "milliseconds": 9
+    },
+    {
+      "name": "apply installedSubset",
+      "result": "PASS",
+      "file": "20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693",
+      "milliseconds": 2
+    },
+    {
+      "name": "apply installedSubset",
+      "result": "PASS",
+      "file": "20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23",
+      "milliseconds": 3
+    },
+    {
+      "name": "S0: observed arwd schema default, FORCE RLS and legacy service grants are faithfully reconstructed",
+      "result": "PASS"
+    },
+    {
+      "name": "S0: legacy reads work; new backend denies an uninstalled rollout",
+      "result": "PASS"
+    },
+    {
+      "name": "A: unexpected schema default privileges abort before foundation and preserve the observed default",
+      "result": "PASS"
+    },
+    {
+      "name": "apply foundation",
+      "result": "PASS",
+      "file": "20261015194719_garimpa_v2_foundation.sql",
+      "sha256": "33e03729f9e058169844fc353cba083cb3d5fe270b98ea890dafd0fb0a87c40c",
+      "milliseconds": 7
+    },
+    {
+      "name": "A: all pre-existing policies and legacy reads preserved, public surface remains unready",
+      "result": "PASS"
+    },
+    {
+      "name": "A: runtime cannot enable the persisted switch by DML",
+      "result": "PASS"
+    },
+    {
+      "name": "B: injected end failure rolls back all expansion DDL; exact candidate can resume",
+      "result": "PASS"
+    },
+    {
+      "name": "B: missing original pairing hash uniqueness aborts atomically",
+      "result": "PASS"
+    },
+    {
+      "name": "apply expansion",
+      "result": "PASS",
+      "file": "20261015194748_garimpa_v2_expansion.sql",
+      "sha256": "02810325f1eecc16dfc05121f44b75a64c5ce0655b9329f2662ffb0d74cbecaa",
+      "milliseconds": 121
+    }
+  ],
+  "error": {
+    "name": "PostgresError",
+    "message": "column \"object_key\" of relation \"private_artifact\" does not exist"
+  }
+}

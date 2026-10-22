@@ -1,0 +1,295 @@
+{
+  "source": "Explicit GRANT/REVOKE contracts in original migrations 3–12, independently reviewed; never inherit permissive production defaults.",
+  "tables": {
+    "account_entitlement": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "account_invitation": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "account_lifecycle_event": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "analysis_assessment": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "audience_policy": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "audience_policy_version": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {
+        "approved_by": [
+          "UPDATE"
+        ],
+        "approved_at": [
+          "UPDATE"
+        ]
+      }
+    },
+    "campaign": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "campaign_link": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "campaign_publication": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "commercial_kit": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "commercial_kit_revision": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "commission_entry": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "comparison_review": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "conversion": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "conversion_attribution": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "destination": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "dispatch_attempt": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "dispatch_control": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "dispatch_job": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "dispatch_reservation": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "domain_event": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "experiment_assignment": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "experiment_evaluation": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "governance_decision": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "import_batch": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "import_row": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "kit_approval": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "kit_validation": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "onboarding_progress": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "operational_cost": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "opportunity": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "policy_experiment": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "price_calibration_run": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "price_evidence_policy_version": {
+      "table": [
+        "SELECT",
+        "INSERT",
+        "UPDATE"
+      ],
+      "columns": {}
+    },
+    "private_artifact": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {
+        "status": [
+          "UPDATE"
+        ]
+      }
+    },
+    "saas_revenue_entry": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    },
+    "usage_event": {
+      "table": [
+        "SELECT",
+        "INSERT"
+      ],
+      "columns": {}
+    }
+  }
+}

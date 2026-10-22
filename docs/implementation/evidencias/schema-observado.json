@@ -1,0 +1,3610 @@
+{
+  "date": "2026-10-14",
+  "project": "spbuwcwmxlycchuwhfir",
+  "schema": "garimpa",
+  "note": "Metadados lidos via MCP. rows são estimativas do catálogo; usar contagens SELECT no relatório.",
+  "tables": [
+    {
+      "name": "garimpa.product",
+      "rls_enabled": true,
+      "rows": 1657,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "marketplace",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "external_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "title",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_url",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "image_url",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "last_price_cents",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "category",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Categoria derivada por regra auditável a partir do título; null quando incerta."
+        },
+        {
+          "name": "first_seen_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()",
+          "comment": "Primeira vez em que este anúncio foi observado pelo BizuMiner."
+        },
+        {
+          "name": "last_seen_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()",
+          "comment": "Última vez em que este anúncio apareceu numa captura; ausência não prova indisponibilidade."
+        },
+        {
+          "name": "last_capture_run_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "family_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Família editorial reconhecida na captura; null quando o classificador não tem pista (produto singular)."
+        },
+        {
+          "name": "family_label",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Rótulo humano da família (dicionário de product-family.ts)."
+        },
+        {
+          "name": "family_method",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Método do classificador que produziu a família (ex.: title-keywords)."
+        },
+        {
+          "name": "family_version",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Versão das regras usadas na classificação; muda quando o dicionário evolui."
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "product_curation_product_tenant_fkey",
+          "source_table": "garimpa.product_curation",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_selection_item_product_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection_item",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_assessment_product_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_assessment",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "curation_event_product_tenant_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "product_last_capture_run_tenant_fkey",
+          "source_table": "garimpa.product",
+          "source_columns": [
+            "last_capture_run_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.capture_run",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_watch_product_tenant_fkey",
+          "source_table": "garimpa.price_watch",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "favorite_product_tenant_fkey",
+          "source_table": "garimpa.favorite",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "publication_product_tenant_fkey",
+          "source_table": "garimpa.publication",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_observation_product_tenant_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "product_tenant_id_fkey",
+          "source_table": "garimpa.product",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.price_observation",
+      "rls_enabled": true,
+      "rows": 9017,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "price_cents",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "original_price_cents",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "claimed_discount_rate",
+          "data_type": "double precision",
+          "format": "float8",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "observed_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "rating_star",
+          "data_type": "double precision",
+          "format": "float8",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "rating_star IS NULL OR rating_star >= 0::double precision AND rating_star <= 5::double precision"
+        },
+        {
+          "name": "sales_label",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "sales_count",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "sales_count IS NULL OR sales_count >= 0"
+        },
+        {
+          "name": "capture_run_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Execução que produziu a observação; nulo apenas em registros legados."
+        },
+        {
+          "name": "title_snapshot",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_url_snapshot",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "image_url_snapshot",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "category_snapshot",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "capture_source",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'legacy'::text",
+          "check": "capture_source = ANY (ARRAY['sweep'::text, 'bookmarklet'::text, 'extension'::text, 'legacy'::text])",
+          "comment": "Origem da observação: sweep, bookmarklet, extension ou legacy (pré-E4)."
+        },
+        {
+          "name": "extension_device_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "client_request_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "requestId idempotente do client; único por dispositivo (retry não duplica observação)."
+        },
+        {
+          "name": "source_page_url",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "client_captured_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "received_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "offer_evidence",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "offer_evidence IS NULL OR jsonb_typeof(offer_evidence) = 'object'::text"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "price_observation_tenant_id_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_observation_extension_device_id_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "extension_device_id"
+          ],
+          "target_table": "garimpa.extension_device",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "price_observation_capture_run_tenant_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "capture_run_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.capture_run",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_observation_product_tenant_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.capture_run",
+      "rls_enabled": true,
+      "rows": 385,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "marketplace",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "started_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "finished_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "status = ANY (ARRAY['running'::text, 'ok'::text, 'error'::text])"
+        },
+        {
+          "name": "items_captured",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "items_new",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "price_changes",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "error",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "collector_run_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Identificador da execução no processo coletor, usado para correlacionar logs."
+        },
+        {
+          "name": "parameters",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb",
+          "comment": "Parâmetros não sensíveis usados pela captura; credenciais nunca entram aqui."
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "price_observation_capture_run_tenant_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "capture_run_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.capture_run",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "product_last_capture_run_tenant_fkey",
+          "source_table": "garimpa.product",
+          "source_columns": [
+            "last_capture_run_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.capture_run",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "capture_run_tenant_id_fkey",
+          "source_table": "garimpa.capture_run",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.publication",
+      "rls_enabled": true,
+      "rows": 1494,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "channel",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "slug",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable",
+            "unique"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'active'::text",
+          "check": "status = ANY (ARRAY['active'::text, 'expired'::text])"
+        },
+        {
+          "name": "published_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "affiliate_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "comment": "Afiliado dono da publicação; a comissão do clique é a deste afiliado (nunca a da casa por fallback)."
+        },
+        {
+          "name": "affiliate_url",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Shortlink de afiliado pré-gerado (Shopee/AliExpress), persistido na criação da publication. O /go redireciona para este valor sem chamar a API do marketplace. Nulo = ainda não gerado (falha fechada no /go)."
+        },
+        {
+          "name": "affiliate_url_generated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Quando affiliate_url foi gerado. Nulo enquanto affiliate_url for nulo."
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "click_event_publication_tenant_fkey",
+          "source_table": "garimpa.click_event",
+          "source_columns": [
+            "publication_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.publication",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "publication_affiliate_id_fkey",
+          "source_table": "garimpa.publication",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "publication_product_tenant_fkey",
+          "source_table": "garimpa.publication",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "publication_tenant_id_fkey",
+          "source_table": "garimpa.publication",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.click_event",
+      "rls_enabled": true,
+      "rows": 670,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "publication_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "clicked_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "user_agent",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "referer",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "ip_hash",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "click_event_publication_tenant_fkey",
+          "source_table": "garimpa.click_event",
+          "source_columns": [
+            "publication_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.publication",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "click_event_tenant_id_fkey",
+          "source_table": "garimpa.click_event",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.subscriber",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'local'::text"
+        },
+        {
+          "name": "email",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable",
+            "unique"
+          ]
+        },
+        {
+          "name": "source",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'web:footer'::text"
+        },
+        {
+          "name": "consented_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "subscriber_tenant_id_fkey",
+          "source_table": "garimpa.subscriber",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.app_user",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'local'::text"
+        },
+        {
+          "name": "auth_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "display_name",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "email",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "last_seen_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "buyer_profile_user_tenant_fkey",
+          "source_table": "garimpa.buyer_profile",
+          "source_columns": [
+            "user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "affiliate_membership_app_user_id_fkey",
+          "source_table": "garimpa.affiliate_membership",
+          "source_columns": [
+            "app_user_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "app_user_tenant_id_fkey",
+          "source_table": "garimpa.app_user",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "favorite_user_tenant_fkey",
+          "source_table": "garimpa.favorite",
+          "source_columns": [
+            "user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_watch_user_tenant_fkey",
+          "source_table": "garimpa.price_watch",
+          "source_columns": [
+            "user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "extension_device_created_by_app_user_id_fkey",
+          "source_table": "garimpa.extension_device",
+          "source_columns": [
+            "created_by_app_user_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "product_curation_reviewer_tenant_fkey",
+          "source_table": "garimpa.product_curation",
+          "source_columns": [
+            "reviewed_by_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "curation_event_actor_tenant_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "actor_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "app_user_role_app_user_id_fkey",
+          "source_table": "garimpa.app_user_role",
+          "source_columns": [
+            "app_user_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "editorial_assessment_actor_app_user_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_assessment",
+          "source_columns": [
+            "actor_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_selection_actor_app_user_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection",
+          "source_columns": [
+            "actor_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.favorite",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'local'::text"
+        },
+        {
+          "name": "user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "favorite_tenant_id_fkey",
+          "source_table": "garimpa.favorite",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "favorite_product_tenant_fkey",
+          "source_table": "garimpa.favorite",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "favorite_user_tenant_fkey",
+          "source_table": "garimpa.favorite",
+          "source_columns": [
+            "user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.price_watch",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'local'::text"
+        },
+        {
+          "name": "user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "baseline_price_cents",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "target_price_cents",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "active",
+          "data_type": "boolean",
+          "format": "bool",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "true"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "deactivated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "price_watch_user_tenant_fkey",
+          "source_table": "garimpa.price_watch",
+          "source_columns": [
+            "user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_watch_tenant_id_fkey",
+          "source_table": "garimpa.price_watch",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_watch_product_tenant_fkey",
+          "source_table": "garimpa.price_watch",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.buyer_profile",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'local'::text"
+        },
+        {
+          "name": "preferred_categories",
+          "data_type": "ARRAY",
+          "format": "_text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::text[]"
+        },
+        {
+          "name": "price_band",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'all'::text",
+          "check": "price_band = ANY (ARRAY['all'::text, 'under_100'::text, '100_500'::text, 'over_500'::text])"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "user_id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "buyer_profile_tenant_id_fkey",
+          "source_table": "garimpa.buyer_profile",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "buyer_profile_user_tenant_fkey",
+          "source_table": "garimpa.buyer_profile",
+          "source_columns": [
+            "user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.affiliate_account",
+      "rls_enabled": true,
+      "rows": 0,
+      "comment": "Conta de afiliado; cada uma possui um tenant_id que isola seu catálogo.",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable",
+            "unique"
+          ]
+        },
+        {
+          "name": "public_slug",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable",
+            "unique"
+          ],
+          "check": "public_slug ~ '^[a-z0-9-]{4,32}$'::text",
+          "comment": "Slug público curto, sem credencial; entra no slug de publicação a partir de E3."
+        },
+        {
+          "name": "display_name",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'active'::text",
+          "check": "status = ANY (ARRAY['active'::text, 'suspended'::text])"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "buyer_profile_tenant_id_fkey",
+          "source_table": "garimpa.buyer_profile",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "publication_affiliate_id_fkey",
+          "source_table": "garimpa.publication",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "extension_device_affiliate_id_fkey",
+          "source_table": "garimpa.extension_device",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "product_curation_tenant_fkey",
+          "source_table": "garimpa.product_curation",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "curation_event_tenant_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_guideline_tenant_id_fkey",
+          "source_table": "garimpa.editorial_guideline",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "affiliate_monitoring_policy_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_monitoring_policy",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "affiliate_monitoring_skip_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_monitoring_skip",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "editorial_assessment_tenant_id_fkey",
+          "source_table": "garimpa.editorial_assessment",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_selection_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "affiliate_monitoring_policy_event_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_monitoring_policy_event",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "capture_run_tenant_id_fkey",
+          "source_table": "garimpa.capture_run",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "publication_tenant_id_fkey",
+          "source_table": "garimpa.publication",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "click_event_tenant_id_fkey",
+          "source_table": "garimpa.click_event",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "subscriber_tenant_id_fkey",
+          "source_table": "garimpa.subscriber",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "app_user_tenant_id_fkey",
+          "source_table": "garimpa.app_user",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "favorite_tenant_id_fkey",
+          "source_table": "garimpa.favorite",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "price_watch_tenant_id_fkey",
+          "source_table": "garimpa.price_watch",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "affiliate_marketplace_config_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_marketplace_config",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "affiliate_membership_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_membership",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "price_observation_tenant_id_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "product_tenant_id_fkey",
+          "source_table": "garimpa.product",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.affiliate_membership",
+      "rls_enabled": true,
+      "rows": 0,
+      "comment": "Vínculo de um app_user (pessoa) à conta de afiliado com papel (owner/operator).",
+      "columns": [
+        {
+          "name": "affiliate_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "app_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "role",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'owner'::text",
+          "check": "role = ANY (ARRAY['owner'::text, 'operator'::text])"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "affiliate_id",
+        "app_user_id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "affiliate_membership_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_membership",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "affiliate_membership_app_user_id_fkey",
+          "source_table": "garimpa.affiliate_membership",
+          "source_columns": [
+            "app_user_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.affiliate_marketplace_config",
+      "rls_enabled": true,
+      "rows": 0,
+      "comment": "Credencial de atribuição (tracking_id/tool_id) por afiliado e marketplace. Nunca devolvida em payload.",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "affiliate_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "marketplace",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tracking_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "tool_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'active'::text",
+          "check": "status = ANY (ARRAY['active'::text, 'invalid'::text, 'suspended'::text])"
+        },
+        {
+          "name": "validated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "affiliate_marketplace_config_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_marketplace_config",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.extension_device",
+      "rls_enabled": true,
+      "rows": 2,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "affiliate_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_by_app_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "name",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "char_length(name) >= 1 AND char_length(name) <= 80"
+        },
+        {
+          "name": "token_hash",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable",
+            "unique"
+          ]
+        },
+        {
+          "name": "token_prefix",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "pairing_code_hash",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable",
+            "unique"
+          ]
+        },
+        {
+          "name": "pairing_expires_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "paired_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "last_used_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "revoked_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "price_observation_extension_device_id_fkey",
+          "source_table": "garimpa.price_observation",
+          "source_columns": [
+            "extension_device_id"
+          ],
+          "target_table": "garimpa.extension_device",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "extension_device_created_by_app_user_id_fkey",
+          "source_table": "garimpa.extension_device",
+          "source_columns": [
+            "created_by_app_user_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "extension_device_affiliate_id_fkey",
+          "source_table": "garimpa.extension_device",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.short_link",
+      "rls_enabled": true,
+      "rows": 172,
+      "comment": "Alias curto de URL para compartilhamento (`/p/<code>` -> `/bizu/<slug>`). Codigo sorteado, nunca derivado do produto: derivar nao evita colisao (casa dos pombos sobre 29^4 = 707.281 casas), apenas a torna permanente. A colisao de sorteio e absorvida pela chave primaria + nova tentativa na aplicacao.",
+      "columns": [
+        {
+          "name": "code",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "code ~ '^[abcdefghjkmnpqrtuvwxyz2346789]{4}$'::text",
+          "comment": "Quatro caracteres do alfabeto sem ambiguidade (sem 0/o, 1/l/i, 5/s, tudo minusculo) - precisa ser digitavel por quem so esta VENDO a tela."
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "slug",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "code"
+      ]
+    },
+    {
+      "name": "garimpa.product_curation",
+      "rls_enabled": true,
+      "rows": 1657,
+      "comment": "Estado editorial atual do produto. Ausência é inválida: trigger cria pending em todo insert.",
+      "columns": [
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'pending'::text",
+          "check": "status = ANY (ARRAY['legacy_visible'::text, 'pending'::text, 'approved'::text, 'rejected'::text, 'held'::text])"
+        },
+        {
+          "name": "reason_code",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "reason_code IS NULL OR (reason_code = ANY (ARRAY['adult_sexual'::text, 'misleading_claim'::text, 'low_utility'::text, 'unsafe_restricted'::text, 'audience_mismatch'::text, 'low_quality_listing'::text, 'duplicate'::text, 'insufficient_evidence'::text, 'weak_offer'::text, 'stale_offer'::text, 'unavailable'::text, 'family_saturation'::text, 'other'::text]))"
+        },
+        {
+          "name": "reason_detail",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "reviewed_by_app_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "reviewed_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "deferred_until",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Quando definido, o produto sai das filas de avaliação até este instante; não altera o status editorial (adiar nunca é rejeitar)."
+        }
+      ],
+      "primary_keys": [
+        "tenant_id",
+        "product_id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "product_curation_tenant_fkey",
+          "source_table": "garimpa.product_curation",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "product_curation_product_tenant_fkey",
+          "source_table": "garimpa.product_curation",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "product_curation_reviewer_tenant_fkey",
+          "source_table": "garimpa.product_curation",
+          "source_columns": [
+            "reviewed_by_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.curation_event",
+      "rls_enabled": true,
+      "rows": 1330,
+      "comment": "Histórico append-only das decisões de curadoria; texto de reason_code=other é insumo para padrões futuros.",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "bigint",
+          "format": "int8",
+          "options": [
+            "identity",
+            "updatable"
+          ],
+          "identity_generation": "ALWAYS"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "from_status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "from_status IS NULL OR (from_status = ANY (ARRAY['legacy_visible'::text, 'pending'::text, 'approved'::text, 'rejected'::text, 'held'::text]))"
+        },
+        {
+          "name": "to_status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "to_status = ANY (ARRAY['legacy_visible'::text, 'pending'::text, 'approved'::text, 'rejected'::text, 'held'::text])"
+        },
+        {
+          "name": "reason_code",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "reason_code IS NULL OR (reason_code = ANY (ARRAY['adult_sexual'::text, 'misleading_claim'::text, 'low_utility'::text, 'unsafe_restricted'::text, 'audience_mismatch'::text, 'low_quality_listing'::text, 'duplicate'::text, 'insufficient_evidence'::text, 'weak_offer'::text, 'stale_offer'::text, 'unavailable'::text, 'family_saturation'::text, 'other'::text]))"
+        },
+        {
+          "name": "reason_detail",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "actor_type",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'human'::text",
+          "check": "actor_type = ANY (ARRAY['human'::text, 'system'::text, 'rule'::text, 'llm'::text])"
+        },
+        {
+          "name": "actor_app_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "policy_version",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'v1'::text"
+        },
+        {
+          "name": "metadata",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "group_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Identificador determinístico do grupo editorial a que a ação pertence (derivado de tenant+família+método/versão); nulo em decisões singulares."
+        },
+        {
+          "name": "review_session_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Sessão de curadoria em que a ação ocorreu; ações de uma mesa compartilham o id."
+        },
+        {
+          "name": "bulk_action_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Uma ação em lote grava um evento por produto com o mesmo bulk_action_id."
+        },
+        {
+          "name": "from_reason_code",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Motivo estruturado do estado anterior, usado para restaurar undo sem perder contexto."
+        },
+        {
+          "name": "from_reason_detail",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Texto livre do motivo anterior quando from_reason_code=other."
+        },
+        {
+          "name": "from_deferred_until",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "Adiamento anterior à transição; uma decisão o consome e undo pode restaurá-lo."
+        },
+        {
+          "name": "triage_run_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "curation_event_product_tenant_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "curation_event_actor_tenant_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "actor_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "curation_event_triage_run_id_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "triage_run_id"
+          ],
+          "target_table": "garimpa.triage_run",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "curation_event_tenant_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.editorial_guideline",
+      "rls_enabled": true,
+      "rows": 0,
+      "comment": "Bússola editorial e preferências de auto-publicação do tenant para calibração de IA.",
+      "columns": [
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "guideline",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "''::text"
+        },
+        {
+          "name": "auto_publish",
+          "data_type": "boolean",
+          "format": "bool",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "false"
+        },
+        {
+          "name": "min_score_auto_publish",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "4"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "tenant_id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "editorial_guideline_tenant_id_fkey",
+          "source_table": "garimpa.editorial_guideline",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.triage_run",
+      "rls_enabled": true,
+      "rows": 14,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "character varying",
+          "format": "varchar",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "started_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "finished_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "character varying",
+          "format": "varchar",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'running'::character varying",
+          "check": "status::text = ANY (ARRAY['running'::character varying, 'ok'::character varying, 'error'::character varying]::text[])"
+        },
+        {
+          "name": "total_input",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "approved_count",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "held_count",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "rejected_count",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "annotated_count",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "0"
+        },
+        {
+          "name": "pipeline_version",
+          "data_type": "character varying",
+          "format": "varchar",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'curation-pipeline-v2'::character varying"
+        },
+        {
+          "name": "model_name",
+          "data_type": "character varying",
+          "format": "varchar",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "error_message",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "metadata",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "curation_event_triage_run_id_fkey",
+          "source_table": "garimpa.curation_event",
+          "source_columns": [
+            "triage_run_id"
+          ],
+          "target_table": "garimpa.triage_run",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.capture_batch",
+      "rls_enabled": true,
+      "rows": 11,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "character varying",
+          "format": "varchar",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "requested_marketplaces",
+          "data_type": "ARRAY",
+          "format": "_text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "pages",
+          "data_type": "smallint",
+          "format": "int2",
+          "options": [
+            "updatable"
+          ],
+          "check": "pages >= 1 AND pages <= 3"
+        },
+        {
+          "name": "status",
+          "data_type": "character varying",
+          "format": "varchar",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'running'::character varying",
+          "check": "status::text = ANY (ARRAY['running'::character varying, 'ok'::character varying, 'partial'::character varying, 'error'::character varying]::text[])"
+        },
+        {
+          "name": "started_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "finished_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "metadata",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "garimpa.affiliate_monitoring_policy",
+      "rls_enabled": true,
+      "rows": 3,
+      "comment": "Escolha de cron por afiliado e marketplace; ausência de linha equivale a desligado.",
+      "columns": [
+        {
+          "name": "affiliate_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "marketplace",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "marketplace = ANY (ARRAY['shopee'::text, 'aliexpress'::text, 'mercadolivre'::text])"
+        },
+        {
+          "name": "enabled",
+          "data_type": "boolean",
+          "format": "bool",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "false"
+        },
+        {
+          "name": "updated_by_auth_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "affiliate_id",
+        "marketplace"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "affiliate_monitoring_policy_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_monitoring_policy",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.affiliate_monitoring_policy_event",
+      "rls_enabled": true,
+      "rows": 2,
+      "comment": "Trilha imutável de alterações da escolha de cron.",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "bigint",
+          "format": "int8",
+          "options": [
+            "identity",
+            "updatable"
+          ],
+          "identity_generation": "ALWAYS"
+        },
+        {
+          "name": "affiliate_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "marketplace",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "marketplace = ANY (ARRAY['shopee'::text, 'aliexpress'::text, 'mercadolivre'::text])"
+        },
+        {
+          "name": "previous_enabled",
+          "data_type": "boolean",
+          "format": "bool",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "enabled",
+          "data_type": "boolean",
+          "format": "bool",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "changed_by_auth_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "changed_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "affiliate_monitoring_policy_event_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_monitoring_policy_event",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.affiliate_monitoring_skip",
+      "rls_enabled": true,
+      "rows": 1,
+      "comment": "Job agendado ignorado por escolha da conta; distinto de fila sem produtos elegíveis.",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "bigint",
+          "format": "int8",
+          "options": [
+            "identity",
+            "updatable"
+          ],
+          "identity_generation": "ALWAYS"
+        },
+        {
+          "name": "affiliate_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "marketplace",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "marketplace = ANY (ARRAY['shopee'::text, 'aliexpress'::text, 'mercadolivre'::text])"
+        },
+        {
+          "name": "github_run_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "reason",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "reason = ANY (ARRAY['policy_disabled'::text, 'account_suspended'::text])"
+        },
+        {
+          "name": "skipped_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "affiliate_monitoring_skip_affiliate_id_fkey",
+          "source_table": "garimpa.affiliate_monitoring_skip",
+          "source_columns": [
+            "affiliate_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.app_user_role",
+      "rls_enabled": true,
+      "rows": 1,
+      "comment": "Roles privilegiadas da aplicação. Ausência de linha ativa significa apenas acesso à área pessoal.",
+      "columns": [
+        {
+          "name": "app_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "role",
+          "data_type": "USER-DEFINED",
+          "format": "app_role",
+          "options": [
+            "updatable"
+          ],
+          "enums": [
+            "afiliado"
+          ]
+        },
+        {
+          "name": "granted_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "granted_by_auth_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "comment": "UUID do auth.users que concedeu a role; texto para evitar acoplamento/FK ao schema auth."
+        },
+        {
+          "name": "revoked_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "app_user_id",
+        "role"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "app_user_role_app_user_id_fkey",
+          "source_table": "garimpa.app_user_role",
+          "source_columns": [
+            "app_user_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.editorial_assessment",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "actor_app_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "policy_version",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "evidence_fingerprint",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "assessment",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "check": "jsonb_typeof(assessment) = 'object'::text"
+        },
+        {
+          "name": "snapshot",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "check": "jsonb_typeof(snapshot) = 'object'::text"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "clock_timestamp()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "editorial_selection_item_assessment_id_product_id_tenant_i_fkey",
+          "source_table": "garimpa.editorial_selection_item",
+          "source_columns": [
+            "assessment_id",
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.editorial_assessment",
+          "target_columns": [
+            "id",
+            "product_id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_assessment_actor_app_user_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_assessment",
+          "source_columns": [
+            "actor_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_assessment_product_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_assessment",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_assessment_tenant_id_fkey",
+          "source_table": "garimpa.editorial_assessment",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.editorial_selection",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "version",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "check": "version > 0"
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "status = ANY (ARRAY['active'::text, 'retired'::text])"
+        },
+        {
+          "name": "valid_until",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "actor_app_user_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "clock_timestamp()"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "editorial_selection_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection",
+          "source_columns": [
+            "tenant_id"
+          ],
+          "target_table": "garimpa.affiliate_account",
+          "target_columns": [
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_selection_actor_app_user_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection",
+          "source_columns": [
+            "actor_app_user_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.app_user",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_selection_item_selection_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection_item",
+          "source_columns": [
+            "selection_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.editorial_selection",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "garimpa.editorial_selection_item",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "(gen_random_uuid())::text"
+        },
+        {
+          "name": "tenant_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "selection_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "product_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "assessment_id",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "position",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "updatable"
+          ],
+          "check": "\"position\" >= 0 AND \"position\" <= 23"
+        },
+        {
+          "name": "destinations",
+          "data_type": "ARRAY",
+          "format": "_text",
+          "options": [
+            "updatable"
+          ],
+          "check": "destinations <@ ARRAY['home'::text, 'pauta'::text] AND cardinality(destinations) >= 1 AND cardinality(destinations) <= 2 AND array_position(destinations, NULL::text) IS NULL"
+        },
+        {
+          "name": "context",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "''::text",
+          "check": "char_length(context) <= 500"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "editorial_selection_item_assessment_id_product_id_tenant_i_fkey",
+          "source_table": "garimpa.editorial_selection_item",
+          "source_columns": [
+            "assessment_id",
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.editorial_assessment",
+          "target_columns": [
+            "id",
+            "product_id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_selection_item_selection_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection_item",
+          "source_columns": [
+            "selection_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.editorial_selection",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        },
+        {
+          "name": "editorial_selection_item_product_id_tenant_id_fkey",
+          "source_table": "garimpa.editorial_selection_item",
+          "source_columns": [
+            "product_id",
+            "tenant_id"
+          ],
+          "target_table": "garimpa.product",
+          "target_columns": [
+            "id",
+            "tenant_id"
+          ]
+        }
+      ]
+    }
+  ]
+}

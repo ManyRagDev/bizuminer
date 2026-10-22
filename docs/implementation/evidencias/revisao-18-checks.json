@@ -1,0 +1,326 @@
+{
+  "date": "2026-10-14",
+  "environment": "local; URL ficticia nao conectavel; credenciais removidas; PGlite isolado",
+  "results": [
+    {
+      "name": "web-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/web"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.43,
+      "log": "docs/implementation/evidencias/revisao-18-web-tests.log"
+    },
+    {
+      "name": "capture-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/capture"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.92,
+      "log": "docs/implementation/evidencias/revisao-18-capture-tests.log"
+    },
+    {
+      "name": "capture-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/capture",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.12,
+      "log": "docs/implementation/evidencias/revisao-18-capture-typecheck.log"
+    },
+    {
+      "name": "persistence-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/persistence"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.32,
+      "log": "docs/implementation/evidencias/revisao-18-persistence-tests.log"
+    },
+    {
+      "name": "web-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/web",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 6.39,
+      "log": "docs/implementation/evidencias/revisao-18-web-typecheck.log"
+    },
+    {
+      "name": "extension-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/extension"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.26,
+      "log": "docs/implementation/evidencias/revisao-18-extension-tests.log"
+    },
+    {
+      "name": "persistence-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/persistence",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.52,
+      "log": "docs/implementation/evidencias/revisao-18-persistence-typecheck.log"
+    },
+    {
+      "name": "extension-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/extension",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.97,
+      "log": "docs/implementation/evidencias/revisao-18-extension-typecheck.log"
+    },
+    {
+      "name": "sql-test-triage-price",
+      "command": [
+        "npm",
+        "run",
+        "test:triage-price",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.42,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-triage-price.log"
+    },
+    {
+      "name": "sql-test",
+      "command": [
+        "npm",
+        "run",
+        "test",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 3.72,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test.log"
+    },
+    {
+      "name": "sql-test-capture-batch",
+      "command": [
+        "npm",
+        "run",
+        "test:capture-batch",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.37,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-capture-batch.log"
+    },
+    {
+      "name": "sql-test-commercial",
+      "command": [
+        "npm",
+        "run",
+        "test:commercial",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.87,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-commercial.log"
+    },
+    {
+      "name": "sql-test-regressions",
+      "command": [
+        "npm",
+        "run",
+        "test:regressions",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.42,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-regressions.log"
+    },
+    {
+      "name": "sql-test-cf-regressions",
+      "command": [
+        "npm",
+        "run",
+        "test:cf-regressions",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.42,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-cf-regressions.log"
+    },
+    {
+      "name": "sql-test-entitlement",
+      "command": [
+        "npm",
+        "run",
+        "test:entitlement",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.67,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-entitlement.log"
+    },
+    {
+      "name": "sql-test-price-evidence",
+      "command": [
+        "npm",
+        "run",
+        "test:price-evidence",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.12,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-price-evidence.log"
+    },
+    {
+      "name": "sql-test-rubric",
+      "command": [
+        "npm",
+        "run",
+        "test:rubric",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.57,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-rubric.log"
+    },
+    {
+      "name": "sql-test-opportunity",
+      "command": [
+        "npm",
+        "run",
+        "test:opportunity",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.99,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-opportunity.log"
+    },
+    {
+      "name": "sql-test-cockpit",
+      "command": [
+        "npm",
+        "run",
+        "test:cockpit",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.74,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-cockpit.log"
+    },
+    {
+      "name": "sql-test-financial",
+      "command": [
+        "npm",
+        "run",
+        "test:financial",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.74,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-financial.log"
+    },
+    {
+      "name": "sql-test-experiment",
+      "command": [
+        "npm",
+        "run",
+        "test:experiment",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.69,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-experiment.log"
+    },
+    {
+      "name": "sql-test-onboarding",
+      "command": [
+        "npm",
+        "run",
+        "test:onboarding",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.22,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-onboarding.log"
+    },
+    {
+      "name": "sql-test-dispatch",
+      "command": [
+        "npm",
+        "run",
+        "test:dispatch",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.74,
+      "log": "docs/implementation/evidencias/revisao-18-sql-test-dispatch.log"
+    },
+    {
+      "name": "web-build",
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "--prefix",
+        "packages/web"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 16.67,
+      "log": "docs/implementation/evidencias/revisao-18-web-build.log"
+    }
+  ]
+}

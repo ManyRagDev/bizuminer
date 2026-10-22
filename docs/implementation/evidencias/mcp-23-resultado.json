@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-15",
+  "project": "spbuwcwmxlycchuwhfir",
+  "auditor": {
+    "model": "gpt-6.1-sol",
+    "reasoning": "high",
+    "report": "docs/implementation/22-AUDITORIA-INDEPENDENTE-MIGRATIONS.md",
+    "scope": "Technical approval only for independent author FK repair; pending V2 chain not approved"
+  },
+  "remote": {
+    "appliedOriginals": 1,
+    "pendingOriginals": 11,
+    "appliedSupplements": 2,
+    "newApplication": {
+      "name": "garimpa_curation_membership_author",
+      "localFile": "20261015040727_garimpa_curation_membership_author.sql",
+      "remoteVersion": "20261015041540",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23",
+      "success": true
+    },
+    "postChecks": {
+      "baselineUnchanged": true,
+      "policiesUnchanged": true,
+      "grantsUnchanged": true,
+      "newKeysValidated": true,
+      "oldKeysAbsent": true
+    },
+    "before": {
+      "clicks": 685,
+      "version": "17.6",
+      "database": "postgres",
+      "editions": 0,
+      "products": 1657,
+      "curations": 1657,
+      "secret_rls": true,
+      "short_links": 172,
+      "observations": 9146,
+      "publications": 1494,
+      "broad_rls_present": false,
+      "m1_identity_present": true,
+      "orphan_curation_authors": 0,
+      "orphan_selection_authors": 0
+    },
+    "after": {
+      "clicks": 685,
+      "version": "17.6",
+      "database": "postgres",
+      "editions": 0,
+      "products": 1657,
+      "curations": 1657,
+      "secret_rls": true,
+      "short_links": 172,
+      "observations": 9146,
+      "publications": 1494,
+      "broad_rls_present": false,
+      "m1_identity_present": true,
+      "orphan_curation_authors": 0,
+      "orphan_selection_authors": 0
+    },
+    "garimpaAdvisorFindings": 0
+  },
+  "verification": {
+    "sqlSuites": 21,
+    "webTests": 379,
+    "webTypecheck": "passed",
+    "webBuild": "passed",
+    "publicSmoke": "same title and 24 product links",
+    "runtime": "garimpa_app read-only confirmed",
+    "sourceManifest": "evidencias/manifesto-execucao-23.json"
+  },
+  "blocked": [
+    "M2-first chain has public projection/runtime gap; independent auditor did not approve it",
+    "No isolated staging identified",
+    "Vercel MCP insufficient scope; CLI credentials unavailable; deployed source not identified",
+    "Real sessions/Auth/Storage/rollout/restore tests pending"
+  ],
+  "notPerformed": [
+    "No retry or alternative transport for rejected M2",
+    "No app deployment",
+    "No external invitation, dispatch, financial synthetic production fact or commercial gate activation"
+  ]
+}

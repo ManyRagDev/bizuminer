@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-14",
+  "project": "spbuwcwmxlycchuwhfir",
+  "schema": "garimpa",
+  "inspection_role": "postgres",
+  "postgres_version": "17.6",
+  "counts": {"products":1657,"observations":9017,"publications":1494,"clicks":670,"app_users":3,"accounts":1,"variant_keys":0,"evidence_present":45},
+  "curation_queue_facts": {"rows":1344,"lowest_verified_true":297,"configuration_guard":false,"security_invoker":true},
+  "coverage": {"all_products":1657,"under_3_including_zero":739,"zero":313,"with_observations":1344,"under_3_with_observations":426},
+  "family": {"assigned":628,"total":1657},
+  "publications": {"channel":"web","status":"active","count":1494},
+  "case_printer": {"id":"05c1c335-c541-4696-8be6-7b6d0580e257","event_at":"2026-10-13T17:05:45.97008Z","actor":"llm","to":"approved","policy":"ai-triage-v2","snapshot_price_cents":529900,"snapshot_observations":1},
+  "case_price_changed": {"id":"afbf6c4f-d8d8-42fa-ae06-14fb7cfd14f9","event_at":"2026-09-22T03:53:02.690758Z","actor":"llm","to":"approved","policy":"ai-triage-v1","snapshot_price_cents":2279,"current_price_cents":1999},
+  "audit_case_06497fba_found": false,
+  "current_products_nonpositive_price":0,
+  "note":"Resumo de SELECTs executados via MCP, não snapshot transacional único. Não contém dados pessoais ou credenciais. Nenhuma escrita foi realizada."
+}

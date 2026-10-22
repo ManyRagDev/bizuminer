@@ -1,12 +1,24 @@
 import { SchemaType, type ResponseSchema } from "@google/generative-ai";
 import type { CurationReason, CurationStatus } from "./curation-contract.ts";
+import type { TriageValueDecision } from "./triage-value-policy.ts";
 
 export interface AICurationItemInput {
   productId: string;
   title: string;
   category: string;
   priceFormatted: string;
+  /** Conservative minimum from verified prior observations of the same configuration. */
+  verifiedPriceReference?: { source: "comparable_history"; minimumPriceFormatted: string; observationCount: number; historyDays: number };
 }
+
+export type TriageInputVersion = {
+  status: "pending" | "held";
+  latestEventId: string | null;
+  priceObservationId: string;
+  priceCents: number;
+  offerEvidenceKey: string;
+  observedAt: string;
+};
 
 export type EditorialCategory = "gadget_util" | "novidade" | "peca_chata" | "outro";
 
@@ -67,4 +79,6 @@ export interface TriageDecision {
   aiScore?: number;
   aiJustification?: string;
   editorialCategory?: EditorialCategory;
+  pricePolicy?: TriageValueDecision;
+  inputVersion?: TriageInputVersion;
 }

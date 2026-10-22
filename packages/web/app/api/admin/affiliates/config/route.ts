@@ -1,3 +1,4 @@
+import { inAccountScope } from "../../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { upsertMarketplaceConfig } from "../../../../../lib/affiliate-db";
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ return inAccountScope(check.context, async () => {
 
   let body: { affiliateId?: unknown; marketplace?: unknown; trackingId?: unknown; toolId?: unknown };
   try {
@@ -45,4 +47,6 @@ export async function POST(request: NextRequest) {
   } catch {
     return sinkJson(check.sink, { ok: false, error: "server_error" }, { status: 500 });
   }
+
+ });
 }

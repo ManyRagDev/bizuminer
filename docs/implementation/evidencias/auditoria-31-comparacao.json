@@ -1,0 +1,52 @@
+{
+  "scope": "Independent read-only reconciliation and isolated counterproof summary; this is an auditor record, not a reconstructed original tool log",
+  "remote": {
+    "project": "spbuwcwmxlycchuwhfir",
+    "identityEvidence": "auditoria-31-identity.json",
+    "securityEvidence": "auditoria-31-security.json",
+    "structureEvidence": "auditoria-31-structure.json",
+    "defaultEvidence": "auditoria-31-defaults.json",
+    "countsEvidence": "auditoria-31-counts.json",
+    "writes": 0
+  },
+  "reconciliation": {
+    "initialATablesAndPolicies": "exact match",
+    "baselineFunctionDefinitionsAndACLs": "all four exact match",
+    "baselineForeignKeys": "51 structural entries match corrected post-expansion inventory; all remote constraints validated",
+    "baselineSecurityAgainstCorrectedStage": "no difference in RLS/FORCE/owner/table ACL for existing tables",
+    "initialFixtureGaps": [
+      "app_user_role FORCE RLS omitted",
+      "service_role arw grants on capture_batch and triage_run omitted",
+      "postgres default table ACL granting garimpa_app arwd omitted"
+    ],
+    "view": "curation_queue_facts definition intentionally replaced twice in B; existing ACL/options preserved"
+  },
+  "counterfactual": {
+    "engine": "PGlite isolated memory",
+    "purpose": "Demonstrate why recapturing C under inherited default privileges without normalizing B is unsafe",
+    "steps": [
+      "Reproduce real ALTER DEFAULT PRIVILEGES arwd in disposable fixture",
+      "Apply installed subset and pre-normalization A+B",
+      "Insert synthetic account, actor and domain event as fixture administrator",
+      "Enable fixture-local gate for counterfactual; do not execute C",
+      "Use runtime with authenticated owner account context"
+    ],
+    "result": {
+      "effectiveUpdate": true,
+      "effectiveDelete": true,
+      "updatedEvents": 1,
+      "deletedEvents": 1
+    },
+    "limitations": "The exact pre-normalization SQL digest was not included in this counterproof tool output; this is not an execution of C or a claim that old C would accept the real baseline. Old C rejects the privilege mismatch."
+  },
+  "verification": {
+    "nativeResult": "execucao-31-replacement-native.json",
+    "nativePass": 39,
+    "checks": 33,
+    "applications": 6,
+    "baselineDefaultsAndLegacyACLsPreserved": true,
+    "matrixTables": 37,
+    "explicitColumnUpdateGrants": 3,
+    "newViewSelectOnly": true
+  }
+}

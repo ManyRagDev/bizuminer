@@ -1,0 +1,17 @@
+{
+  "mode": "execute",
+  "before": {
+    "id": "c5c334a3-3783-4e3b-ae8c-2e35e6b4c1d0",
+    "status": "running",
+    "startedAt": "2026-09-25T16:22:15.618Z"
+  },
+  "expiredIds": [
+    "c5c334a3-3783-4e3b-ae8c-2e35e6b4c1d0"
+  ],
+  "after": {
+    "id": "c5c334a3-3783-4e3b-ae8c-2e35e6b4c1d0",
+    "status": "error",
+    "finishedAt": "2026-10-10T20:37:58.288Z",
+    "error": "execution_timeout"
+  }
+}

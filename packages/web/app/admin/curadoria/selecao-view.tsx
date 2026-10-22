@@ -6,6 +6,7 @@ import {
   EDITORIAL_DIMENSIONS,
   EDITORIAL_MAX_PRODUCTS,
   EDITORIAL_LEVELS,
+  hasSuperiorityClaim,
   type EditorialAssessmentInput,
   type EditorialCandidate,
   type EditorialSelection,
@@ -35,6 +36,18 @@ function errorMessage(error: string): string {
     invalid_critical_doubts: "Registre no máximo 20 dúvidas, cada uma com 3 a 500 caracteres.",
     invalid_max_price: "Informe um preço máximo aceitável válido.",
     invalid_hero_policy: "Atualize a página para usar a rubrica atual da hero.",
+    superiority_claim_requires_comparative_basis: "Alegações de superioridade (ex.: 'melhor', 'campeã', 'mais barato') exigem registrar a base comparativa com produtos concorrentes.",
+    comparative_basis_alternative_not_found: "Uma ou mais alternativas da base comparativa não existem ou pertencem a outra conta.",
+    comparative_basis_alternative_expired: "As alternativas comparadas precisam ter preço verificado nas últimas 48 horas.",
+    comparative_basis_alternative_not_approved: "Todas as alternativas comparadas devem estar aprovadas na curadoria.",
+    comparative_basis_alternative_changed: "Uma das alternativas teve o preço ou configuração alterado e exige nova revisão.",
+    comparative_basis_scope_or_price_required: "Informe o recorte de uso ou faixa de preço da comparação.",
+    comparative_basis_criteria_required: "Informe ao menos um critério objetivo de comparação.",
+    comparative_basis_references_required: "As referências atuais de oferta e configuração são obrigatórias.",
+    comparative_basis_rationale_required: "Informe a justificativa editorial da comparação.",
+    comparative_basis_rationale_must_be_distinct: "A justificativa editorial da comparação deve ser própria e distinta da alegação pública.",
+    comparative_basis_alternatives_required: "Informe ao menos um produto alternativo para sustentar a alegação.",
+    alternative_cannot_be_self: "O produto não pode ser comparado contra si mesmo.",
   };
   if (error.startsWith("invalid_dimension_")) return "Preencha o nível e uma justificativa de pelo menos 3 caracteres para cada dimensão.";
   return messages[error] ?? error;
@@ -108,15 +121,49 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
   const [input, setInput] = useState(() => assessmentFrom(candidate));
   const [maxPrice, setMaxPrice] = useState(() => (input.maxPriceCents / 100).toFixed(2));
   const [doubts, setDoubts] = useState(input.criticalDoubts.join("\n"));
+  const [altIdsText, setAltIdsText] = useState(() => candidate.assessment?.comparativeBasis?.alternativeProductIds?.join("\n") ?? "");
+  const [usageScope, setUsageScope] = useState(() => candidate.assessment?.comparativeBasis?.usageScope ?? "");
+  const [minPriceRange, setMinPriceRange] = useState(() => candidate.assessment?.comparativeBasis?.priceRange?.minCents != null ? (candidate.assessment.comparativeBasis.priceRange.minCents / 100).toFixed(2) : "");
+  const [maxPriceRange, setMaxPriceRange] = useState(() => candidate.assessment?.comparativeBasis?.priceRange?.maxCents != null ? (candidate.assessment.comparativeBasis.priceRange.maxCents / 100).toFixed(2) : "");
+  const [criteriaText, setCriteriaText] = useState(() => candidate.assessment?.comparativeBasis?.criteria?.join("\n") ?? "");
+  const [checkedAtText, setCheckedAtText] = useState(() => candidate.assessment?.comparativeBasis?.checkedAt ? candidate.assessment.comparativeBasis.checkedAt.slice(0, 16) : new Date().toISOString().slice(0, 16));
+  const [comparativeRationale, setComparativeRationale] = useState(() => candidate.assessment?.comparativeBasis?.rationale ?? "");
   const [feedback, setFeedback] = useState("");
   const [pending, startTransition] = useTransition();
+
+  const showComparative = hasSuperiorityClaim(input.publicRationale) || altIdsText.trim().length > 0;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cents = Math.round(Number(maxPrice.replace(",", ".")) * 100);
     if (!Number.isSafeInteger(cents) || cents <= 0) { setFeedback("Informe um preço máximo válido."); return; }
+    const hasClaim = hasSuperiorityClaim(input.publicRationale);
+    const altIds = altIdsText.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+    const criteria = criteriaText.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+    const minCents = minPriceRange.trim() ? Math.round(Number(minPriceRange.replace(",", ".")) * 100) : null;
+    const maxCents = maxPriceRange.trim() ? Math.round(Number(maxPriceRange.replace(",", ".")) * 100) : null;
+    const priceRange = (minCents !== null || maxCents !== null) ? { minCents, maxCents } : null;
+
+    const comparativeBasis = (hasClaim || altIds.length > 0)
+      ? {
+          version: "v1",
+          candidateProductId: candidate.id,
+          alternativeProductIds: altIds,
+          usageScope: usageScope.trim() || null,
+          priceRange,
+          criteria,
+          checkedAt: checkedAtText ? new Date(checkedAtText).toISOString() : new Date().toISOString(),
+          rationale: comparativeRationale.trim(),
+        }
+      : null;
+
     startTransition(async () => {
-      const result = await saveEditorialAssessmentAction({ ...input, maxPriceCents: cents, criticalDoubts: doubts.split("\n").map((line) => line.trim()).filter(Boolean) });
+      const result = await saveEditorialAssessmentAction({
+        ...input,
+        comparativeBasis,
+        maxPriceCents: cents,
+        criticalDoubts: doubts.split("\n").map((line) => line.trim()).filter(Boolean),
+      });
       if (!result.ok) { setFeedback(errorMessage(result.error)); return; }
       if (!result.candidate) { setFeedback("O produto deixou de estar disponível para seleção. Atualize a página."); return; }
       onSaved(result.candidate);
@@ -143,6 +190,79 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
     <label>Benefício concreto<textarea required minLength={3} maxLength={500} value={input.benefit} onChange={(event) => setInput((current) => ({ ...current, benefit: event.target.value }))} /></label>
     <label>O que chega na compra (quantidade, variante e tamanho conhecidos)<textarea required minLength={3} maxLength={1000} value={input.purchaseContents} onChange={(event) => setInput((current) => ({ ...current, purchaseContents: event.target.value }))} /></label>
     <label>Por que indicamos — texto público para home e pauta<textarea required minLength={10} maxLength={500} value={input.publicRationale} onChange={(event) => setInput((current) => ({ ...current, publicRationale: event.target.value }))} /></label>
+    {showComparative && (
+      <fieldset className="comparative-basis-fieldset">
+        <legend>Base comparativa (obrigatória para alegações de superioridade ou preço relativo)</legend>
+        <p><small>Alegações como &quot;melhor&quot;, &quot;campeã&quot; ou &quot;mais barato&quot; exigem sustentar a comparação contra alternativas válidas da mesma conta observadas nas últimas 48 horas com critérios objetivos.</small></p>
+        <label>
+          Recorte de uso avaliado (ex.: cafeteiras expresso domésticas com bomba de pressão)
+          <input
+            type="text"
+            value={usageScope}
+            onChange={(e) => setUsageScope(e.target.value)}
+            placeholder="Recorte de uso ou categoria comparável"
+          />
+        </label>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <label style={{ flex: 1 }}>
+            Faixa de preço mínima (R$)
+            <input
+              type="text"
+              inputMode="decimal"
+              value={minPriceRange}
+              onChange={(e) => setMinPriceRange(e.target.value)}
+              placeholder="0,00"
+            />
+          </label>
+          <label style={{ flex: 1 }}>
+            Faixa de preço máxima (R$)
+            <input
+              type="text"
+              inputMode="decimal"
+              value={maxPriceRange}
+              onChange={(e) => setMaxPriceRange(e.target.value)}
+              placeholder="1000,00"
+            />
+          </label>
+        </div>
+        <label>
+          Critérios explícitos de comparação (ao menos um, separados por linha ou vírgula)
+          <textarea
+            required={hasSuperiorityClaim(input.publicRationale)}
+            value={criteriaText}
+            onChange={(e) => setCriteriaText(e.target.value)}
+            placeholder="Ex.: pressão 15 bar&#10;bico vaporizador de leite em inox"
+          />
+        </label>
+        <label>
+          IDs das alternativas comparadas (um por linha ou separados por vírgula)
+          <textarea
+            required={hasSuperiorityClaim(input.publicRationale)}
+            value={altIdsText}
+            onChange={(e) => setAltIdsText(e.target.value)}
+            placeholder="Ex.: prod_1&#10;prod_2"
+          />
+        </label>
+        <label>
+          Data/hora da checagem
+          <input
+            type="datetime-local"
+            value={checkedAtText}
+            onChange={(e) => setCheckedAtText(e.target.value)}
+          />
+        </label>
+        <label>
+          Justificativa comparativa humana
+          <textarea
+            required={hasSuperiorityClaim(input.publicRationale)}
+            value={comparativeRationale}
+            onChange={(e) => setComparativeRationale(e.target.value)}
+            placeholder="Por que esta oferta supera as alternativas indicadas no recorte avaliado..."
+          />
+        </label>
+        <p><small>Nota: O servidor vinculará e revalidará as referências canônicas de oferta (preço, data e configuração) do candidato e de cada alternativa no momento do salvamento.</small></p>
+      </fieldset>
+    )}
     <label>Preço máximo aceitável (R$)<input required inputMode="decimal" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} /><small>Acima deste valor, o destaque será bloqueado até nova avaliação.</small></label>
     <label>Dúvidas essenciais em aberto (uma por linha)<textarea maxLength={4000} value={doubts} onChange={(event) => setDoubts(event.target.value)} /><small>Dúvidas essenciais e níveis fracos ou desconhecidos impedem o destaque.</small></label>
     {feedback && <p role="alert">{feedback}</p>}
@@ -215,8 +335,37 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       <h3 id="hero-ranking-title">Hero · os melhores disponíveis</h3>
       <p>Até {HERO_MAX_PRODUCTS} melhores produtos disponíveis, por ordem relativa. A nota ajuda a comparar; não há corte mínimo de qualidade para preencher as posições.</p>
       <p>Público {HERO_WEIGHTS.audience}% · utilidade {HERO_WEIGHTS.utility}% · valor {HERO_WEIGHTS.value}% · confiança {HERO_WEIGHTS.confidence}% · clareza {HERO_WEIGHTS.clarity}%.</p>
-      <p>{catalogHeroActive && !selection && !dirty ? "Destaques atuais: antes da primeira edição editorial, home e pauta compartilham os melhores do catálogo aprovado. Avaliações válidas têm prioridade, seguidas pelos sinais de preço comparável, avaliações, clareza e vendas." : "Prévia da próxima ativação: itens do rascunho destinados à home, com a avaliação atual. A ordem geral permanece editorial; a hero usa a classificação."}</p>
-      {heroPreview.length ? <ol>{heroPreview.map(({ candidate, classification }) => <li key={candidate.id}><b>{candidate.title}</b> · {heroScoreLabel(classification)} · {classification.basis === "editorial" ? "avaliação editorial" : "sinais do catálogo"}</li>)}</ol> : <p>Nenhum item válido nesta prévia. Ofertas desatualizadas ou com impedimentos de compra precisam de revisão.</p>}
+      {heroPreview.length ? (
+        <ol style={{ paddingLeft: "20px", margin: "12px 0" }}>
+          {heroPreview.map(({ candidate, classification }) => (
+            <li key={candidate.id} style={{ marginBottom: "8px", lineHeight: "1.4" }}>
+              <a
+                href={`/bizu/${candidate.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontWeight: 600, color: "var(--accent, #0070f3)", textDecoration: "none" }}
+              >
+                {candidate.title}
+              </a>
+              {" "}·{" "}
+              <span style={{ fontSize: "0.8125rem", color: "var(--ink-muted, #71717a)" }}>
+                {heroScoreLabel(classification)} · {classification.basis === "editorial" ? "avaliação editorial" : "sinais do catálogo"}
+              </span>
+              {" "}·{" "}
+              <a
+                href={candidate.productUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                style={{ fontSize: "0.75rem", color: "var(--ink-muted, #71717a)", textDecoration: "underline" }}
+              >
+                Ver na Loja ↗
+              </a>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p>Nenhum item válido nesta prévia. Ofertas desatualizadas ou com impedimentos de compra precisam de revisão.</p>
+      )}
       <button type="button" disabled={!schemaReady || pending} onClick={prepareBest}>Preparar seleção com até {EDITORIAL_MAX_PRODUCTS} produtos</button>
       <p>Home e pauta compartilham até {EDITORIAL_MAX_PRODUCTS} produtos; os {HERO_MAX_PRODUCTS} melhores ocupam a hero. Este botão prepara uma edição com candidatos já avaliados. Ao ativá-la, ela passa a controlar home e pauta; uma edição vazia ou vencida não é preenchida automaticamente pelo catálogo.</p>
     </section>

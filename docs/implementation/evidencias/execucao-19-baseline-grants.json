@@ -1,0 +1,422 @@
+{
+  "project": "spbuwcwmxlycchuwhfir",
+  "source": "read-only information_schema.role_table_grants; garimpa_app; observed before local migration application",
+  "grants": [
+    {
+      "table": "affiliate_account",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "affiliate_account",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "affiliate_account",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "affiliate_account",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "affiliate_marketplace_config",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "affiliate_marketplace_config",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "affiliate_marketplace_config",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "affiliate_marketplace_config",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "affiliate_membership",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "affiliate_membership",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "affiliate_membership",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "affiliate_membership",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "affiliate_monitoring_policy",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "affiliate_monitoring_policy",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "affiliate_monitoring_policy",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "affiliate_monitoring_policy",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "affiliate_monitoring_policy_event",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "affiliate_monitoring_policy_event",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "affiliate_monitoring_policy_event",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "affiliate_monitoring_policy_event",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "affiliate_monitoring_skip",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "affiliate_monitoring_skip",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "affiliate_monitoring_skip",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "affiliate_monitoring_skip",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "app_user",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "app_user",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "app_user",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "app_user",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "app_user_role",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "buyer_profile",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "buyer_profile",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "buyer_profile",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "buyer_profile",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "capture_batch",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "capture_batch",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "capture_batch",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "capture_batch",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "capture_run",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "capture_run",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "capture_run",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "capture_run",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "click_event",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "click_event",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "click_event",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "click_event",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "curation_event",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "curation_event",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "curation_event",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "curation_event",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "curation_queue_facts",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "curation_queue_facts",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "curation_queue_facts",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "curation_queue_facts",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "editorial_assessment",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "editorial_assessment",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "editorial_guideline",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "editorial_guideline",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "editorial_guideline",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "editorial_guideline",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "editorial_selection",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "editorial_selection",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "editorial_selection",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "editorial_selection_item",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "editorial_selection_item",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "extension_device",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "extension_device",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "extension_device",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "extension_device",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "favorite",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "favorite",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "favorite",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "favorite",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "price_observation",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "price_observation",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "price_observation",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "price_observation",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "price_watch",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "price_watch",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "price_watch",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "price_watch",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "product",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "product",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "product",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "product",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "product_curation",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "product_curation",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "product_curation",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "product_curation",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "publication",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "publication",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "publication",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "publication",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "short_link",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "short_link",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "short_link",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "short_link",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "subscriber",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "subscriber",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "subscriber",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "subscriber",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "triage_run",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "triage_run",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "triage_run",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "triage_run",
+      "privilege": "UPDATE"
+    }
+  ]
+}

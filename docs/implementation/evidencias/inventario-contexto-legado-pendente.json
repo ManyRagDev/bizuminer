@@ -1,0 +1,177 @@
+{
+  "packages/web/lib/admin-db.ts": [
+    {
+      "line": 63,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 170,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 201,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 256,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 277,
+      "source": "const sql = db();"
+    }
+  ],
+  "packages/web/lib/curation-db.ts": [
+    {
+      "line": 275,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 374,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 576,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 606,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 716,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 823,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 939,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 962,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 1102,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 1112,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 1243,
+      "source": "const sql = db();"
+    }
+  ],
+  "packages/web/lib/member-db.ts": [
+    {
+      "line": 48,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 61,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 75,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 106,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 137,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 172,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 187,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 202,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 220,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 234,
+      "source": "export async function savedDeals(userId: string, tenantId = \"local\"): Promise<SavedDealRow[]> {  const sql = db();"
+    },
+    {
+      "line": 284,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 324,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 364,
+      "source": "const sql = db();"
+    }
+  ],
+  "packages/web/lib/extension-db.ts": [
+    {
+      "line": 46,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 102,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 147,
+      "source": "const sql = db();"
+    },
+    {
+      "line": 198,
+      "source": "const sql = db();"
+    }
+  ],
+  "packages/web/lib/editorial-selection-db.ts": [],
+  "packages/persistence/src/pg-store.ts": [
+    {
+      "line": 54,
+      "source": "const rows = await this.sql<{ external_id: string }[]>`"
+    },
+    {
+      "line": 83,
+      "source": "const rows = await this.sql<UpsertRow[]>`"
+    },
+    {
+      "line": 183,
+      "source": "const rows = await this.sql<{ id: string }[]>`"
+    },
+    {
+      "line": 194,
+      "source": "await this.sql`"
+    },
+    {
+      "line": 205,
+      "source": "const rows = await this.sql<{ min_cents: number; max_cents: number; observations: string }[]>`"
+    },
+    {
+      "line": 216,
+      "source": "const rows = await this.sql<"
+    },
+    {
+      "line": 253,
+      "source": "const rows = await this.sql<{ level: string; n: string }[]>`"
+    },
+    {
+      "line": 271,
+      "source": "await this.sql.end();"
+    }
+  ]
+}

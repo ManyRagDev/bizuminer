@@ -18,6 +18,7 @@ export const PRODUCT_FAMILIES = {
   audio: "Áudio",
   cuidados_pessoais: "Cuidados pessoais",
   ferramentas: "Ferramentas",
+  cafeteiras: "Cafeteiras",
 } as const;
 
 export type ProductFamily = keyof typeof PRODUCT_FAMILIES;
@@ -28,16 +29,16 @@ export const FAMILY_METHOD = "title-keywords" as const;
  * Versão das regras. Subir SEMPRE que o dicionário mudar: a versão é gravada
  * no produto e distingue agrupamentos feitos com regras diferentes.
  */
-export const FAMILY_RULES_VERSION = "v1" as const;
+export const FAMILY_RULES_VERSION = "v2" as const;
 
 export interface ProductFamilyInfo {
   readonly key: ProductFamily;
   readonly label: string;
   readonly method: typeof FAMILY_METHOD;
-  readonly version: typeof FAMILY_RULES_VERSION;
+  readonly version: string;
 }
 
-const FAMILY_RULES: ReadonlyArray<readonly [ProductFamily, readonly string[]]> = [
+const FAMILY_RULES: ReadonlyArray<readonly [ProductFamily, readonly string[], string?]> = [
   ["manoplas_moto", ["manopla", "punho de moto", "punho para moto", "grip motocicleta"]],
   [
     "unhas_manicure",
@@ -74,6 +75,20 @@ const FAMILY_RULES: ReadonlyArray<readonly [ProductFamily, readonly string[]]> =
     ["skincare", "cuidados com a pele", "limpeza facial", "escova secadora", "aparador de pelos"],
   ],
   ["ferramentas", ["kit ferramentas", "furadeira", "parafusadeira", "chave catraca", "alicate"]],
+  [
+    "cafeteiras",
+    [
+      "cafeteira",
+      "cafeteira eletrica",
+      "cafeteira expressa",
+      "cafeteira expresso",
+      "cafeteira italiana",
+      "prensa francesa",
+      "cafeteira de capsula",
+      "cafeteira monodose",
+    ],
+    "v2",
+  ],
 ];
 
 function normalize(value: string): string {
@@ -89,13 +104,13 @@ export function productFamilyForTitle(title: string): ProductFamily | undefined 
 
 export function familyInfoForTitle(title: string): ProductFamilyInfo | undefined {
   const normalized = normalize(title);
-  for (const [family, terms] of FAMILY_RULES) {
+  for (const [family, terms, versionOverride] of FAMILY_RULES) {
     if (terms.some((term) => normalized.includes(normalize(term)))) {
       return {
         key: family,
         label: PRODUCT_FAMILIES[family],
         method: FAMILY_METHOD,
-        version: FAMILY_RULES_VERSION,
+        version: versionOverride ?? "v1",
       };
     }
   }

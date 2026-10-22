@@ -1,0 +1,187 @@
+{
+  "at": "2026-10-15T13:48:27.702985+00:00",
+  "status": "CURRENT_CHAIN_REJECTED_FOR_PRODUCTION",
+  "newProductionWrites": 0,
+  "newMigrationsCreated": 0,
+  "replacementCandidateCreated": false,
+  "nativeChecksPassed": 10,
+  "sqlSuitesPassed": 21,
+  "audit": "22-AUDITORIA-INDEPENDENTE-MIGRATIONS.md, adendo9",
+  "files": [
+    {
+      "path": "tools/editorial-tests/native-postgres-fixture.ts",
+      "sha256": "4761210b592ecc6aaf3273db40cb5864c165724eabb29a3fddccb08baeaec42e"
+    },
+    {
+      "path": "tools/editorial-tests/native-migration-flow.test.ts",
+      "sha256": "3c1344bf86d0df2dfad06d0ff9ce2718e85a5a57bbd243fdb3a31a367047cb6d"
+    },
+    {
+      "path": "tools/editorial-tests/observed-baseline.ts",
+      "sha256": "01d2b936e5975d341e70b01343863b8484c898a24574cf6372e9a98aedd09683"
+    },
+    {
+      "path": "tools/editorial-tests/commercial-fixture.ts",
+      "sha256": "2c1972e38bde4844362c638de8cc0d60e21c5bd2aec2c72bdb319195e2f08768"
+    },
+    {
+      "path": "tools/editorial-tests/package.json",
+      "sha256": "18ab5376557e428f1d09037ae6f62c6a6477ccace40a503234f4046ab912705a"
+    },
+    {
+      "path": "tools/editorial-tests/README.md",
+      "sha256": "599117a118b855e3a9b9289e4c0235e0bdf8293f9188c11d6e0702705a49e03b"
+    },
+    {
+      "path": "packages/web/lib/commercial-workflow.ts",
+      "sha256": "0230e889e4260214dba7c74b07ece91a72e2a69016cfc203ae86839117042d3b"
+    },
+    {
+      "path": "packages/web/lib/saas-entitlement-db.ts",
+      "sha256": "f2efa90ab39b1d3fff3754ee92bae098ad33183c52202dc97ddf467cf71110d8"
+    },
+    {
+      "path": "packages/web/lib/tenant-db.ts",
+      "sha256": "62b5ed352310f895a93dedb285b8ca976ca52a46cd2f398676b7529197d29dc5"
+    },
+    {
+      "path": "packages/web/lib/account-scope.ts",
+      "sha256": "e2b34702a8f2123f8e05ba354a02b0957e0727404969f5bc1c5f0a489d1129c1"
+    },
+    {
+      "path": "docs/implementation/24-CAMINHO-SEGURO-PARA-CONCLUSAO.md",
+      "sha256": "71ef8c2807ff5ab58529883d34237d0e9e4f56a92f98bb1bc42b117d0ce44746"
+    },
+    {
+      "path": "docs/implementation/25-ADERENCIA-AO-PLANO-ORIGINAL.md",
+      "sha256": "c583daafd1f14ae66a176ccdadf7ea2ebf35fe538e0e8dcf45cfc11d814dbb5c"
+    },
+    {
+      "path": "docs/implementation/26-VERIFICACAO-NATIVA-E-IMPEDIMENTOS-DE-IMPLANTACAO.md",
+      "sha256": "f8f6c498dbf9803a09537b64eaebf27b4001574bc0e18e86360d352af9d135d8"
+    },
+    {
+      "path": "docs/implementation/22-AUDITORIA-INDEPENDENTE-MIGRATIONS.md",
+      "sha256": "16ff1a0324fa4eab93e4f718b87e7b5492dd5f62c9ad14927c55aa94e60a19be"
+    },
+    {
+      "path": "docs/implementation/STATUS-EXECUCAO.md",
+      "sha256": "8c07dc8d7daeab71731fe44c35ab4c3ba4cf7d8646e39b068b6f09382f3799e7"
+    },
+    {
+      "path": "docs/implementation/README.md",
+      "sha256": "5addab774e09b2c6d4e8ed1269d102ce8b773dd3abe6d056405877873ee56c31"
+    },
+    {
+      "path": "docs/implementation/CHECKPOINT-EXECUCAO-SEQUENCIAL.md",
+      "sha256": "e6fff2d6825d78b5b60ea64957b7e5ebc8d37aa35a7f4dc2e8123bfa1c00d857"
+    },
+    {
+      "path": "docs/implementation/evidencias/schema-observado.json",
+      "sha256": "050c6a65def569f045b97ef2c42f588d43a636b5c89d6346db1416dd229fd0bb"
+    },
+    {
+      "path": "docs/implementation/evidencias/policies-view-constraints.json",
+      "sha256": "7542f6c1e2a3f7af5c52b5f7786ec323d1efd3c10a25243baf8d47220f6bb01d"
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-19-baseline-grants.json",
+      "sha256": "cfd806269b792cb63c3bfe025b94ece8ccc3128650cb6eae6554cc37316f8770"
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-26-native-postgres.json",
+      "sha256": "ac49d147410ecb84b9a04aa4a0b67e4d337ec6a1a531ebe29feeb7cc430ce848"
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-26-checks.json",
+      "sha256": "0640ef56070526c20e361769202a4e9f45befc0beb7221e430323b7778c96708"
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-26-checks.py",
+      "sha256": "83b209d7268ef7c317ce2a0e6c8798b05887d7590d3bb185e5c176ef7e545159"
+    },
+    {
+      "path": "docs/implementation/evidencias/mcp-26-r26baseline.json",
+      "sha256": "0c38cd9d3d3de516f76359936a3ea21bc0e6996d62b3a46771f5f4b3696c6380"
+    },
+    {
+      "path": "docs/implementation/evidencias/mcp-26-r26final0.json",
+      "sha256": "6eaff7fcfe88fd8870f80d42429c796783964f0bc2da85970dd68f8a0b4c1e77"
+    },
+    {
+      "path": "docs/implementation/evidencias/mcp-26-r26final1.json",
+      "sha256": "ad7544c09158f398078e743d8fee2261b42a60290c550af597e4d832247fd3b6"
+    },
+    {
+      "path": "docs/implementation/evidencias/mcp-26-r26finalSql.json",
+      "sha256": "05f9436ab9e4faabba0eb4ae76dc124978862672cc02ffe0723d0ccc00353bf2"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261005235546_editorial_selection.sql",
+      "sha256": "b5ebb15a48d98b902ded3c8e69c94b1b2b8bc1eec59d07716e1efcfcb0b7013f"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014101000_garimpa_tenant_rls_scoped.sql",
+      "sha256": "57e737818e44266dc7e59d6a4b8637cd3d83fba1637a0cc0837df3674c88e8a0"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014102000_garimpa_price_evidence_canonical.sql",
+      "sha256": "5663b934ce2240efcafa8b069e54376f08cc392ec07d87d62d4c4c98deceb2b6"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014103000_garimpa_rubric_assessment_shadow.sql",
+      "sha256": "fc2ebbd70c0c31f9a416b2026d1a0789aafa908b68031710fec41ba5e7483139"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014104000_garimpa_audience_policy_and_opportunity.sql",
+      "sha256": "f7891a8b351f3efe3da146e520c1a2a0c2c05afd0a6e8d848c2f34302331341a"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014105000_garimpa_commerce_and_campaign_link.sql",
+      "sha256": "0ac1aac79763568890d0ea5a6f8785898f338da0d981d3e49aa87e569763e648"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014106000_garimpa_commercial_financial_ledger.sql",
+      "sha256": "64e3695d1defc2dc28b69fa61f3ea2eea71a2d8bffb3f4aac0475079618ed038"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014107000_garimpa_click_attribution_and_channels.sql",
+      "sha256": "45da44abba0327b4d7c78c39f3f9ba29040f937ff291a6f9aa2961ba27686da9"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014108000_garimpa_policy_experiments.sql",
+      "sha256": "4dee052305d5d0d10a73e7139de358f2bfc9af54b9de5ae53dec4cb7e12e0f08"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014109000_garimpa_dispatch_jobs_outbox.sql",
+      "sha256": "89165a429250169ec34f11bd7db62d306fdcb429aacaa70ac6bb9a0e481225ff"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014110000_garimpa_saas_onboarding_entitlements.sql",
+      "sha256": "0c247052eb42a56ac97edf845fda5d548f0c7194d5745d4d51ed2739d9978a7b"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015021300_garimpa_verified_workflows.sql",
+      "sha256": "f2566ff5f61b5ad605bb28ae40ed7062e81f773ca3937fe22311730525182038"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23"
+    }
+  ],
+  "testBinary": {
+    "package": "@embedded-postgres/linux-x64",
+    "packageVersion": "17.6.0-beta.15",
+    "postgresVersion": "17.6",
+    "npmIntegrity": "sha512-f04/oSB35rc2SB4WbJLvUGeh8eNnnwbsIkLXLf86Bi43vOc7H07Znx1zROwpi08mGkUFmNrpAcXyL4Yu8YRgMw==",
+    "archiveSha256": "8d14394e1092b8bc659943966a5d1cd19b1bcc34ab02e135ed7c51fe60ba9d12"
+  }
+}

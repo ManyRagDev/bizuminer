@@ -1,27 +1,31 @@
 /**
- * CLI de varredura ao vivo: /ofertas → InMemoryStore + resumo no console.
- *
- * Uso: node --experimental-strip-types bin/sweep.ts [--pages N] [--min-discount 0.3]
- *
- * Desde E0 (25/08/2026) o acesso automatizado ao Mercado Livre é controlado
- * por kill switch: a varredura só executa quando `ML_AUTOMATED_CAPTURE_ENABLED
- * = true` E `NODE_ENV = development`. Sem isso, o processo aborta ANTES de
- * criar `capture_run` e ANTES de qualquer requisição de rede — sem registro
- * falso e sem scrape. O parser puro e as fixtures continuam em outro caminho.
- *
- * Sem banco configurado, o store é em memória (o dado desta execução é
- * descartado). Serve para validar o pipeline ponta a ponta contra o site real.
+ * CLI legado de ML: recusa permanente antes das importações operacionais.
+ * Use a extensão BizuMiner ou o bloco manual no painel (OS-032).
  */
 
-import { spawn } from "node:child_process";
-import path from "node:path";
-import { MercadoLivreDealsAdapter } from "../../capture/src/adapters/mercadolivre/deals.ts";
 import { mlAutomatedCaptureEnabled } from "../../capture/src/automated-capture.ts";
-import { sweep } from "../src/ingest.ts";
-import { InMemoryStore } from "../src/store.ts";
-import { PostgresStore } from "../src/pg-store.ts";
 import type { CaptureContext, Credential } from "../../capture/src/types.ts";
 import type { OfferStore } from "../src/store.ts";
+
+// Nenhuma flag, consentimento ou argumento reabre esta entrada.
+if (!mlAutomatedCaptureEnabled()) {
+  console.log("CAPTURE_FAILURE=" + JSON.stringify({
+    version: 1,
+    marketplace: "mercadolivre",
+    kind: "manual_capture_only",
+  }));
+  console.error("manual_capture_only: use a extensão BizuMiner ou importe o bloco manual no painel.");
+  process.exit(1);
+}
+
+// Código legado preservado; só seria carregado após o gate, sempre falso.
+const { spawn } = await import("node:child_process");
+const { default: path } = await import("node:path");
+const { MercadoLivreDealsAdapter } = await import("../../capture/src/adapters/mercadolivre/deals.ts");
+const { CaptureError } = await import("../../capture/src/errors.ts");
+const { sweep } = await import("../src/ingest.ts");
+const { InMemoryStore } = await import("../src/store.ts");
+const { PostgresStore } = await import("../src/pg-store.ts");
 
 const args = process.argv.slice(2);
 const flag = (name: string): string | undefined => {
@@ -32,17 +36,6 @@ const flag = (name: string): string | undefined => {
 const pages = Number(flag("pages") ?? 1);
 const minDiscount = flag("min-discount") ? Number(flag("min-discount")) : undefined;
 const operationBatchId = flag("operation-batch");
-
-// Kill switch E0: aborta antes de instanciar adapter/store e de qualquer rede.
-if (!mlAutomatedCaptureEnabled()) {
-  console.error(
-    "[bloqueado] A varredura automatizada do Mercado Livre está desligada (ML_AUTOMATED_CAPTURE_ENABLED).\n" +
-      "Nenhuma requisição foi feita e nenhuma rodagem foi registrada.\n" +
-      "Para liberar explicitamente em desenvolvimento: ML_AUTOMATED_CAPTURE_ENABLED=true NODE_ENV=development node --experimental-strip-types bin/sweep.ts\n" +
-      "O caminho vigente de captura é o manual (bookmarklet/extensão no painel).",
-  );
-  process.exit(1);
-}
 
 const ctx: CaptureContext = {
   runId: `sweep-${Date.now()}`,
@@ -77,7 +70,16 @@ const summary = await sweep(
     operationBatchId,
   },
   ctx,
-);
+).catch(async (error: unknown) => {
+  // Machine contract: no vendor URL, body, session or credential crosses the process boundary.
+  console.log("CAPTURE_FAILURE=" + JSON.stringify({
+    version: 1,
+    marketplace: "mercadolivre",
+    kind: error instanceof CaptureError ? error.kind : "internal",
+  }));
+  if (pg) await pg.close();
+  process.exit(1);
+});
 
 console.log("\n=== Resumo ===");
 console.log(`marketplace:    ${summary.marketplace}`);

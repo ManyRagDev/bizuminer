@@ -116,3 +116,23 @@ input#code {
 }
 
 footer { display: flex; justify-content: flex-end; }
+
+.env-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-body);
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.env-row select {
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}

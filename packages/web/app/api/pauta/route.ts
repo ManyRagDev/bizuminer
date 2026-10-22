@@ -1,3 +1,4 @@
+import { inAccountScope } from "../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../lib/api-auth";
 import { getPublishedEditorialSelection } from "../../../lib/editorial-selection-db";
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ return inAccountScope(check.context, async () => {
 
   const selection = await getPublishedEditorialSelection("pauta");
   const host = shareBaseUrl().replace(/\/$/, "");
@@ -30,4 +32,6 @@ export async function GET(request: NextRequest) {
     selectionVersion: selection.version, validUntil: selection.validUntil,
     heroProductIds: selection.heroProductIds, heroValidUntil: selection.heroValidUntil,
   }, { headers: { "Cache-Control": "no-store" } });
+
+ });
 }

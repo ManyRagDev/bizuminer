@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-16T01:19:25.606981+00:00",
+  "status": "LOCAL_CONTINUITY_REPAIRS_VERIFIED_REMOTE_HOMOLOGATION_BLOCKED",
+  "productionApproved": false,
+  "productionWrites": 0,
+  "deploys": 0,
+  "githubWrites": 0,
+  "audit": "28-AUDITORIA-INDEPENDENTE-FINALIZACAO.md",
+  "rolloutManifestSha256": "f099288d245ac2c308f4298cdccf80e3bffecf4a6cef8f099f2aad0c3c5a7c51",
+  "rolloutCatalogueSha256": "b3aa87ae61b76177b6dc3bc02ede97ccaf165fab7b89e6825e9595bd5dd5ec74",
+  "compatibilitySources": 58,
+  "units": [
+    {
+      "phase": "foundation",
+      "file": "20261015194719_garimpa_v2_foundation.sql",
+      "sha256": "579fa86e8696d7bfcee701ed61e6c8b43b9538dfafa93f146883633bd3682c57"
+    },
+    {
+      "phase": "expansion",
+      "file": "20261015194748_garimpa_v2_expansion.sql",
+      "sha256": "576784e3157c080051e1b23fa52c517530b93618b7ebe98adb2f2bb6931d2664"
+    },
+    {
+      "phase": "scoped_cutover",
+      "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
+      "sha256": "bb7fec9f4fc8c73c8bb9762d30824e589af7da093b102791b68edb2787cd2f37"
+    }
+  ],
+  "historicalV2MigrationFilesUnchanged": 14,
+  "preservedPreviousCandidate": "rollout-27-aprovado/",
+  "verification": {
+    "nativeRolloutChecks": 26,
+    "nativeLocalApplications": 6,
+    "nativeOperationalChecks": 21,
+    "generalCommandsPassed": 26,
+    "generalCommandsFailed": 0,
+    "sqlSuitesPassed": 21,
+    "webTestsPassed": 379,
+    "persistenceTestsPassed": 36,
+    "typechecks": [
+      "web",
+      "persistence"
+    ],
+    "webBuildPassed": true,
+    "rolloutVerifier": "PASS"
+  },
+  "evidence": [
+    "execucao-28-replacement-native.json",
+    "execucao-28-operational-native.json",
+    "execucao-28-final-checks.json",
+    "execucao-28-rollout-verify.json",
+    "execucao-28-acessos.json",
+    "execucao-28-proveniencia-github.json",
+    "execucao-28-fontes-runtime.json"
+  ],
+  "sourceSnapshotDigest": "932ed101c7d08f3739657efe150e08839e08dfbc36fc049aef331c21d061dd5c",
+  "blockers": [
+    "Supabase MCP tools unavailable in current session; active baseline not reconfirmed",
+    "Vercel linked project/team forbidden403; no candidate deployment confirmed",
+    "Supabase staging/Auth/Storage/Supavisor/recovery not homologated",
+    "Published Actions revision differs from local candidate; compatible commit/ref must be published before C"
+  ],
+  "capabilityLimit": "Automatic capture for external tenants requires validated per-account credential resolution; house credentials never substituted",
+  "retiredLegacyCommands": [
+    "curate-initial-catalog",
+    "purge-catalog",
+    "cleanup-lifecycle",
+    "verify-tenant-isolation"
+  ],
+  "intermediateFailures": {
+    "preservedGeneralRun": "execucao-28-fechamento-checks.json",
+    "preservedNativeRun": "execucao-28-operational-native-intermediario-1.json",
+    "notes": [
+      "Four intermediate general failures: temporary unsealed catalogue regeneration and stronger pending authorization expectation",
+      "Native subprocess test used URL pathname with encoded space; fixed with fileURLToPath",
+      "Initial CJS/ESM test import error retained in tool conversation; no original raw file fabricated"
+    ],
+    "finalFailures": 0
+  }
+}

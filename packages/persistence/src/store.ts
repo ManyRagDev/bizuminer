@@ -69,6 +69,7 @@ export interface CaptureRunRecord {
 
 export type StartCaptureRunInput = Pick<CaptureRunRecord, "tenantId" | "marketplace" | "startedAt" | "collectorRunId" | "parameters">;
 export interface FinishCaptureRunInput {
+  readonly tenantId?: string; // Explicit scope for callers; legacy house callers remain compatible.
   readonly finishedAt: Date;
   readonly status: "ok" | "error";
   readonly itemsCaptured: number;

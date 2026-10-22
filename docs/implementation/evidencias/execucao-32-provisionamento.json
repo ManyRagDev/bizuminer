@@ -1,0 +1,86 @@
+{
+  "at": "2026-10-16T03:10:21.866282+00:00",
+  "purpose": "Provision isolated staging and finish deployment; preserve Google login",
+  "activeProject": "spbuwcwmxlycchuwhfir",
+  "branches": [],
+  "managementServer": {
+    "name": "supabase-management",
+    "url": "https://mcp.supabase.com/mcp?features=account,branching",
+    "configured": true,
+    "originalProjectConnectionPreserved": true,
+    "cliReportedOAuthSuccess": true,
+    "managementToolsUsed": false,
+    "explicitScopeConsentPending": true,
+    "toolsLoaded": true,
+    "availableTools": [
+      "get_cost",
+      "confirm_cost",
+      "create_branch",
+      "create_project",
+      "list_projects",
+      "list_organizations"
+    ]
+  },
+  "autoReview": {
+    "broadOAuthNavigation": "rejected: excessive scopes including secrets/database/storage",
+    "reducedOAuthCommand": "rejected before execution: explicit consent required for organizations:read, projects:read, projects:write",
+    "bypassAttempted": false
+  },
+  "pendingQuestions": [
+    "Explicit consent to organizations:read, projects:read, projects:write in current organization for staging",
+    "Free-only or temporary spending up to USD1 without plan upgrades/add-ons"
+  ],
+  "applicationAuthentication": {
+    "provider": "google",
+    "entry": "packages/web/app/entrar/google-button.tsx",
+    "callback": "packages/web/app/auth/callback/route.ts",
+    "modified": false
+  },
+  "frozenCandidate": {
+    "manifestSha256": "dafa91ab8231fa0ebed32152412586100ec3c499dfa52f5703bf1d50493ab7eb",
+    "runtimeFilesUnchanged": 462,
+    "units": [
+      {
+        "phase": "foundation",
+        "file": "20261015194719_garimpa_v2_foundation.sql",
+        "sha256": "33e03729f9e058169844fc353cba083cb3d5fe270b98ea890dafd0fb0a87c40c",
+        "lockTimeout": "5s",
+        "statementTimeout": "45s",
+        "manualTransactionSha256": "cf3b322232f1109fcf8a9bf40945685c3a8bab120f1970c6a3d8e30a12079069",
+        "transactionRequired": true,
+        "dependsOn": [
+          "installedSubset"
+        ]
+      },
+      {
+        "phase": "expansion",
+        "file": "20261015194748_garimpa_v2_expansion.sql",
+        "sha256": "02810325f1eecc16dfc05121f44b75a64c5ce0655b9329f2662ffb0d74cbecaa",
+        "lockTimeout": "5s",
+        "statementTimeout": "45s",
+        "manualTransactionSha256": "298fb67887ef8849734f4be4e702885f4189ed2e9528feb45f8c5de185bcc45b",
+        "transactionRequired": true,
+        "dependsOn": [
+          "foundation"
+        ]
+      },
+      {
+        "phase": "scoped_cutover",
+        "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
+        "sha256": "1114987e4108745492af6c3457ec6850a999ed16be79d815d001c4b156669a21",
+        "lockTimeout": "5s",
+        "statementTimeout": "45s",
+        "manualTransactionSha256": "c7719a418e873a04afdc8cf2faa5d7eda8690fdd3d4204c557b042889d7a3857",
+        "transactionRequired": true,
+        "dependsOn": [
+          "expansion"
+        ]
+      }
+    ]
+  },
+  "newProductionMigrations": 0,
+  "newDeployments": 0,
+  "newPaidResources": 0,
+  "status": "AWAITING_EXPLICIT_SCOPE_CONSENT_AND_COST_PREFERENCE",
+  "pricingReference": "https://supabase.com/docs/guides/platform/manage-your-usage/branching"
+}

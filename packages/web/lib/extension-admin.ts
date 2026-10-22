@@ -6,6 +6,7 @@
  */
 
 import { db } from "./db.ts";
+import { withOwnerAccountDb } from "./owner-account-db.ts";
 
 export interface DeviceRow {
   id: string;
@@ -28,9 +29,8 @@ export interface AffiliateMetricRow {
   devices: number;
 }
 
-export async function listDevices(appUserId: string): Promise<DeviceRow[]> {
-  const sql = db();
-  try {
+export async function listDevices(appUserId: string, factory: typeof db=db): Promise<DeviceRow[]> {
+  return withOwnerAccountDb(typeof appUserId === "undefined" ? null : appUserId, async (sql,affiliateId) => {
     const rows = await sql<{
       id: string;
       affiliate_id: string;
@@ -45,7 +45,7 @@ export async function listDevices(appUserId: string): Promise<DeviceRow[]> {
       from garimpa.extension_device
       where exists (
           select 1 from garimpa.affiliate_membership am
-          where am.affiliate_id = garimpa.extension_device.affiliate_id
+          where am.affiliate_id = garimpa.extension_device.affiliate_id and am.affiliate_id=${affiliateId} and am.role='owner' and am.revoked_at is null
             and am.app_user_id = ${appUserId}
         )
       order by created_at desc
@@ -60,55 +60,46 @@ export async function listDevices(appUserId: string): Promise<DeviceRow[]> {
       revokedAt: row.revoked_at ? new Date(row.revoked_at).toISOString() : null,
       createdAt: new Date(row.created_at).toISOString(),
     }));
-  } finally {
-    await sql.end();
-  }
+  }, factory);
 }
 
-export async function revokeDevice(deviceId: string, appUserId: string): Promise<boolean> {
-  const sql = db();
-  try {
+export async function revokeDevice(deviceId: string, appUserId: string, factory: typeof db=db): Promise<boolean> {
+  return withOwnerAccountDb(typeof appUserId === "undefined" ? null : appUserId, async (sql,affiliateId) => {
     const rows = await sql<{ id: string }[]>`
       update garimpa.extension_device
       set revoked_at = now(), token_hash = null, token_prefix = null
       where id = ${deviceId} and revoked_at is null
         and exists (
           select 1 from garimpa.affiliate_membership am
-          where am.affiliate_id = garimpa.extension_device.affiliate_id
+          where am.affiliate_id = garimpa.extension_device.affiliate_id and am.affiliate_id=${affiliateId} and am.role='owner' and am.revoked_at is null
             and am.app_user_id = ${appUserId}
         )
       returning id
     `;
     return rows.length > 0;
-  } finally {
-    await sql.end();
-  }
+  }, factory);
 }
 
-export async function renameDevice(deviceId: string, name: string, appUserId: string): Promise<boolean> {
-  const sql = db();
-  try {
+export async function renameDevice(deviceId: string, name: string, appUserId: string, factory: typeof db=db): Promise<boolean> {
+  return withOwnerAccountDb(typeof appUserId === "undefined" ? null : appUserId, async (sql,affiliateId) => {
     const rows = await sql<{ id: string }[]>`
       update garimpa.extension_device
       set name = ${name}
       where id = ${deviceId}
         and exists (
           select 1 from garimpa.affiliate_membership am
-          where am.affiliate_id = garimpa.extension_device.affiliate_id
+          where am.affiliate_id = garimpa.extension_device.affiliate_id and am.affiliate_id=${affiliateId} and am.role='owner' and am.revoked_at is null
             and am.app_user_id = ${appUserId}
         )
       returning id
     `;
     return rows.length > 0;
-  } finally {
-    await sql.end();
-  }
+  }, factory);
 }
 
 /** Métricas por afiliado (cliques/publicações/dispositivos) — sem token bruto. */
-export async function affiliateMetrics(): Promise<AffiliateMetricRow[]> {
-  const sql = db();
-  try {
+export async function affiliateMetrics(factory: typeof db=db): Promise<AffiliateMetricRow[]> {
+  return withOwnerAccountDb(null, async (sql,affiliateId) => {
     const rows = await sql<{
       affiliate_id: string;
       display_name: string;
@@ -124,7 +115,7 @@ export async function affiliateMetrics(): Promise<AffiliateMetricRow[]> {
                 join garimpa.publication p on p.id = c.publication_id
                 where p.affiliate_id = a.id and c.clicked_at >= now() - interval '7 days') as clicks_7d,
              (select count(*)::int from garimpa.extension_device d where d.affiliate_id = a.id) as devices
-      from garimpa.affiliate_account a
+      from garimpa.affiliate_account a where a.id=${affiliateId}
       order by (a.id = 'aff_local') desc, a.created_at asc
     `;
     return rows.map((row) => ({
@@ -136,7 +127,5 @@ export async function affiliateMetrics(): Promise<AffiliateMetricRow[]> {
       clicks7d: row.clicks_7d,
       devices: row.devices,
     }));
-  } finally {
-    await sql.end();
-  }
+  }, factory);
 }

@@ -1,3 +1,4 @@
+import { prioritizeMonitoringQueue } from "./monitoring-priority.ts";
 /** Acompanhamento do catálogo: decisão reproduzível, sem confundir interesse com evidência. */
 export type MonitorMarketplace = "mercadolivre" | "shopee" | "aliexpress";
 export type MonitorTier = "watch" | "approved" | "engaged" | "candidate" | "archive";
@@ -9,6 +10,7 @@ export interface MonitoringCandidate {
   readonly activeWatches: number;
   readonly clicks7d: number;
   readonly curationStatus: string | null;
+  readonly opportunityState?: "prioritized" | "monitored" | "candidate" | "held" | "archived";
 }
 
 export interface MonitoringDecision {
@@ -24,7 +26,9 @@ export interface MonitoringDecision {
 export function monitoringDecision(candidate: MonitoringCandidate, now = new Date()): MonitoringDecision {
   const ageHours = Math.max(0, (now.getTime() - candidate.lastObservedAt.getTime()) / 3_600_000);
   const tier: MonitorTier = candidate.activeWatches > 0 ? "watch"
+    : candidate.opportunityState === "prioritized" ? "watch"
     : candidate.curationStatus === "approved" ? "approved"
+    : candidate.opportunityState === "monitored" ? "approved"
     : candidate.clicks7d > 0 ? "engaged"
     : candidate.curationStatus === "pending" && ageHours <= 14 * 24 ? "candidate"
     : "archive";
@@ -80,15 +84,10 @@ export function monitoringQueue(
     }
   };
   take("watch", cap);
-  // Uma pequena reserva constrói histórico de candidatos e não deixa a fila
-  // aprovada consumir 100% do orçamento por meses. Interesse explícito vence.
-  if (cap >= 10) {
-    take("candidate", Math.floor(cap * 0.1));
-    take("engaged", Math.floor(cap * 0.1));
-  }
-  for (const decision of due) {
-    if (chosen.length >= cap) break;
-    if (!taken.has(decision.productId)) chosen.push(decision);
-  }
+  const remaining=due.filter(d=>!taken.has(d.productId)).map(d=>({...d,id:d.productId,observationCount:d.tier==='candidate'?1:2}));
+  // Keep existing 10% candidate policy and explicit watches; use the same budget allocator as radar.
+  const allocated=prioritizeMonitoringQueue(remaining,cap-chosen.length,cap>=10?0.1:0);
+  chosen.push(...allocated);
+
   return chosen;
 }

@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-16T02:13:07.631650+00:00",
+  "result": "PASS_LOCAL_VERIFICATION",
+  "productionApproved": false,
+  "newProductionMigrations": 0,
+  "newDeployments": 0,
+  "nativeResults": 39,
+  "operationalResults": 21,
+  "sealedSqlSuites": 21,
+  "webTests": 379,
+  "broadOriginal": {
+    "passedCommands": 25,
+    "failedCommands": 1,
+    "failure": "web-tests under restricted sandbox",
+    "preserved": true
+  },
+  "webRerun": {
+    "exitCode": 0,
+    "tests": 379,
+    "log": "execucao-31-web-unsandboxed.log"
+  },
+  "captureExtensionCommands": 4,
+  "typechecks": "web/persistence/capture/extension PASS",
+  "builds": "Node22 local and Node24.11.0 isolated copy PASS; existing dependency installs, no remote services",
+  "runtimeSourcesFrozen": 462,
+  "sourceArchive": "docs/implementation/evidencias/bizuminer-release31-r3.tar.gz",
+  "sourceArchiveSha256": "7fcbb0dd4a541cb6bd400f96877e2dbe4eff20a36f7f458023f40801eb605040",
+  "manifestSha256": "dafa91ab8231fa0ebed32152412586100ec3c499dfa52f5703bf1d50493ab7eb",
+  "readiness": "isolated rehearsal only; Supabase staging/cost confirmation and operational homologation unresolved",
+  "notProven": [
+    "managed postgres DDL role",
+    "Auth/Storage/Supavisor",
+    "deployed candidate/writers",
+    "remote recovery and performance",
+    "production migration approval",
+    "commercial gates"
+  ]
+}

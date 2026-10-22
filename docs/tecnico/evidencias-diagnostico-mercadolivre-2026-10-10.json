@@ -1,0 +1,128 @@
+{
+  "investigatedCaptureBatchId": "f09adc8c-eb71-4a4e-8872-4f741ad83d45",
+  "investigatedCaptureRunId": "055f72b6-6130-4eb3-bd3d-70bd4934e0bc",
+  "originalStartedAtBrt": "2026-10-10T17:50:35.665-03:00",
+  "localNodeReproduction": {
+    "startedAt": "2026-10-10T20:59:12.264Z",
+    "finishedAt": "2026-10-10T20:59:12.636Z",
+    "requestedUrl": "https://www.mercadolivre.com.br/ofertas",
+    "response": {
+      "status": 200,
+      "redirected": true,
+      "finalOrigin": "https://www.mercadolivre.com.br",
+      "finalPath": "/gz/account-verification",
+      "finalQueryKeys": [
+        "go",
+        "tid"
+      ],
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 41327,
+      "sha256": "303d43f1ca86c3a7ad96150d20776fd162cc5dbaa8cd2c7decdd4c00e96efee8",
+      "title": "Mercado Libre"
+    },
+    "parser": {
+      "offers": 0,
+      "oldCardSignatureCount": 0,
+      "polyCardClassAttributes": [],
+      "titleClassCount": 0,
+      "currentPriceClassCount": 0,
+      "reaisAriaCount": 0
+    },
+    "pageSignals": {
+      "accountVerification": true,
+      "captcha": false,
+      "robot": false,
+      "offersWord": true,
+      "scriptCount": 24
+    }
+  },
+  "firstHop": {
+    "startedAt": "2026-10-10T21:04:44.839Z",
+    "finishedAt": "2026-10-10T21:04:45.040Z",
+    "requestedUrl": "https://www.mercadolivre.com.br/ofertas",
+    "status": 302,
+    "location": {
+      "origin": "https://www.mercadolivre.com.br",
+      "path": "/gz/account-verification",
+      "queryKeys": [
+        "go",
+        "tid"
+      ],
+      "returnDestinationPath": "/ofertas"
+    },
+    "redirectsFollowed": 0,
+    "cookiesSent": false,
+    "authSent": false
+  },
+  "visibleAccessPageText": "Olá! Para continuar, acesse sua conta",
+  "normalBrowserComparison": {
+    "observedAt": "2026-10-10T21:02:43.337Z",
+    "url": "https://www.mercadolivre.com.br/ofertas",
+    "title": "Ofertas | Mercadolivre Brasil",
+    "accountMenu": [
+      "Crie a sua conta",
+      "Entre"
+    ],
+    "loginPerformed": false,
+    "captchaSolved": false,
+    "cardCount": 48,
+    "oldCardSignatureMatches": 48,
+    "titleAnchorMatches": 48,
+    "currentMoneyMatches": 48,
+    "cardClass": "andes-card poly-card poly-card--grid-card poly-card--xlarge andes-card--flat andes-card--primary andes-card--padding-0",
+    "sampleFile": "docs/tecnico/evidencias-cards-mercadolivre-2026-10-10.html",
+    "scope": "Rendered browser DOM, not a raw Node/server HTML response. No product detail URL was opened."
+  },
+  "offlineReplay": {
+    "executedAt": "2026-10-10T21:04:39.541Z",
+    "networkRequests": 0,
+    "databaseWrites": 0,
+    "aiCalls": 0,
+    "challengeReplay": {
+      "mockFetchCalls": 1,
+      "actualError": {
+        "kind": "malformed_response",
+        "message": "nenhuma oferta extraída da página de ofertas — layout mudou?",
+        "retryable": false
+      },
+      "matchesPersisted1750Message": true
+    },
+    "controls": {
+      "historicalFixture": {
+        "sourceDate": "2026-08-18",
+        "offers": 3
+      },
+      "currentDomExcerpts": {
+        "sourceDate": "2026-10-10",
+        "offers": 3,
+        "priceCents": [
+          89910,
+          50670,
+          272700
+        ],
+        "originalPriceCents": [
+          185500,
+          79900,
+          384900
+        ],
+        "scope": "Three minimal sanitized browser DOM excerpts, not a complete raw server response; catalog versus listing identity not validated."
+      }
+    }
+  },
+  "diagnosis": {
+    "reproducedFailure": "Anonymous Node request redirected to account verification; final HTTP 200 treated as offers HTML; zero parsed offers misclassified as possible layout change.",
+    "layoutHypothesis": "Not supported as the cause of the reproduced failure. Current browser card signatures and three minimal excerpts remain compatible.",
+    "historicalConfidence": "Strong causal reproduction nine minutes after the failed capture, but original 17:50 response body and final URL were not retained.",
+    "exactProviderTrigger": "Unknown. Login page alone does not prove an IP block, CAPTCHA, account problem, or a particular anti-automation mechanism.",
+    "authScope": "A normal browser displaying sign-in links received offers; do not claim login is universally mandatory.",
+    "serverCollectorUsesBrowserSession": false
+  },
+  "investigationSideEffects": {
+    "databaseWrites": 0,
+    "productsIngested": 0,
+    "aiCalls": 0,
+    "deploymentChanges": 0,
+    "functionalCodeChanges": 0
+  },
+  "privacy": "No cookie values, raw redirect query values, account identifiers, credential values, or full HTML retained in this evidence file."
+}

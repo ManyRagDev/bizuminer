@@ -1,3 +1,5 @@
+import postgres from "postgres";
+import { resolveWorkerCredential, accountCaptureAdapter } from "../src/account-credentials.ts";
 /**
  * CLI de varredura da AliExpress: Open Platform oficial → PostgresStore.
  *
@@ -34,6 +36,8 @@ const flag = (name: string): string | undefined => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 
+const tenantId = flag("tenant") ?? "local";
+if(!/^[a-z0-9._-]{1,64}$/.test(tenantId)) throw new Error("invalid_capture_tenant");
 const pages = Number(flag("pages") ?? 1);
 const minDiscount = flag("min-discount") ? Number(flag("min-discount")) : undefined;
 const keyword = flag("keyword");
@@ -69,7 +73,7 @@ if (dryRun) {
   process.exit(0);
 }
 
-if (!aliexpressCaptureEnabled()) {
+if (process.env.ALIEXPRESS_CAPTURE_ENABLED !== "true") {
   console.error(
     "[bloqueado] A captura da AliExpress está desligada.\n" +
       "Nenhuma requisição foi feita e nenhuma rodagem foi registrada.\n\n" +
@@ -88,6 +92,8 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+const credentialSql=postgres(process.env.DATABASE_URL!,{prepare:false,max:1,ssl:process.env.DATABASE_URL!.includes("localhost")?false:{rejectUnauthorized:false}});
+try {
 const ctx: CaptureContext = {
   runId: `sweep-aliexpress-${Date.now()}`,
   log: (e) => {
@@ -97,18 +103,11 @@ const ctx: CaptureContext = {
   },
 };
 
-const cred: Credential = {
-  marketplace: "aliexpress",
-  secret: {
-    appKey: process.env.ALIEXPRESS_APP_KEY!,
-    appSecret: process.env.ALIEXPRESS_APP_SECRET!,
-    trackingId: process.env.ALIEXPRESS_TRACKING_ID!,
-  },
-};
+const cred = await resolveWorkerCredential(credentialSql,tenantId,"aliexpress");
 
 const store = new PostgresStore({ connectionString: process.env.DATABASE_URL });
 console.log("store: Postgres (Supabase, schema garimpa)");
-const adapter = new AliExpressAdapter();
+const adapter = accountCaptureAdapter(credentialSql,tenantId,new AliExpressAdapter());
 
 console.log(`Executando plano ${plan.id} na AliExpress (${entriesForMode(plan, mode).length} consultas, até ${pages} página(s) por consulta)...`);
 const summary = await runCapturePlan(
@@ -116,7 +115,7 @@ const summary = await runCapturePlan(
   cred,
   store,
   {
-    tenantId: "local",
+    tenantId,
     plan,
     mode,
     maxPagesPerQuery: pages,
@@ -137,7 +136,7 @@ console.log(`mudanças preço: ${summary.priceChanges}`);
 console.log(`limitados:      ${summary.itemsSkippedByPolicy}`);
 console.log(`duração:        ${summary.durationMs}ms`);
 
-const activity = await store.productActivity("local", null);
+const activity = await store.productActivity(tenantId, null);
 console.log("\n=== Estado de vida do catálogo geral após o plano ===");
 console.log(`recentes (últimos 14d): ${activity.recente}`);
 console.log(`dormentes (histórico):  ${activity.dormente}`);
@@ -151,7 +150,7 @@ if (summary.queriesFailed > 0) process.exitCode = 1;
 // devolve 404 e o produto vira link morto (bug real, 28/08/2026).
 console.log("\n=== Publicações e link de saída ===");
 const links = await ensureAliExpressPublications(
-  { connectionString: process.env.DATABASE_URL, tenantId: "local" },
+  { connectionString: process.env.DATABASE_URL, tenantId },
   ctx,
 );
 console.log(`candidatos:      ${links.candidates}`);
@@ -163,7 +162,7 @@ if (args.includes("--trigger-triage")) {
   const triageScript = path.resolve(import.meta.dirname, "../../web/bin/run-triage.ts");
   const child = spawn(
     process.execPath,
-    ["--env-file=../web/.env.local", "--experimental-strip-types", triageScript, "--limit", "100"],
+    ["--experimental-strip-types", triageScript, "--limit", "100", "--tenant", tenantId],
     { stdio: "inherit", cwd: path.resolve(import.meta.dirname, "..") }
   );
   await new Promise<void>((resolve) => {
@@ -177,3 +176,5 @@ if (args.includes("--trigger-triage")) {
     });
   });
 }
+
+} finally {await credentialSql.end();}

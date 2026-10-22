@@ -1,0 +1,47 @@
+{
+  "project": "spbuwcwmxlycchuwhfir",
+  "authorization": "User explicitly authorized complete sequence on connected project",
+  "attempts": [
+    {
+      "order": 1,
+      "path": "packages/persistence/supabase/migrations/20261014100000_garimpa_account_context_and_membership.sql",
+      "name": "garimpa_account_context_and_membership",
+      "sourceSha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"success\":true}"
+          }
+        ]
+      }
+    },
+    {
+      "order": 2,
+      "path": "packages/persistence/supabase/migrations/20261014101000_garimpa_tenant_rls_scoped.sql",
+      "name": "garimpa_tenant_rls_scoped",
+      "sourceSha256": "57e737818e44266dc7e59d6a4b8637cd3d83fba1637a0cc0837df3674c88e8a0",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "This action was rejected due to unacceptable risk.\nReason: Esta migração altera de forma ampla e persistente as políticas RLS, permissões, triggers e acesso de todas as tabelas tenantizadas em um banco ativo, podendo interromper ou expor operações; a autorização para aplicar a sequência não torna este passo amplo e potencialmente disruptivo uma alteração estreitamente delimitada sem staging validado.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval."
+          }
+        ],
+        "isError": true
+      }
+    },
+    {
+      "purpose": "Protect only new empty affiliate_secret; does not execute rejected broad migration 2",
+      "path": "packages/persistence/supabase/migrations/20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"success\":true}"
+          }
+        ]
+      }
+    }
+  ]
+}

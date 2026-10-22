@@ -22,12 +22,21 @@ function requireServerEnv(): void {
   }
 }
 
+/** Opções padrão para persistência de sessão (1 ano) em dispositivos móveis e desktop. */
+export const SESSION_COOKIE_OPTIONS = {
+  maxAge: 60 * 60 * 24 * 365,
+  sameSite: "lax" as const,
+  path: "/",
+};
+
 /** Browser: só para iniciar o fluxo OAuth (botão "Continuar com Google"). */
 export function createBrowserSupabase() {
   if (!PUBLIC_URL || !PUBLIC_KEY) {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ausentes");
   }
-  return createBrowserClient(PUBLIC_URL, PUBLIC_KEY);
+  return createBrowserClient(PUBLIC_URL, PUBLIC_KEY, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
+  });
 }
 
 /**
@@ -38,11 +47,12 @@ export async function createPageSupabase() {
   requireServerEnv();
   const store = await cookies();
   return createServerClient(SUPABASE_URL!, SUPABASE_KEY!, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll: () => store.getAll(),
       setAll: (cookiesToSet) => {
         try {
-          cookiesToSet.forEach(({ name, value, options }) => store.set(name, value, options));
+          cookiesToSet.forEach(({ name, value, options }) => store.set(name, value, { ...SESSION_COOKIE_OPTIONS, ...options }));
         } catch {
           // setAll durante render de Server Component: o Proxy escreve na resposta final.
         }
@@ -60,11 +70,12 @@ export async function createPageSupabase() {
 export function createRouteSupabase(request: NextRequest, response: NextResponse) {
   requireServerEnv();
   return createServerClient(SUPABASE_URL!, SUPABASE_KEY!, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (cookiesToSet, headers) => {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, { ...SESSION_COOKIE_OPTIONS, ...options }));
         Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
       },
     },
@@ -80,12 +91,13 @@ export function createMiddlewareSupabase(request: NextRequest) {
   requireServerEnv();
   let supabaseResponse = NextResponse.next({ request });
   const supabase = createServerClient(SUPABASE_URL!, SUPABASE_KEY!, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (cookiesToSet, headers) => {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
+        cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, { ...SESSION_COOKIE_OPTIONS, ...options }));
         Object.entries(headers).forEach(([key, value]) => supabaseResponse.headers.set(key, value));
       },
     },
@@ -104,10 +116,10 @@ export function attachSink(sink: NextResponse, response: NextResponse): NextResp
     response.cookies.set(cookie.name, cookie.value, {
       httpOnly: cookie.httpOnly,
       secure: cookie.secure,
-      sameSite: cookie.sameSite,
-      path: cookie.path,
+      sameSite: cookie.sameSite ?? SESSION_COOKIE_OPTIONS.sameSite,
+      path: cookie.path ?? SESSION_COOKIE_OPTIONS.path,
       expires: cookie.expires,
-      maxAge: cookie.maxAge,
+      maxAge: cookie.maxAge ?? SESSION_COOKIE_OPTIONS.maxAge,
       domain: cookie.domain,
     });
   }

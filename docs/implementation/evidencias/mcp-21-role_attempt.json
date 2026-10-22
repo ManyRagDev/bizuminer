@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"error\":{\"name\":\"HttpException\",\"message\":\"Failed to run sql query: ERROR:  42501: permission denied to set role \\\"garimpa_app\\\"\\n\"}}"
+    }
+  ],
+  "isError": true
+}

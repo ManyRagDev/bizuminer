@@ -1,4 +1,6 @@
-import { sameOfferConfigurationSql } from "./offer-history.ts";
+import { currentAccount, scopedTenantId } from "./account-scope.ts";
+import { accountDatabase } from "./database-pool.ts";
+import { sameOfferConfigurationSql, projectConservativePriceEvidence } from "./offer-history.ts";
 import postgres from "postgres";
 import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "./catalog-policy.ts";
 import { publishedEditorialStateKey, type PublishedEditorialSelection } from "./editorial-selection.ts";
@@ -10,7 +12,7 @@ import { parseProductSlug, slugCaseSql } from "./marketplaces.ts";
 
 /**
  * Acesso de leitura/escrita do web ao schema garimpa (role garimpa_app).
- * Uma instância por operação — o pooler Supavisor faz o pooling.
+ * Handles por operação compartilham um pool limitado no processo.
  */
 
 export interface DealRow {
@@ -52,20 +54,24 @@ export interface DealsPage {
 }
 
 export function db() {
-  return postgres(process.env.DATABASE_URL!, {
-    prepare: false,
-    // max: 1 — cada instância abre UMA conexão. O pooler do Supabase em modo
-    // session limita a 15 sessões por projeto; instâncias com max:3 podiam
-    // multiplicar conexões sob concorrência (o /api/pauta estourou o teto ao
-    // passar de 12 para 20 produtos). Operações rodam suas queries de forma
-    // sequencial, então max:1 não custa latência e mantém o teto distante.
-    max: 1,
-    ssl: process.env.DATABASE_URL!.includes("localhost") ? false : { rejectUnauthorized: false },
-  });
+  // The shared transport has no account state; each handle authorizes its own transactions.
+  return accountDatabase(process.env.DATABASE_URL!, currentAccount());
 }
 
 /** A seleção editorial determina a ordem inicial; filtros explícitos preservam sua ordenação. */
 export async function topDeals(query: DealQuery = {}, tenantId = "local", publishedSelection?: PublishedEditorialSelection, sqlFactory: typeof db = db): Promise<DealsPage> {
+  const publicReader = await import("./public-offer-db.ts");
+  if (await publicReader.publicProjectionReady(sqlFactory)) {
+    const bounds = priceRangeForBand(query.priceBand ?? "all");
+    return publicReader.publicCatalog(tenantId, {
+      category: query.category?.trim() || null, search: query.search?.trim() || null,
+      marketplace: query.marketplace?.trim() || null, minPriceCents: bounds.min, maxPriceCents: bounds.max,
+      minRating: query.minRating ?? null, minDiscount: query.minDiscount ?? null,
+      freshnessDays: freshnessDays(query.freshness ?? "2d"), sort: query.sort ?? "signal",
+      lowestOnly: query.lowestOnly ?? false, hasHistory: query.hasHistory ?? false,
+      limit: query.limit ?? 12, offset: query.offset ?? 0,
+    }, sqlFactory);
+  }
   const limit = Math.min(Math.max(query.limit ?? 12, 1), 24);
   const offset = Math.max(query.offset ?? 0, 0);
   const sort = query.sort ?? "signal";
@@ -189,6 +195,8 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local", publis
  * curta fazia categorias sumirem.
  */
 export async function dealCategories(freshness: FreshnessBand = "7d", tenantId = "local"): Promise<string[]> {
+  const reader=await import("./public-offer-db.ts");
+  if(await reader.publicProjectionReady()) return (await reader.publicCatalogStats(tenantId,Math.min(freshnessDays(freshness)??7,7))).categories;
   const freshnessDaysValue = Math.min(freshnessDays(freshness) ?? PRODUCT_EVIDENCE_TTL_DAYS, PRODUCT_EVIDENCE_TTL_DAYS);
   const sql = db();
   try {
@@ -213,7 +221,9 @@ export async function dealCategories(freshness: FreshnessBand = "7d", tenantId =
  * Contagem de produtos por marketplace, na mesma janela de 7 dias da
  * vitrine — alimenta o filtro de plataforma ("Mercado Livre (41)").
  */
-export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantId = "local"): Promise<Record<string, number>> {
+export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantId = scopedTenantId()): Promise<Record<string, number>> {
+  const reader=await import("./public-offer-db.ts");
+  if(await reader.publicProjectionReady()) return (await reader.publicCatalogStats(tenantId,Math.min(freshnessDays(freshness)??7,7))).marketplaces;
   const freshnessDaysValue = Math.min(freshnessDays(freshness) ?? PRODUCT_EVIDENCE_TTL_DAYS, PRODUCT_EVIDENCE_TTL_DAYS);
   const sql = db();
   try {
@@ -243,6 +253,8 @@ export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantI
  * ser descartada no próximo salvamento.
  */
 export async function catalogCategories(tenantId = "local"): Promise<string[]> {
+  const reader=await import("./public-offer-db.ts");
+  if(await reader.publicProjectionReady()) return (await reader.publicCatalogStats(tenantId,7)).categories;
   const sql = db();
   try {
     const rows = await sql<{ category: string }[]>`
@@ -263,6 +275,8 @@ export async function catalogCategories(tenantId = "local"): Promise<string[]> {
 
 /** Produto individual e seus fatos de preço para a página compartilhável. */
 export async function dealDetail(slug: string, tenantId = "local", sqlFactory: typeof db = db): Promise<DealDetail | null> {
+  const publicReader = await import("./public-offer-db.ts");
+  if (await publicReader.publicProjectionReady(sqlFactory)) return publicReader.publicDealDetail(slug, sqlFactory);
   const parsed = parseProductSlug(slug);
   if (!parsed) return null;
   const { marketplace, externalId } = parsed;
@@ -486,6 +500,8 @@ export async function resolvePublicationForLink(slug: string): Promise<Affiliate
 export async function globalCategoryDesirability(
   tenantId = "local",
 ): Promise<Map<string, number>> {
+  const reader=await import("./public-offer-db.ts");
+  if(await reader.publicProjectionReady()) return categoryDesirabilityFromStats((await reader.publicCatalogStats(tenantId,7)).categoryStats);
   const sql = db();
   try {
     const rows = await sql<CategoryStats[]>`
@@ -527,14 +543,27 @@ export async function globalHeroProducts(
   max = 6,
   tenantId = "local",
 ): Promise<VitrineProduct[]> {
+  const reader=await import("./public-offer-db.ts");
+  if(await reader.publicProjectionReady()) {
+    const desirability=await globalCategoryDesirability(tenantId);
+    const rows=await reader.publicHeroCandidates(tenantId);
+    return rows.map(row=>({row,score:heroScore({priceCents:row.price_cents,previousMinPriceCents:row.previous_min_price_cents,
+     observationCount:row.observation_count,historyDays:row.history_days,lowestVerified:row.lowest_verified,ratingStar:row.rating_star,
+     salesCount:row.sales_count,evidenceObservedAt:row.evidence_observed_at,category:row.category},desirability)}))
+      .filter(e=>e.score>=7).sort((a,b)=>b.score-a.score||a.row.price_cents-b.row.price_cents).slice(0,max).map(e=>toVitrineProduct(e.row));
+  }
   const desirability = await globalCategoryDesirability(tenantId);
   const sql = db();
   try {
+    const { editorialSelectionSchemaReady } = await import("./editorial-selection-db.ts");
+    const schemaReady = await editorialSelectionSchemaReady(sql);
+    const configurationComparison = schemaReady ? sameOfferConfigurationSql("l", "o") : "false";
     const rows = await sql<(DealRow & { total_count: number })[]>`
       with latest as (
         select distinct on (product_id)
           id, product_id, price_cents, original_price_cents, claimed_discount_rate,
-          rating_star, sales_label, sales_count, observed_at
+          rating_star, sales_label, sales_count, observed_at,
+          ${sql.unsafe(schemaReady ? "offer_evidence" : "null::jsonb as offer_evidence")}
         from garimpa.price_observation
         where tenant_id = ${tenantId}
         order by product_id, observed_at desc, id desc
@@ -542,19 +571,22 @@ export async function globalHeroProducts(
         select l.product_id,
           count(o.id)::int as observation_count,
           floor(extract(epoch from (l.observed_at - min(o.observed_at))) / 86400)::int as history_days,
-          min(o.price_cents) filter (where o.id <> l.id) as previous_min_price_cents
+          min(o.price_cents) filter (where o.id <> l.id) as previous_min_price_cents,
+          bool_and(${sql.unsafe(configurationComparison)}) as history_comparable
         from latest l
         join garimpa.price_observation o
           on o.product_id = l.product_id and o.tenant_id = ${tenantId}
-        group by l.product_id, l.id, l.observed_at
+        group by l.product_id, l.id, l.observed_at, l.offer_evidence
       )
       select p.id, p.title, p.image_url, p.category, p.marketplace,
              ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug,
              l.price_cents, l.original_price_cents, l.claimed_discount_rate,
              l.rating_star, l.sales_label, l.sales_count,
              l.observed_at as evidence_observed_at,
-             s.previous_min_price_cents, s.observation_count, s.history_days,
-             (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
+             case when s.history_comparable then s.previous_min_price_cents end as min_price_cents,
+             case when s.history_comparable then s.previous_min_price_cents end as previous_min_price_cents,
+             s.observation_count, s.history_days,
+             (s.history_comparable and s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified
       from garimpa.product p
       join garimpa.product_curation pc
         on pc.product_id = p.id and pc.tenant_id = p.tenant_id
@@ -566,7 +598,8 @@ export async function globalHeroProducts(
         and p.image_url is not null
     `;
 
-    const heroScorable: Array<{ row: DealRow; score: number }> = rows.map((row) => {
+    const heroScorable: Array<{ row: DealRow; score: number }> = rows.map((r) => {
+      const row = projectConservativePriceEvidence(r);
       const scorable: HeroScorable = {
         priceCents: row.price_cents,
         previousMinPriceCents: row.previous_min_price_cents,

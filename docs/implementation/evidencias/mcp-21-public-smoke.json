@@ -1,0 +1,23 @@
+{
+  "samples": [
+    {
+      "when": "before",
+      "bytes": 229892,
+      "title": [
+        "BizuMiner — Um bizu bom vale ouro"
+      ],
+      "productLinks": 24,
+      "httpErrorMarkers": 0
+    },
+    {
+      "when": "after",
+      "bytes": 229892,
+      "title": [
+        "BizuMiner — Um bizu bom vale ouro"
+      ],
+      "productLinks": 24,
+      "httpErrorMarkers": 0
+    }
+  ],
+  "samePublicProductLinks": true
+}

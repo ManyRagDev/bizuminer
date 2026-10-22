@@ -1,0 +1,71 @@
+{
+  "capturedAt": "2026-10-15T04:15:34.140368+00:00",
+  "environment": "independent auditor; isolated PGlite only; no remote writes",
+  "files": [
+    {
+      "path": "packages/web/lib/auth-merge.ts",
+      "sha256": "85b118c1c887bab41cf5239886c97cd2d4ac8b6278b543f70d530ca4a8e37810"
+    },
+    {
+      "path": "packages/web/lib/editorial-selection-db.ts",
+      "sha256": "16ca404003de2b9c603e2f778cb2e848ac16c523a9785b5560ffe6a62507eb77"
+    },
+    {
+      "path": "packages/web/lib/public-offer-db.ts",
+      "sha256": "64ceea3416a9414575e8c0ef88e51142187904a4bba1b6de20ab9bdb4b893cbd"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014109000_garimpa_dispatch_jobs_outbox.sql",
+      "sha256": "89165a429250169ec34f11bd7db62d306fdcb429aacaa70ac6bb9a0e481225ff"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014110000_garimpa_saas_onboarding_entitlements.sql",
+      "sha256": "0c247052eb42a56ac97edf845fda5d548f0c7194d5745d4d51ed2739d9978a7b"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015021300_garimpa_verified_workflows.sql",
+      "sha256": "f2566ff5f61b5ad605bb28ae40ed7062e81f773ca3937fe22311730525182038"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23"
+    },
+    {
+      "path": "tools/editorial-tests/auth-merge-flow.test.ts",
+      "sha256": "08f2f34c79d719f551e6aace24ca6f97fe2c86f054d28bc775cbdcb939979932"
+    },
+    {
+      "path": "tools/editorial-tests/migration-integrity-flow.test.ts",
+      "sha256": "f9f2b7a6339770f7bbf3934e80c9c8dbf8f96a494018450dee4289172a3c79d9"
+    },
+    {
+      "path": "tools/editorial-tests/public-readiness-flow.test.ts",
+      "sha256": "06ad56083007023d21a0572f0a39e441c5bed8a95e72bccad4692b8a4030df30"
+    }
+  ],
+  "independentlyExecuted": [
+    {
+      "file": "tools/editorial-tests/auth-merge-flow.test.ts",
+      "result": "PASS seven logged groups, including rollback; no remote Auth/browser concurrency certification"
+    },
+    {
+      "file": "tools/editorial-tests/migration-integrity-flow.test.ts",
+      "result": "PASS five logged groups including actual cross-home editorial services and revoked membership"
+    },
+    {
+      "file": "tools/editorial-tests/public-readiness-flow.test.ts",
+      "result": "PASS M1 false, M6 false, M8 true, missing stats false, no links/click writes"
+    }
+  ],
+  "rolloutApproval": false,
+  "M2": "REPROVADA for active project under current order/unidentified deployment",
+  "authorRepair": "Technically approved only as narrow standalone FK repair at exact recorded hash and current confirmed M1+13 baseline; subject to normal safety review",
+  "authorRepairEnvelope": {
+    "lock_timeout": "5s",
+    "statement_timeout": "45s",
+    "atomic": true,
+    "project": "spbuwcwmxlycchuwhfir",
+    "migrationSha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23",
+    "postChecks": "both global FKs validated; old FKs absent; counts, policies, grants unchanged; runtime/public read continuity"
+  }
+}

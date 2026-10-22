@@ -1,3 +1,4 @@
+import { withMonitoringDb } from "../src/monitoring-db.ts";
 /**
  * Diagnóstico somente leitura da cobertura do acompanhamento.
  * Não consulta marketplaces nem chama um preço antigo de atual.
@@ -24,7 +25,7 @@ const sql = postgres(connectionString, {
 });
 
 try {
-  const candidates: MonitoringCandidate[] = await loadMonitoringCandidates(sql, tenantId);
+  const candidates: MonitoringCandidate[] = await withMonitoringDb(sql,tenantId,tx=>loadMonitoringCandidates(tx,tenantId));
   const now = new Date();
   const marketplaces: MonitorMarketplace[] = ["mercadolivre", "shopee", "aliexpress"];
   const report = {

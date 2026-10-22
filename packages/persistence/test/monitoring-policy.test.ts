@@ -56,3 +56,16 @@ test("ausências repetidas recebem recuo progressivo, menor para itens observado
   assert.deepEqual([1, 2, 3, 4].map((n) => missingRetryHours(n, false)), [24, 72, 168, 336]);
   assert.deepEqual([1, 2, 3, 4].map((n) => missingRetryHours(n, true)), [6, 24, 72, 72]);
 });
+
+test("produtos com favoritos/alertas têm vencimento a cada 24h e precedem vitrine", () => {
+  const userFavorite = candidate("fav-1", { activeWatches: 1, lastObservedAt: new Date("2026-09-23T10:00:00Z") });
+  const decision = monitoringDecision(userFavorite, now);
+  assert.equal(decision.tier, "watch");
+  assert.equal(decision.targetHours, 24);
+  assert.equal(decision.due, true);
+
+  const approvedItem = candidate("app-1", { curationStatus: "approved", lastObservedAt: new Date("2026-09-21T00:00:00Z") });
+  const queue = monitoringQueue([approvedItem, userFavorite], "shopee", 1, now);
+  assert.equal(queue[0]?.productId, "fav-1");
+});
+

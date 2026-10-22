@@ -1,0 +1,107 @@
+{
+  "at": "2026-10-15T13:43:22.294Z",
+  "engine": "postgres (PostgreSQL) 17.6",
+  "target": "disposable-localhost",
+  "productionWrites": 0,
+  "scope": "Original SQL chain only. Does not authorize production rollout or certify Supabase services.",
+  "checks": [
+    {
+      "name": "baseline preserves legacy no-context reads",
+      "result": "PASS"
+    },
+    {
+      "name": "reproduced: M2-first empties legacy reads before public projections exist",
+      "result": "PASS"
+    },
+    {
+      "name": "full original chain executes on PostgreSQL 17.6",
+      "result": "PASS"
+    },
+    {
+      "name": "two independent runtime sessions have no bypass privileges",
+      "result": "PASS"
+    },
+    {
+      "name": "real account transactions isolate A/B/A and clear transaction-local context",
+      "result": "PASS"
+    },
+    {
+      "name": "concurrent actual campaign service admits only the last available quota",
+      "result": "PASS"
+    },
+    {
+      "name": "simultaneous invitation claims consume token once and grant one membership/event",
+      "result": "PASS"
+    },
+    {
+      "name": "lock timeout rolls back the whole transaction and leaves no inserted row/context",
+      "result": "PASS"
+    },
+    {
+      "name": "operator cannot insert owner-only governance with the original final policies",
+      "result": "PASS"
+    },
+    {
+      "name": "reproduced: late M2 removes owner protection and blocks platform reactivation; rollback restores policies",
+      "result": "PASS"
+    }
+  ],
+  "migrations": [
+    {
+      "file": "20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345"
+    },
+    {
+      "file": "20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693"
+    },
+    {
+      "file": "20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23"
+    },
+    {
+      "file": "20261014101000_garimpa_tenant_rls_scoped.sql",
+      "sha256": "57e737818e44266dc7e59d6a4b8637cd3d83fba1637a0cc0837df3674c88e8a0"
+    },
+    {
+      "file": "20261014102000_garimpa_price_evidence_canonical.sql",
+      "sha256": "5663b934ce2240efcafa8b069e54376f08cc392ec07d87d62d4c4c98deceb2b6"
+    },
+    {
+      "file": "20261014103000_garimpa_rubric_assessment_shadow.sql",
+      "sha256": "fc2ebbd70c0c31f9a416b2026d1a0789aafa908b68031710fec41ba5e7483139"
+    },
+    {
+      "file": "20261014104000_garimpa_audience_policy_and_opportunity.sql",
+      "sha256": "f7891a8b351f3efe3da146e520c1a2a0c2c05afd0a6e8d848c2f34302331341a"
+    },
+    {
+      "file": "20261014105000_garimpa_commerce_and_campaign_link.sql",
+      "sha256": "0ac1aac79763568890d0ea5a6f8785898f338da0d981d3e49aa87e569763e648"
+    },
+    {
+      "file": "20261014106000_garimpa_commercial_financial_ledger.sql",
+      "sha256": "64e3695d1defc2dc28b69fa61f3ea2eea71a2d8bffb3f4aac0475079618ed038"
+    },
+    {
+      "file": "20261014107000_garimpa_click_attribution_and_channels.sql",
+      "sha256": "45da44abba0327b4d7c78c39f3f9ba29040f937ff291a6f9aa2961ba27686da9"
+    },
+    {
+      "file": "20261014108000_garimpa_policy_experiments.sql",
+      "sha256": "4dee052305d5d0d10a73e7139de358f2bfc9af54b9de5ae53dec4cb7e12e0f08"
+    },
+    {
+      "file": "20261014109000_garimpa_dispatch_jobs_outbox.sql",
+      "sha256": "89165a429250169ec34f11bd7db62d306fdcb429aacaa70ac6bb9a0e481225ff"
+    },
+    {
+      "file": "20261014110000_garimpa_saas_onboarding_entitlements.sql",
+      "sha256": "0c247052eb42a56ac97edf845fda5d548f0c7194d5745d4d51ed2739d9978a7b"
+    },
+    {
+      "file": "20261015021300_garimpa_verified_workflows.sql",
+      "sha256": "f2566ff5f61b5ad605bb28ae40ed7062e81f773ca3937fe22311730525182038"
+    }
+  ]
+}

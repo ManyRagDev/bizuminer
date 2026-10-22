@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { cache } from "react";
+import type { NextRequest, NextResponse } from "next/server";
 import type { AppRole } from "./auth-contract.ts";
 import { mergeAnonymousIntoAuth } from "./auth-merge.ts";
 import { db } from "./db.ts";
 import { createPageSupabase, createRouteSupabase } from "./supabase.ts";
+import type { AccountContext } from "./tenant-db.ts";
 
 /**
  * Sessão e identidade no servidor (AL-3, 22/08/2026).
@@ -19,9 +21,10 @@ export interface AuthUser {
   id: string;
   email: string | null;
   name: string | null;
+  emailConfirmed?: boolean;
 }
 
-function toAuthUser(user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }): AuthUser {
+function toAuthUser(user: { id: string; email?: string | null; email_confirmed_at?: string; user_metadata?: Record<string, unknown> }): AuthUser {
   const meta = user.user_metadata ?? {};
   const name =
     typeof meta.full_name === "string" && meta.full_name.trim()
@@ -29,16 +32,16 @@ function toAuthUser(user: { id: string; email?: string | null; user_metadata?: R
       : typeof meta.name === "string"
         ? meta.name.trim()
         : null;
-  return { id: user.id, email: user.email ?? null, name };
+  return { id: user.id, email: user.email ?? null, name, emailConfirmed: Boolean(user.email_confirmed_at) };
 }
 
-/** Página (server component): sessão vinda dos cookies + getUser() na rede. */
-export async function getPageAuth(): Promise<AuthUser | null> {
+/** Página (server component): sessão vinda dos cookies + getUser() na rede (memoizada por requisição). */
+export const getPageAuth = cache(async function getPageAuth(): Promise<AuthUser | null> {
   const supabase = await createPageSupabase();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
   return toAuthUser(data.user);
-}
+});
 
 /** Route handler: mesma checagem, com o response como destino da sessão. */
 export async function getRouteAuth(request: NextRequest, response: NextResponse): Promise<AuthUser | null> {
@@ -57,46 +60,59 @@ export interface RoleAccess {
  * Autorização server-side por role persistida. A role não é lida de
  * user_metadata (editável pelo usuário) nem de e-mail/configuração. Consultar
  * o banco também faz uma revogação valer imediatamente, sem esperar refresh do
- * JWT do Supabase.
+ * JWT do Supabase. (Memoizada por requisição).
  */
-export async function roleAccess(authUserId: string, role: AppRole): Promise<RoleAccess | null> {
+export const roleAccess = cache(async function roleAccess(authUserId: string, role: AppRole): Promise<RoleAccess | null> {
   const sql = db();
   try {
-    const rows = await sql<{ app_user_id: string; role: AppRole }[]>`
+    let rows: { app_user_id: string; role: AppRole }[];
+    try {
+      rows = await sql<typeof rows>`select id as app_user_id, ${role}::text as role
+        from garimpa.resolve_actor_identity(${authUserId}) where ${role}=any(roles)`;
+    } catch (error) {
+      if ((error as { code?: string }).code !== "42883") throw error;
+      rows = await sql<typeof rows>`
       select au.id as app_user_id, aur.role::text as role
       from garimpa.app_user au
       join garimpa.app_user_role aur on aur.app_user_id = au.id
       where au.auth_user_id = ${authUserId}
-        and aur.role = ${role}::garimpa.app_role
+        and aur.role::text = ${role}
         and aur.revoked_at is null
       limit 1
-    `;
+      `;
+    }
     const row = rows[0];
     return row ? { appUserId: row.app_user_id, role: row.role } : null;
   } finally {
     await sql.end();
   }
-}
+});
 
 export async function isAffiliate(user: AuthUser): Promise<boolean> {
   return (await roleAccess(user.id, "afiliado")) !== null;
 }
 
-/** Linha app_user da conta autenticada (via auth_user_id), ou null. */
-export async function resolveAppUserId(authUserId: string, tenantId = "local"): Promise<string | null> {
+/** Linha app_user da conta autenticada (via auth_user_id), ou null. (Memoizada por requisição). */
+export const resolveAppUserId = cache(async function resolveAppUserId(authUserId: string, tenantId?: string): Promise<string | null> {
   const sql = db();
   try {
-    const rows = await sql<{ id: string }[]>`
+    let rows: { id: string }[];
+    try {
+      rows = await sql<typeof rows>`select id from garimpa.resolve_actor_identity(${authUserId}) where (${tenantId ?? null}::text is null or tenant_id=${tenantId ?? null})`;
+    } catch (error) {
+      if ((error as { code?: string }).code !== "42883") throw error;
+      rows = await sql<typeof rows>`
       select id
       from garimpa.app_user
-      where tenant_id = ${tenantId} and auth_user_id = ${authUserId}
+      where (${tenantId ?? null}::text is null or tenant_id=${tenantId ?? null}) and auth_user_id = ${authUserId}
       limit 1
-    `;
+      `;
+    }
     return rows[0]?.id ?? null;
   } finally {
     await sql.end();
   }
-}
+});
 
 export interface PageSession {
   authUser: AuthUser;
@@ -123,3 +139,10 @@ export async function getPageSession(bmUid: string | null): Promise<PageSession 
   }
   return { authUser: user, appUserId };
 }
+
+export {
+  type AccountContext,
+  type UserAccountMembership,
+  getUserMemberships,
+  resolveAccountContext,
+} from "./account-context.ts";

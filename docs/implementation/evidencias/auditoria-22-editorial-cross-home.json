@@ -1,0 +1,21 @@
+{
+  "environment": "isolated PGlite synthetic only",
+  "results": [
+    {
+      "name": "resolver permits cross-home member",
+      "rows": [
+        {
+          "affiliate_id": "aff_b"
+        }
+      ]
+    },
+    {
+      "name": "existing editorial actor join under scoped RLS",
+      "rows": []
+    },
+    {
+      "name": "cross-home selection write",
+      "allowed": true
+    }
+  ]
+}

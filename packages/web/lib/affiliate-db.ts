@@ -1,3 +1,4 @@
+import { scopedTenantId } from "./account-scope.ts";
 /**
  * Acesso do painel à camada de afiliados (E1).
  *
@@ -9,7 +10,8 @@
  * no caminho de clique (isso é E3).
  */
 
-import { db } from "./db";
+import { db } from "./db.ts";
+import { withTenantDb, withAccountDb, type AccountContext } from "./tenant-db.ts";
 
 export interface AffiliateAccount {
   id: string;
@@ -55,9 +57,12 @@ function toAccount(row: {
 }
 
 /** Lista apenas as contas às quais o afiliado autenticado pertence. */
-export async function listAffiliateAccounts(appUserId: string): Promise<AffiliateAccountSummary[]> {
-  const sql = db();
-  try {
+export async function listAffiliateAccounts(
+  appUserId: string,
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
+): Promise<AffiliateAccountSummary[]> {
+  return await withTenantDb(tenantId, async (sql) => {
     const rows = await sql<{
       id: string;
       tenant_id: string;
@@ -73,7 +78,7 @@ export async function listAffiliateAccounts(appUserId: string): Promise<Affiliat
              (select count(*)::int from garimpa.affiliate_membership m
                where m.affiliate_id = a.id and m.role = 'owner') as owner_count
       from garimpa.affiliate_account a
-      where exists (
+      where a.tenant_id = ${tenantId} and exists (
         select 1 from garimpa.affiliate_membership mine
         where mine.affiliate_id = a.id and mine.app_user_id = ${appUserId}
       )
@@ -108,15 +113,15 @@ export async function listAffiliateAccounts(appUserId: string): Promise<Affiliat
       });
     }
     return accounts;
-  } finally {
-    await sql.end();
-  }
+  }, sqlFactory);
 }
 
 /** Conta da casa (aff_local) com status de configuração de marketplace. */
-export async function getHouseAccount(): Promise<AffiliateAccountSummary | null> {
-  const sql = db();
-  try {
+export async function getHouseAccount(
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
+): Promise<AffiliateAccountSummary | null> {
+  return await withTenantDb(tenantId, async (sql) => {
     const rows = await sql<{
       id: string;
       tenant_id: string;
@@ -132,7 +137,7 @@ export async function getHouseAccount(): Promise<AffiliateAccountSummary | null>
              (select count(*)::int from garimpa.affiliate_membership m
                where m.affiliate_id = a.id and m.role = 'owner') as owner_count
       from garimpa.affiliate_account a
-      where a.id = 'aff_local'
+      where a.tenant_id = ${tenantId} and a.id = 'aff_local'
       limit 1
     `;
     const row = rows[0];
@@ -162,24 +167,27 @@ export async function getHouseAccount(): Promise<AffiliateAccountSummary | null>
         validatedAt: c.validated_at,
       })),
     };
-  } finally {
-    await sql.end();
-  }
+  }, sqlFactory);
 }
 
 /**
  * Grava/atualiza a credencial de marketplace de uma conta vinculada.
  * Nunca devolve os valores gravados — apenas o status resultante.
  */
-export async function upsertMarketplaceConfig(input: {
-  appUserId: string;
-  affiliateId: string;
-  marketplace: string;
-  trackingId: string;
-  toolId: string;
-}): Promise<MarketplaceConfigView> {
-  const sql = db();
-  try {
+export async function upsertMarketplaceConfig(
+  input: {
+    appUserId: string;
+    affiliateId: string;
+    marketplace: string;
+    trackingId: string;
+    toolId: string;
+  },
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
+  context?: AccountContext,
+): Promise<MarketplaceConfigView> {
+  const runner = async (sql: any) => {
+    const [columns]=await sql`select exists(select 1 from information_schema.columns where table_schema='garimpa' and table_name='affiliate_membership' and column_name='revoked_at') as revocation`;
     const rows = await sql<{
       marketplace: string;
       configured: boolean;
@@ -191,8 +199,10 @@ export async function upsertMarketplaceConfig(input: {
       select ${input.affiliateId}, ${input.marketplace}, ${input.trackingId}, ${input.toolId}, 'active'
       where exists (
         select 1 from garimpa.affiliate_membership am
+        join garimpa.affiliate_account aa on aa.id = am.affiliate_id and aa.tenant_id = ${tenantId}
         where am.affiliate_id = ${input.affiliateId}
           and am.app_user_id = ${input.appUserId}
+          and ${sql.unsafe(columns?.revocation ? "am.revoked_at is null" : "true")}
       )
       on conflict (affiliate_id, marketplace) do update set
         tracking_id = excluded.tracking_id,
@@ -210,7 +220,14 @@ export async function upsertMarketplaceConfig(input: {
       status: row.status as MarketplaceConfigView["status"],
       validatedAt: row.validated_at,
     };
-  } finally {
-    await sql.end();
+  };
+
+  if (context) {
+    if (context.tenantId !== tenantId || context.affiliateId !== input.affiliateId) {
+      throw new Error("context_mismatch");
+    }
+    return await withAccountDb(context, runner, sqlFactory);
   }
+
+  return await withTenantDb(tenantId, runner, sqlFactory);
 }

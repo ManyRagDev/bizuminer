@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   affiliateName: "bm_affiliate_name",
   activeTabId: "bm_active_tab_id",
   outbox: "bm_outbox",
+  apiBaseUrl: "bm_api_base_url",
 } as const;
 
 export function chromeStorage(): ExtensionStorage {
@@ -25,6 +26,16 @@ export async function getToken(storage: ExtensionStorage): Promise<string | null
   const data = await storage.get(STORAGE_KEYS.token);
   const token = data[STORAGE_KEYS.token];
   return typeof token === "string" && token.length > 0 ? token : null;
+}
+
+export async function getApiBaseUrl(storage: ExtensionStorage, fallback = "http://localhost:3100"): Promise<string> {
+  const data = await storage.get(STORAGE_KEYS.apiBaseUrl);
+  const url = data[STORAGE_KEYS.apiBaseUrl];
+  return typeof url === "string" && url.length > 0 ? url : fallback;
+}
+
+export async function setApiBaseUrl(storage: ExtensionStorage, url: string): Promise<void> {
+  await storage.set({ [STORAGE_KEYS.apiBaseUrl]: url });
 }
 
 export async function setSession(

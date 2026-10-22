@@ -39,7 +39,8 @@ function catalogSignals(candidate: HeroCandidate): HeroClassification["catalogSi
   if (typeof evidence.packageQuantity === "number" && Number.isSafeInteger(evidence.packageQuantity) && evidence.packageQuantity > 0) add("Quantidade informada na fonte", 3);
   if (typeof evidence.variantKey === "string" && evidence.variantKey.trim()) add("Configuração identificada na captura", 10);
   if (comparable && candidate.observationCount! >= 3 && candidate.historyDays! >= 7) add("Histórico comparável com ao menos três observações em sete dias", 10);
-  if (typeof candidate.salesCount === "number" && Number.isSafeInteger(candidate.salesCount) && candidate.salesCount > 0) add("Vendas informadas pelo marketplace", Math.min(5, Math.log10(candidate.salesCount + 1) * 5 / 3));
+  // BUG-018: A pontuação global em classifyHeroCandidate não ganha pontos pela contagem bruta de vendas sem denominador comparável. Vendas permanecem puramente descritivas (0 pontos).
+  if (typeof candidate.salesCount === "number" && Number.isSafeInteger(candidate.salesCount) && candidate.salesCount > 0) add("Vendas informadas pelo marketplace", 0);
   return signals;
 }
 

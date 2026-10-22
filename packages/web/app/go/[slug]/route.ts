@@ -9,6 +9,9 @@ import {
 import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "../../../lib/catalog-policy";
 import { affiliateLinksV2Enabled } from "../../../lib/flags";
 import { marketplaceDef, parseProductSlug } from "../../../lib/marketplaces";
+import { validateCampaignTokenForSlug, type CampaignTokenValidationResult } from "../../../lib/campaign-attribution";
+import { publicProjectionReady } from "../../../lib/public-offer-db";
+import { publicGo } from "../../../lib/public-go";
 
 /**
  * Telemetria própria de cliques (engenharia-reversa.md §6):
@@ -24,6 +27,10 @@ import { marketplaceDef, parseProductSlug } from "../../../lib/marketplaces";
  * M3 (plano-multiplataforma.md): Shopee é um terceiro ramo, resolvido antes
  * de V2/legado por não misturar com o caminho matt_word do ML. Não chama a
  * API da Shopee aqui — só redireciona para o affiliate_url já persistido.
+ *
+ * EP-07: Validação e atribuição de link de campanha (?c=<code>).
+ * Se ?c= for passado, valida se o token pertence à oferta/slug. Falha fechado
+ * se for inválido, trocado ou de outro tenant (C-06).
  */
 
 export async function GET(
@@ -31,20 +38,29 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
+  const url = new URL(req.url);
+  const campaignCode = url.searchParams.get("c");
+  if (await publicProjectionReady()) return publicGo(req, slug, campaignCode);
 
-  // Roteamento por ESTRATÉGIA DE LINK, não por nome de loja. Antes era
-  // `parsed?.marketplace === "shopee"`, e a AliExpress caía no ramo do
-  // Mercado Livre virando 404 em todo produto. A pergunta certa não é "que
-  // loja é?" e sim "o link já está pronto?".
+  let campaignAttribution: CampaignTokenValidationResult | null = null;
+  if (campaignCode) {
+    campaignAttribution = await validateCampaignTokenForSlug(campaignCode, slug);
+    if (!campaignAttribution.valid) {
+      // C-06: token inválido ou de outro produto falha fechado, nunca troca de dono.
+      return new Response("Link de campanha inválido ou não correspondente a este produto", { status: 404 });
+    }
+  }
+
+  // Roteamento por ESTRATÉGIA DE LINK, não por nome de loja.
   const parsed = parseProductSlug(slug);
   if (parsed && marketplaceDef(parsed.marketplace)?.linkStrategy === "pregenerated") {
-    return handlePreGenerated(parsed.externalId, parsed.marketplace, req);
+    return handlePreGenerated(parsed.externalId, parsed.marketplace, req, campaignAttribution);
   }
 
   if (affiliateLinksV2Enabled()) {
-    return handleV2(req, slug);
+    return handleV2(req, slug, campaignAttribution);
   }
-  return handleLegacy(req, slug);
+  return handleLegacy(req, slug, campaignAttribution);
 }
 
 /**
@@ -53,7 +69,12 @@ export async function GET(
  * API de marketplace nenhum — latência e rate limit nunca entram no caminho
  * crítico do clique.
  */
-async function handlePreGenerated(externalId: string, marketplace: string, req: Request) {
+async function handlePreGenerated(
+  externalId: string,
+  marketplace: string,
+  req: Request,
+  attribution: CampaignTokenValidationResult | null,
+) {
   const resolution = await resolvePreGeneratedLink(externalId, marketplace);
   const target = shopeeRedirectTarget(resolution);
 
@@ -70,12 +91,30 @@ async function handlePreGenerated(externalId: string, marketplace: string, req: 
       "0.0.0.0";
     const ipHash = createHash("sha256").update(`garimpa:${ip}`).digest("hex").slice(0, 32);
 
-    await sql`
-      insert into garimpa.click_event
-        (id, tenant_id, publication_id, user_agent, referer, ip_hash)
-      values (gen_random_uuid()::text, ${target.tenantId}, ${target.publicationId},
-              ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
-    `;
+    let recorded = false;
+    if (attribution?.valid && attribution.campaignPublicationId) {
+      try {
+        await sql`
+          insert into garimpa.click_event
+            (id, tenant_id, publication_id, campaign_publication_id, campaign_link_id, user_agent, referer, ip_hash)
+          values (gen_random_uuid()::text, ${target.tenantId}, ${target.publicationId},
+                  ${attribution.campaignPublicationId}, ${attribution.campaignLinkId ?? null},
+                  ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
+        `;
+        recorded = true;
+      } catch {
+        // Fallback para schema sem M-07
+      }
+    }
+
+    if (!recorded) {
+      await sql`
+        insert into garimpa.click_event
+          (id, tenant_id, publication_id, user_agent, referer, ip_hash)
+        values (gen_random_uuid()::text, ${target.tenantId}, ${target.publicationId},
+                ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
+      `;
+    }
 
     return new Response(null, {
       status: 302,
@@ -87,7 +126,11 @@ async function handlePreGenerated(externalId: string, marketplace: string, req: 
 }
 
 /** Caminho V2 (E3): comissão por afiliado, sem fallback global. */
-async function handleV2(req: Request, slug: string) {
+async function handleV2(
+  req: Request,
+  slug: string,
+  attribution: CampaignTokenValidationResult | null,
+) {
   const resolution = await resolvePublicationForLink(slug);
   if (!resolution) {
     // Não encontrado OU config ausente/suspensa: falhar fechado, nunca usar a tag da casa.
@@ -102,12 +145,30 @@ async function handleV2(req: Request, slug: string) {
       "0.0.0.0";
     const ipHash = createHash("sha256").update(`garimpa:${ip}`).digest("hex").slice(0, 32);
 
-    await sql`
-      insert into garimpa.click_event
-        (id, tenant_id, publication_id, user_agent, referer, ip_hash)
-      values (gen_random_uuid()::text, ${resolution.tenantId}, ${resolution.publicationId},
-              ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
-    `;
+    let recorded = false;
+    if (attribution?.valid && attribution.campaignPublicationId) {
+      try {
+        await sql`
+          insert into garimpa.click_event
+            (id, tenant_id, publication_id, campaign_publication_id, campaign_link_id, user_agent, referer, ip_hash)
+          values (gen_random_uuid()::text, ${resolution.tenantId}, ${resolution.publicationId},
+                  ${attribution.campaignPublicationId}, ${attribution.campaignLinkId ?? null},
+                  ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
+        `;
+        recorded = true;
+      } catch {
+        // Fallback para schema sem M-07
+      }
+    }
+
+    if (!recorded) {
+      await sql`
+        insert into garimpa.click_event
+          (id, tenant_id, publication_id, user_agent, referer, ip_hash)
+        values (gen_random_uuid()::text, ${resolution.tenantId}, ${resolution.publicationId},
+                ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
+      `;
+    }
 
     const target = affiliateLink(resolution.productUrl, slug, {
       trackingId: resolution.trackingId,
@@ -123,7 +184,11 @@ async function handleV2(req: Request, slug: string) {
 }
 
 /** Caminho legado: preserva links antigos enquanto a flag V2 está desligada. */
-async function handleLegacy(req: Request, slug: string) {
+async function handleLegacy(
+  req: Request,
+  slug: string,
+  attribution: CampaignTokenValidationResult | null,
+) {
   const sql = db();
   try {
     const rows = await sql<{ id: string; product_url: string; tenant_id: string }[]>`
@@ -160,12 +225,30 @@ async function handleLegacy(req: Request, slug: string) {
       "0.0.0.0";
     const ipHash = createHash("sha256").update(`garimpa:${ip}`).digest("hex").slice(0, 32);
 
-    await sql`
-      insert into garimpa.click_event
-        (id, tenant_id, publication_id, user_agent, referer, ip_hash)
-      values (gen_random_uuid()::text, ${pub.tenant_id}, ${pub.id},
-              ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
-    `;
+    let recorded = false;
+    if (attribution?.valid && attribution.campaignPublicationId) {
+      try {
+        await sql`
+          insert into garimpa.click_event
+            (id, tenant_id, publication_id, campaign_publication_id, campaign_link_id, user_agent, referer, ip_hash)
+          values (gen_random_uuid()::text, ${pub.tenant_id}, ${pub.id},
+                  ${attribution.campaignPublicationId}, ${attribution.campaignLinkId ?? null},
+                  ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
+        `;
+        recorded = true;
+      } catch {
+        // Fallback para schema sem M-07
+      }
+    }
+
+    if (!recorded) {
+      await sql`
+        insert into garimpa.click_event
+          (id, tenant_id, publication_id, user_agent, referer, ip_hash)
+        values (gen_random_uuid()::text, ${pub.tenant_id}, ${pub.id},
+                ${req.headers.get("user-agent")}, ${req.headers.get("referer")}, ${ipHash})
+      `;
+    }
 
     // Legado: tag global da casa. Será removido quando a V2 estiver estabilizada.
     const trackingId = process.env.ML_TRACKING_ID!;

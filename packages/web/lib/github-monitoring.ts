@@ -1,6 +1,7 @@
 import "server-only";
 
-import { db } from "./db";
+import { withTenantDb } from "./tenant-db";
+import { currentAccount } from "./account-scope";
 
 const REPOSITORY = "ManyRagDev/bizuminer";
 const WORKFLOW = "monitor-prices.yml";
@@ -27,6 +28,8 @@ export interface GithubMonitoringRun {
 
 /** Histórico do agendador. O token é opcional enquanto o repositório for público. */
 export async function githubMonitoringRuns(): Promise<GithubMonitoringRun[]> {
+  const context=currentAccount();
+  if(!context || context.tenantId!=='local')return [];
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
   const token = process.env.GITHUB_ACTIONS_READ_TOKEN ?? process.env.GITHUB_ACTIONS_WRITE_TOKEN;
   if (token) {
@@ -60,8 +63,7 @@ export async function githubMonitoringRuns(): Promise<GithubMonitoringRun[]> {
   }));
   if (runs.length === 0) return runs;
 
-  const sql = db();
-  try {
+  return withTenantDb('local', async sql => {
     const ids = runs.map((run) => String(run.id));
     const captures = await sql<{
       github_run_id: string;
@@ -113,7 +115,5 @@ export async function githubMonitoringRuns(): Promise<GithubMonitoringRun[]> {
       if ((error as { code?: string }).code !== "42P01") throw error;
     }
     return runs;
-  } finally {
-    await sql.end();
-  }
+  });
 }

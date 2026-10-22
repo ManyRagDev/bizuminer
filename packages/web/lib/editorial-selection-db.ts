@@ -1,14 +1,18 @@
+import { scopedTenantId } from "./account-scope.ts";
 import { sameOfferConfigurationSql } from "./offer-history.ts";
 import { db } from "./db.ts";
 import { productSlug } from "./marketplaces.ts";
 import { catalogHeroPresentation, rankHeroCandidates } from "./hero-ranking.ts";
 import {
   EDITORIAL_MAX_PRODUCTS, EDITORIAL_POLICY_VERSION, editorialEvidenceFingerprint, editorialSelectionBlockers,
+  hasSuperiorityClaim,
   validateEditorialAssessment, validateEditorialSelection,
   type EditorialAssessment, type EditorialAssessmentInput, type EditorialCandidate,
   type EditorialDestination, type EditorialSelection, type PublishedEditorialSelection,
   type ReplaceEditorialSelectionInput,
 } from "./editorial-selection.ts";
+
+import { resolveVariantEvidence, isMateriallyEquivalent, normalizeUrl } from "./comparison-evidence.ts";
 
 type SqlClient = ReturnType<typeof db>;
 type QueryClient = Pick<SqlClient, "unsafe">;
@@ -20,6 +24,303 @@ type CandidateRow = {
   lowest_verified: boolean; rating_star: number | null; sales_label: string | null; sales_count: number | null;
   observed_at: Date | string; offer_evidence: unknown; history_comparable: boolean;
 };
+
+type CanonicalProductEvidence = {
+  id: string;
+  marketplace: string;
+  external_id: string;
+  product_url: string;
+  title: string;
+  status: string;
+  observation_id: string | null;
+  price_cents: number;
+  observed_at: Date | string | null;
+  offer_evidence: unknown;
+  latest_curation_event_id: string | null;
+  latest_evidence_event_id: string | null;
+};
+
+async function fetchCanonicalProductEvidence(
+  tx: QueryClient,
+  tenantId: string,
+  productIds: string[]
+): Promise<{ rows: CanonicalProductEvidence[]; tableUnavailable: boolean }> {
+  if (!productIds.length) return { rows: [], tableUnavailable: false };
+  const rows = await tx.unsafe<any[]>(`
+    select p.id, p.marketplace, p.external_id, p.product_url, p.title, c.status,
+           obs.id as observation_id,
+           coalesce(obs.price_cents, 0)::int as price_cents,
+           obs.observed_at,
+           obs.offer_evidence,
+           (select max(e.id)::text from garimpa.curation_event e where e.tenant_id = p.tenant_id and e.product_id = p.id) as latest_curation_event_id
+    from garimpa.product p
+    join garimpa.product_curation c on c.tenant_id = p.tenant_id and c.product_id = p.id
+    left join lateral (
+      select o.id, o.price_cents, o.observed_at, o.offer_evidence
+      from garimpa.price_observation o
+      where o.tenant_id = p.tenant_id and o.product_id = p.id
+      order by o.observed_at desc, o.id desc limit 1
+    ) obs on true
+    where p.tenant_id = $1 and p.id = any($2)
+  `, [tenantId, productIds]);
+
+  let eventMap = new Map<string, string>();
+  let tableUnavailable = false;
+  try {
+    const eventRows = await tx.unsafe<{ product_id: string; max_id: string }[]>(`
+      select product_id, max(id)::text as max_id
+      from garimpa.comparative_evidence_event
+      where tenant_id = $1 and product_id = any($2)
+      group by product_id
+    `, [tenantId, productIds]);
+    eventMap = new Map(eventRows.map((r) => [r.product_id, r.max_id]));
+  } catch (err: any) {
+    if (err?.code === "42P01") {
+      tableUnavailable = true;
+    } else {
+      throw err;
+    }
+  }
+
+  const resultRows: CanonicalProductEvidence[] = rows.map((r) => ({
+    id: r.id,
+    marketplace: r.marketplace,
+    external_id: r.external_id,
+    product_url: r.product_url,
+    title: r.title,
+    status: r.status,
+    observation_id: r.observation_id,
+    price_cents: r.price_cents,
+    observed_at: r.observed_at,
+    offer_evidence: r.offer_evidence,
+    latest_curation_event_id: r.latest_curation_event_id,
+    latest_evidence_event_id: eventMap.get(r.id) ?? "0",
+  }));
+
+  return { rows: resultRows, tableUnavailable };
+}
+
+type ObservationRow = {
+  id: string;
+  product_id: string;
+  price_cents: number;
+  observed_at: Date | string | null;
+  offer_evidence: unknown;
+};
+
+type IneligibilityEventRow = {
+  id: string;
+  product_id: string;
+  from_status: string;
+  to_status: string;
+  created_at: Date | string;
+};
+
+type ComparativeEvidenceEventRow = {
+  id: string;
+  tenant_id: string;
+  product_id: string;
+  subject: string;
+  operation: string;
+  observation_id: string | null;
+  material_projection: Record<string, any>;
+  recorded_at: Date | string;
+};
+
+async function validateSuperiorityClaimsInBatch(
+  tx: QueryClient,
+  tenantId: string,
+  assessments: EditorialAssessment[],
+  now: Date
+): Promise<Map<string, boolean>> {
+  const result = new Map<string, boolean>();
+  const claimAssessments = assessments.filter(
+    (a) => hasSuperiorityClaim(a.publicRationale) || (a.comparativeBasis && a.comparativeBasis.alternativeProductIds?.length > 0)
+  );
+  if (!claimAssessments.length) return result;
+
+  const allProductIds = new Set<string>();
+  for (const a of claimAssessments) {
+    if (!a.comparativeBasis || a.comparativeBasis.version !== "v3" || !a.comparativeBasis.alternativeProductIds?.length) {
+      result.set(a.id, false);
+      continue;
+    }
+    allProductIds.add(a.productId);
+    for (const altId of a.comparativeBasis.alternativeProductIds) {
+      allProductIds.add(altId);
+    }
+  }
+
+  const pids = Array.from(allProductIds);
+  if (!pids.length) return result;
+
+  let evidenceEvents: ComparativeEvidenceEventRow[] = [];
+  try {
+    evidenceEvents = await tx.unsafe<ComparativeEvidenceEventRow[]>(`
+      select id::text as id, tenant_id, product_id, subject, operation,
+             observation_id, material_projection, recorded_at
+      from garimpa.comparative_evidence_event
+      where tenant_id = $1 and product_id = any($2)
+      order by product_id, id asc
+    `, [tenantId, pids]);
+  } catch (err: any) {
+    if (err?.code === "42P01") {
+      // AC-037.2: Se a tabela de eventos ainda não existir (42P01), alegações novas/antigas falham fechado
+      for (const a of claimAssessments) {
+        result.set(a.id, false);
+      }
+      return result;
+    }
+    throw err;
+  }
+
+  const eventsByProduct = new Map<string, ComparativeEvidenceEventRow[]>();
+  for (const ev of evidenceEvents) {
+    let list = eventsByProduct.get(ev.product_id);
+    if (!list) {
+      list = [];
+      eventsByProduct.set(ev.product_id, list);
+    }
+    list.push(ev);
+  }
+
+  const curations = await tx.unsafe<{ product_id: string; status: string }[]>(`
+    select product_id, status
+    from garimpa.product_curation
+    where tenant_id = $1 and product_id = any($2)
+  `, [tenantId, pids]);
+  const curationMap = new Map(curations.map((c) => [c.product_id, c.status]));
+
+  const observations = await tx.unsafe<ObservationRow[]>(`
+    select id, product_id, price_cents, observed_at, offer_evidence
+    from garimpa.price_observation
+    where tenant_id = $1 and product_id = any($2)
+    order by product_id, observed_at desc, id desc
+  `, [tenantId, pids]);
+
+  const obsByProduct = new Map<string, ObservationRow[]>();
+  for (const obs of observations) {
+    let list = obsByProduct.get(obs.product_id);
+    if (!list) {
+      list = [];
+      obsByProduct.set(obs.product_id, list);
+    }
+    list.push(obs);
+  }
+
+  const ineligibilityEvents = await tx.unsafe<IneligibilityEventRow[]>(`
+    select id::text as id, product_id, from_status, to_status, created_at
+    from garimpa.curation_event
+    where tenant_id = $1 and product_id = any($2) and to_status <> 'approved'
+  `, [tenantId, pids]);
+
+  const curationEventsByProduct = new Map<string, IneligibilityEventRow[]>();
+  for (const ev of ineligibilityEvents) {
+    let list = curationEventsByProduct.get(ev.product_id);
+    if (!list) {
+      list = [];
+      curationEventsByProduct.set(ev.product_id, list);
+    }
+    list.push(ev);
+  }
+
+  for (const a of claimAssessments) {
+    if (result.has(a.id) && result.get(a.id) === false) continue;
+    const basis = a.comparativeBasis;
+    if (!basis || basis.version !== "v3" || !basis.alternativeProductIds?.length || !basis.evidenceReferences) {
+      result.set(a.id, false);
+      continue;
+    }
+    const refs = basis.evidenceReferences;
+    const productsToCheck = [a.productId, ...basis.alternativeProductIds];
+    let valid = true;
+
+    for (const pid of productsToCheck) {
+      const ref = refs[pid];
+      if (!ref) {
+        valid = false;
+        break;
+      }
+
+      // 1. Current curation status
+      const currentStatus = curationMap.get(pid);
+      if (currentStatus !== "approved") {
+        valid = false;
+        break;
+      }
+
+      // 2. Ineligibility event in curation_event since assessment cutoff
+      const cEvents = curationEventsByProduct.get(pid) ?? [];
+      const assessmentCreatedAt = new Date(a.createdAt).getTime();
+      const cutoffCurationEventId = ref.latestCurationEventId != null ? BigInt(ref.latestCurationEventId) : null;
+
+      const hasIneligibilityAfter = cEvents.some((ev) => {
+        const evTime = new Date(ev.created_at).getTime();
+        const evId = BigInt(ev.id);
+        if (cutoffCurationEventId != null && evId > cutoffCurationEventId) return true;
+        if (evTime >= assessmentCreatedAt) return true;
+        return false;
+      });
+      if (hasIneligibilityAfter) {
+        valid = false;
+        break;
+      }
+
+      // 3. Observations check: latest observation freshness and integrity
+      const pObsList = obsByProduct.get(pid) ?? [];
+      if (!pObsList.length) {
+        valid = false;
+        break;
+      }
+
+      const latestObs = pObsList[0];
+      const latestTime = latestObs.observed_at ? new Date(latestObs.observed_at).getTime() : NaN;
+      if (isNaN(latestTime) || now.getTime() - latestTime > 48 * 3600000 || latestTime > now.getTime() + 60000) {
+        valid = false;
+        break;
+      }
+      if (!Number.isSafeInteger(latestObs.price_cents) || latestObs.price_cents <= 0) {
+        valid = false;
+        break;
+      }
+      if (ref.priceCents != null && latestObs.price_cents !== ref.priceCents) {
+        valid = false;
+        break;
+      }
+      const latestVariant = resolveVariantEvidence(latestObs.offer_evidence);
+      if (ref.variantConfirmed) {
+        if (!latestVariant.confirmed || latestVariant.variantKey !== ref.variantKey) {
+          valid = false;
+          break;
+        }
+      } else {
+        if (latestVariant.confirmed || latestVariant.variantKey != null) {
+          valid = false;
+          break;
+        }
+      }
+
+      // 4. Memory of historical mutations: inspect comparative_evidence_event since cutoff
+      const pEvidenceEvents = eventsByProduct.get(pid) ?? [];
+      const cutoffEvidenceId = ref.latestEvidenceEventId != null ? BigInt(ref.latestEvidenceEventId) : 0n;
+
+      for (const ev of pEvidenceEvents) {
+        if (BigInt(ev.id) > cutoffEvidenceId) {
+          if (!isMateriallyEquivalent(ref, ev.material_projection)) {
+            valid = false;
+            break;
+          }
+        }
+      }
+
+      if (!valid) break;
+    }
+
+    result.set(a.id, valid);
+  }
+
+  return result;
+}
 
 export async function editorialSelectionSchemaReady(sql: QueryClient): Promise<boolean> {
   const rows = await sql.unsafe<{ ready: boolean }[]>(`select
@@ -75,7 +376,7 @@ function toAssessment(row: AssessmentRow): EditorialAssessment {
 async function latestAssessments(sql: QueryClient, tenantId: string): Promise<Map<string, EditorialAssessment>> {
   const rows = await sql.unsafe<AssessmentRow[]>(`select distinct on (product_id)
     id, product_id, assessment, snapshot, policy_version, created_at from garimpa.editorial_assessment
-    where tenant_id=$1 order by product_id, created_at desc, id desc`, [tenantId]);
+    where tenant_id=$1 and coalesce(assessment->>'schemaVersion','1')<>'2' order by product_id, created_at desc, id desc`, [tenantId]);
   return new Map(rows.map((row) => [row.product_id, toAssessment(row)]));
 }
 
@@ -114,7 +415,7 @@ function highlightDeadline(candidates: EditorialCandidate[], editionValidUntil?:
   ]))).toISOString();
 }
 
-export async function getEditorialSelectionDesk(tenantId = "local", sqlFactory: typeof db = db): Promise<{
+export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<{
   schemaReady: boolean; selection: EditorialSelection | null; candidates: EditorialCandidate[]; catalogHeroActive: boolean;
 }> {
   if (!process.env.DATABASE_URL) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false };
@@ -123,6 +424,7 @@ export async function getEditorialSelectionDesk(tenantId = "local", sqlFactory: 
     if (!await editorialSelectionSchemaReady(sql)) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false };
     // One repeatable snapshot for desk state and optimistic version.
     return await sql.begin("isolation level repeatable read read only", async (tx) => {
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       const selection = await readSelection(tx, tenantId);
       const assessments = await latestAssessments(tx, tenantId);
       const rows = await candidateRows(tx, tenantId);
@@ -132,22 +434,113 @@ export async function getEditorialSelectionDesk(tenantId = "local", sqlFactory: 
   } finally { await sql.end(); }
 }
 
-export async function saveEditorialAssessment(input: EditorialAssessmentInput, reviewerId: string, tenantId = "local", sqlFactory: typeof db = db):
+export async function saveEditorialAssessment(input: EditorialAssessmentInput, reviewerId: string, tenantId = scopedTenantId(), sqlFactory: typeof db = db):
 Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: string }> {
-  const validated = validateEditorialAssessment(input);
-  if (!validated.ok) return validated;
   if (!reviewerId || !process.env.DATABASE_URL) return { ok: false, error: "forbidden" };
   const sql = sqlFactory();
   try {
     if (!await editorialSelectionSchemaReady(sql)) return { ok: false, error: "migration_required" };
     return await sql.begin(async (tx) => {
-      const actors = await tx`select id from garimpa.app_user where id=${reviewerId} and tenant_id=${tenantId}`;
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
+      const [columns]=await tx`select exists(select 1 from information_schema.columns where table_schema='garimpa' and table_name='affiliate_membership' and column_name='revoked_at') as revocation`;
+      const actors = await tx`select m.app_user_id as id from garimpa.affiliate_membership m join garimpa.affiliate_account a on a.id=m.affiliate_id where m.app_user_id=${reviewerId} and a.tenant_id=${tenantId} and ${tx.unsafe(columns?.revocation?"m.revoked_at is null":"true")}`;
       if (!actors.length) return { ok: false as const, error: "forbidden" };
-      await tx`select id from garimpa.product where id=${validated.value.productId} and tenant_id=${tenantId} for no key update`;
-      const rows = await candidateRows(tx, tenantId, [validated.value.productId]);
+      await tx`select id from garimpa.product where id=${input.productId} and tenant_id=${tenantId} for no key update`;
+      const rows = await candidateRows(tx, tenantId, [input.productId]);
       if (!rows[0] || rows[0].status !== "approved") return { ok: false as const, error: "product_not_approved" };
       const candidate = toCandidate(rows[0], null);
-      if (candidate.evidenceFingerprint !== validated.value.evidenceFingerprint) return { ok: false as const, error: "evidence_changed" };
+      if (candidate.evidenceFingerprint !== input.evidenceFingerprint) return { ok: false as const, error: "evidence_changed" };
+
+      let assessmentToValidate: EditorialAssessmentInput = input;
+      if (input.comparativeBasis) {
+        const altIds = input.comparativeBasis.alternativeProductIds;
+        if (!altIds || !altIds.length) {
+          return { ok: false as const, error: "comparative_basis_alternatives_required" };
+        }
+        // AC-037.2: Bloqueio determinístico dos produtos em ordem para sincronização com writers
+        const allIdsToFetch = Array.from(new Set([input.productId, ...altIds])).sort();
+        await tx.unsafe(`
+          select id from garimpa.product
+          where tenant_id = $1 and id = any($2)
+          order by id
+          for update
+        `, [tenantId, allIdsToFetch]);
+
+        const { rows: evidenceRows, tableUnavailable } = await fetchCanonicalProductEvidence(tx, tenantId, allIdsToFetch);
+        if (tableUnavailable) {
+          return { ok: false as const, error: "comparative_evidence_table_unavailable" };
+        }
+        const evidenceMap = new Map(evidenceRows.map((r) => [r.id, r]));
+
+        for (const altId of altIds) {
+          const alt = evidenceMap.get(altId);
+          if (!alt) {
+            return { ok: false as const, error: "comparative_basis_alternative_not_found" };
+          }
+          if (alt.status !== "approved") {
+            return { ok: false as const, error: "comparative_basis_alternative_not_approved" };
+          }
+          const obsTime = alt.observed_at ? new Date(alt.observed_at).getTime() : NaN;
+          const now = new Date();
+          if (isNaN(obsTime) || now.getTime() - obsTime > 48 * 3600000 || obsTime > now.getTime() + 60000) {
+            return { ok: false as const, error: "comparative_basis_alternative_expired" };
+          }
+          if (!Number.isSafeInteger(alt.price_cents) || alt.price_cents <= 0) {
+            return { ok: false as const, error: "comparative_basis_alternative_expired" };
+          }
+        }
+
+        const candidateEvidence = evidenceMap.get(input.productId);
+        if (!candidateEvidence || !candidateEvidence.observation_id || !candidateEvidence.observed_at) {
+          return { ok: false as const, error: "missing_evidence_fingerprint" };
+        }
+
+        // Build server-derived canonical evidence references for candidate and alternatives (AC-037.2, versão v3)
+        const canonicalRefs: Record<string, any> = {};
+        for (const pid of allIdsToFetch) {
+          const row = evidenceMap.get(pid)!;
+          const variant = resolveVariantEvidence(row.offer_evidence);
+          const rawSource = row.offer_evidence && typeof row.offer_evidence === "object"
+            ? (row.offer_evidence as Record<string, unknown>).source ?? null
+            : null;
+          const sourceUrl = rawSource && typeof (rawSource as any).url === "string" ? (rawSource as any).url : null;
+          const sourceMarketplace = rawSource && typeof (rawSource as any).marketplace === "string" ? (rawSource as any).marketplace : null;
+          canonicalRefs[pid] = {
+            productId: pid,
+            marketplace: row.marketplace,
+            externalId: row.external_id,
+            productUrl: row.product_url,
+            curationStatus: row.status,
+            variantKey: variant.variantKey,
+            variantLabel: variant.variantLabel,
+            variantConfirmed: variant.confirmed,
+            source: rawSource,
+            sourceUrl,
+            sourceMarketplace,
+            observationId: row.observation_id,
+            observedAt: new Date(row.observed_at!).toISOString(),
+            priceCents: row.price_cents,
+            latestCurationEventId: row.latest_curation_event_id,
+            latestEvidenceEventId: row.latest_evidence_event_id,
+            materialSequenceMark: `${row.observation_id}:${row.price_cents}:${variant.variantKey ?? "none"}:${row.latest_evidence_event_id ?? "0"}`,
+          };
+        }
+
+        assessmentToValidate = {
+          ...input,
+          comparativeBasis: {
+            ...input.comparativeBasis,
+            version: "v3",
+            candidateProductId: input.productId,
+            checkedAt: new Date().toISOString(),
+            evidenceReferences: canonicalRefs,
+          },
+        };
+      }
+
+      const validated = validateEditorialAssessment(assessmentToValidate);
+      if (!validated.ok) return validated;
+
       const stored = await tx<AssessmentRow[]>`insert into garimpa.editorial_assessment
         (tenant_id, product_id, actor_app_user_id, policy_version, evidence_fingerprint, assessment, snapshot)
         values (${tenantId}, ${candidate.id}, ${reviewerId}, ${EDITORIAL_POLICY_VERSION},
@@ -159,7 +552,7 @@ Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: stri
   } finally { await sql.end(); }
 }
 
-export async function replaceEditorialSelection(input: ReplaceEditorialSelectionInput, reviewerId: string, tenantId = "local", sqlFactory: typeof db = db):
+export async function replaceEditorialSelection(input: ReplaceEditorialSelectionInput, reviewerId: string, tenantId = scopedTenantId(), sqlFactory: typeof db = db):
 Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string }> {
   const validated = validateEditorialSelection(input);
   if (!validated.ok) return validated;
@@ -168,8 +561,10 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
   try {
     if (!await editorialSelectionSchemaReady(sql)) return { ok: false, error: "migration_required" };
     return await sql.begin(async (tx) => {
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       await tx`select pg_advisory_xact_lock(hashtextextended(${`editorial-selection:${tenantId}`}, 0))`;
-      const actors = await tx`select id from garimpa.app_user where id=${reviewerId} and tenant_id=${tenantId}`;
+      const [columns]=await tx`select exists(select 1 from information_schema.columns where table_schema='garimpa' and table_name='affiliate_membership' and column_name='revoked_at') as revocation`;
+      const actors = await tx`select m.app_user_id as id from garimpa.affiliate_membership m join garimpa.affiliate_account a on a.id=m.affiliate_id where m.app_user_id=${reviewerId} and a.tenant_id=${tenantId} and ${tx.unsafe(columns?.revocation?"m.revoked_at is null":"true")}`;
       if (!actors.length) return { ok: false as const, error: "forbidden" };
       const current = await readSelection(tx, tenantId);
       if ((current?.version ?? null) !== validated.value.expectedVersion) return { ok: false as const, error: "selection_conflict" };
@@ -194,6 +589,19 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
         if (editorialSelectionBlockers(toCandidate(row, assessment), assessment).length) return { ok: false as const, error: "selection_item_blocked" };
         itemAssessments.set(item.productId, assessment);
       }
+
+      // Revalidação temporal de alegações de superioridade (AC-036.1 / AC-036.2 / BUG-021)
+      const now = new Date();
+      const claimValidity = await validateSuperiorityClaimsInBatch(tx, tenantId, Array.from(itemAssessments.values()), now);
+      for (const item of validated.value.items) {
+        const assessment = itemAssessments.get(item.productId)!;
+        const hasClaim = hasSuperiorityClaim(assessment.publicRationale) || hasSuperiorityClaim(item.context);
+        if (hasClaim) {
+          if (claimValidity.get(assessment.id) !== true) {
+            return { ok: false as const, error: "selection_item_blocked" };
+          }
+        }
+      }
       const versions = await tx<{ version: number }[]>`select coalesce(max(version),0)::int as version from garimpa.editorial_selection where tenant_id=${tenantId}`;
       await tx`update garimpa.editorial_selection set status='retired' where tenant_id=${tenantId} and status='active'`;
       const created = await tx<{ id: string; version: number; valid_until: Date | string }[]>`insert into garimpa.editorial_selection
@@ -213,13 +621,14 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
   } finally { await sql.end(); }
 }
 
-export async function getPublishedEditorialSelection(destination: EditorialDestination | "all", tenantId = "local", sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
+export async function getPublishedEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
   const empty: PublishedEditorialSelection = { mode: "unavailable", schemaReady: false, id: null, version: null, validUntil: null, products: [], heroProductIds: [], heroValidUntil: null };
   if (!process.env.DATABASE_URL) return empty;
   const sql = sqlFactory();
   try {
     if (!await editorialSelectionSchemaReady(sql)) return empty;
     return await sql.begin("isolation level repeatable read read only", async (tx) => {
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       const selection = await readSelection(tx, tenantId);
       const now = new Date();
       if (!selection) {
@@ -229,7 +638,24 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
         const assessments = await latestAssessments(tx, tenantId);
         const rows = await candidateRows(tx, tenantId);
         const candidates = rows.map((row) => toCandidate(row, assessments.get(row.id) ?? null, now));
-        const selected = rankHeroCandidates(candidates, now)
+
+        // Revalidação de alegações de superioridade no ramo de catálogo antes da 1ª edição (BUG-021)
+        const candidateAssessments = candidates
+          .map((c) => c.assessment)
+          .filter((a): a is EditorialAssessment => a !== null);
+        const catalogClaimValidity = await validateSuperiorityClaimsInBatch(tx, tenantId, candidateAssessments, now);
+
+        const eligibleCandidates = candidates.filter((candidate) => {
+          if (candidate.assessment) {
+            if (candidate.selectionBlockers.length) return false;
+            if (hasSuperiorityClaim(candidate.assessment.publicRationale)) {
+              if (catalogClaimValidity.get(candidate.assessment.id) !== true) return false;
+            }
+          }
+          return true;
+        });
+
+        const selected = rankHeroCandidates(eligibleCandidates, now)
           .filter((entry) => entry.classification.status === "hero").slice(0, EDITORIAL_MAX_PRODUCTS);
         const highlights = selected.filter((entry) => entry.selectedForHero);
         const validUntil = highlightDeadline(selected.map(({ candidate }) => candidate));
@@ -249,16 +675,32 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
       const rows = await candidateRows(tx, tenantId, items.map((item) => item.productId));
       const byId = new Map(rows.map((row) => [row.id, row]));
       const newest = await latestAssessments(tx, tenantId);
-      const heroCandidates: EditorialCandidate[] = [];
+
+      // Revalidação em lote de todas as alternativas de alegações de superioridade (BUG-021)
+      const itemAssessmentList: EditorialAssessment[] = [];
+      const itemAssessmentMap = new Map<string, EditorialAssessment>();
       for (const item of items) {
         const stored = await tx<AssessmentRow[]>`select id, product_id, assessment, snapshot, policy_version, created_at from garimpa.editorial_assessment
           where id=${item.assessmentId} and product_id=${item.productId} and tenant_id=${tenantId}`;
-        const row = byId.get(item.productId);
-        if (!row || !stored.length) continue;
+        if (!stored.length) continue;
         const assessment = toAssessment(stored[0]);
+        itemAssessmentList.push(assessment);
+        itemAssessmentMap.set(item.productId, assessment);
+      }
+      const claimValidity = await validateSuperiorityClaimsInBatch(tx, tenantId, itemAssessmentList, now);
+
+      const heroCandidates: EditorialCandidate[] = [];
+      for (const item of items) {
+        const assessment = itemAssessmentMap.get(item.productId);
+        const row = byId.get(item.productId);
+        if (!row || !assessment) continue;
         if (newest.get(item.productId)?.id !== assessment.id) continue;
         const candidate = toCandidate(row, assessment, now);
         if (candidate.selectionBlockers.length) continue;
+        const hasClaim = hasSuperiorityClaim(assessment.publicRationale) || hasSuperiorityClaim(item.context);
+        if (hasClaim) {
+          if (claimValidity.get(assessment.id) !== true) continue; // Omitir item cuja alegação de superioridade não se sustenta mais
+        }
         if (item.destinations.includes("home")) heroCandidates.push(candidate);
         if (destination !== "all" && !item.destinations.includes(destination)) continue;
         // Explicit public projection: never serialize internal judgments or doubts.
@@ -275,7 +717,7 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
   } finally { await sql.end(); }
 }
 
-export async function getEditorialProductPresentation(productId: string, tenantId = "local") {
+export async function getEditorialProductPresentation(productId: string, tenantId = scopedTenantId()) {
   const selection = await getPublishedEditorialSelection("all", tenantId);
   return selection.products.find((product) => product.id === productId) ?? null;
 }

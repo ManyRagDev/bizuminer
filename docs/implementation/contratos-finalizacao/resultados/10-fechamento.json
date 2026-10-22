@@ -1,0 +1,1238 @@
+{
+  "order": "OS-10",
+  "state": "CONCLUIDO",
+  "at": "2026-10-16T22:52:34.379394+00:00",
+  "conclusion": "Implantação do núcleo concluída; Blueprint integral não concluído.",
+  "scope": "Web pública, operação própria/contexto humano comprovado, catálogo/histórico/links e monitoramento existente; capacidades condicionadas não promovidas.",
+  "version": {
+    "commit": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9",
+    "deployment": "dpl_EwDxnLU8t7BLFrNFVjsnxbWQVuhp",
+    "localHead": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd plus preserved preexisting changes",
+    "migrations": {
+      "A": "20261016185521",
+      "B": "20261016185708",
+      "C": "20261016223906"
+    },
+    "Csha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597"
+  },
+  "orders": {
+    "OS-01": "CONCLUIDO no escopo registrado",
+    "OS-02": "CONCLUIDO no escopo registrado",
+    "OS-03": "CONCLUIDO no escopo registrado",
+    "OS-04": "CONCLUIDO no escopo registrado",
+    "OS-05": "CONCLUIDO no escopo registrado",
+    "OS-06": "CONCLUIDO no escopo registrado",
+    "OS-07": "CONCLUIDO no escopo registrado",
+    "OS-08": "CONCLUIDO no escopo registrado",
+    "OS-09": "CONCLUIDO no escopo registrado",
+    "OS-10": "CONCLUIDO no escopo registrado"
+  },
+  "requirements": [
+    {
+      "id": "REQ-CODEX-01",
+      "state": "CONCLUIDO documental",
+      "implementation": "13 specs e62 requisitos conciliados",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Não aplicável à ativação",
+      "remaining": "Nenhuma para a cobertura documental; não certifica produto.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CODEX-02",
+      "state": "CONCLUIDO documental",
+      "implementation": "13 specs e62 requisitos conciliados",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Não aplicável à ativação",
+      "remaining": "Nenhuma para a cobertura documental; não certifica produto.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-04",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-06",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-07",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-08",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-09",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-CUR-10",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DIST-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Link legado e monetização própria preservados; sem clique artificial",
+      "remaining": "Código12/canais em campanha legítima e integração oficial de envio, adapter/configuração/wiring e autorização de destino.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DIST-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Link legado e monetização própria preservados; sem clique artificial",
+      "remaining": "Código12/canais em campanha legítima e integração oficial de envio, adapter/configuração/wiring e autorização de destino.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DIST-03",
+      "state": "PARCIAL",
+      "implementation": "Core de distribuição instalado; integração oficial de envio ainda não implementada/homologada",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Link legado e monetização própria preservados; sem clique artificial",
+      "remaining": "Código12/canais em campanha legítima e integração oficial de envio, adapter/configuração/wiring e autorização de destino.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DOM-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Modelo comum instalado; contexto e versionamento exercitados localmente",
+      "remaining": "Homologação comercial contextual com política/material legítimos; matching evolutivo continua pendente.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DOM-02",
+      "state": "ATENDE estrutura",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Modelo comum instalado; contexto e versionamento exercitados localmente",
+      "remaining": "SaaS segue no mesmo motor; finalizar capacidades de operação por conta antes de clientes.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DOM-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Modelo comum instalado; contexto e versionamento exercitados localmente",
+      "remaining": "Homologação comercial contextual com política/material legítimos; matching evolutivo continua pendente.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DOM-04",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Modelo comum instalado; contexto e versionamento exercitados localmente",
+      "remaining": "Homologação comercial contextual com política/material legítimos; matching evolutivo continua pendente.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-DOM-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Modelo comum instalado; contexto e versionamento exercitados localmente",
+      "remaining": "Homologação comercial contextual com política/material legítimos; matching evolutivo continua pendente.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-ED-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-ED-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-ED-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-ED-04",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-ED-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-ED-06",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Curadoria própria acessível; adiamento/reabertura e autoria legítimos provados",
+      "remaining": "30–50 avaliações humanas, ratificação e comparações de sombra; curador. Sem promoção automática nova.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-KIT-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Leitura de campanhas real passou; nenhum kit de produção foi fabricado",
+      "remaining": "Material/direitos legítimos, upload/download Storage e render/export real antes de habilitar a capacidade; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-KIT-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Leitura de campanhas real passou; nenhum kit de produção foi fabricado",
+      "remaining": "Material/direitos legítimos, upload/download Storage e render/export real antes de habilitar a capacidade; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-KIT-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Leitura de campanhas real passou; nenhum kit de produção foi fabricado",
+      "remaining": "Material/direitos legítimos, upload/download Storage e render/export real antes de habilitar a capacidade; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-KIT-04",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Leitura de campanhas real passou; nenhum kit de produção foi fabricado",
+      "remaining": "Material/direitos legítimos, upload/download Storage e render/export real antes de habilitar a capacidade; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-KIT-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Leitura de campanhas real passou; nenhum kit de produção foi fabricado",
+      "remaining": "Material/direitos legítimos, upload/download Storage e render/export real antes de habilitar a capacidade; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MET-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Consumidor financeiro real carregou dados existentes/vazios sem inventar receita",
+      "remaining": "Fato financeiro real, relatório sanitizado e parser específico a implementar; método/coorte para experimento; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MET-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Consumidor financeiro real carregou dados existentes/vazios sem inventar receita",
+      "remaining": "Fato financeiro real, relatório sanitizado e parser específico a implementar; método/coorte para experimento; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MET-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Consumidor financeiro real carregou dados existentes/vazios sem inventar receita",
+      "remaining": "Fato financeiro real, relatório sanitizado e parser específico a implementar; método/coorte para experimento; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MET-04",
+      "state": "PARCIAL",
+      "implementation": "Importador canônico interno instalado; adapter/parser específico de relatório real ainda não implementado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Consumidor financeiro real carregou dados existentes/vazios sem inventar receita",
+      "remaining": "Fato financeiro real, relatório sanitizado e parser específico a implementar; método/coorte para experimento; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MET-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Consumidor financeiro real carregou dados existentes/vazios sem inventar receita",
+      "remaining": "Fato financeiro real, relatório sanitizado e parser específico a implementar; método/coorte para experimento; proprietário/executor.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MKT-01",
+      "state": "PARCIAL",
+      "implementation": "Instrumentação e base comercial publicadas; resultado de negócio não fabricado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Não homologado como ganho comercial",
+      "remaining": "Cadência e demonstração real com método/tempo/custo/denominador; proprietário editorial/comercial.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MKT-02",
+      "state": "PARCIAL",
+      "implementation": "Instrumentação e base comercial publicadas; resultado de negócio não fabricado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Não homologado como ganho comercial",
+      "remaining": "Cadência e demonstração real com método/tempo/custo/denominador; proprietário editorial/comercial.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MKT-03",
+      "state": "PARCIAL",
+      "implementation": "Instrumentação e base comercial publicadas; resultado de negócio não fabricado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Não homologado como ganho comercial",
+      "remaining": "Cadência e demonstração real com método/tempo/custo/denominador; proprietário editorial/comercial.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MON-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Monitoramento próprio retomado; GitHub38977824431 success no SHA publicado",
+      "remaining": "Descoberta automática e dispositivo não retomados; resolver credenciais por conta ainda precisa implementação para multicliente.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MON-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Monitoramento próprio retomado; GitHub38977824431 success no SHA publicado",
+      "remaining": "Descoberta automática e dispositivo não retomados; resolver credenciais por conta ainda precisa implementação para multicliente.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-MON-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Monitoramento próprio retomado; GitHub38977824431 success no SHA publicado",
+      "remaining": "Descoberta automática e dispositivo não retomados; resolver credenciais por conta ainda precisa implementação para multicliente.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-OPS-01",
+      "state": "CONCLUIDO no núcleo",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "A/B/C aplicadas, versão publicada, backup restaurado, dados íntegros, site/monitoramento retomados",
+      "remaining": "Conclusão integral depende das capacidades originais; sem reparo impeditivo aberto no escopo do núcleo.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-OPS-02",
+      "state": "CONCLUIDO no núcleo",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "A/B/C aplicadas, versão publicada, backup restaurado, dados íntegros, site/monitoramento retomados",
+      "remaining": "Conclusão integral depende das capacidades originais; sem reparo impeditivo aberto no escopo do núcleo.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-OPS-03",
+      "state": "PARCIAL integral / núcleo concluído",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "A/B/C aplicadas, versão publicada, backup restaurado, dados íntegros, site/monitoramento retomados",
+      "remaining": "Conclusão integral depende das capacidades originais; sem reparo impeditivo aberto no escopo do núcleo.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-PRICE-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Projeções públicas e observações reais ativas, com limites conservadores",
+      "remaining": "Amostras comparáveis por fonte e calibração/EXP-02 ratificada para E3; operador/curador.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-PRICE-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Projeções públicas e observações reais ativas, com limites conservadores",
+      "remaining": "Amostras comparáveis por fonte e calibração/EXP-02 ratificada para E3; operador/curador.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-PRICE-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Projeções públicas e observações reais ativas, com limites conservadores",
+      "remaining": "Amostras comparáveis por fonte e calibração/EXP-02 ratificada para E3; operador/curador.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-PRICE-04",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Projeções públicas e observações reais ativas, com limites conservadores",
+      "remaining": "Amostras comparáveis por fonte e calibração/EXP-02 ratificada para E3; operador/curador.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-PRICE-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Projeções públicas e observações reais ativas, com limites conservadores",
+      "remaining": "Amostras comparáveis por fonte e calibração/EXP-02 ratificada para E3; operador/curador.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-PRICE-06",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Projeções públicas e observações reais ativas, com limites conservadores",
+      "remaining": "Amostras comparáveis por fonte e calibração/EXP-02 ratificada para E3; operador/curador.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-SAAS-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "RLS/owner real e negativas no pool aprovados; duas contas concorrentes somente em teste nativo local",
+      "remaining": "Wiring de credenciais por conta, Auth/Storage/workers no conjunto, termos/quotas/suporte/privacidade e piloto real autorizado.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-SAAS-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "RLS/owner real e negativas no pool aprovados; duas contas concorrentes somente em teste nativo local",
+      "remaining": "Wiring de credenciais por conta, Auth/Storage/workers no conjunto, termos/quotas/suporte/privacidade e piloto real autorizado.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-SAAS-03",
+      "state": "PARCIAL",
+      "implementation": "RLS/contexto/segredos base instalados; segregação de credenciais de coleta por conta ainda incompleta",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "RLS/owner real e negativas no pool aprovados; duas contas concorrentes somente em teste nativo local",
+      "remaining": "Wiring de credenciais por conta, Auth/Storage/workers no conjunto, termos/quotas/suporte/privacidade e piloto real autorizado.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-SAAS-04",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "RLS/owner real e negativas no pool aprovados; duas contas concorrentes somente em teste nativo local",
+      "remaining": "Wiring de credenciais por conta, Auth/Storage/workers no conjunto, termos/quotas/suporte/privacidade e piloto real autorizado.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-SAAS-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "RLS/owner real e negativas no pool aprovados; duas contas concorrentes somente em teste nativo local",
+      "remaining": "Wiring de credenciais por conta, Auth/Storage/workers no conjunto, termos/quotas/suporte/privacidade e piloto real autorizado.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-TEST-01",
+      "state": "PARCIAL",
+      "implementation": "Matriz T01–18/S-*/J1–3 classificada em08-integracao.json",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "Provas gerenciadas do núcleo e regressões locais disponíveis",
+      "remaining": "Casos comerciais reais, Storage, provedor/canal e piloto dependentes de entrada; não se alegam28 cenários reais PASS.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-UX-01",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "UI proprietária observada OS06; web pública pósC200/302 e consumidores reais pósC passaram",
+      "remaining": "Telas comerciais apósC não reinspecionadas automaticamente (timeout CUA); jornadas de campanha/kit e comprador completas não certificadas.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-UX-02",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "UI proprietária observada OS06; web pública pósC200/302 e consumidores reais pósC passaram",
+      "remaining": "Telas comerciais apósC não reinspecionadas automaticamente (timeout CUA); jornadas de campanha/kit e comprador completas não certificadas.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-UX-03",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "UI proprietária observada OS06; web pública pósC200/302 e consumidores reais pósC passaram",
+      "remaining": "Telas comerciais apósC não reinspecionadas automaticamente (timeout CUA); jornadas de campanha/kit e comprador completas não certificadas.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-UX-04",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "UI proprietária observada OS06; web pública pósC200/302 e consumidores reais pósC passaram",
+      "remaining": "Telas comerciais apósC não reinspecionadas automaticamente (timeout CUA); jornadas de campanha/kit e comprador completas não certificadas.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "REQ-UX-05",
+      "state": "PARCIAL",
+      "implementation": "Base implementada/publicada e schema instalado",
+      "local": "Fontes publicadas f60b6187; A/B/C instaladas. Prova local histórica31/OS01/OS12, com fontes e delta12 exatos; não é homologação integral no ativo.",
+      "managed": "UI proprietária observada OS06; web pública pósC200/302 e consumidores reais pósC passaram",
+      "remaining": "Telas comerciais apósC não reinspecionadas automaticamente (timeout CUA); jornadas de campanha/kit e comprador completas não certificadas.",
+      "evidence": [
+        "06-pre-c.md",
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    }
+  ],
+  "epics": [
+    {
+      "id": "EP-00",
+      "state": "CONCLUIDO núcleo",
+      "remaining": "Nenhuma para a implantação do núcleo.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-01",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "G-EVIDENCE/E3 e calibração editorial.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-02",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Avaliações humanas e ratificação; sombra não promovida.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-03",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Política/audiência contextual ratificada; radar sem oportunidade real configurada.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-04",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Campanha/kit legítimos e homologação real de publicação assistida.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-05",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Jornadas comerciais e inspeção visual pósC não repetidas por CUA.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-06",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Direitos/material, Storage real e render/export homologados.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-07",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Links12 de campanha/canais reais e atribuição, sem clique fictício.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-08",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Relatório sanitizado e implementação do parser específico; fato financeiro real.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-09",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Método/coorte/amostra e revisão de experimento reais.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-10",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Credenciais por conta e homologação gerenciada multicliente/Storage/worker.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-11",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Adapter/configuração/wiring de canal oficial e envio autorizado real.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    },
+    {
+      "id": "EP-12",
+      "state": "PARCIAL: base instalada/testada; capacidade integral não homologada",
+      "remaining": "Termos/quotas/suporte/privacidade, credenciais por conta e piloto autorizado.",
+      "evidence": [
+        "07-unidade-c.md",
+        "08-integracao.md",
+        "09-retomada.md"
+      ]
+    }
+  ],
+  "plans": [
+    {
+      "id": "D00",
+      "description": "Baseline e checkpoint",
+      "state": "CONCLUIDO baseline/registro",
+      "orders": "OS01/02/10"
+    },
+    {
+      "id": "D01",
+      "description": "Conta e continuidade",
+      "state": "CONCLUIDO no núcleo; escopo externo/dispositivo mantém limite",
+      "orders": "OS06–09; regressões locais31/OS01/12"
+    },
+    {
+      "id": "D02",
+      "description": "Dispositivo/revogação",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D03",
+      "description": "Contratos/guards",
+      "state": "CONCLUIDO no núcleo; escopo externo/dispositivo mantém limite",
+      "orders": "OS06–09; regressões locais31/OS01/12"
+    },
+    {
+      "id": "D04",
+      "description": "Entitlements/quotas",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D05",
+      "description": "Evidência de preço",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D06",
+      "description": "Revisão/rubrica",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D07",
+      "description": "Política/radar/monitoramento",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D08",
+      "description": "Campanhas/materiais",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D09",
+      "description": "Financeiro/importação",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D10",
+      "description": "Experimentos",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D11",
+      "description": "Agenda/envio",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D12",
+      "description": "Onboarding/SaaS",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "D13",
+      "description": "Homologação de implantação",
+      "state": "CONCLUIDO rollout direto do núcleo33/36; multicliente/Storage completos não certificados",
+      "orders": "OS01–09; staging pago não é pré-condição deste caminho"
+    },
+    {
+      "id": "D14",
+      "description": "Auditoria/fechamento",
+      "state": "CONCLUIDO fechamento do núcleo; Blueprint integral permanece parcial",
+      "orders": "OS10; continuidade específica OS11"
+    },
+    {
+      "id": "R00",
+      "description": "Baseline/fixture",
+      "state": "CONCLUIDO baseline/registro",
+      "orders": "OS01/02/10"
+    },
+    {
+      "id": "R01",
+      "description": "Conta/dispositivo",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R02",
+      "description": "Bootstrap/plano",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R03",
+      "description": "Suspensão/quotas",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R04",
+      "description": "Revisão/autoria",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R05",
+      "description": "Ratificação/calibração",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R06",
+      "description": "Radar/monitoramento",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R07",
+      "description": "Campanhas/materiais",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R08",
+      "description": "Importação/ledger",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R09",
+      "description": "Experimentos",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R10",
+      "description": "Worker/envio",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R11",
+      "description": "Onboarding",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R12",
+      "description": "Auditoria local",
+      "state": "PARCIAL: base publicada/instalada e provas locais disponíveis; capacidade integral conforme registro pendente",
+      "orders": "OS01–08 + OS11 por capacidade"
+    },
+    {
+      "id": "R13",
+      "description": "Homologação isolada",
+      "state": "CONCLUIDO rollout direto do núcleo33/36; multicliente/Storage completos não certificados",
+      "orders": "OS01–09; staging pago não é pré-condição deste caminho"
+    },
+    {
+      "id": "R14",
+      "description": "Fechamento",
+      "state": "CONCLUIDO fechamento do núcleo; Blueprint integral permanece parcial",
+      "orders": "OS10; continuidade específica OS11"
+    }
+  ],
+  "pendingTechnical": [
+    "Parser específico do relatório de programa",
+    "Resolver/adapter/worker de credenciais por conta para captura e monitoramento multicliente",
+    "Integração oficial de envio: adapter/configuração/wiring e homologação real"
+  ],
+  "externalInputs": "CAPACIDADES-PENDENTES permanece fonte de entradas comerciais/dados/direitos/método/piloto; isso não converte lacuna técnica em mera falta de senha.",
+  "limits": [
+    "Sem publicação nova de runtime neste fechamento: a candidata05/12 foi preservada.",
+    "Sem promessa de Blueprint completo, todos62 requisitos implementados/homologados, ou certificação de telas comerciais pósC por automação.",
+    "Não houve criação de clientes/vendas/cliques/comissões/convites/envios para preencher aceite.",
+    "Captura-offers e dispositivos não homologados continuam parados; monitor-prices ativo."
+  ],
+  "documentVerification": {
+    "result": "PASS",
+    "requirementsExact": 62,
+    "epics": 13,
+    "planItems": 30,
+    "newLocalLinksChecked": 35,
+    "brokenLinks": 0,
+    "approvedSourcesUnchanged": 462,
+    "deltaSourcesUnchanged": 4,
+    "orders06to10": "CONCLUIDO in declared scopes",
+    "protectedSourceFilesEditedByThisTurn": 0
+  }
+}

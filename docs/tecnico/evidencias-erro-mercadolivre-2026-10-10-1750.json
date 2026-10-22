@@ -1,0 +1,32 @@
+{
+  "timezone": "America/Sao_Paulo",
+  "captureBatch": {
+    "id": "f09adc8c-eb71-4a4e-8872-4f741ad83d45",
+    "startedAt": "2026-10-10T17:50:34.731399-03:00",
+    "finishedAt": "2026-10-10T17:50:39.292979-03:00",
+    "status": "error",
+    "executor": "local",
+    "mlConsent": true,
+    "error": "capture_failed",
+    "storeError": "step_exit_failed",
+    "triageRunCount": 0
+  },
+  "captureRun": {
+    "id": "055f72b6-6130-4eb3-bd3d-70bd4934e0bc",
+    "marketplace": "mercadolivre",
+    "startedAt": "2026-10-10T17:50:35.665-03:00",
+    "finishedAt": "2026-10-10T17:50:38.040-03:00",
+    "status": "error",
+    "itemsCaptured": 0,
+    "itemsNew": 0,
+    "itemsSeen": 0,
+    "pagesRead": 0,
+    "maxPages": 1,
+    "error": "nenhuma oferta extraída da página de ofertas — layout mudou?"
+  },
+  "interpretation": {
+    "confirmed": "O coletor iniciou e falhou na extração da primeira página; o parser não produziu ofertas. A triagem não iniciou.",
+    "notEstablished": "A mensagem sugere mudança de layout, mas o HTML e a URL final dessa resposta não foram preservados; não é possível distinguir de uma página alternativa de verificação ou outra resposta sem cards reconhecidos."
+  },
+  "verification": "Consultas somente leitura ao banco real e leitura do ponto que gera o erro em packages/capture/src/adapters/mercadolivre/deals.ts. Sem nova captura, IA, alteração de execução ou correção de parser."
+}

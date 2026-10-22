@@ -1,0 +1,126 @@
+{
+  "order": "OS-04",
+  "state": "CONCLUIDO",
+  "intent": {
+    "file": "packages/persistence/supabase/rollouts/v2/20261015194748_garimpa_v2_expansion.sql",
+    "sha256": "02810325f1eecc16dfc05121f44b75a64c5ce0655b9329f2662ffb0d74cbecaa",
+    "name": "garimpa_v2_expansion",
+    "at": "2026-10-16 18:57:00 UTC"
+  },
+  "toolResult": {
+    "success": true
+  },
+  "post": [
+    {
+      "table_count": 66,
+      "policy_count": 180,
+      "control_false": true,
+      "own_bucket": [
+        {
+          "id": "bizuminer-private",
+          "public": false,
+          "fileSizeLimit": null,
+          "allowedMimeTypes": null
+        }
+      ],
+      "migration": [
+        {
+          "name": "garimpa_v2_expansion",
+          "sha256": "02810325f1eecc16dfc05121f44b75a64c5ce0655b9329f2662ffb0d74cbecaa",
+          "version": "20261016185708",
+          "statementCount": 1
+        }
+      ],
+      "invalid_constraints": 1,
+      "public_direct_selects": 0,
+      "user_role_force_rls": true
+    }
+  ],
+  "originalColumnsComparison": {
+    "tables": 28,
+    "result": "PASS"
+  },
+  "otherSchemasComparison": {
+    "schemas": 8,
+    "result": "PASS"
+  },
+  "existingBucketsComparison": {
+    "buckets": 8,
+    "result": "PASS"
+  },
+  "catalogChecks": [
+    {
+      "check_name": "policies",
+      "matches": true,
+      "observed_count": 180
+    },
+    {
+      "check_name": "functions",
+      "matches": false,
+      "observed_count": 26
+    },
+    {
+      "check_name": "views",
+      "matches": true,
+      "observed_count": 2
+    },
+    {
+      "check_name": "tables",
+      "matches": true,
+      "observed_count": 66
+    },
+    {
+      "check_name": "columnAcls",
+      "matches": true,
+      "observed_count": 3
+    },
+    {
+      "check_name": "constraints",
+      "matches": true,
+      "observed_count": 243
+    },
+    {
+      "check_name": "foreignKeys",
+      "matches": true,
+      "observed_count": 145
+    },
+    {
+      "check_name": "triggers",
+      "matches": false,
+      "observed_count": 59
+    }
+  ],
+  "normalizedFunctionsComparison": {
+    "count": 26,
+    "result": "PASS",
+    "details": "Definições, prosrc, SECURITY DEFINER, proconfig e ACL conferidos por assinatura; diferença agregada exclusivamente na ordenação en_US.UTF-8 versus C."
+  },
+  "legacyTrigger": [
+    {
+      "table_name": "product",
+      "name": "product_seed_curation",
+      "definition": "CREATE TRIGGER product_seed_curation AFTER INSERT ON garimpa.product FOR EACH ROW EXECUTE FUNCTION garimpa.seed_product_curation()",
+      "enabled": "O"
+    }
+  ],
+  "knownNotValidatedConstraint": {
+    "name": "experiment_evaluation_tenant_id_experiment_id_unit_id_fkey",
+    "expectedInSealedCatalogue": true
+  },
+  "runtime": {
+    "role": "garimpa_app",
+    "super": false,
+    "bypass": false,
+    "products": 1657,
+    "observations": 9338,
+    "publications": 1495,
+    "shortlinks": 172,
+    "commercialReady": false,
+    "commercialDenied": true
+  },
+  "nextUnitIssue": {
+    "unit": "C",
+    "status": "BLOQUEADA_PARA_APLICACAO",
+    "reason": "Guard rollout_function_inventory_mismatch compara array ordenado sob collation padrão com literal gerado sob C; produção ordena public_catalog_stats antes public_catalog. Não houve tentativa de aplicar C nem alteração dos bytes."
+  }
+}

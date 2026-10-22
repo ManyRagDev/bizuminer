@@ -1,0 +1,345 @@
+{
+  "date": "2026-10-15",
+  "environment": "local; URL ficticia nao conectavel; credenciais removidas; PGlite isolado",
+  "results": [
+    {
+      "name": "web-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/web"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.64,
+      "log": "docs/implementation/evidencias/execucao-28-final-web-tests.log"
+    },
+    {
+      "name": "persistence-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/persistence"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.31,
+      "log": "docs/implementation/evidencias/execucao-28-final-persistence-tests.log"
+    },
+    {
+      "name": "persistence-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/persistence"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.77,
+      "log": "docs/implementation/evidencias/execucao-28-final-persistence-typecheck.log"
+    },
+    {
+      "name": "sql-test",
+      "command": [
+        "npm",
+        "run",
+        "test",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 4.39,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test.log"
+    },
+    {
+      "name": "web-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/web",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 8.62,
+      "log": "docs/implementation/evidencias/execucao-28-final-web-typecheck.log"
+    },
+    {
+      "name": "sql-test-triage-price",
+      "command": [
+        "npm",
+        "run",
+        "test:triage-price",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.52,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-triage-price.log"
+    },
+    {
+      "name": "sql-test-capture-batch",
+      "command": [
+        "npm",
+        "run",
+        "test:capture-batch",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.47,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-capture-batch.log"
+    },
+    {
+      "name": "sql-test-regressions",
+      "command": [
+        "npm",
+        "run",
+        "test:regressions",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.67,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-regressions.log"
+    },
+    {
+      "name": "sql-test-commercial",
+      "command": [
+        "npm",
+        "run",
+        "test:commercial",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 3.33,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-commercial.log"
+    },
+    {
+      "name": "sql-test-cf-regressions",
+      "command": [
+        "npm",
+        "run",
+        "test:cf-regressions",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.87,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-cf-regressions.log"
+    },
+    {
+      "name": "sql-test-entitlement",
+      "command": [
+        "npm",
+        "run",
+        "test:entitlement",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.87,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-entitlement.log"
+    },
+    {
+      "name": "sql-test-price-evidence",
+      "command": [
+        "npm",
+        "run",
+        "test:price-evidence",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.87,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-price-evidence.log"
+    },
+    {
+      "name": "sql-test-rubric",
+      "command": [
+        "npm",
+        "run",
+        "test:rubric",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.97,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-rubric.log"
+    },
+    {
+      "name": "sql-test-opportunity",
+      "command": [
+        "npm",
+        "run",
+        "test:opportunity",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 12.14,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-opportunity.log"
+    },
+    {
+      "name": "sql-test-cockpit",
+      "command": [
+        "npm",
+        "run",
+        "test:cockpit",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 12.3,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-cockpit.log"
+    },
+    {
+      "name": "sql-test-experiment",
+      "command": [
+        "npm",
+        "run",
+        "test:experiment",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.72,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-experiment.log"
+    },
+    {
+      "name": "sql-test-financial",
+      "command": [
+        "npm",
+        "run",
+        "test:financial",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 12.29,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-financial.log"
+    },
+    {
+      "name": "sql-test-onboarding",
+      "command": [
+        "npm",
+        "run",
+        "test:onboarding",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.52,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-onboarding.log"
+    },
+    {
+      "name": "sql-test-dispatch",
+      "command": [
+        "npm",
+        "run",
+        "test:dispatch",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 12.44,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-dispatch.log"
+    },
+    {
+      "name": "sql-test-verified-workflows",
+      "command": [
+        "npm",
+        "run",
+        "test:verified-workflows",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 4.42,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-verified-workflows.log"
+    },
+    {
+      "name": "sql-test-verified-upgrade",
+      "command": [
+        "npm",
+        "run",
+        "test:verified-upgrade",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 4.17,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-verified-upgrade.log"
+    },
+    {
+      "name": "sql-test-secret-bootstrap",
+      "command": [
+        "npm",
+        "run",
+        "test:secret-bootstrap",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 4.17,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-secret-bootstrap.log"
+    },
+    {
+      "name": "sql-test-auth-merge",
+      "command": [
+        "npm",
+        "run",
+        "test:auth-merge",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 4.08,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-auth-merge.log"
+    },
+    {
+      "name": "sql-test-migration-integrity",
+      "command": [
+        "npm",
+        "run",
+        "test:migration-integrity",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.62,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-migration-integrity.log"
+    },
+    {
+      "name": "sql-test-public-readiness",
+      "command": [
+        "npm",
+        "run",
+        "test:public-readiness",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 4.97,
+      "log": "docs/implementation/evidencias/execucao-28-final-sql-test-public-readiness.log"
+    },
+    {
+      "name": "web-build",
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "--prefix",
+        "packages/web"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 20.72,
+      "log": "docs/implementation/evidencias/execucao-28-final-web-build.log"
+    }
+  ]
+}

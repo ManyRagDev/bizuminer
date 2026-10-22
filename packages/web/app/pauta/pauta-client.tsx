@@ -103,6 +103,13 @@ export default function PautaClient({
         setHeroValidUntil(data.heroValidUntil);
         setHeroBadgeCurrent(data.heroValidUntil !== null && Date.parse(data.heroValidUntil) > Date.now());
         setLoadError("");
+        if (data.products.length > 0) {
+          fetch("/api/pauta/warmup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slugs: data.products.slice(0, 10).map((p) => p.slug) }),
+          }).catch(() => {});
+        }
       } catch {
         if (!controller.signal.aborted) setLoadError("Não foi possível carregar a seleção. Atualize a página para tentar novamente.");
       } finally { checking = false; if (!controller.signal.aborted) setLoading(false); }
@@ -133,6 +140,12 @@ export default function PautaClient({
   }, [selectionValidUntil]);
 
   async function copyLink(product: PautaProduct) {
+    if (product.slug) {
+      fetch(`/bizu/${encodeURIComponent(product.slug)}/opengraph-image`, {
+        method: "GET",
+        priority: "high",
+      } as RequestInit).catch(() => {});
+    }
     const ok = await copyToClipboard(product.shareUrl);
     if (!ok && typeof window !== "undefined") {
       window.prompt("Copie o link abaixo:", product.shareUrl);

@@ -1,45 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mlAutomatedCaptureEnabled } from "../lib/automated-capture.ts";
+import { mlAutomatedCaptureEnabled, mlCaptureAllowedWithConsent } from "../lib/automated-capture.ts";
 
-test("kill switch ML: flag ausente → desligado (default seguro)", () => {
-  assert.equal(mlAutomatedCaptureEnabled({}), false);
-  assert.equal(mlAutomatedCaptureEnabled({ NODE_ENV: "development" }), false);
-});
-
-test("kill switch ML: só 'true' literal liga (case-sensitive)", () => {
-  assert.equal(mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "" }), false);
-  assert.equal(mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "false" }), false);
-  assert.equal(mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "1" }), false);
-  assert.equal(mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "TRUE" }), false);
-});
-
-test("kill switch ML: flag true em produção → desligado (falha fechada)", () => {
-  assert.equal(
-    mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "true", NODE_ENV: "production" }),
-    false,
-  );
-  assert.equal(mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "true" }), false);
-});
-
-test("kill switch ML: produção exige flag adicional explícita (31/08/2026)", () => {
-  assert.equal(
-    mlAutomatedCaptureEnabled({
-      ML_AUTOMATED_CAPTURE_ENABLED: "true",
-      ML_AUTOMATED_CAPTURE_PRODUCTION: "true",
-      NODE_ENV: "production",
-    }),
-    true,
-  );
-  assert.equal(
-    mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "true", ML_AUTOMATED_CAPTURE_PRODUCTION: "false", NODE_ENV: "production" }),
-    false,
-  );
-});
-
-test("kill switch ML: flag true + development → ligado", () => {
-  assert.equal(
-    mlAutomatedCaptureEnabled({ ML_AUTOMATED_CAPTURE_ENABLED: "true", NODE_ENV: "development" }),
-    true,
-  );
+test("OS-032: ML permanece manual para toda combinação de flags e ambiente", () => {
+  const values = [undefined, "", "false", "true", "TRUE", "1"];
+  for (const NODE_ENV of [undefined, "development", "production", "test"]) {
+    for (const ML_AUTOMATED_CAPTURE_ENABLED of values) {
+      for (const ML_AUTOMATED_CAPTURE_PRODUCTION of values) {
+        const env = { NODE_ENV, ML_AUTOMATED_CAPTURE_ENABLED, ML_AUTOMATED_CAPTURE_PRODUCTION };
+        assert.equal(mlAutomatedCaptureEnabled(env), false, JSON.stringify(env));
+        for (const consent of [false, true]) {
+          assert.equal(mlCaptureAllowedWithConsent(consent, env), false, JSON.stringify({ ...env, consent }));
+        }
+      }
+    }
+  }
+  // O ambiente real também nunca concede permissão.
+  assert.equal(mlAutomatedCaptureEnabled(), false);
+  assert.equal(mlCaptureAllowedWithConsent(true), false);
 });

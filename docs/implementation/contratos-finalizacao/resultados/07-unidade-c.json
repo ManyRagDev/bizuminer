@@ -1,0 +1,48 @@
+{
+  "order": "OS-07",
+  "state": "CONCLUIDO",
+  "at": "2026-10-16T21:40:35.845Z",
+  "target": {
+    "project": "spbuwcwmxlycchuwhfir",
+    "schema": "garimpa"
+  },
+  "unit": "garimpa_v2_scoped_cutover",
+  "sha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597",
+  "bytes": 335555,
+  "entryOS06": "CONCLUIDO",
+  "reconciledRemote": {
+    "commercialEnabled": false,
+    "cutoverHistoryEntries": 0
+  },
+  "maintenance": "all protection and both workflows disabled maintained",
+  "backup": "20261016-os06-antes-c.dump plus seeded-data.json, persistent private destination, real local restore PASS",
+  "pending": "Exact approval requested asynchronously from owner; no alternate transport or retry.",
+  "postCPreparation": "Readonly runtime smoke prepared privately, not executed before C.",
+  "previousAttempt": {
+    "tool": "mcp__supabase__apply_migration",
+    "executed": false,
+    "autoReviewRejected": true,
+    "reason": "General completion authorization did not explicitly authorize this exact persistent production security/state change."
+  },
+  "explicitOwnerApproval": "sim, in response to exact C/hash/target/policy/switch authorization request",
+  "application": {
+    "tool": "mcp__supabase__apply_migration",
+    "name": "garimpa_v2_scoped_cutover",
+    "success": true,
+    "version": "20261016223906",
+    "bytes": 335555,
+    "sha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597"
+  },
+  "postconditions": {
+    "commercialEnabled": true,
+    "remainingLegacyAppAccessPolicies": 0,
+    "policies": 185,
+    "notValidConstraints": 1,
+    "unchangedOriginalTables": 28,
+    "unchangedExternalSchemas": 8,
+    "runtimeWithoutBypass": true,
+    "realOwnerAccountResolved": true,
+    "publicPrivateReadDenied": true
+  },
+  "next": "OS-08; maintenance remains"
+}

@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-15T20:31:46.351846+00:00",
+  "kind": "retrospective occurrence note, not an original raw native log",
+  "intermediateNativeJsonRetained": false,
+  "nativeEvidencePath": "docs/implementation/evidencias/execucao-27-replacement-native.json",
+  "occurrences": [
+    {
+      "case": "native membership negative assertion",
+      "observed": "18 preceding checks PASS; safely rejected with runtime_can_enable_rollout while regex expected unexpected_runtime_role_membership",
+      "resolution": "accept both appropriate refusals in assertion; SQL unchanged; full rerun23checks plus6applications PASS",
+      "source": "executor tool output and auditor independent confirmation in this conversation"
+    },
+    {
+      "case": "suspended monitoring candidate assertion",
+      "observed": "RLS returned no candidates; direct helper rejected suspended account",
+      "resolution": "assert empty candidate list and direct helper rejection; final native suite PASS",
+      "source": "executor tool output in this conversation"
+    },
+    {
+      "case": "initial web sandbox checks",
+      "observed": "capture-process/QR required native subprocess/loopback execution",
+      "resolution": "native rerun with remote credentials removed passed; final379webPASS",
+      "source": "execucao-27-checks.json, execucao-27-web-native.json and original check logs"
+    },
+    {
+      "case": "final historical manifest count assertion",
+      "observed": "round26 hashes include15migration files,14from V2 and one earlier editorial migration",
+      "resolution": "compare the14explicit manifest names and also verify all15historical hashes; all unchanged",
+      "source": "manifesto-execucao-26.json and local read-only hash comparison"
+    }
+  ]
+}

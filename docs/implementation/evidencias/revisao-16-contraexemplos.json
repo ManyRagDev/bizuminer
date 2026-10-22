@@ -1,0 +1,362 @@
+{
+  "date": "2026-10-14",
+  "environment": "PGlite SQL real isolado; nenhuma escrita remota",
+  "appliedMigrations": [
+    "20261014100000_garimpa_account_context_and_membership.sql",
+    "20261014101000_garimpa_tenant_rls_scoped.sql",
+    "20261014102000_garimpa_price_evidence_canonical.sql",
+    "20261014103000_garimpa_rubric_assessment_shadow.sql",
+    "20261014104000_garimpa_audience_policy_and_opportunity.sql",
+    "20261014105000_garimpa_commerce_and_campaign_link.sql",
+    "20261014106000_garimpa_commercial_financial_ledger.sql",
+    "20261014107000_garimpa_click_attribution_and_channels.sql",
+    "20261014108000_garimpa_policy_experiments.sql",
+    "20261014109000_garimpa_dispatch_jobs_outbox.sql",
+    "20261014110000_garimpa_saas_onboarding_entitlements.sql"
+  ],
+  "results": [
+    {
+      "name": "RLS_without_context_reads_invites_and_plans",
+      "status": "defect_confirmed",
+      "observed": {
+        "context": [
+          {
+            "tenant": null,
+            "membership": null
+          }
+        ],
+        "invitations": [
+          {
+            "tenant_id": "a",
+            "token_hash": "hash-a"
+          },
+          {
+            "tenant_id": "b",
+            "token_hash": "hash-b"
+          }
+        ],
+        "plans": [
+          {
+            "tenant_id": "a",
+            "plan_version": "test"
+          },
+          {
+            "tenant_id": "b",
+            "plan_version": "test"
+          }
+        ],
+        "updated": [
+          {
+            "tenant_id": "a"
+          },
+          {
+            "tenant_id": "b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "private_legacy_and_policy_mutation_without_membership",
+      "status": "defect_confirmed",
+      "observed": {
+        "authorizedAccountContextRefusesForgedB": true,
+        "policyInB": "f921aa8d-174e-457a-91d2-4f35ce277bc7",
+        "houseSummaryWithoutActor": {
+          "awaiting": 1,
+          "newPending": 1,
+          "legacyVisible": 0,
+          "held": 0,
+          "approved": 0,
+          "rejected": 0,
+          "deferred": 0
+        }
+      }
+    },
+    {
+      "name": "legitimate_device_bootstraps_but_capture_guard_loses_actor_context",
+      "status": "defect_confirmed",
+      "observed": {
+        "bootstrapAllowed": true,
+        "captureGuardWithCurrentTenantOnlyWrapper": false,
+        "positiveControlWithAuthorizedActor": true,
+        "scope": "SQL exato da revalidacao; persistExtensionCapture HTTP nao chamado"
+      }
+    },
+    {
+      "name": "human_review_without_AI_returns_success_without_saving",
+      "status": "defect_confirmed",
+      "observed": {
+        "response": {
+          "comparisonReviewId": null,
+          "agreement": true,
+          "disagreements": [],
+          "hasShadow": false
+        },
+        "before": [
+          {
+            "human": 0,
+            "comparisons": 0
+          }
+        ],
+        "after": [
+          {
+            "human": 0,
+            "comparisons": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "rubric_ratifies_thirty_replays_of_one_product_without_approval",
+      "status": "defect_confirmed",
+      "observed": {
+        "metrics": {
+          "totalReviewed": 30,
+          "agreedCount": 30,
+          "disagreedCount": 0,
+          "agreementRate": 1,
+          "disagreementByDimension": {
+            "quality": 0,
+            "value": 0,
+            "audience": 0,
+            "confidence": 0,
+            "safety": 0
+          },
+          "sampleSizeTarget": 30,
+          "minAgreementRateTarget": 0.8,
+          "gatePassed": true,
+          "status": "ratified",
+          "gateName": "G-RUBRIC"
+        },
+        "distinctProducts": 1
+      }
+    },
+    {
+      "name": "multi_membership_reviewer_rejected_by_home_tenant_FK",
+      "status": "defect_confirmed",
+      "observed": {
+        "code": "23503",
+        "message": "insert or update on table \"comparison_review\" violates foreign key constraint \"comparison_review_reviewed_by_app_user_id_tenant_id_fkey\""
+      }
+    },
+    {
+      "name": "import_suppresses_commission_adjustment",
+      "status": "defect_confirmed",
+      "observed": {
+        "first": {
+          "batchId": "4b7f85b0-ce37-44cf-8b17-4a4fd6023b07",
+          "committedRowsCount": 1,
+          "alreadyCommitted": false
+        },
+        "correction": {
+          "batchId": "70600979-1291-47ba-8817-0c27bd6c9f7b",
+          "committedRowsCount": 0,
+          "alreadyCommitted": false
+        },
+        "preview": [
+          {
+            "rowNumber": 2,
+            "externalOrderId": "order-1",
+            "externalItemId": "item-1",
+            "decision": "duplicate",
+            "reason": "Comissão já registrada anteriormente no ledger desta conta",
+            "row": {
+              "externalOrderId": "order-1",
+              "externalItemId": "item-1",
+              "occurredAt": "2026-10-14T10:00:00.000Z",
+              "orderValueCents": 10000,
+              "commissionCents": 150,
+              "currency": "BRL",
+              "marketplace": "shopee",
+              "subId": null,
+              "status": "confirmed",
+              "commissionState": "received"
+            }
+          }
+        ],
+        "ledger": [
+          {
+            "amount_cents": 100,
+            "state": "confirmed",
+            "predecessor_id": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "ledger_key_still_collides_despite_fixed_digest",
+      "status": "defect_confirmed",
+      "observed": {
+        "distinctDigests": true,
+        "first": {
+          "batchId": "d815b7a7-760b-44d9-91d8-88be88503dda",
+          "committedRowsCount": 1,
+          "alreadyCommitted": false
+        },
+        "second": {
+          "batchId": "63683c58-d657-4e1e-b974-8425081a41de",
+          "committedRowsCount": 0,
+          "alreadyCommitted": false
+        },
+        "decisions": [
+          {
+            "rowNumber": 2,
+            "externalOrderId": "colon",
+            "externalItemId": "a:b",
+            "decision": "duplicate",
+            "reason": "Comissão já registrada anteriormente no ledger desta conta",
+            "row": {
+              "externalOrderId": "colon",
+              "externalItemId": "a:b",
+              "occurredAt": "2026-10-14T10:00:00.000Z",
+              "orderValueCents": 10000,
+              "commissionCents": 250,
+              "currency": "BRL",
+              "marketplace": "shopee",
+              "subId": null,
+              "status": "confirmed",
+              "commissionState": "confirmed"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "overlapping_previews_duplicate_conversion_not_commission",
+      "status": "defect_confirmed",
+      "observed": {
+        "conversions": 2,
+        "commissions": 1
+      }
+    },
+    {
+      "name": "experiment_promotes_shadow_unpaired_sample_with_forged_approver",
+      "status": "defect_confirmed",
+      "observed": {
+        "beforeStatus": "shadow",
+        "sample": 1,
+        "missingScoreMetric": 0,
+        "promoted": {
+          "promoted": true,
+          "candidateVersion": "missing-candidate",
+          "baselineVersion": "base"
+        },
+        "currentPolicy": {
+          "current_version": "missing-candidate",
+          "candidate_versions": 0
+        }
+      }
+    },
+    {
+      "name": "onboarding_invitation_accepts_unverified_email_and_missing_identity",
+      "status": "defect_confirmed",
+      "observed": {
+        "accepted": {
+          "accepted": true,
+          "affiliateId": "aff_a",
+          "tenantId": "a",
+          "role": "operator"
+        },
+        "authenticatedAuthUserId": null,
+        "actorHasNoVerifiedRecipientEmail": true
+      }
+    },
+    {
+      "name": "invite_acceptance_breaks_when_baseline_grant_is_faithful",
+      "status": "defect_confirmed",
+      "observed": {
+        "baselineSelectOnlyFromExistingMigration": true,
+        "fixtureHadBroaderGrant": true,
+        "failure": {
+          "code": "42501",
+          "message": "permission denied for table app_user_role"
+        }
+      }
+    },
+    {
+      "name": "onboarding_marks_credentials_complete_without_evidence",
+      "status": "defect_confirmed",
+      "observed": {
+        "progress": {
+          "completedSteps": [
+            "account_created",
+            "marketplace_credentials_configured"
+          ],
+          "currentStep": "test_link_verified",
+          "allSteps": [
+            {
+              "step": "account_created",
+              "status": "completed",
+              "updatedAt": "2026-10-14 20:42:43.677-03"
+            },
+            {
+              "step": "marketplace_credentials_configured",
+              "status": "completed",
+              "updatedAt": "2026-10-14 20:42:43.679-03"
+            }
+          ]
+        },
+        "credentials": 0
+      }
+    },
+    {
+      "name": "suspension_does_not_revoke_private_reads_or_mark_account_suspended",
+      "status": "defect_confirmed",
+      "observed": {
+        "accounts": [
+          {
+            "status": "active"
+          }
+        ],
+        "opportunities": [
+          {
+            "count": 1
+          }
+        ],
+        "plans": [
+          {
+            "status": "suspended"
+          }
+        ]
+      }
+    },
+    {
+      "name": "dispatch_sends_synthetic_facts_and_hardcoded_link",
+      "status": "defect_confirmed",
+      "observed": {
+        "jobId": "b0765957-46f4-4abb-886c-ac139254b669",
+        "output": {
+          "jobProcessed": true,
+          "jobId": "b0765957-46f4-4abb-886c-ac139254b669",
+          "status": "succeeded"
+        },
+        "payload": {
+          "destination": {
+            "id": "dd",
+            "targetRef": "authorized-test"
+          },
+          "text": "Oferta Especial",
+          "link": "https://garimpa.app/p/test",
+          "idempotencyKey": "audit-dispatch"
+        },
+        "missingSnapshotAndCampaignLink": true,
+        "adapterWasCalledInsideFixtureTransaction": true
+      }
+    },
+    {
+      "name": "dispatch_ignores_lost_marker_after_controlled_cancel",
+      "status": "defect_confirmed",
+      "observed": {
+        "cancelled": true,
+        "adapterCallsAfterCancellation": 1,
+        "output": {
+          "jobProcessed": true,
+          "jobId": "35549076-3c45-4f59-b03c-f267f422c4c7",
+          "status": "error",
+          "error": "LEASE_NOT_HELD: Cannot finalize job leased by another worker or not in leased status"
+        },
+        "method": "Interleaving controlado com SQL real na mesma sessao; nao certifica concorrencia multi-sessao"
+      }
+    }
+  ]
+}

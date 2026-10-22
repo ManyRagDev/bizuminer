@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-16T02:02:47.944Z",
+  "source": "authenticated Vercel MCP; read-only; no environment values decrypted",
+  "project": {
+    "id": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+    "name": "web",
+    "accountId": "team_CdqNeIvhoe03YClNYUpP6C1w",
+    "framework": "nextjs",
+    "nodeVersion": "24.x",
+    "latestDeployment": {
+      "id": "dpl_FtFtkK1C91T6Z38H5985mYe2RGRL",
+      "url": "web-e3twr6aqn-emanuels-projects-aa92a126.vercel.app",
+      "createdAt": 1791302922407,
+      "readyState": "READY",
+      "target": "production"
+    },
+    "domains": [
+      "www.bizuminer.com.br",
+      "web-khaki-beta-l29v7h3o33.vercel.app",
+      "bizuminer.com.br",
+      "web-emanuels-projects-aa92a126.vercel.app",
+      "web-git-main-emanuels-projects-aa92a126.vercel.app"
+    ]
+  },
+  "production": {
+    "id": "dpl_FtFtkK1C91T6Z38H5985mYe2RGRL",
+    "url": "web-e3twr6aqn-emanuels-projects-aa92a126.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "createdAt": 1791302922407,
+    "aliases": [
+      "www.bizuminer.com.br",
+      "web-khaki-beta-l29v7h3o33.vercel.app",
+      "bizuminer.com.br",
+      "web-emanuels-projects-aa92a126.vercel.app",
+      "web-git-main-emanuels-projects-aa92a126.vercel.app"
+    ],
+    "gitCommit": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+    "gitRef": "main",
+    "project": {
+      "id": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+      "name": "web",
+      "framework": "nextjs"
+    }
+  }
+}

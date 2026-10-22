@@ -1,0 +1,365 @@
+{
+  "observedDate": "2026-10-14",
+  "project": "spbuwcwmxlycchuwhfir",
+  "data": [
+    {
+      "jsonb_build_object": {
+        "policy_summary": [
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "affiliate_account",
+            "policyname": "affiliate_account_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "affiliate_marketplace_config",
+            "policyname": "affiliate_marketplace_config_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "affiliate_membership",
+            "policyname": "affiliate_membership_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "affiliate_monitoring_policy",
+            "policyname": "affiliate_monitoring_policy_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "affiliate_monitoring_policy_event",
+            "policyname": "affiliate_monitoring_policy_event_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "affiliate_monitoring_skip",
+            "policyname": "affiliate_monitoring_skip_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "app_user",
+            "policyname": "app_user_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "SELECT",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "app_user_role",
+            "policyname": "app_user_role_runtime_read",
+            "with_check": null
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "buyer_profile",
+            "policyname": "buyer_profile_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "capture_batch",
+            "policyname": "capture_batch_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "capture_run",
+            "policyname": "capture_run_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "click_event",
+            "policyname": "click_event_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "SELECT",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "curation_event",
+            "policyname": "curation_event_app_access",
+            "with_check": null
+          },
+          {
+            "cmd": "INSERT",
+            "qual": null,
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "curation_event",
+            "policyname": "curation_event_app_insert",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "editorial_assessment",
+            "policyname": "editorial_assessment_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "editorial_guideline",
+            "policyname": "editorial_guideline_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "editorial_selection",
+            "policyname": "editorial_selection_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "editorial_selection_item",
+            "policyname": "editorial_selection_item_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "extension_device",
+            "policyname": "extension_device_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "favorite",
+            "policyname": "favorite_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "price_observation",
+            "policyname": "price_observation_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "price_watch",
+            "policyname": "price_watch_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "product",
+            "policyname": "product_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "product_curation",
+            "policyname": "product_curation_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "publication",
+            "policyname": "publication_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "short_link",
+            "policyname": "short_link_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "subscriber",
+            "policyname": "subscriber_app_access",
+            "with_check": "true"
+          },
+          {
+            "cmd": "ALL",
+            "qual": "true",
+            "roles": [
+              "garimpa_app"
+            ],
+            "tablename": "triage_run",
+            "policyname": "triage_run_app_access",
+            "with_check": "true"
+          }
+        ],
+        "view_definition": " WITH latest AS (\n         SELECT DISTINCT ON (price_observation.product_id) price_observation.id,\n            price_observation.product_id,\n            price_observation.tenant_id,\n            price_observation.price_cents,\n            price_observation.original_price_cents,\n            price_observation.claimed_discount_rate,\n            price_observation.rating_star,\n            price_observation.sales_label,\n            price_observation.sales_count,\n            price_observation.observed_at\n           FROM garimpa.price_observation\n          ORDER BY price_observation.product_id, price_observation.observed_at DESC, price_observation.id DESC\n        ), stats AS (\n         SELECT l_1.product_id,\n            count(o.id)::integer AS observation_count,\n            floor(EXTRACT(epoch FROM l_1.observed_at - min(o.observed_at)) / 86400::numeric)::integer AS history_days,\n            min(o.price_cents) FILTER (WHERE o.id <> l_1.id) AS previous_min_price_cents\n           FROM latest l_1\n             JOIN garimpa.price_observation o ON o.product_id = l_1.product_id AND o.tenant_id = l_1.tenant_id\n          GROUP BY l_1.product_id, l_1.tenant_id, l_1.id, l_1.observed_at\n        ), first_run AS (\n         SELECT DISTINCT ON (price_observation.product_id) price_observation.product_id,\n            price_observation.capture_run_id\n           FROM garimpa.price_observation\n          WHERE price_observation.capture_run_id IS NOT NULL\n          ORDER BY price_observation.product_id, price_observation.observed_at, price_observation.id\n        )\n SELECT p.id,\n    p.tenant_id,\n    p.marketplace,\n    p.external_id,\n    p.title,\n    p.product_url,\n    p.image_url,\n    p.category,\n    p.last_seen_at,\n    p.family_key,\n    p.family_label,\n    p.family_method,\n    p.family_version,\n    c.status,\n    c.reason_code,\n    c.reason_detail,\n    c.deferred_until,\n    c.created_at AS queued_at,\n    l.price_cents,\n    l.original_price_cents,\n    l.claimed_discount_rate,\n    l.rating_star,\n    l.sales_label,\n    l.sales_count,\n    l.observed_at,\n    s.observation_count,\n    s.history_days,\n    s.previous_min_price_cents,\n    s.observation_count >= 3 AND s.history_days >= 7 AND l.price_cents <= s.previous_min_price_cents AS lowest_verified,\n    fr.capture_run_id AS presenting_capture_run_id,\n    run.marketplace AS presenting_marketplace,\n    run.parameters ->> 'capturePlanId'::text AS presenting_plan_id,\n    run.parameters ->> 'captureQueryId'::text AS presenting_query_id,\n    run.parameters ->> 'captureMode'::text AS presenting_mode,\n    run.parameters ->> 'targetCategory'::text AS presenting_target_category,\n    run.parameters ->> 'targetFamily'::text AS presenting_target_family\n   FROM garimpa.product_curation c\n     JOIN garimpa.product p ON p.id = c.product_id AND p.tenant_id = c.tenant_id\n     JOIN latest l ON l.product_id = p.id AND l.tenant_id = p.tenant_id\n     JOIN stats s ON s.product_id = p.id\n     LEFT JOIN first_run fr ON fr.product_id = p.id\n     LEFT JOIN garimpa.capture_run run ON run.id = fr.capture_run_id AND run.tenant_id = p.tenant_id;",
+        "garimpa_constraints": [
+          {
+            "conname": "publication_affiliate_id_fkey",
+            "relation": "garimpa.publication",
+            "definition": "FOREIGN KEY (affiliate_id) REFERENCES garimpa.affiliate_account(id) ON DELETE RESTRICT"
+          },
+          {
+            "conname": "publication_id_tenant_key",
+            "relation": "garimpa.publication",
+            "definition": "UNIQUE (id, tenant_id)"
+          },
+          {
+            "conname": "publication_pkey",
+            "relation": "garimpa.publication",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "conname": "publication_product_tenant_fkey",
+            "relation": "garimpa.publication",
+            "definition": "FOREIGN KEY (product_id, tenant_id) REFERENCES garimpa.product(id, tenant_id) ON DELETE CASCADE"
+          },
+          {
+            "conname": "publication_slug_key",
+            "relation": "garimpa.publication",
+            "definition": "UNIQUE (slug)"
+          },
+          {
+            "conname": "publication_status_check",
+            "relation": "garimpa.publication",
+            "definition": "CHECK ((status = ANY (ARRAY['active'::text, 'expired'::text])))"
+          },
+          {
+            "conname": "publication_tenant_id_fkey",
+            "relation": "garimpa.publication",
+            "definition": "FOREIGN KEY (tenant_id) REFERENCES garimpa.affiliate_account(tenant_id) ON DELETE RESTRICT"
+          },
+          {
+            "conname": "app_user_id_tenant_key",
+            "relation": "garimpa.app_user",
+            "definition": "UNIQUE (id, tenant_id)"
+          },
+          {
+            "conname": "app_user_pkey",
+            "relation": "garimpa.app_user",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "conname": "app_user_tenant_id_fkey",
+            "relation": "garimpa.app_user",
+            "definition": "FOREIGN KEY (tenant_id) REFERENCES garimpa.affiliate_account(tenant_id) ON DELETE RESTRICT"
+          },
+          {
+            "conname": "affiliate_membership_affiliate_id_fkey",
+            "relation": "garimpa.affiliate_membership",
+            "definition": "FOREIGN KEY (affiliate_id) REFERENCES garimpa.affiliate_account(id) ON DELETE RESTRICT"
+          },
+          {
+            "conname": "affiliate_membership_app_user_id_fkey",
+            "relation": "garimpa.affiliate_membership",
+            "definition": "FOREIGN KEY (app_user_id) REFERENCES garimpa.app_user(id) ON DELETE RESTRICT"
+          },
+          {
+            "conname": "affiliate_membership_pkey",
+            "relation": "garimpa.affiliate_membership",
+            "definition": "PRIMARY KEY (affiliate_id, app_user_id)"
+          },
+          {
+            "conname": "affiliate_membership_role_check",
+            "relation": "garimpa.affiliate_membership",
+            "definition": "CHECK ((role = ANY (ARRAY['owner'::text, 'operator'::text])))"
+          }
+        ]
+      }
+    }
+  ]
+}

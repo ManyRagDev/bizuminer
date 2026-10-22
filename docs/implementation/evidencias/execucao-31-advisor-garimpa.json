@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-16T02:06:15.814Z",
+  "source": "Supabase MCP get_advisors security; filtered to namespace garimpa",
+  "garimpaFindings": [],
+  "unrelatedSharedProjectDetailsOmitted": true,
+  "noProductionChanges": true
+}

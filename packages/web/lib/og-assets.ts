@@ -70,8 +70,16 @@ const SATORI_DECODABLE = ["image/jpeg", "image/png", "image/gif", "image/svg+xml
  * formato futuro que o `sharp` saiba ler. Descartar a foto seria pior que a
  * doença: um story de produto sem produto não vende nada.
  */
+const PRODUCT_IMAGE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const productImageCache = new Map<string, { base64: string; expiresAt: number }>();
+
 export async function fetchProductImage(url: string | null): Promise<string | null> {
   if (!url) return null;
+  const cached = productImageCache.get(url);
+  const now = Date.now();
+  if (cached && cached.expiresAt > now) {
+    return cached.base64;
+  }
   const jpegUrl = url.endsWith(".webp") ? `${url.slice(0, -".webp".length)}.jpg` : url;
   try {
     const response = await fetch(jpegUrl, { signal: AbortSignal.timeout(4000) });
@@ -79,11 +87,22 @@ export async function fetchProductImage(url: string | null): Promise<string | nu
     const type = (response.headers.get("content-type") ?? "image/jpeg").split(";")[0]!.trim().toLowerCase();
     const buffer = Buffer.from(await response.arrayBuffer());
 
+    let result: string | null = null;
     if (SATORI_DECODABLE.includes(type)) {
-      return `data:${type};base64,${buffer.toString("base64")}`;
+      result = `data:${type};base64,${buffer.toString("base64")}`;
+    } else {
+      const png = await transcodeToPng(buffer);
+      result = png ? `data:image/png;base64,${png.toString("base64")}` : null;
     }
-    const png = await transcodeToPng(buffer);
-    return png && `data:image/png;base64,${png.toString("base64")}`;
+
+    if (result) {
+      if (productImageCache.size > 150) {
+        const oldestKey = productImageCache.keys().next().value;
+        if (oldestKey) productImageCache.delete(oldestKey);
+      }
+      productImageCache.set(url, { base64: result, expiresAt: now + PRODUCT_IMAGE_CACHE_TTL_MS });
+    }
+    return result;
   } catch {
     return null;
   }

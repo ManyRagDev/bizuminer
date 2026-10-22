@@ -1,0 +1,429 @@
+{
+  "date": "2026-10-15",
+  "environment": "local; URL ficticia nao conectavel; credenciais removidas; PGlite isolado",
+  "results": [
+    {
+      "name": "web-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/web"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.47,
+      "log": "docs/implementation/evidencias/execucao-19-web-tests.log"
+    },
+    {
+      "name": "web-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/web",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 6.33,
+      "log": "docs/implementation/evidencias/execucao-19-web-typecheck-final.log",
+      "initialAttempt": {
+        "name": "web-typecheck",
+        "command": [
+          "npm",
+          "run",
+          "typecheck",
+          "--prefix",
+          "packages/web",
+          "--",
+          "--incremental",
+          "false"
+        ],
+        "exitCode": 2,
+        "elapsedSeconds": 6.93,
+        "log": "docs/implementation/evidencias/execucao-19-web-typecheck.log"
+      },
+      "recheckReason": "Verificação da fonte final, incluindo parser de direitos do upload privado; sem credenciais remotas.",
+      "previousResult": {
+        "name": "web-typecheck",
+        "command": [
+          "npm",
+          "run",
+          "typecheck",
+          "--prefix",
+          "packages/web",
+          "--",
+          "--incremental",
+          "false"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": null,
+        "log": "docs/implementation/evidencias/execucao-19-web-typecheck-final.log",
+        "initialAttempt": {
+          "name": "web-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck",
+            "--prefix",
+            "packages/web",
+            "--",
+            "--incremental",
+            "false"
+          ],
+          "exitCode": 2,
+          "elapsedSeconds": 6.93,
+          "log": "docs/implementation/evidencias/execucao-19-web-typecheck.log"
+        },
+        "recheckReason": "Campo endsAt conectado ao formulário do piloto após falha de tipagem. Reexecução observada com exit 0; build posterior passou na mesma fonte."
+      }
+    },
+    {
+      "name": "capture-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/capture"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 5.83,
+      "log": "docs/implementation/evidencias/execucao-19-capture-tests.log"
+    },
+    {
+      "name": "persistence-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/persistence"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.31,
+      "log": "docs/implementation/evidencias/execucao-19-persistence-tests.log"
+    },
+    {
+      "name": "capture-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/capture",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.07,
+      "log": "docs/implementation/evidencias/execucao-19-capture-typecheck.log"
+    },
+    {
+      "name": "extension-tests",
+      "command": [
+        "npm",
+        "test",
+        "--prefix",
+        "packages/extension"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.27,
+      "log": "docs/implementation/evidencias/execucao-19-extension-tests.log"
+    },
+    {
+      "name": "persistence-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/persistence",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.42,
+      "log": "docs/implementation/evidencias/execucao-19-persistence-typecheck.log"
+    },
+    {
+      "name": "extension-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "packages/extension",
+        "--",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.07,
+      "log": "docs/implementation/evidencias/execucao-19-extension-typecheck.log"
+    },
+    {
+      "name": "sql-test-triage-price",
+      "command": [
+        "npm",
+        "run",
+        "test:triage-price",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.32,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-triage-price.log"
+    },
+    {
+      "name": "sql-test",
+      "command": [
+        "npm",
+        "run",
+        "test",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 3.92,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test.log"
+    },
+    {
+      "name": "sql-test-capture-batch",
+      "command": [
+        "npm",
+        "run",
+        "test:capture-batch",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.47,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-capture-batch.log"
+    },
+    {
+      "name": "sql-test-commercial",
+      "command": [
+        "npm",
+        "run",
+        "test:commercial",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 3.02,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-commercial.log"
+    },
+    {
+      "name": "sql-test-regressions",
+      "command": [
+        "npm",
+        "run",
+        "test:regressions",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.32,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-regressions.log"
+    },
+    {
+      "name": "sql-test-cf-regressions",
+      "command": [
+        "npm",
+        "run",
+        "test:cf-regressions",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.77,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-cf-regressions.log"
+    },
+    {
+      "name": "sql-test-entitlement",
+      "command": [
+        "npm",
+        "run",
+        "test:entitlement",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.57,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-entitlement.log"
+    },
+    {
+      "name": "sql-test-price-evidence",
+      "command": [
+        "npm",
+        "run",
+        "test:price-evidence",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.42,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-price-evidence.log"
+    },
+    {
+      "name": "sql-test-rubric",
+      "command": [
+        "npm",
+        "run",
+        "test:rubric",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.57,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-rubric.log"
+    },
+    {
+      "name": "sql-test-opportunity",
+      "command": [
+        "npm",
+        "run",
+        "test:opportunity",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.94,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-opportunity.log"
+    },
+    {
+      "name": "sql-test-cockpit",
+      "command": [
+        "npm",
+        "run",
+        "test:cockpit",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 12.04,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-cockpit.log"
+    },
+    {
+      "name": "sql-test-experiment",
+      "command": [
+        "npm",
+        "run",
+        "test:experiment",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.47,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-experiment.log"
+    },
+    {
+      "name": "sql-test-financial",
+      "command": [
+        "npm",
+        "run",
+        "test:financial",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 12.04,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-financial.log"
+    },
+    {
+      "name": "sql-test-onboarding",
+      "command": [
+        "npm",
+        "run",
+        "test:onboarding",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.42,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-onboarding.log"
+    },
+    {
+      "name": "sql-test-dispatch",
+      "command": [
+        "npm",
+        "run",
+        "test:dispatch",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 11.79,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-dispatch.log"
+    },
+    {
+      "name": "sql-test-verified-upgrade",
+      "command": [
+        "npm",
+        "run",
+        "test:verified-upgrade",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 3.83,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-verified-upgrade.log"
+    },
+    {
+      "name": "sql-test-verified-workflows",
+      "command": [
+        "npm",
+        "run",
+        "test:verified-workflows",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 4.37,
+      "log": "docs/implementation/evidencias/execucao-19-sql-test-verified-workflows.log"
+    },
+    {
+      "name": "web-build",
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "--prefix",
+        "packages/web"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 18.5,
+      "log": "docs/implementation/evidencias/execucao-19-web-build-final.log",
+      "previousResult": {
+        "name": "web-build",
+        "command": [
+          "npm",
+          "run",
+          "build",
+          "--prefix",
+          "packages/web"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 19.71,
+        "log": "docs/implementation/evidencias/execucao-19-web-build.log"
+      },
+      "recheckReason": "Verificação da fonte final, incluindo parser de direitos do upload privado; sem credenciais remotas."
+    }
+  ],
+  "finalizedAtUtc": "2026-10-15T03:20:08.259080+00:00",
+  "summary": {
+    "commands": 26,
+    "passed": 26,
+    "failed": 0,
+    "unitTests": 557,
+    "sqlSuites": 17,
+    "typechecks": 4,
+    "builds": 1,
+    "workflowScenarios": 13,
+    "upgradeChecks": 3,
+    "externalHomologation": "not_executed"
+  }
+}

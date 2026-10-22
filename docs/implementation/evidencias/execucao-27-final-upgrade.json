@@ -1,0 +1,8 @@
+{
+  "environment": "isolated PGlite, no remote migration",
+  "results": [
+    "baseline before V2: owner compatibility and forged identity denied",
+    "11→12 preserves v1 assessment, legacy financial identities and unassigned experiment rows byte-for-value",
+    "old unassigned measurements remain historical; new writes enforce assignment and immutable grants"
+  ]
+}

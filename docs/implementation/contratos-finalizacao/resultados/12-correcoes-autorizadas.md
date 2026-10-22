@@ -1,0 +1,21 @@
+# Resultado OS-12 — Correções autorizadas
+
+Estado: CONCLUIDO — correções delimitadas verificadas, sem aplicação de C.
+
+O [parecer de entrega](12-auditoria-entrega.md) aprovou tecnicamente o novo hash exato de C, condicionado à OS-06 e preflight/backup/manutenção válidos. A OS-05 foi retomada e concluída com candidata READY real promovida sob proteção all. Novos hosts/canônico também exigem autenticação. As ressalvas históricas de consolidação de resultado foram atendidas nesta atualização; smokes pessoais e retomada continuam nas ordens próprias.
+
+Baseline main43700c59, alterações preexistentes preservadas. Autorização humana explícita das duas correções; [auditoria de contrato](12-auditoria-contrato.md) CONFORME antes da execução. Nenhuma alteração de regra de negócio ou Google OAuth.
+
+AC-12.1 PASS: C recebeu somente `COLLATE "C"` no ORDER BY de inventário de funções. Novo SHA `a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597`. Gerador tem somente a mesma correção; manifesto só sha256/manualTransactionSha256 de C, novo SHA `3c8af38ce344ef3ad8030b07a58e2503f567ab964e8842bb592290421c886081`. Regeração completa --seal na cópia isolada reproduziu A/B/C/manifesto byte a byte. Catálogo não recapturado; A/B preservadas. Primeira regeneração falhou pela ausência de dois JSONs de entrada na cópia; ambos foram copiados sem alteração e a repetição passou, sem patch adicional.
+
+AC-12.2 PASS local: verificador existente, novo teste nativo de collation, replacement-rollout e operational-maintenance, todos exit0 no PostgreSQL17.11 descartável. Novo teste contém10 cenários em dois bancos template0 C/en_US.UTF-8, com guarda exata extraída de C: inventário correto aceita; ausente/extra/overload rejeitam preservando gate/policy. Funções sintéticas testam somente inventário; comportamento completo é coberto pelas suites nativas existentes. Não é homologação gerenciada de OAuth/Storage/pooler. Logs em `/tmp/bizuminer-finalizacao/os-12/check-0.log` a `check-3.log`.
+
+AC-12.3 PASS: alvo Vercel web/equipe CF-01 reconfirmado. Ordem observada de chamadas MCP: update protection all; get_project confirma all; unpause; autoassignfalse; GET bruto confirma paused=false, autoassign=false, all. A resposta intermediária get_project omite paused; não existe snapshot bruto intermediário all+paused, e essa limitação documental é explícita. Inventário completo25 hosts (paginação encerrada):24 redirecionam à autenticação Vercel; alias histórico restante retorna410 x-vercel-error GONE, sem atingir aplicação. Prova anterior que interpretou410 como inesperado foi mantida e reconciliada, não apagada. Nenhuma URL foi observada expondo a aplicação. Writers continuam suspensos.
+
+AC-12.4 PASS de registro/transferência: delta e estados anteriores/atuais registrados sem segredos; CF-01 e OS-05/07 receberam somente a exceção aprovada, mantendo histórico. Publicação real segue OS-05; C espera OS-06 e parecer favorável ao novo hash. Proteção original all_except_custom_domains será restaurada somente após OS-08/09 aprovadas; não foi desativada para testar.
+
+Ocorrência de publicação: tentativa `dpl_6UCdqJa1HzAjMgskFk83nkVayTri` incluiu cache gerado de tipagem fora da allowlist, pois a sequência de orquestração não interrompeu no assert de inspeção. Foi cancelada e nunca promovida. Cache removido apenas do upload temporário; reenvio utiliza script em que todas as assertions antecedem o comando de deploy. Nenhum segredo ou nova fonte de runtime foi enviado. Essa ocorrência não altera a prova dos bytes SQL.
+
+Escritas próprias limitadas à lista OS-12 e resultados das ordens em retomada. [Delta](../../evidencias/os12-delta-fontes.json) e [evidência](12-correcoes-autorizadas.json). Implantação não está concluída; aceites OS-05–10 permanecem exigidos.
+
+Conferência final: HEAD/staged/diff tracked da árvore compartilhada iguais à baseline;460 fontes originais e quatro hashes do delta conferem. O `git diff --check` global retorna2 por três linhas em branco finais preexistentes em monitoring-policy.test.ts, globals.css e offer-history.ts; não foram corrigidas fora do escopo. Comparação no-index dos três arquivos alterados não apontou whitespace (exit1 por haver diff), teste novo sem whitespace indevido. Isso não é falha funcional nova nem impede o aceite delimitado.

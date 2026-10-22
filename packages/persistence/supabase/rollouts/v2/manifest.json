@@ -1,0 +1,747 @@
+{
+  "version": 1,
+  "sealed": true,
+  "catalogueSha256": "26a510294648b9dd42e031ac7352fe5858d6a8db7b465b50893355447d69a0b7",
+  "productionApproved": false,
+  "environmentPrerequisite": "isolated rehearsal and independent approval of exact SQL/code; compatible deployment and writers before C",
+  "installedSubset": [
+    {
+      "file": "20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345"
+    },
+    {
+      "file": "20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693"
+    },
+    {
+      "file": "20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23"
+    }
+  ],
+  "compatibilitySources": [
+    {
+      "path": "tools/editorial-tests/rollout-privilege-matrix.json",
+      "sha256": "be957e08944d643d55c32982929c3c7ebff19c32c10f47cb475055d824fe4165"
+    },
+    {
+      "path": "tools/editorial-tests/rollout-monitoring-fragment.sql",
+      "sha256": "509835ae88a71352827e4ba492abc160fbbdd391f5bdccde0772ea769bf8e126"
+    },
+    {
+      "path": "tools/editorial-tests/rollout-extension-fragment.sql",
+      "sha256": "10fb1575c4bd785f63840ff1cc71bcdb844833fa09e0f3ff4f706d08f9bc2411"
+    },
+    {
+      "path": "tools/editorial-tests/rollout-extension-preflight.sql",
+      "sha256": "42d7f0e22a03bc5a8d0839f68ae9e82dd579486d69ad6a480818d7d260cb40e8"
+    },
+    {
+      "path": "packages/persistence/src/monitoring-db.ts",
+      "sha256": "d395f38ad7d940980d8de392242d075e37858b0d43884e7f80c121e9c10386b7"
+    },
+    {
+      "path": "packages/persistence/src/monitoring-candidates.ts",
+      "sha256": "e7b5aa13ce75b6949dc2c0f9f5eda51c33f411f4c21ba80ec646219fc433b2ec"
+    },
+    {
+      "path": "packages/persistence/src/monitoring-schedule.ts",
+      "sha256": "3cca22f3789ea5c948236c8feec2909fc51012065700819040890dc6c7b175f9"
+    },
+    {
+      "path": "packages/persistence/bin/monitor-prices.ts",
+      "sha256": "2b1fbcf10b374f5c6d67618dce04952b733aba1326cf90c3b053ee497d9ed54e"
+    },
+    {
+      "path": "packages/persistence/bin/monitoring-plan.ts",
+      "sha256": "d51dcf619ce6f745e177ddedf69e025eecaf6ddd1e56d946b9724361adee192e"
+    },
+    {
+      "path": "packages/persistence/src/pg-store.ts",
+      "sha256": "bb03c640cd9a5c20805352aa5da428d997aa683b70b407cadd8f6827e8ba52c1"
+    },
+    {
+      "path": ".github/workflows/capture-offers.yml",
+      "sha256": "8c0a9386008e832aa1dad434418b3483ca30b254c4045b3c659130067505de6b"
+    },
+    {
+      "path": ".github/workflows/monitor-prices.yml",
+      "sha256": "60a2572ac74526a449bbb700c8f3dc5564b95fdc646306f5db40a60988862900"
+    },
+    {
+      "path": "packages/persistence/bin/backfill-family.ts",
+      "sha256": "3b4e6acea08764688bece31c3f6b5ade3f6983c466cfa0f371ef7a243db8da2b"
+    },
+    {
+      "path": "packages/persistence/bin/bootstrap-affiliate-house.ts",
+      "sha256": "3c27d7756a7e32322c9aed58a561ccc4c871db13a30f47b1a54fd85fa19f9dbe"
+    },
+    {
+      "path": "packages/persistence/bin/cleanup-lifecycle.ts",
+      "sha256": "8ba6bed573b70fb67b04d42ebe18bb62e9f6d110a0272f1fdcf935b84f84306d"
+    },
+    {
+      "path": "packages/persistence/bin/curate-initial-catalog.ts",
+      "sha256": "5f092a12570d4d9b27359d6d58ee9964a7350bed3dd360dea10c6307a82aaff9"
+    },
+    {
+      "path": "packages/persistence/bin/purge-catalog.ts",
+      "sha256": "7bf9da0c29ddfaa6204cd40e0847ad3992fa9758364e960e54a1a0ee2901bbe7"
+    },
+    {
+      "path": "packages/persistence/bin/seed-house-marketplace-config.ts",
+      "sha256": "a4a36353ce9900b559fa5310ce652c69c57244eaee1eb6f0aefd28a98462960a"
+    },
+    {
+      "path": "packages/persistence/bin/verify-tenant-isolation.ts",
+      "sha256": "108b8e3b79fbd0ff51f50c2b50e08298f6502096e4e53da1c2c064ccec04821e"
+    },
+    {
+      "path": "packages/persistence/src/catalog-maintenance.ts",
+      "sha256": "1ee210f6ac5d2146a4c3c93ed6b62b83f46fa43a63ccb14c9f5b6c8f89a59845"
+    },
+    {
+      "path": "packages/persistence/src/house-maintenance.ts",
+      "sha256": "a87b79d2aedf5273b857305c1458ad86d6c61d29a5c681c9b4b73ee0802fa67f"
+    },
+    {
+      "path": "packages/persistence/src/ingest.ts",
+      "sha256": "a91fe6951ce84b5e77d280ff901c3e9a1f8ff735f55890fada19f9ead937f685"
+    },
+    {
+      "path": "packages/persistence/src/maintenance-cli.ts",
+      "sha256": "cd64fad409432018f2b4c903218ee25300ce97bf02d52380aa0248ddd6f652ce"
+    },
+    {
+      "path": "packages/persistence/src/store.ts",
+      "sha256": "8ca83cf5c15b5780ff66997a0303efd5495e81a2b78b5a2e1a2bba229ec5304c"
+    },
+    {
+      "path": "packages/web/app/api/admin/captura/route.ts",
+      "sha256": "80dccffa5f025fe05edcb55dd08c0d9fe835e7c1c1888fc7b1138a08ae2b20e8"
+    },
+    {
+      "path": "packages/web/app/api/admin/extension/devices/route.ts",
+      "sha256": "cf16b40e468913f1ac6ee62ac03fbac2ee006293d940f8403dc2e6fd33d38e3a"
+    },
+    {
+      "path": "packages/web/app/api/admin/rodagem/lote/route.ts",
+      "sha256": "fc6597ff68a4005253cfeb83971e37a2dbb6229ffbf04f55c9382b60bad3947c"
+    },
+    {
+      "path": "packages/web/app/api/admin/rodagem/navegador/route.ts",
+      "sha256": "74df798a079731aa085866c06b37358886bff9a491ed8efeaf5cbf651268afdd"
+    },
+    {
+      "path": "packages/web/app/api/extension/capture-batches/route.ts",
+      "sha256": "1ac811ac1319fbb6029b2c1fe5797c7d5eb07bf423b6efc3ad6868a4f6cf37a1"
+    },
+    {
+      "path": "packages/web/app/api/extension/pairing-codes/route.ts",
+      "sha256": "749de64247641eb6a23076c013b44f7f1b4a7909cbcd39ecd6c94907946b39d1"
+    },
+    {
+      "path": "packages/web/bin/reconcile-capture-batches.ts",
+      "sha256": "3d62d9caead564a9ee8195a6150a1902256b10c01d8ff0cf11417e73861a4a51"
+    },
+    {
+      "path": "packages/web/bin/run-capture-batch.ts",
+      "sha256": "0080b15175646f2afecea7bba9b091ff2f5e465cd02502f642e034113a96a51f"
+    },
+    {
+      "path": "packages/web/bin/run-dispatch.mts",
+      "sha256": "2ab57546ad8265f2d28249cc27c8653a2e0a652fd6138561f8122adbbaf6bd06"
+    },
+    {
+      "path": "packages/web/bin/run-triage.ts",
+      "sha256": "26129a5a0bb7dd006b9a5b8d3107bb0c43b5510ef25c69819e8f7a8e8755edc9"
+    },
+    {
+      "path": "packages/web/lib/account-context.ts",
+      "sha256": "c337757e4b418f474fe275438897413a393d46e24bdc3971978790a73ceb41aa"
+    },
+    {
+      "path": "packages/web/lib/account-scope.ts",
+      "sha256": "92d9734d2002aa60de03570b22e3e04234a2e095d29d93c36e80e4e2e581a44f"
+    },
+    {
+      "path": "packages/web/lib/browser-capture-db.ts",
+      "sha256": "ad7fb6b7f11e217c9629423e980c5925bdf6d1fcc06b182363f8aae138337b7b"
+    },
+    {
+      "path": "packages/web/lib/capture-batch-db.ts",
+      "sha256": "08456d5398adf5338fdedb41be6367ffa19a6e58ee35ff86fa51ae45a58cfa2a"
+    },
+    {
+      "path": "packages/web/lib/capture-batch-worker.ts",
+      "sha256": "0ba73bdc1d75a6aa0d4396e25e10d30344c0664dcb834c3feb38965246d1062c"
+    },
+    {
+      "path": "packages/web/lib/capture-dispatch.ts",
+      "sha256": "f80daae8cf55044eb0ea422f3bf11a86ad16d93f42e79ce39ba58fb8a479978d"
+    },
+    {
+      "path": "packages/web/lib/capture-process.ts",
+      "sha256": "c7cebe63eb220f94e47ab44d7b4eb1c0838e4799a807fca1ee8ba1bde4d262fc"
+    },
+    {
+      "path": "packages/web/lib/commercial-financial-db.ts",
+      "sha256": "7c9c27b14956e1dc6d3f1419860ae35843702bd699d02b01866cb3e2d5837736"
+    },
+    {
+      "path": "packages/web/lib/commercial-rollout.ts",
+      "sha256": "b4ae2d2b73d44f54613c4edc9d48042ddd552f923a0886d46d3ab946c7526732"
+    },
+    {
+      "path": "packages/web/lib/commercial-workflow.ts",
+      "sha256": "5dfca8cb99c3b20fffe0c4cb92aeb3c5443fac68df65cdf8a9a9b9f6a624ac41"
+    },
+    {
+      "path": "packages/web/lib/dispatch-worker.ts",
+      "sha256": "9f43572b60f22f085874b716341ca8ec8adcd0af2c58204f5154fc34dd82f467"
+    },
+    {
+      "path": "packages/web/lib/experiment-db.ts",
+      "sha256": "1b25ed4fb07dfbdb3be74414c3fd3b9ed2ce35712cc72144e126445afe358abb"
+    },
+    {
+      "path": "packages/web/lib/extension-admin.ts",
+      "sha256": "0cdcf61c65ea3b7e4af56ac98c89715beded0b8fc5829c584a5ccfa295fa012f"
+    },
+    {
+      "path": "packages/web/lib/extension-db.ts",
+      "sha256": "ccee964d4890cee7f9c6fe25b024dc1a41d9154826d76e050f70487097ee09e9"
+    },
+    {
+      "path": "packages/web/lib/github-monitoring.ts",
+      "sha256": "7f2e2534fa904a4b2f32c922fcc59d5e455753e85efd8ae9c0eabe8ab0f412ff"
+    },
+    {
+      "path": "packages/web/lib/governance-db.ts",
+      "sha256": "058fc93f35a1fa4a9474fef2a3d3228b2c250d20d6550916c14933898ca9a383"
+    },
+    {
+      "path": "packages/web/lib/kit-artifact-db.ts",
+      "sha256": "c093b8d45378903f613b51d8cca2ac62c930931d2b90590deab7a67956e10214"
+    },
+    {
+      "path": "packages/web/lib/manual-capture.ts",
+      "sha256": "3515e7f78a222b2f8b2600e0a3a47e108c483ac06efedeb80dd1f570b5a68a5c"
+    },
+    {
+      "path": "packages/web/lib/owner-account-db.ts",
+      "sha256": "d89f5ad39ac92a1fd45583b8f7e4e35c7fb941b50f8fb9e2496fef2daa91e066"
+    },
+    {
+      "path": "packages/web/lib/private-artifact-db.ts",
+      "sha256": "6f5a5bb44fa6e50c2f367b5f136d82ca58368384d349c011469d74bb06ed9b52"
+    },
+    {
+      "path": "packages/web/lib/public-offer-db.ts",
+      "sha256": "0aafa644626ae986329936f17be12cede240e9ebaff10dfd94d3b3ad21a0a259"
+    },
+    {
+      "path": "packages/web/lib/rubric-db.ts",
+      "sha256": "6147f46848bfdcba05c5ebf97ebb0b6fb52875ee0bb5ef15854a6e76c93a355a"
+    },
+    {
+      "path": "packages/web/lib/saas-onboarding-db.ts",
+      "sha256": "948fde426e8e297a1baf7ffa1db229bf86889e588ab9baebf8bf784f39ec7329"
+    },
+    {
+      "path": "packages/web/lib/tenant-db.ts",
+      "sha256": "8db3761ca6dc6fc970f6cac3513165b1e883ca82dabae4adfae8170062a37051"
+    },
+    {
+      "path": "packages/web/lib/workflow-readiness.ts",
+      "sha256": "a2eacceec399f7e736bee253a21e3cb0a6557f1b59deaae0cca72248e61ebe60"
+    }
+  ],
+  "supersedes": [
+    {
+      "file": "20261014101000_garimpa_tenant_rls_scoped.sql",
+      "sha256": "57e737818e44266dc7e59d6a4b8637cd3d83fba1637a0cc0837df3674c88e8a0"
+    },
+    {
+      "file": "20261014102000_garimpa_price_evidence_canonical.sql",
+      "sha256": "5663b934ce2240efcafa8b069e54376f08cc392ec07d87d62d4c4c98deceb2b6"
+    },
+    {
+      "file": "20261014103000_garimpa_rubric_assessment_shadow.sql",
+      "sha256": "fc2ebbd70c0c31f9a416b2026d1a0789aafa908b68031710fec41ba5e7483139"
+    },
+    {
+      "file": "20261014104000_garimpa_audience_policy_and_opportunity.sql",
+      "sha256": "f7891a8b351f3efe3da146e520c1a2a0c2c05afd0a6e8d848c2f34302331341a"
+    },
+    {
+      "file": "20261014105000_garimpa_commerce_and_campaign_link.sql",
+      "sha256": "0ac1aac79763568890d0ea5a6f8785898f338da0d981d3e49aa87e569763e648"
+    },
+    {
+      "file": "20261014106000_garimpa_commercial_financial_ledger.sql",
+      "sha256": "64e3695d1defc2dc28b69fa61f3ea2eea71a2d8bffb3f4aac0475079618ed038"
+    },
+    {
+      "file": "20261014107000_garimpa_click_attribution_and_channels.sql",
+      "sha256": "45da44abba0327b4d7c78c39f3f9ba29040f937ff291a6f9aa2961ba27686da9"
+    },
+    {
+      "file": "20261014108000_garimpa_policy_experiments.sql",
+      "sha256": "4dee052305d5d0d10a73e7139de358f2bfc9af54b9de5ae53dec4cb7e12e0f08"
+    },
+    {
+      "file": "20261014109000_garimpa_dispatch_jobs_outbox.sql",
+      "sha256": "89165a429250169ec34f11bd7db62d306fdcb429aacaa70ac6bb9a0e481225ff"
+    },
+    {
+      "file": "20261014110000_garimpa_saas_onboarding_entitlements.sql",
+      "sha256": "0c247052eb42a56ac97edf845fda5d548f0c7194d5745d4d51ed2739d9978a7b"
+    },
+    {
+      "file": "20261015021300_garimpa_verified_workflows.sql",
+      "sha256": "f2566ff5f61b5ad605bb28ae40ed7062e81f773ca3937fe22311730525182038"
+    }
+  ],
+  "legacyPoliciesReplaced": [
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_account",
+      "permissive": "PERMISSIVE",
+      "policyname": "affiliate_account_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_marketplace_config",
+      "permissive": "PERMISSIVE",
+      "policyname": "affiliate_marketplace_config_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_membership",
+      "permissive": "PERMISSIVE",
+      "policyname": "affiliate_membership_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_monitoring_policy",
+      "permissive": "PERMISSIVE",
+      "policyname": "affiliate_monitoring_policy_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_monitoring_policy_event",
+      "permissive": "PERMISSIVE",
+      "policyname": "affiliate_monitoring_policy_event_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_monitoring_skip",
+      "permissive": "PERMISSIVE",
+      "policyname": "affiliate_monitoring_skip_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "app_user",
+      "permissive": "PERMISSIVE",
+      "policyname": "app_user_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "app_user_role",
+      "permissive": "PERMISSIVE",
+      "policyname": "app_user_role_runtime_read",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "buyer_profile",
+      "permissive": "PERMISSIVE",
+      "policyname": "buyer_profile_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "capture_batch",
+      "permissive": "PERMISSIVE",
+      "policyname": "capture_batch_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "capture_run",
+      "permissive": "PERMISSIVE",
+      "policyname": "capture_run_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "click_event",
+      "permissive": "PERMISSIVE",
+      "policyname": "click_event_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "curation_event",
+      "permissive": "PERMISSIVE",
+      "policyname": "curation_event_app_access",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "curation_event",
+      "permissive": "PERMISSIVE",
+      "policyname": "curation_event_app_insert",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_assessment",
+      "permissive": "PERMISSIVE",
+      "policyname": "editorial_assessment_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_guideline",
+      "permissive": "PERMISSIVE",
+      "policyname": "editorial_guideline_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_selection",
+      "permissive": "PERMISSIVE",
+      "policyname": "editorial_selection_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_selection_item",
+      "permissive": "PERMISSIVE",
+      "policyname": "editorial_selection_item_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "extension_device",
+      "permissive": "PERMISSIVE",
+      "policyname": "extension_device_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "favorite",
+      "permissive": "PERMISSIVE",
+      "policyname": "favorite_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "price_observation",
+      "permissive": "PERMISSIVE",
+      "policyname": "price_observation_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "price_watch",
+      "permissive": "PERMISSIVE",
+      "policyname": "price_watch_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "product",
+      "permissive": "PERMISSIVE",
+      "policyname": "product_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "product_curation",
+      "permissive": "PERMISSIVE",
+      "policyname": "product_curation_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "publication",
+      "permissive": "PERMISSIVE",
+      "policyname": "publication_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "short_link",
+      "permissive": "PERMISSIVE",
+      "policyname": "short_link_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "subscriber",
+      "permissive": "PERMISSIVE",
+      "policyname": "subscriber_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "triage_run",
+      "permissive": "PERMISSIVE",
+      "policyname": "triage_run_app_access",
+      "with_check": "true"
+    }
+  ],
+  "newCommercialTables": [
+    "account_entitlement",
+    "account_invitation",
+    "account_lifecycle_event",
+    "analysis_assessment",
+    "audience_policy",
+    "audience_policy_version",
+    "campaign",
+    "campaign_link",
+    "campaign_publication",
+    "commercial_kit",
+    "commercial_kit_revision",
+    "commission_entry",
+    "comparison_review",
+    "conversion",
+    "conversion_attribution",
+    "destination",
+    "dispatch_attempt",
+    "dispatch_control",
+    "dispatch_job",
+    "dispatch_reservation",
+    "domain_event",
+    "experiment_assignment",
+    "experiment_evaluation",
+    "governance_decision",
+    "import_batch",
+    "import_row",
+    "kit_approval",
+    "kit_validation",
+    "onboarding_progress",
+    "operational_cost",
+    "opportunity",
+    "policy_experiment",
+    "price_calibration_run",
+    "price_evidence_policy_version",
+    "private_artifact",
+    "saas_revenue_entry",
+    "usage_event"
+  ],
+  "m11TenantTables": [
+    "account_entitlement",
+    "account_invitation",
+    "account_lifecycle_event",
+    "affiliate_account",
+    "affiliate_secret",
+    "analysis_assessment",
+    "app_user",
+    "audience_policy",
+    "audience_policy_version",
+    "buyer_profile",
+    "campaign",
+    "campaign_link",
+    "campaign_publication",
+    "capture_batch",
+    "capture_run",
+    "click_event",
+    "commercial_kit",
+    "commercial_kit_revision",
+    "commission_entry",
+    "comparison_review",
+    "conversion",
+    "conversion_attribution",
+    "curation_event",
+    "destination",
+    "dispatch_attempt",
+    "dispatch_job",
+    "domain_event",
+    "editorial_assessment",
+    "editorial_guideline",
+    "editorial_selection",
+    "editorial_selection_item",
+    "experiment_assignment",
+    "experiment_evaluation",
+    "favorite",
+    "import_batch",
+    "import_row",
+    "kit_approval",
+    "kit_validation",
+    "onboarding_progress",
+    "operational_cost",
+    "opportunity",
+    "policy_experiment",
+    "price_evidence_policy_version",
+    "price_observation",
+    "price_watch",
+    "product",
+    "product_curation",
+    "publication",
+    "saas_revenue_entry",
+    "short_link",
+    "subscriber",
+    "triage_run",
+    "usage_event"
+  ],
+  "units": [
+    {
+      "phase": "foundation",
+      "file": "20261015194719_garimpa_v2_foundation.sql",
+      "sha256": "33e03729f9e058169844fc353cba083cb3d5fe270b98ea890dafd0fb0a87c40c",
+      "lockTimeout": "5s",
+      "statementTimeout": "45s",
+      "manualTransactionSha256": "cf3b322232f1109fcf8a9bf40945685c3a8bab120f1970c6a3d8e30a12079069",
+      "transactionRequired": true,
+      "dependsOn": [
+        "installedSubset"
+      ]
+    },
+    {
+      "phase": "expansion",
+      "file": "20261015194748_garimpa_v2_expansion.sql",
+      "sha256": "02810325f1eecc16dfc05121f44b75a64c5ce0655b9329f2662ffb0d74cbecaa",
+      "lockTimeout": "5s",
+      "statementTimeout": "45s",
+      "manualTransactionSha256": "298fb67887ef8849734f4be4e702885f4189ed2e9528feb45f8c5de185bcc45b",
+      "transactionRequired": true,
+      "dependsOn": [
+        "foundation"
+      ]
+    },
+    {
+      "phase": "scoped_cutover",
+      "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
+      "sha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597",
+      "lockTimeout": "5s",
+      "statementTimeout": "45s",
+      "manualTransactionSha256": "a302de9d3d656bce934815326aa92a1213d3e845ffceb24924098230b9572581",
+      "transactionRequired": true,
+      "dependsOn": [
+        "expansion"
+      ]
+    }
+  ]
+}

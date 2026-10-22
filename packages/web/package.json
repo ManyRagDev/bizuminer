@@ -24,6 +24,7 @@
   "devDependencies": {
     "@types/node": "^26.2.0",
     "@types/react": "^19.0.0",
+    "jsqr": "1.4.0",
     "typescript": "5.6"
   }
 }

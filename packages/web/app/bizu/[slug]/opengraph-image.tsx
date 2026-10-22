@@ -5,6 +5,7 @@ import { marketplaceDef } from "../../../lib/marketplaces";
 import { brl, fetchProductImage, ogFonts, truncate } from "../../../lib/og-assets";
 
 export const runtime = "nodejs";
+export const revalidate = 86400;
 export const alt = "BizuMiner";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -59,7 +60,13 @@ export default async function Image({ params }: { params: Promise<Params> }) {
           </div>
         </div>
       ),
-      { ...size, fonts },
+      {
+        ...size,
+        fonts,
+        headers: {
+          "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+        },
+      },
     );
   }
 
@@ -212,6 +219,12 @@ export default async function Image({ params }: { params: Promise<Params> }) {
         </div>
       </div>
     ),
-    { ...size, fonts },
+    {
+      ...size,
+      fonts,
+      headers: {
+        "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+      },
+    },
   );
 }

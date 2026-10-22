@@ -1,4 +1,6 @@
+import { scopedTenantId } from "./account-scope.ts";
 import { db } from "./db";
+import { withTenantDb } from "./tenant-db.ts";
 
 /**
  * Painel administrativo: leitura agregada de tudo que o app registra.
@@ -21,19 +23,11 @@ export interface CaptureRunRow {
   /** Identidade da execução pai, derivada no SQL para incluir o histórico anterior ao campo explícito. */
   execution_id?: string | null;
   parameters?: Record<string, unknown>;
+  capture_mode?: string | null;
 }
 
-export type CaptureBatchStatus = "running" | "ok" | "partial" | "error";
-export interface CaptureBatch {
-  id: string;
-  tenant_id: string;
-  requested_marketplaces: string[];
-  pages: number;
-  status: CaptureBatchStatus;
-  started_at: Date | string;
-  finished_at: Date | string | null;
-  marketplaces: Array<{ marketplace: string; status: CaptureBatchStatus | "waiting"; runs: number }>;
-}
+export { captureBatchStatus, latestCaptureBatch } from "./capture-batch-db.ts";
+export type { CaptureBatch, CaptureBatchStatus } from "./capture-batch-db.ts";
 
 export interface AdminOverview {
   products: number;
@@ -47,6 +41,7 @@ export interface AdminOverview {
   activeWatches: number;
   profiles: number;
   lastOkRunAt: Date | string | null;
+  lastDiscoveryAt: Date | string | null;
   triageRuns: number;
   lastTriageRunAt: Date | string | null;
   lastTriage: {
@@ -66,9 +61,8 @@ export interface TopClickedRow {
   clicks: number;
 }
 
-export async function adminOverview(tenantId = "local"): Promise<AdminOverview> {
-  const sql = db();
-  try {
+export async function adminOverview(tenantId = scopedTenantId(), customSql?: any): Promise<AdminOverview> {
+  const runner = async (sql: any) => {
     const rows = await sql<Array<Record<string, number | Date | string | null>>>`
       select
         (select count(*)::int from garimpa.product where tenant_id = ${tenantId}) as products,
@@ -98,7 +92,10 @@ export async function adminOverview(tenantId = "local"): Promise<AdminOverview> 
         (select count(*)::int from garimpa.price_watch where tenant_id = ${tenantId} and active) as active_watches,
         (select count(*)::int from garimpa.buyer_profile where tenant_id = ${tenantId}) as profiles,
         (select max(finished_at) from garimpa.capture_run
-          where tenant_id = ${tenantId} and status = 'ok') as last_ok_run_at
+          where tenant_id = ${tenantId} and status = 'ok') as last_ok_run_at,
+        (select max(finished_at) from garimpa.capture_run
+          where tenant_id = ${tenantId} and status = 'ok'
+          and parameters->>'captureMode' is distinct from 'monitoring') as last_discovery_at
     `;
     const row = rows[0];
 
@@ -159,23 +156,24 @@ export async function adminOverview(tenantId = "local"): Promise<AdminOverview> 
       favorites: row.favorites as number,
       activeWatches: row.active_watches as number,
       profiles: row.profiles as number,
+      lastDiscoveryAt: (row?.last_discovery_at as Date | string) ?? null,
       lastOkRunAt: row.last_ok_run_at as Date | string | null,
       triageRuns,
       lastTriageRunAt,
       lastTriage,
     };
-  } finally {
-    await sql.end();
-  }
+  };
+
+  if (customSql) return await runner(customSql);
+  return await withTenantDb(tenantId, runner);
 }
 
-export async function captureRuns(limit = 20, tenantId = "local", marketplace?: string): Promise<CaptureRunRow[]> {
-  const sql = db();
-  try {
+export async function captureRuns(limit = 20, tenantId = scopedTenantId(), marketplace?: string, customSql?: any): Promise<CaptureRunRow[]> {
+  const runner = async (sql: any) => {
     return await sql<CaptureRunRow[]>`
       select cr.id, cr.marketplace, cr.status, cr.started_at, cr.finished_at,
              cr.items_captured, cr.items_new, cr.price_changes, cr.error,
-             cr.collector_run_id,
+             cr.collector_run_id, cr.parameters->>'captureMode' as capture_mode,
              (select count(*)::int from garimpa.price_observation o
                where o.capture_run_id = cr.id) as observation_count
       from garimpa.capture_run cr
@@ -184,9 +182,9 @@ export async function captureRuns(limit = 20, tenantId = "local", marketplace?: 
       order by cr.started_at desc
       limit ${Math.min(Math.max(limit, 1), 100)}
     `;
-  } finally {
-    await sql.end();
-  }
+  };
+  if (customSql) return await runner(customSql);
+  return await withTenantDb(tenantId, runner);
 }
 
 /**
@@ -198,12 +196,12 @@ export async function captureRuns(limit = 20, tenantId = "local", marketplace?: 
  */
 export async function captureRunHistory(
   executionLimit = 20,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   marketplace?: string,
+  customSql?: any,
 ): Promise<CaptureRunRow[]> {
-  const sql = db();
   const safeLimit = Math.min(Math.max(executionLimit, 1), 50);
-  try {
+  const runner = async (sql: any) => {
     return await sql<CaptureRunRow[]>`
       with normalized as (
         select cr.*,
@@ -231,17 +229,17 @@ export async function captureRunHistory(
         limit ${safeLimit}
       )
       select cr.id, cr.marketplace, cr.status, cr.started_at, cr.finished_at,
-             cr.items_captured, cr.items_new, cr.price_changes, cr.error,
-             cr.collector_run_id, cr.parameters, cr.execution_id,
-             (select count(*)::int from garimpa.price_observation o
-               where o.capture_run_id = cr.id) as observation_count
+              cr.items_captured, cr.items_new, cr.price_changes, cr.error,
+              cr.collector_run_id, cr.parameters, cr.execution_id,
+              (select count(*)::int from garimpa.price_observation o
+                where o.capture_run_id = cr.id) as observation_count
       from normalized cr
       join selected s on s.execution_id = cr.execution_id
       order by s.sort_at desc, cr.started_at asc, cr.id asc
     `;
-  } finally {
-    await sql.end();
-  }
+  };
+  if (customSql) return await runner(customSql);
+  return await withTenantDb(tenantId, runner);
 }
 
 /**
@@ -255,9 +253,8 @@ export async function captureRunHistory(
  * Sem filtro, devolve a rodagem em andamento de qualquer plataforma (usado
  * pela visão geral do painel).
  */
-export async function runningRun(tenantId = "local", marketplace?: string): Promise<CaptureRunRow | null> {
-  const sql = db();
-  try {
+export async function runningRun(tenantId = scopedTenantId(), marketplace?: string, customSql?: any): Promise<CaptureRunRow | null> {
+  const runner = async (sql: any) => {
     const rows = await sql<CaptureRunRow[]>`
       select cr.id, cr.marketplace, cr.status, cr.started_at, cr.finished_at,
              cr.items_captured, cr.items_new, cr.price_changes, cr.error,
@@ -271,98 +268,13 @@ export async function runningRun(tenantId = "local", marketplace?: string): Prom
       limit 1
     `;
     return rows[0] ?? null;
-  } finally {
-    await sql.end();
-  }
+  };
+  if (customSql) return await runner(customSql);
+  return await withTenantDb(tenantId, runner);
 }
 
-/** Cria a operação pai antes dos CLIs para que o painel possa acompanhá-la. */
-export async function createCaptureBatch(
-  tenantId: string,
-  marketplaces: string[],
-  pages: number,
-): Promise<CaptureBatch> {
-  const sql = db();
-  try {
-    const [row] = await sql<Omit<CaptureBatch, "marketplaces">[]>`
-      insert into garimpa.capture_batch (tenant_id, requested_marketplaces, pages)
-      values (${tenantId}, ${marketplaces}, ${pages})
-      returning id, tenant_id, requested_marketplaces, pages, status, started_at, finished_at
-    `;
-    if (!row) throw new Error("capture_batch_not_created");
-    return { ...row, marketplaces: marketplaces.map((marketplace) => ({ marketplace, status: "waiting", runs: 0 })) };
-  } finally {
-    await sql.end();
-  }
-}
-
-/**
- * Deriva o estado do lote das capture_run filhas. A leitura também fecha o
- * lote, portanto uma nova solicitação não fica bloqueada após a conclusão.
- */
-export async function captureBatchStatus(id: string, tenantId = "local"): Promise<CaptureBatch | null> {
-  const sql = db();
-  try {
-    const rows = await sql<Omit<CaptureBatch, "marketplaces">[]>`
-      select id, tenant_id, requested_marketplaces, pages, status, started_at, finished_at
-      from garimpa.capture_batch
-      where id = ${id} and tenant_id = ${tenantId}
-      limit 1
-    `;
-    const batch = rows[0];
-    if (!batch) return null;
-    const childRuns = await sql<{ marketplace: string; status: CaptureBatchStatus; runs: number }[]>`
-      select marketplace, status, count(*)::int as runs
-      from garimpa.capture_run
-      where tenant_id = ${tenantId}
-        and parameters ->> 'operationBatchId' = ${id}
-      group by marketplace, status
-    `;
-    const marketplaces = batch.requested_marketplaces.map((marketplace) => {
-      const rowsForMarketplace = childRuns.filter((row) => row.marketplace === marketplace);
-      const runs = rowsForMarketplace.reduce((sum, row) => sum + row.runs, 0);
-      if (runs === 0) return { marketplace, status: "waiting" as const, runs };
-      if (rowsForMarketplace.some((row) => row.status === "running")) return { marketplace, status: "running" as const, runs };
-      if (rowsForMarketplace.every((row) => row.status === "error")) return { marketplace, status: "error" as const, runs };
-      if (rowsForMarketplace.some((row) => row.status === "error")) return { marketplace, status: "partial" as const, runs };
-      return { marketplace, status: "ok" as const, runs };
-    });
-    const statuses = marketplaces.map((item) => item.status);
-    const nextStatus: CaptureBatchStatus = statuses.some((status) => status === "waiting" || status === "running")
-      ? "running"
-      : statuses.every((status) => status === "ok") ? "ok"
-      : statuses.every((status) => status === "error") ? "error" : "partial";
-    if (batch.status === "running" && nextStatus !== "running") {
-      await sql`
-        update garimpa.capture_batch
-        set status = ${nextStatus}, finished_at = now()
-        where id = ${id} and status = 'running'
-      `;
-    }
-    return { ...batch, status: nextStatus, finished_at: nextStatus === "running" ? null : batch.finished_at, marketplaces };
-  } finally {
-    await sql.end();
-  }
-}
-
-export async function latestCaptureBatch(tenantId = "local"): Promise<CaptureBatch | null> {
-  const sql = db();
-  try {
-    const rows = await sql<{ id: string }[]>`
-      select id from garimpa.capture_batch
-      where tenant_id = ${tenantId}
-      order by started_at desc
-      limit 1
-    `;
-    return rows[0] ? await captureBatchStatus(rows[0].id, tenantId) : null;
-  } finally {
-    await sql.end();
-  }
-}
-
-export async function topClicked(days = 7, limit = 6, tenantId = "local"): Promise<TopClickedRow[]> {
-  const sql = db();
-  try {
+export async function topClicked(days = 7, limit = 6, tenantId = scopedTenantId(), customSql?: any): Promise<TopClickedRow[]> {
+  const runner = async (sql: any) => {
     return await sql<TopClickedRow[]>`
       select p.title, pub.slug, count(c.id)::int as clicks
       from garimpa.click_event c
@@ -374,7 +286,7 @@ export async function topClicked(days = 7, limit = 6, tenantId = "local"): Promi
       order by clicks desc
       limit ${Math.min(Math.max(limit, 1), 20)}
     `;
-  } finally {
-    await sql.end();
-  }
+  };
+  if (customSql) return await runner(customSql);
+  return await withTenantDb(tenantId, runner);
 }

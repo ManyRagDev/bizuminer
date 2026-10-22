@@ -1,3 +1,5 @@
+import { resolveWorkerCredential, withAccountCredential } from "../src/account-credentials.ts";
+import { withMonitoringDb } from "../src/monitoring-db.ts";
 /**
  * Retenção por ID exato, separada da descoberta por palavra-chave.
  * Sem --execute: somente lê o banco e mostra a fila. Com --execute: consulta
@@ -28,6 +30,9 @@ const limit = Number(flag("limit") ?? "20");
 if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("--limit deve ser inteiro entre 1 e 100");
 const execute = args.includes("--execute");
 const tenantId = process.env.MONITOR_TENANT_ID ?? "local";
+// Global API credentials configured by the current cron belong to the house.
+// Another account needs its own credential resolver before enabling external calls.
+
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL não definido");
 
@@ -36,22 +41,23 @@ const sql = postgres(connectionString, {
   max: 1,
   ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false },
 });
-const scheduleDecision = await monitoringScheduleDecision(
-  sql, tenantId, marketplace, process.env.GITHUB_EVENT_NAME,
-);
+const scheduleDecision = await withMonitoringDb(sql,tenantId,tx=>monitoringScheduleDecision(
+  tx, tenantId, marketplace, process.env.GITHUB_EVENT_NAME,
+));
 if (!scheduleDecision.allowed) {
   if (scheduleDecision.affiliateId && process.env.GITHUB_RUN_ID && scheduleDecision.reason) {
-    await recordMonitoringSkip(sql, scheduleDecision.affiliateId, marketplace,
-      process.env.GITHUB_RUN_ID, scheduleDecision.reason);
+    await withMonitoringDb(sql,tenantId,tx=>recordMonitoringSkip(tx, scheduleDecision.affiliateId!, marketplace,
+      process.env.GITHUB_RUN_ID!, scheduleDecision.reason!));
   }
   await sql.end();
   console.log(JSON.stringify({ marketplace, mode: "schedule", tenantId,
     skipped: scheduleDecision.reason }));
   process.exit(0);
 }
-const candidates = await loadMonitoringCandidates(sql, tenantId);
-const suppressed = await suppressedMonitoringIds(sql, tenantId, marketplace, candidates);
-await sql.end();
+const {candidates,suppressed} = await withMonitoringDb(sql,tenantId,async tx=>{
+ const candidates=await loadMonitoringCandidates(tx,tenantId);
+ return {candidates,suppressed:await suppressedMonitoringIds(tx,tenantId,marketplace,candidates)};
+});
 const selected = monitoringQueue(candidates.filter((candidate) => !suppressed.has(candidate.productId)), marketplace, limit);
 const byId = new Map(candidates.map((candidate) => [candidate.productId, candidate]));
 const queue = selected.map((decision) => ({ decision, product: byId.get(decision.productId)! }));
@@ -64,6 +70,7 @@ const runParameters = {
 };
 
 if (!execute) {
+  await sql.end();
   console.log(JSON.stringify({ marketplace, mode: "dry-run", tenantId, limit,
     suppressed: suppressed.size,
     dueSelected: queue.length,
@@ -72,6 +79,8 @@ if (!execute) {
     previewIds: queue.slice(0, 10).map((entry) => entry.decision.productId) }, null, 2));
   process.exit(0);
 }
+
+const cred = await resolveWorkerCredential(sql,tenantId,marketplace).catch(async error=>{await sql.end();throw error;});
 
 if (queue.length === 0) {
   const store = new PostgresStore({ connectionString, maxConnections: 1 });
@@ -88,23 +97,11 @@ if (queue.length === 0) {
     console.log(JSON.stringify({ marketplace, mode: "execute", runId, attempted: 0, matched: 0 }));
   } finally {
     await store.close();
+    await sql.end();
   }
   process.exit(0);
 }
 
-if (marketplace === "shopee" ? !shopeeCaptureEnabled() : !aliexpressCaptureEnabled()) {
-  throw new Error(`captura de ${marketplace} desabilitada pelo gate do marketplace`);
-}
-
-const secret = marketplace === "shopee"
-  ? { appId: process.env.SHOPEE_APP_ID, appSecret: process.env.SHOPEE_APP_SECRET }
-  : { appKey: process.env.ALIEXPRESS_APP_KEY, appSecret: process.env.ALIEXPRESS_APP_SECRET,
-      trackingId: process.env.ALIEXPRESS_TRACKING_ID };
-if (Object.values(secret).some((value) => !value)) throw new Error(`credenciais de ${marketplace} incompletas`);
-const cred: Credential = marketplace === "shopee"
-  ? { marketplace, secret: { appId: process.env.SHOPEE_APP_ID!, appSecret: process.env.SHOPEE_APP_SECRET! } }
-  : { marketplace, secret: { appKey: process.env.ALIEXPRESS_APP_KEY!,
-      appSecret: process.env.ALIEXPRESS_APP_SECRET!, trackingId: process.env.ALIEXPRESS_TRACKING_ID! } };
 const ctx: CaptureContext = { runId: `monitor-${marketplace}-${Date.now()}`,
   log: (event) => { if (event.level === "error") console.error(event.msg); } };
 const store = new PostgresStore({ connectionString, maxConnections: 1 });
@@ -125,7 +122,7 @@ try {
   for (const { product } of queue) {
     attempted++;
     try {
-      const lookupResult = await lookup.byIdDetailed(cred, product.externalId, ctx);
+      const lookupResult = await withAccountCredential(sql,tenantId,marketplace,credential=>lookup.byIdDetailed(credential, product.externalId, ctx));
       if (!lookupResult.offer) {
         missing++;
         missingIds.push(product.productId);
@@ -141,6 +138,7 @@ try {
         originalPriceCents: offer.originalPriceCents,
         claimedDiscountRate: offer.claimedDiscountRate, ratingStar: offer.ratingStar,
         salesLabel: offer.salesLabel, salesCount: offer.salesCount, observedAt: offer.capturedAt,
+        offerEvidence: offer.offerEvidence,
       });
       matched++;
       if (result.previousPriceCents !== undefined && result.previousPriceCents !== offer.priceCents) priceChanges++;
@@ -162,6 +160,7 @@ try {
       missingInvalidPrice: missingReasons.invalid_price, missingCurrency: missingReasons.currency },
   });
   await store.close();
+  await sql.end();
 }
 console.log(JSON.stringify({ marketplace, mode: "execute", runId, attempted, matched, missing,
   missingReasons, failed, priceChanges }));

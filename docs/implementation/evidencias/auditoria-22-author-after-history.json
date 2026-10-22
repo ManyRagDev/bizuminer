@@ -1,0 +1,18 @@
+{
+  "project": "spbuwcwmxlycchuwhfir",
+  "filter": "version >= 20261014000000",
+  "migrations": [
+    {
+      "version": "20261015034755",
+      "name": "garimpa_account_context_and_membership"
+    },
+    {
+      "version": "20261015035126",
+      "name": "garimpa_affiliate_secret_bootstrap_rls"
+    },
+    {
+      "version": "20261015041540",
+      "name": "garimpa_curation_membership_author"
+    }
+  ]
+}

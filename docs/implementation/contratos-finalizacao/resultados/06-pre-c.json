@@ -1,0 +1,473 @@
+{
+  "order": "OS-06",
+  "state": "CONCLUIDO",
+  "deployment": "dpl_EwDxnLU8t7BLFrNFVjsnxbWQVuhp",
+  "commit": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9",
+  "acceptance": {
+    "AC1": "PENDING: actual owner browser Google OAuth and admin session",
+    "AC2": "PARTIAL: public/detail/legacy link/monetized resolver/context/worker read passed; used curation/capture/monitor write/provider smokes pending",
+    "AC3": "PENDING: essential operational consumer smokes and any backup alignment after legitimate writes"
+  },
+  "runtimeReadOnly": {
+    "identity": {
+      "role": "garimpa_app",
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "membershipResolved": true,
+    "ownerAccount": "local",
+    "foreignAccountRejected": true,
+    "counts": {
+      "products": "1657",
+      "observations": "9338",
+      "publications": "1495",
+      "shortlinks": "172"
+    },
+    "reset": {
+      "tenant_reset": true,
+      "actor_reset": true
+    },
+    "worker": {
+      "products": "1657"
+    },
+    "commercialEnabled": false,
+    "publicProjectionReady": true,
+    "detailResolved": true,
+    "monetizedTargetHost": "s.shopee.com.br",
+    "legacyShortLinkResolved": true,
+    "publicPrivateReadDenied": true,
+    "limit": "DB identity selected from an existing owner membership; this does not prove browser Google OAuth or any write/provider flow."
+  },
+  "httpReadOnly": [
+    {
+      "path": "/bizu/shp-49107392414",
+      "exitCode": 0,
+      "httpStatus": "200",
+      "title": "Kit De Sachês Para Cuidados Com A Pele SKIN1004 3 Unidades | Seleção De Linhas Mistas | BizuMiner",
+      "location": null,
+      "bytes": 22697,
+      "applicationAuthenticationExpected": false,
+      "containsApplicationError": false
+    },
+    {
+      "path": "/admin",
+      "exitCode": 0,
+      "httpStatus": "307",
+      "title": null,
+      "location": "/entrar?next=%2Fadmin",
+      "bytes": 15,
+      "applicationAuthenticationExpected": true,
+      "containsApplicationError": false
+    },
+    {
+      "path": "/api/admin/rodagens",
+      "exitCode": 0,
+      "httpStatus": "401",
+      "title": null,
+      "location": null,
+      "bytes": 33,
+      "applicationAuthenticationExpected": true,
+      "containsApplicationError": false
+    }
+  ],
+  "legacyHttp": {
+    "path": "/p/33pu",
+    "exitCode": 0,
+    "httpStatus": "302",
+    "location": "/bizu/ali-1005012705365068",
+    "clickRouteInvoked": false
+  },
+  "preservation": {
+    "originalTables": 28,
+    "allOriginalColumnCountsDigestsMatchOS02": true,
+    "otherSchemas": 8,
+    "allOtherSchemaFingerprintsMatchOS02": true
+  },
+  "testPreconditionCorrection": {
+    "exitCode": 1,
+    "assertion": "legacySlug truthy",
+    "diagnosis": "First stored short code can refer to an offer no longer publicly eligible. Existing public_short_link explicitly joins public_offer_rows; null is expected for that precondition. Retest selects an already-existing public eligible link; no source/SQL change."
+  },
+  "humanHandoff": {
+    "browser": "Codex in-app browser",
+    "destination": "https://www.bizuminer.com.br/admin",
+    "observed": "Existing Vercel sign-in routed to Google identifier screen, no browser session available",
+    "required": "Owner completes existing Vercel login and BizuMiner Google login; observe actual owner admin UI",
+    "authorizationPending": false,
+    "secretsRequestedInChat": false
+  },
+  "protectedState": {
+    "ssoProtection": "all",
+    "publicClosed": true,
+    "captureWorkflow": "disabled_manually",
+    "monitorWorkflow": "disabled_manually",
+    "commercialEnabled": false,
+    "cutoverApplied": false
+  },
+  "next": "After browser login, validate operational flows, align backup if legitimate writes changed data, then OS07 exact C and OS08/09. No C until AC1-3 met.",
+  "resumptions": [
+    {
+      "at": "2026-10-16T21:11:56.329Z",
+      "order": "OS-06",
+      "baseline": "main 43700c59f4e24f68f3a2e32c20ee5147fa4816cd plus preexisting changes",
+      "target": {
+        "supabase": "spbuwcwmxlycchuwhfir",
+        "schema": "garimpa",
+        "vercel": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+        "team": "team_CdqNeIvhoe03YClNYUpP6C1w",
+        "github": "ManyRagDev/bizuminer"
+      },
+      "sources": {
+        "approved": 462,
+        "approvedDelta": 4,
+        "mismatches": 0
+      },
+      "deployment": {
+        "id": "dpl_EwDxnLU8t7BLFrNFVjsnxbWQVuhp",
+        "state": "READY",
+        "productionCommit": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9"
+      },
+      "maintenance": {
+        "paused": false,
+        "protection": "all",
+        "autoAssignCustomDomains": false,
+        "workflowIds": [
+          387073270,
+          366364369
+        ],
+        "workflowState": "disabled_manually",
+        "activeRuntimeSessions": 0
+      },
+      "preservation": {
+        "originalTables": 28,
+        "allCountsAndDigestsEqual": true,
+        "externalSchemas": 8,
+        "externalFingerprintsEqual": true,
+        "backupPresent": true,
+        "backupBytes": 6300642,
+        "backupMode": "0600",
+        "backupSha256": "f61b2195cf75157e8ac5dbb646dcb1af507adf6d94a0a47819d80b2e6e1e25c1"
+      },
+      "rollout": {
+        "AInstalled": true,
+        "BInstalled": true,
+        "CInstalled": false,
+        "commercialEnabled": false,
+        "Csha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597",
+        "localVerifierExitCode": 0
+      },
+      "runtime": {
+        "exitCode": 0,
+        "role": "garimpa_app",
+        "superuser": false,
+        "bypassrls": false,
+        "ownerAccount": "local",
+        "foreignAccountRejected": true,
+        "tenantAndActorReset": true,
+        "publicPrivateReadDenied": true,
+        "publicProjectionReady": true,
+        "detailResolved": true,
+        "legacyLinkResolved": true,
+        "monetizedHost": "s.shopee.com.br",
+        "products": 1657,
+        "observations": 9338,
+        "publications": 1495,
+        "links": 172
+      },
+      "pending": [
+        "Personal Vercel and BizuMiner Google login",
+        "Operational curation and used capture/monitoring smokes",
+        "C and subsequent OS07-10"
+      ],
+      "limitations": [
+        "No browser owner session; DB membership resolution does not prove OAuth.",
+        "Vercel connector 403 resolved for read-only checks through authenticated CLI in the exact authorized scope.",
+        "One read-only diagnostic used nonexistent relation commercial_rollout_control; corrected using existing commercial_rollout_ready() helper; no database mutation.",
+        "Initial Node invocation referenced an absent tsx loader; native --experimental-strip-types rerun passed without source changes.",
+        "Bucket fingerprint query used row_to_json rather than the frozen baseline projection; no comparison inferred from that query.",
+        "No migrations, deployment, workflow execution, fabricated business records or source changes in this resumption."
+      ]
+    }
+  ],
+  "finalAcceptance": {
+    "at": "2026-10-16T21:38:12.713Z",
+    "state": "CONCLUIDO",
+    "order": "OS-06",
+    "browser": {
+      "canonical": "https://www.bizuminer.com.br/admin",
+      "googleLoginObserved": true,
+      "ownerAccount": "BizuMiner (casa)",
+      "curationRead": true,
+      "deferralWriteAndUndo": true,
+      "returnedPending": 28,
+      "deferred": 0,
+      "reviewerActiveOwnerConfirmed": true
+    },
+    "monitoring": {
+      "shopee": {
+        "exitCode": 0,
+        "runId": "52e604b4-447a-4991-b6f5-6524c0eba0fa",
+        "attempted": 0,
+        "matched": 0,
+        "limit": "empty eligible queue; provider not exercised"
+      },
+      "aliexpress": {
+        "exitCode": 0,
+        "runId": "526cbc9c-bc8e-4cc7-b34f-7add9a94d9ac",
+        "attempted": 1,
+        "matched": 1,
+        "failed": 0,
+        "priceChanges": 1
+      }
+    },
+    "changedOriginalTables": [
+      "app_user",
+      "capture_run",
+      "price_observation",
+      "product",
+      "product_curation"
+    ],
+    "originalColumnProjection": [
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "affiliate_account",
+        "row_count": 1,
+        "original_columns_digest": "53abf21fd227918591561f55b5dc8f9e"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "affiliate_marketplace_config",
+        "row_count": 1,
+        "original_columns_digest": "17cfb59b66a8e2c3e28a5ef6482ea2d1"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "affiliate_membership",
+        "row_count": 1,
+        "original_columns_digest": "1ac57bcb38b170c34fd4fed807bee207"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "affiliate_monitoring_policy",
+        "row_count": 3,
+        "original_columns_digest": "32c01c2e3f0fa209f29e6428f82c5856"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "affiliate_monitoring_policy_event",
+        "row_count": 2,
+        "original_columns_digest": "7c89097ebfbc7e28194c3f5d1ccf659b"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "affiliate_monitoring_skip",
+        "row_count": 1,
+        "original_columns_digest": "4f23d8476079771a480c81e432bf0435"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "affiliate_secret",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "app_user",
+        "row_count": 3,
+        "original_columns_digest": "5bc67ab5b3330f42d07716d04ee47f65"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "app_user_role",
+        "row_count": 1,
+        "original_columns_digest": "cd10fc0c77a641d6a4ec19946945ef1d"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "buyer_profile",
+        "row_count": 1,
+        "original_columns_digest": "4101cdd017e96634014fd92e6d66f8d7"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "capture_batch",
+        "row_count": 11,
+        "original_columns_digest": "157a5bf406e744df4173c1ace82b10bd"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "capture_run",
+        "row_count": 409,
+        "original_columns_digest": "cda965f7a950fc5ab26d51b4b4312335"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "click_event",
+        "row_count": 767,
+        "original_columns_digest": "3149f7c356e63b567c32dc13b6268d0f"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "curation_event",
+        "row_count": 1330,
+        "original_columns_digest": "b50629030d73f29f792f765fb6b3f269"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "editorial_assessment",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "editorial_guideline",
+        "row_count": 1,
+        "original_columns_digest": "8fae2478ac2ffdb6fb94e5447ef03e6a"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "editorial_selection",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "editorial_selection_item",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "extension_device",
+        "row_count": 3,
+        "original_columns_digest": "fd3dd785d523a6f3da967268b50ee7f3"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "favorite",
+        "row_count": 7,
+        "original_columns_digest": "7d8d803b8630a4a0d4a1657e0fc48f66"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "price_observation",
+        "row_count": 9339,
+        "original_columns_digest": "8a66339c0e52a1df8c0c322fcac7ed7a"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "price_watch",
+        "row_count": 4,
+        "original_columns_digest": "da310d69508a666b0a0e559f90665728"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "product",
+        "row_count": 1657,
+        "original_columns_digest": "d0e9dd7d544d26240ac1e33c4b1da714"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "product_curation",
+        "row_count": 1657,
+        "original_columns_digest": "4626d5bb83804a52b15ab182b9ea9d59"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "publication",
+        "row_count": 1495,
+        "original_columns_digest": "898c81137e924fc2262ea480f15adcfa"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "short_link",
+        "row_count": 172,
+        "original_columns_digest": "ecdaa73fe77efa03848794139c5e9d14"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "subscriber",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 21:37:51.994751+00",
+        "table_name": "triage_run",
+        "row_count": 17,
+        "original_columns_digest": "cc204394f790be7935cca92872386395"
+      }
+    ],
+    "externalFingerprints": [
+      {
+        "schema_name": "auth",
+        "relations": 28,
+        "catalog_fingerprint": "56f9a83a675fcdf8a1d32f120f1e4857"
+      },
+      {
+        "schema_name": "brincareducando",
+        "relations": 26,
+        "catalog_fingerprint": "8f4e76a95574ebb6ba2c9bb819df681f"
+      },
+      {
+        "schema_name": "jacomprei",
+        "relations": 8,
+        "catalog_fingerprint": "28a5df0052fadb4e97135bd05d69481d"
+      },
+      {
+        "schema_name": "manylabs",
+        "relations": 9,
+        "catalog_fingerprint": "1e611465b3c59473f83dbc7dab5f298c"
+      },
+      {
+        "schema_name": "navegantes",
+        "relations": 15,
+        "catalog_fingerprint": "051328afee0032f1398eddcdc1b9de07"
+      },
+      {
+        "schema_name": "postspark",
+        "relations": 53,
+        "catalog_fingerprint": "51d5d2be46fc1a278a125511e25b243e"
+      },
+      {
+        "schema_name": "public",
+        "relations": 2,
+        "catalog_fingerprint": "979b141b28853cb968ba3298fa00dfc3"
+      },
+      {
+        "schema_name": "storage",
+        "relations": 8,
+        "catalog_fingerprint": "dab938b1558a022243f39251fb8eb104"
+      }
+    ],
+    "commercialEnabled": false,
+    "backup": {
+      "destination": "/home/many/.local/share/bizuminer/backups/20261016-os06-antes-c.dump",
+      "sha256": "be68a6a809536ed1cdc21a30015a5bcf5edad4268f4bd3d9d8e263d428c60d58",
+      "bytes": 6604810,
+      "seededData": "20261016-os06-seeded-data.json",
+      "restorePass": true,
+      "originalTablesCompared": 28,
+      "catalog": {
+        "tables": 66,
+        "policies": 180,
+        "foreignKeys": 145,
+        "expectedNotValid": 1
+      },
+      "allCountsAndDigestsMatch": true,
+      "seededDataMatch": true
+    },
+    "writers": {
+      "workflows": "both disabled_manually",
+      "legacyExtension": "not resumed; device homologation excluded",
+      "captureApiUI": "disabled; not activated"
+    },
+    "limits": [
+      "No real campaign exists for new12-character link smoke.",
+      "Shopee provider not exercised because queue empty; successful empty run is not provider certification.",
+      "Optional extension/browser/manual capture and automatic discovery remain unhomologated and stopped; real AliExpress monitoring exercised provider and shared persistence.",
+      "No new editorial judgment, sale, click, commission, customer, invitation or message fabricated.",
+      "Updated product_curation.reviewer is legitimate owner; deferral actions do not create curation_event by existing design.",
+      "All errors from temporary restore comparison retained; exact after-B catalog comparison and UTC seeded-data checks passed."
+    ]
+  }
+}

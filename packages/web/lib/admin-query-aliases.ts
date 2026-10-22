@@ -1,23 +1,4 @@
-/**
- * Canonicalização das query params das páginas administrativas (09/09/2026).
- *
- * Canônico aceito: `?aba=selecao|excecoes|auditoria|bussola` + `?sub=singulars|grupos|spotcheck|espera`.
- * Legados aceitos (migrados para o canônico via redirect, nunca quebrados):
- *  - `?aba=hoje`            → `?aba=excecoes&sub=singulars`
- *  - `?aba=grupos`          → `?aba=excecoes&sub=grupos`
- *  - `?aba=espera`          → `?aba=auditoria&sub=espera`
- *  - `?aba=aprendizados`    → `?aba=bussola`
- *  - `?fila=held`           → `?aba=auditoria&sub=espera`
- *  - `?modo=grupos`         → `?sub=grupos` (em excecoes)
- *  - `?modo=hoje`           → `?sub=singulars` (em excecoes)
- *  - `?subaba=espera`       → `?sub=espera` (em auditoria)
- *  - `?subaba=spotcheck`    → `?sub=spotcheck` (em auditoria)
- *
- * A página chama `canonicalAdminQuery(...)` e, se `redirectNeeded`, faz
- * `redirect(canonicalAdminUrl(...))` — o aliase segue funcionando sem que a
- * lógica de aba leia duas gramáticas.
- */
-
+/** Curadoria: seleção, pendências e qualidade; links antigos mantêm seu destino. */
 export type AdminQueryRaw = Record<string, string | undefined>;
 
 export type AdminQueryCanonical = {
@@ -29,7 +10,7 @@ export type AdminQueryCanonical = {
 const ABA_ALIASES: Record<string, { aba: string; sub?: string }> = {
   hoje: { aba: "excecoes", sub: "singulars" },
   grupos: { aba: "excecoes", sub: "grupos" },
-  espera: { aba: "auditoria", sub: "espera" },
+  espera: { aba: "excecoes", sub: "retidos" },
   aprendizados: { aba: "bussola" },
   selecao: { aba: "selecao" },
   excecoes: { aba: "excecoes" },
@@ -37,6 +18,8 @@ const ABA_ALIASES: Record<string, { aba: string; sub?: string }> = {
   bussola: { aba: "bussola" },
   pipeline: { aba: "pipeline" },
   lotes: { aba: "pipeline" },
+  radar: { aba: "radar" },
+  direcionamento: { aba: "radar" },
 };
 
 const DEFAULT_SUB: Record<string, string> = {
@@ -44,7 +27,7 @@ const DEFAULT_SUB: Record<string, string> = {
   auditoria: "spotcheck",
 };
 
-const SUB_VALUES = new Set(["singulars", "grupos", "spotcheck", "espera"]);
+const SUB_VALUES = new Set(["singulars", "grupos", "spotcheck", "espera", "retidos", "adiados"]);
 
 const MODO_TO_SUB: Record<string, string> = {
   grupos: "grupos",
@@ -63,13 +46,13 @@ export function canonicalAdminQuery(raw: AdminQueryRaw): AdminQueryCanonical {
     aliasSub = alias.sub ?? "";
     abaLegacy = abaRaw !== aba;
   } else if (fila === "held") {
-    aba = "auditoria";
+    aba = "excecoes";
   }
 
   let sub = "";
   let subLegacy = false;
   if (fila === "held") {
-    sub = "espera";
+    sub = "retidos";
   } else if (subRaw && SUB_VALUES.has(subRaw)) {
     sub = subRaw;
   } else if (subaba && SUB_VALUES.has(subaba)) {
@@ -84,7 +67,14 @@ export function canonicalAdminQuery(raw: AdminQueryRaw): AdminQueryCanonical {
     sub = DEFAULT_SUB[aba] ?? "";
   }
 
-  const redirectNeeded =
+  const movedHoldQueue = sub === "espera";
+  if (movedHoldQueue) { aba = "excecoes"; sub = "retidos"; }
+  const allowed = aba === "excecoes" ? ["singulars", "grupos", "retidos", "adiados"]
+    : aba === "auditoria" ? ["spotcheck"] : [""];
+  const invalidSub = !allowed.includes(sub);
+  if (invalidSub) sub = DEFAULT_SUB[aba] ?? "";
+
+  const redirectNeeded = movedHoldQueue || invalidSub ||
     abaLegacy || subLegacy || fila === "held" || modo !== undefined || subaba !== undefined;
   return { aba, sub, redirectNeeded };
 }

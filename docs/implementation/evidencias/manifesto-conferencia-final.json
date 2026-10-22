@@ -1,0 +1,236 @@
+{
+  "checkedAt": "2026-10-14T16:20:37.523716+00:00",
+  "head": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+  "identityNote": "HEAD identifica somente a base; existem alterações preexistentes e não rastreadas. Hashes identificam o conteúdo conferido.",
+  "remoteProjectRef": "spbuwcwmxlycchuwhfir",
+  "remoteMigrationsApplied": 0,
+  "stagingBranchesObserved": [],
+  "checks": {
+    "webTests": 367,
+    "captureTests": 127,
+    "persistenceTests": 35,
+    "extensionTests": 16,
+    "editorialSqlScenarios": 29,
+    "triageSqlScenarios": 22,
+    "captureSqlScenarios": 20,
+    "commercialSqlScenarios": 31,
+    "isolatedNewMigrationsExecuted": 11,
+    "buildExit": 0,
+    "typechecksExit": 0,
+    "noTargetAuditExpectedExit": 1
+  },
+  "files": [
+    {
+      "path": "docs/implementation/12-RELATORIO-DE-IMPLEMENTACAO-E-CONFERENCIA.md",
+      "sha256": "3b18a971345170d9eab021abe83ed21a365a2dbceb9c485ebe88332a11c47b9a"
+    },
+    {
+      "path": "docs/implementation/STATUS-EXECUCAO.md",
+      "sha256": "6e6509668e383cca667969a2e95575936d2231bfa51a6460c71cdbf69d6b82eb"
+    },
+    {
+      "path": "packages/persistence/bin/verify-remote-compatibility.ts",
+      "sha256": "9f6e0930358cbd398a321bb8e4650ebcffe1b78c6ad7c89ee23fd234d4a497fb"
+    },
+    {
+      "path": "packages/persistence/package.json",
+      "sha256": "a6a42d72801a970c0ded460aa4649753f58c9ea68e65e3d3c87111ce306b3715"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "bd000d5c48ad1b784fe29856214b3dc35b8def63b968196583efe41cb5973044"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014101000_garimpa_tenant_rls_scoped.sql",
+      "sha256": "57e737818e44266dc7e59d6a4b8637cd3d83fba1637a0cc0837df3674c88e8a0"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014102000_garimpa_price_evidence_canonical.sql",
+      "sha256": "5663b934ce2240efcafa8b069e54376f08cc392ec07d87d62d4c4c98deceb2b6"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014103000_garimpa_rubric_assessment_shadow.sql",
+      "sha256": "b9d1561dd0d38357dc90c227c2165752fa78cfd77d711c78f35f73edb7f6c495"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014104000_garimpa_audience_policy_and_opportunity.sql",
+      "sha256": "f7891a8b351f3efe3da146e520c1a2a0c2c05afd0a6e8d848c2f34302331341a"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014105000_garimpa_commerce_and_campaign_link.sql",
+      "sha256": "0ac1aac79763568890d0ea5a6f8785898f338da0d981d3e49aa87e569763e648"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014106000_garimpa_commercial_financial_ledger.sql",
+      "sha256": "64e3695d1defc2dc28b69fa61f3ea2eea71a2d8bffb3f4aac0475079618ed038"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014107000_garimpa_click_attribution_and_channels.sql",
+      "sha256": "45da44abba0327b4d7c78c39f3f9ba29040f937ff291a6f9aa2961ba27686da9"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014108000_garimpa_policy_experiments.sql",
+      "sha256": "6ac558033d30f09c86b89290d4b46e0b73f3f2b1db816834263d4be790c34e0b"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014109000_garimpa_dispatch_jobs_outbox.sql",
+      "sha256": "5aceebe2b67a8746d378da834bf9420200cc43ba66fbbde930e8809c054c7315"
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014110000_garimpa_saas_onboarding_entitlements.sql",
+      "sha256": "68340af2f2ad7833edd35202b921ebb4792485035b60f3ca5a97b164814cde42"
+    },
+    {
+      "path": "packages/web/app/_components/admin-shell.tsx",
+      "sha256": "b5d70ef00879fc3d658a16cbf5d9f93fdfb980ce9926391cb89a46d2cd21d4e6"
+    },
+    {
+      "path": "packages/web/app/admin/campanhas/page.tsx",
+      "sha256": "808b13b534306189bd732cbfd0ea8c7fc8aa90f2365e0c0eaaec5ce8ec65000f"
+    },
+    {
+      "path": "packages/web/app/admin/campanhas/workspace.tsx",
+      "sha256": "b1e3d4d263e6adf46e0d958ec6d41de850a4c67e63bd810b2e7af3d5b57a69db"
+    },
+    {
+      "path": "packages/web/app/admin/financeiro/actions.ts",
+      "sha256": "c6dea2c5e88d109527891fa82bed5666c70c78c843d3aca409e693abc124d340"
+    },
+    {
+      "path": "packages/web/app/admin/financeiro/page.tsx",
+      "sha256": "b6fec7727d245926ccc4a2e4c2eadc0bb030525652e55fe39e449c8b619243ca"
+    },
+    {
+      "path": "packages/web/app/admin/financeiro/workspace.tsx",
+      "sha256": "5a326f82aa7c332e9ba06ca44ace55d16104a23dfbacc83f60aa9a0baa36e695"
+    },
+    {
+      "path": "packages/web/app/admin/marketing/kit-actions.ts",
+      "sha256": "eb1feba0994ec683d687a8dc848816e4debf342c22fb225234824220aaa910fd"
+    },
+    {
+      "path": "packages/web/app/bizu/[slug]/page.tsx",
+      "sha256": "4f0fd1b83c905603459b5dd464e1a2ad6f1efcec2c03a94a3b368f99334a3cc3"
+    },
+    {
+      "path": "packages/web/app/bizu/[slug]/redirect-banner.tsx",
+      "sha256": "11290635f257a41508ce96b18a7561ba9f9f1289b70d1680827f5562d78e014c"
+    },
+    {
+      "path": "packages/web/app/go/[slug]/route.ts",
+      "sha256": "74564725e71d4f879c8066aa87ecbfd1364a6737bea50f36749609b4e8bdca76"
+    },
+    {
+      "path": "packages/web/app/p/[code]/route.ts",
+      "sha256": "c12569356ee64e20499ddc498b407da907aeb75ae24cebd376083492b067754b"
+    },
+    {
+      "path": "packages/web/lib/account-context.ts",
+      "sha256": "2f5a8ff27ca122b27a3e5abd8054ca3420a9d5c7c212c04c18c2db635a84ef91"
+    },
+    {
+      "path": "packages/web/lib/auth.ts",
+      "sha256": "89bdad279e88e023bdb0673d549ae311eda358c6b4c6c68b21c5400bd0e2c38d"
+    },
+    {
+      "path": "packages/web/lib/campaign-attribution.ts",
+      "sha256": "2aff923ac12be99fe2571c0f2c53f9ab0df35215c0a1f7880f7917019fc90abe"
+    },
+    {
+      "path": "packages/web/lib/campaign-exit.ts",
+      "sha256": "b83d46584ba7968c21806e88eb3cdb40236d2a686c62445f289d92469e2b83ec"
+    },
+    {
+      "path": "packages/web/lib/commerce-contract.ts",
+      "sha256": "1ffb6f4ddf24d53c5e3536ec04a3d57e0b5a076b6869713eaf3ed4cab189ab50"
+    },
+    {
+      "path": "packages/web/lib/commerce-db.ts",
+      "sha256": "9b3f8ff50de035b87aa0667ba18ac5aa0094223ded2fc97ad83a678db15c98bc"
+    },
+    {
+      "path": "packages/web/lib/commercial-financial-contract.ts",
+      "sha256": "e3d33a05bf037fa582bb6e0790c869cbd3dcaf7a7052e3d9905b158c9554f367"
+    },
+    {
+      "path": "packages/web/lib/commercial-financial-db.ts",
+      "sha256": "79be544bb483c6e78d093bc2bc3f7e2dc422a058a9d37cf69c1b8f119aac5023"
+    },
+    {
+      "path": "packages/web/lib/commercial-messages.ts",
+      "sha256": "eef3f8dfbe89f3df618baf38f33cf94057892a84d821db4d4e97ca61aa5f5fad"
+    },
+    {
+      "path": "packages/web/lib/commercial-workflow.ts",
+      "sha256": "e2fa2d9940f98927e52e010281e7d41a5dde37cce5153d91a74e03ffc8300d2a"
+    },
+    {
+      "path": "packages/web/lib/db.ts",
+      "sha256": "0e216a8462f389a437badf7831cc5b501a62243fc3c08f31f29868a7b42fe1c3"
+    },
+    {
+      "path": "packages/web/lib/kit-validator.ts",
+      "sha256": "e32e96e59c5c5290b340bc2144de135a57837ae8ca69bda77ae00541041bce07"
+    },
+    {
+      "path": "packages/web/lib/price-evidence.ts",
+      "sha256": "adf28ee19b949875baa62d45e94ad7e74d4ad203c3a02473d2dc7c59db8e1a75"
+    },
+    {
+      "path": "packages/web/lib/public-go.ts",
+      "sha256": "d6de194ccbb25ee312e9bd8001ef8eae3c54737ec9cce6988db57471e2217aef"
+    },
+    {
+      "path": "packages/web/lib/public-link-page.ts",
+      "sha256": "7836a1ba1824d4eac062c51a75473e1b96dca0474de9e80b6447f9fe0b5174eb"
+    },
+    {
+      "path": "packages/web/lib/public-offer-db.ts",
+      "sha256": "6dc56c6c51b8b9965a6bc7656e4a20b5d9e373139c2baa4f5849e258fb54b10b"
+    },
+    {
+      "path": "packages/web/lib/short-link-db.ts",
+      "sha256": "47fd65e80c0db37c2df5457077d519e677337e7d0490427f834adb9210352139"
+    },
+    {
+      "path": "packages/web/lib/tenant-db.ts",
+      "sha256": "ba403db831cb5d0c0a940fb700b6cc45d1ffc58132526c3ecc13309304387cee"
+    },
+    {
+      "path": "packages/web/test/campaign-attribution.test.mjs",
+      "sha256": "25b57a80220c83f292b0ee8673a96f63bd826afd6ed784e0889ae68a3dab047b"
+    },
+    {
+      "path": "packages/web/test/commerce-contract.test.mjs",
+      "sha256": "922ddfa4276d9a2930086488a7449309de1c006467312163f39f66c8043f1cd5"
+    },
+    {
+      "path": "packages/web/test/commercial-flow-contract.test.mjs",
+      "sha256": "d389ff628c4c8a6b2af09afe8f7cde0991de1d4e9de63f550742ab2922864fa6"
+    },
+    {
+      "path": "packages/web/test/kit-validator.test.mjs",
+      "sha256": "0454b3e58d55c235a4c1daae30233f06145f7588ee88b796ebcf0de227983d1b"
+    },
+    {
+      "path": "packages/web/test/price-evidence.test.mjs",
+      "sha256": "6d7bbba5319682c47309346cfb76c0742ad2e4577fcbc1df328337b9a1513dbd"
+    },
+    {
+      "path": "tools/editorial-tests/README.md",
+      "sha256": "30b050bb3fbca0cd9353521ed7346883b95ecc1ab5a1527151080cc43bf81fb5"
+    },
+    {
+      "path": "tools/editorial-tests/commercial-fixture.ts",
+      "sha256": "7b409500d2dbdb7faee69522074e63b05085bec2c4083600c126198c7f5cb52c"
+    },
+    {
+      "path": "tools/editorial-tests/commercial-flow.test.ts",
+      "sha256": "cc6beeaa8647878ec0f150d1eeec72ca2e43b51d31d27018d8407e70c62f7344"
+    },
+    {
+      "path": "tools/editorial-tests/package.json",
+      "sha256": "183fcdc6ecdb9b252343735c8450f6a63cc5a2034eb33405117e10b8ccbb3d01"
+    }
+  ]
+}

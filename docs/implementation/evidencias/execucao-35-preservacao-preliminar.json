@@ -1,0 +1,580 @@
+{
+  "source": "Supabase MCP; SELECT only; preliminary while existing writers may still run",
+  "phase": "before migrations; not a frozen maintenance baseline or recovery backup",
+  "project": "spbuwcwmxlycchuwhfir",
+  "columns": [
+    {
+      "table_name": "affiliate_account",
+      "columns": [
+        "id",
+        "tenant_id",
+        "public_slug",
+        "display_name",
+        "status",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table_name": "affiliate_marketplace_config",
+      "columns": [
+        "id",
+        "affiliate_id",
+        "marketplace",
+        "tracking_id",
+        "tool_id",
+        "status",
+        "validated_at",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table_name": "affiliate_membership",
+      "columns": [
+        "affiliate_id",
+        "app_user_id",
+        "role",
+        "created_at",
+        "revoked_at"
+      ]
+    },
+    {
+      "table_name": "affiliate_monitoring_policy",
+      "columns": [
+        "affiliate_id",
+        "marketplace",
+        "enabled",
+        "updated_by_auth_user_id",
+        "updated_at"
+      ]
+    },
+    {
+      "table_name": "affiliate_monitoring_policy_event",
+      "columns": [
+        "id",
+        "affiliate_id",
+        "marketplace",
+        "previous_enabled",
+        "enabled",
+        "changed_by_auth_user_id",
+        "changed_at"
+      ]
+    },
+    {
+      "table_name": "affiliate_monitoring_skip",
+      "columns": [
+        "id",
+        "affiliate_id",
+        "marketplace",
+        "github_run_id",
+        "reason",
+        "skipped_at"
+      ]
+    },
+    {
+      "table_name": "affiliate_secret",
+      "columns": [
+        "id",
+        "tenant_id",
+        "marketplace",
+        "secret_id",
+        "key_version",
+        "ciphertext",
+        "nonce",
+        "tag",
+        "status",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table_name": "app_user",
+      "columns": [
+        "id",
+        "tenant_id",
+        "auth_user_id",
+        "display_name",
+        "email",
+        "created_at",
+        "last_seen_at"
+      ]
+    },
+    {
+      "table_name": "app_user_role",
+      "columns": [
+        "app_user_id",
+        "role",
+        "granted_at",
+        "granted_by_auth_user_id",
+        "revoked_at"
+      ]
+    },
+    {
+      "table_name": "buyer_profile",
+      "columns": [
+        "user_id",
+        "tenant_id",
+        "preferred_categories",
+        "price_band",
+        "updated_at"
+      ]
+    },
+    {
+      "table_name": "capture_batch",
+      "columns": [
+        "id",
+        "tenant_id",
+        "requested_marketplaces",
+        "pages",
+        "status",
+        "started_at",
+        "finished_at",
+        "metadata"
+      ]
+    },
+    {
+      "table_name": "capture_run",
+      "columns": [
+        "id",
+        "tenant_id",
+        "marketplace",
+        "started_at",
+        "finished_at",
+        "status",
+        "items_captured",
+        "items_new",
+        "price_changes",
+        "error",
+        "collector_run_id",
+        "parameters"
+      ]
+    },
+    {
+      "table_name": "click_event",
+      "columns": [
+        "id",
+        "tenant_id",
+        "publication_id",
+        "clicked_at",
+        "user_agent",
+        "referer",
+        "ip_hash"
+      ]
+    },
+    {
+      "table_name": "curation_event",
+      "columns": [
+        "id",
+        "tenant_id",
+        "product_id",
+        "from_status",
+        "to_status",
+        "reason_code",
+        "reason_detail",
+        "actor_type",
+        "actor_app_user_id",
+        "policy_version",
+        "metadata",
+        "created_at",
+        "group_id",
+        "review_session_id",
+        "bulk_action_id",
+        "from_reason_code",
+        "from_reason_detail",
+        "from_deferred_until",
+        "triage_run_id",
+        "actor_membership_app_user_id",
+        "actor_membership_affiliate_id"
+      ]
+    },
+    {
+      "table_name": "editorial_assessment",
+      "columns": [
+        "id",
+        "tenant_id",
+        "product_id",
+        "actor_app_user_id",
+        "policy_version",
+        "evidence_fingerprint",
+        "assessment",
+        "snapshot",
+        "created_at"
+      ]
+    },
+    {
+      "table_name": "editorial_guideline",
+      "columns": [
+        "tenant_id",
+        "guideline",
+        "auto_publish",
+        "min_score_auto_publish",
+        "updated_at"
+      ]
+    },
+    {
+      "table_name": "editorial_selection",
+      "columns": [
+        "id",
+        "tenant_id",
+        "version",
+        "status",
+        "valid_until",
+        "actor_app_user_id",
+        "created_at"
+      ]
+    },
+    {
+      "table_name": "editorial_selection_item",
+      "columns": [
+        "id",
+        "tenant_id",
+        "selection_id",
+        "product_id",
+        "assessment_id",
+        "position",
+        "destinations",
+        "context"
+      ]
+    },
+    {
+      "table_name": "extension_device",
+      "columns": [
+        "id",
+        "affiliate_id",
+        "created_by_app_user_id",
+        "name",
+        "token_hash",
+        "token_prefix",
+        "pairing_code_hash",
+        "pairing_expires_at",
+        "paired_at",
+        "last_used_at",
+        "revoked_at",
+        "created_at"
+      ]
+    },
+    {
+      "table_name": "favorite",
+      "columns": [
+        "id",
+        "tenant_id",
+        "user_id",
+        "product_id",
+        "created_at"
+      ]
+    },
+    {
+      "table_name": "price_observation",
+      "columns": [
+        "id",
+        "tenant_id",
+        "product_id",
+        "price_cents",
+        "original_price_cents",
+        "claimed_discount_rate",
+        "observed_at",
+        "rating_star",
+        "sales_label",
+        "sales_count",
+        "capture_run_id",
+        "title_snapshot",
+        "product_url_snapshot",
+        "image_url_snapshot",
+        "category_snapshot",
+        "capture_source",
+        "extension_device_id",
+        "client_request_id",
+        "source_page_url",
+        "client_captured_at",
+        "received_at",
+        "offer_evidence"
+      ]
+    },
+    {
+      "table_name": "price_watch",
+      "columns": [
+        "id",
+        "tenant_id",
+        "user_id",
+        "product_id",
+        "baseline_price_cents",
+        "target_price_cents",
+        "active",
+        "created_at",
+        "deactivated_at"
+      ]
+    },
+    {
+      "table_name": "product",
+      "columns": [
+        "id",
+        "tenant_id",
+        "marketplace",
+        "external_id",
+        "title",
+        "product_url",
+        "image_url",
+        "last_price_cents",
+        "created_at",
+        "updated_at",
+        "category",
+        "first_seen_at",
+        "last_seen_at",
+        "last_capture_run_id",
+        "family_key",
+        "family_label",
+        "family_method",
+        "family_version"
+      ]
+    },
+    {
+      "table_name": "product_curation",
+      "columns": [
+        "tenant_id",
+        "product_id",
+        "status",
+        "reason_code",
+        "reason_detail",
+        "reviewed_by_app_user_id",
+        "reviewed_at",
+        "created_at",
+        "updated_at",
+        "deferred_until"
+      ]
+    },
+    {
+      "table_name": "publication",
+      "columns": [
+        "id",
+        "tenant_id",
+        "product_id",
+        "channel",
+        "slug",
+        "status",
+        "published_at",
+        "affiliate_id",
+        "affiliate_url",
+        "affiliate_url_generated_at"
+      ]
+    },
+    {
+      "table_name": "short_link",
+      "columns": [
+        "code",
+        "tenant_id",
+        "slug",
+        "created_at"
+      ]
+    },
+    {
+      "table_name": "subscriber",
+      "columns": [
+        "id",
+        "tenant_id",
+        "email",
+        "source",
+        "consented_at",
+        "created_at"
+      ]
+    },
+    {
+      "table_name": "triage_run",
+      "columns": [
+        "id",
+        "tenant_id",
+        "started_at",
+        "finished_at",
+        "status",
+        "total_input",
+        "approved_count",
+        "held_count",
+        "rejected_count",
+        "annotated_count",
+        "pipeline_version",
+        "model_name",
+        "error_message",
+        "metadata",
+        "created_at"
+      ]
+    }
+  ],
+  "query": "select now() inspected_at,x.* from (select 'affiliate_account'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"public_slug\",t.\"display_name\",t.\"status\",t.\"created_at\",t.\"updated_at\" from garimpa.\"affiliate_account\" t) r\nunion all\nselect 'affiliate_marketplace_config'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"affiliate_id\",t.\"marketplace\",t.\"tracking_id\",t.\"tool_id\",t.\"status\",t.\"validated_at\",t.\"created_at\",t.\"updated_at\" from garimpa.\"affiliate_marketplace_config\" t) r\nunion all\nselect 'affiliate_membership'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"affiliate_id\",t.\"app_user_id\",t.\"role\",t.\"created_at\",t.\"revoked_at\" from garimpa.\"affiliate_membership\" t) r\nunion all\nselect 'affiliate_monitoring_policy'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"affiliate_id\",t.\"marketplace\",t.\"enabled\",t.\"updated_by_auth_user_id\",t.\"updated_at\" from garimpa.\"affiliate_monitoring_policy\" t) r\nunion all\nselect 'affiliate_monitoring_policy_event'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"affiliate_id\",t.\"marketplace\",t.\"previous_enabled\",t.\"enabled\",t.\"changed_by_auth_user_id\",t.\"changed_at\" from garimpa.\"affiliate_monitoring_policy_event\" t) r\nunion all\nselect 'affiliate_monitoring_skip'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"affiliate_id\",t.\"marketplace\",t.\"github_run_id\",t.\"reason\",t.\"skipped_at\" from garimpa.\"affiliate_monitoring_skip\" t) r\nunion all\nselect 'affiliate_secret'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"marketplace\",t.\"secret_id\",t.\"key_version\",t.\"ciphertext\",t.\"nonce\",t.\"tag\",t.\"status\",t.\"created_at\",t.\"updated_at\" from garimpa.\"affiliate_secret\" t) r\nunion all\nselect 'app_user'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"auth_user_id\",t.\"display_name\",t.\"email\",t.\"created_at\",t.\"last_seen_at\" from garimpa.\"app_user\" t) r\nunion all\nselect 'app_user_role'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"app_user_id\",t.\"role\",t.\"granted_at\",t.\"granted_by_auth_user_id\",t.\"revoked_at\" from garimpa.\"app_user_role\" t) r\nunion all\nselect 'buyer_profile'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"user_id\",t.\"tenant_id\",t.\"preferred_categories\",t.\"price_band\",t.\"updated_at\" from garimpa.\"buyer_profile\" t) r\nunion all\nselect 'capture_batch'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"requested_marketplaces\",t.\"pages\",t.\"status\",t.\"started_at\",t.\"finished_at\",t.\"metadata\" from garimpa.\"capture_batch\" t) r\nunion all\nselect 'capture_run'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"marketplace\",t.\"started_at\",t.\"finished_at\",t.\"status\",t.\"items_captured\",t.\"items_new\",t.\"price_changes\",t.\"error\",t.\"collector_run_id\",t.\"parameters\" from garimpa.\"capture_run\" t) r\nunion all\nselect 'click_event'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"publication_id\",t.\"clicked_at\",t.\"user_agent\",t.\"referer\",t.\"ip_hash\" from garimpa.\"click_event\" t) r\nunion all\nselect 'curation_event'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"product_id\",t.\"from_status\",t.\"to_status\",t.\"reason_code\",t.\"reason_detail\",t.\"actor_type\",t.\"actor_app_user_id\",t.\"policy_version\",t.\"metadata\",t.\"created_at\",t.\"group_id\",t.\"review_session_id\",t.\"bulk_action_id\",t.\"from_reason_code\",t.\"from_reason_detail\",t.\"from_deferred_until\",t.\"triage_run_id\",t.\"actor_membership_app_user_id\",t.\"actor_membership_affiliate_id\" from garimpa.\"curation_event\" t) r\nunion all\nselect 'editorial_assessment'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"product_id\",t.\"actor_app_user_id\",t.\"policy_version\",t.\"evidence_fingerprint\",t.\"assessment\",t.\"snapshot\",t.\"created_at\" from garimpa.\"editorial_assessment\" t) r\nunion all\nselect 'editorial_guideline'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"tenant_id\",t.\"guideline\",t.\"auto_publish\",t.\"min_score_auto_publish\",t.\"updated_at\" from garimpa.\"editorial_guideline\" t) r\nunion all\nselect 'editorial_selection'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"version\",t.\"status\",t.\"valid_until\",t.\"actor_app_user_id\",t.\"created_at\" from garimpa.\"editorial_selection\" t) r\nunion all\nselect 'editorial_selection_item'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"selection_id\",t.\"product_id\",t.\"assessment_id\",t.\"position\",t.\"destinations\",t.\"context\" from garimpa.\"editorial_selection_item\" t) r\nunion all\nselect 'extension_device'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"affiliate_id\",t.\"created_by_app_user_id\",t.\"name\",t.\"token_hash\",t.\"token_prefix\",t.\"pairing_code_hash\",t.\"pairing_expires_at\",t.\"paired_at\",t.\"last_used_at\",t.\"revoked_at\",t.\"created_at\" from garimpa.\"extension_device\" t) r\nunion all\nselect 'favorite'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"user_id\",t.\"product_id\",t.\"created_at\" from garimpa.\"favorite\" t) r\nunion all\nselect 'price_observation'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"product_id\",t.\"price_cents\",t.\"original_price_cents\",t.\"claimed_discount_rate\",t.\"observed_at\",t.\"rating_star\",t.\"sales_label\",t.\"sales_count\",t.\"capture_run_id\",t.\"title_snapshot\",t.\"product_url_snapshot\",t.\"image_url_snapshot\",t.\"category_snapshot\",t.\"capture_source\",t.\"extension_device_id\",t.\"client_request_id\",t.\"source_page_url\",t.\"client_captured_at\",t.\"received_at\",t.\"offer_evidence\" from garimpa.\"price_observation\" t) r\nunion all\nselect 'price_watch'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"user_id\",t.\"product_id\",t.\"baseline_price_cents\",t.\"target_price_cents\",t.\"active\",t.\"created_at\",t.\"deactivated_at\" from garimpa.\"price_watch\" t) r\nunion all\nselect 'product'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"marketplace\",t.\"external_id\",t.\"title\",t.\"product_url\",t.\"image_url\",t.\"last_price_cents\",t.\"created_at\",t.\"updated_at\",t.\"category\",t.\"first_seen_at\",t.\"last_seen_at\",t.\"last_capture_run_id\",t.\"family_key\",t.\"family_label\",t.\"family_method\",t.\"family_version\" from garimpa.\"product\" t) r\nunion all\nselect 'product_curation'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"tenant_id\",t.\"product_id\",t.\"status\",t.\"reason_code\",t.\"reason_detail\",t.\"reviewed_by_app_user_id\",t.\"reviewed_at\",t.\"created_at\",t.\"updated_at\",t.\"deferred_until\" from garimpa.\"product_curation\" t) r\nunion all\nselect 'publication'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"product_id\",t.\"channel\",t.\"slug\",t.\"status\",t.\"published_at\",t.\"affiliate_id\",t.\"affiliate_url\",t.\"affiliate_url_generated_at\" from garimpa.\"publication\" t) r\nunion all\nselect 'short_link'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"code\",t.\"tenant_id\",t.\"slug\",t.\"created_at\" from garimpa.\"short_link\" t) r\nunion all\nselect 'subscriber'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"email\",t.\"source\",t.\"consented_at\",t.\"created_at\" from garimpa.\"subscriber\" t) r\nunion all\nselect 'triage_run'::text table_name,count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(r)::text),'' order by md5(to_jsonb(r)::text)),'')) original_columns_digest from (select t.\"id\",t.\"tenant_id\",t.\"started_at\",t.\"finished_at\",t.\"status\",t.\"total_input\",t.\"approved_count\",t.\"held_count\",t.\"rejected_count\",t.\"annotated_count\",t.\"pipeline_version\",t.\"model_name\",t.\"error_message\",t.\"metadata\",t.\"created_at\" from garimpa.\"triage_run\" t) r) x order by table_name;",
+  "results": [
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "affiliate_account",
+      "row_count": 1,
+      "original_columns_digest": "53abf21fd227918591561f55b5dc8f9e"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "affiliate_marketplace_config",
+      "row_count": 1,
+      "original_columns_digest": "17cfb59b66a8e2c3e28a5ef6482ea2d1"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "affiliate_membership",
+      "row_count": 1,
+      "original_columns_digest": "1ac57bcb38b170c34fd4fed807bee207"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "affiliate_monitoring_policy",
+      "row_count": 3,
+      "original_columns_digest": "32c01c2e3f0fa209f29e6428f82c5856"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "affiliate_monitoring_policy_event",
+      "row_count": 2,
+      "original_columns_digest": "7c89097ebfbc7e28194c3f5d1ccf659b"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "affiliate_monitoring_skip",
+      "row_count": 1,
+      "original_columns_digest": "4f23d8476079771a480c81e432bf0435"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "affiliate_secret",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "app_user",
+      "row_count": 3,
+      "original_columns_digest": "bc6bba6478b00e0f57326329998f2112"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "app_user_role",
+      "row_count": 1,
+      "original_columns_digest": "cd10fc0c77a641d6a4ec19946945ef1d"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "buyer_profile",
+      "row_count": 1,
+      "original_columns_digest": "4101cdd017e96634014fd92e6d66f8d7"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "capture_batch",
+      "row_count": 11,
+      "original_columns_digest": "157a5bf406e744df4173c1ace82b10bd"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "capture_run",
+      "row_count": 403,
+      "original_columns_digest": "3a870353f4f2197ba1e7ee28f881397f"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "click_event",
+      "row_count": 766,
+      "original_columns_digest": "4333041bb094b57ac7cd24be984104e1"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "curation_event",
+      "row_count": 1330,
+      "original_columns_digest": "b50629030d73f29f792f765fb6b3f269"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "editorial_assessment",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "editorial_guideline",
+      "row_count": 1,
+      "original_columns_digest": "8fae2478ac2ffdb6fb94e5447ef03e6a"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "editorial_selection",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "editorial_selection_item",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "extension_device",
+      "row_count": 3,
+      "original_columns_digest": "fd3dd785d523a6f3da967268b50ee7f3"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "favorite",
+      "row_count": 7,
+      "original_columns_digest": "7d8d803b8630a4a0d4a1657e0fc48f66"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "price_observation",
+      "row_count": 9261,
+      "original_columns_digest": "d617cb59a6c8f50c9ba032adbea308e9"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "price_watch",
+      "row_count": 4,
+      "original_columns_digest": "da310d69508a666b0a0e559f90665728"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "product",
+      "row_count": 1657,
+      "original_columns_digest": "77053a5b1bac588130f08cc9efc8aa06"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "product_curation",
+      "row_count": 1657,
+      "original_columns_digest": "57bc5470d3397f87305cee2911da8cb0"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "publication",
+      "row_count": 1495,
+      "original_columns_digest": "898c81137e924fc2262ea480f15adcfa"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "short_link",
+      "row_count": 172,
+      "original_columns_digest": "ecdaa73fe77efa03848794139c5e9d14"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "subscriber",
+      "row_count": 0,
+      "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "inspected_at": "2026-10-16 13:24:24.74225+00",
+      "table_name": "triage_run",
+      "row_count": 17,
+      "original_columns_digest": "cc204394f790be7935cca92872386395"
+    }
+  ],
+  "databaseWrites": 0,
+  "comparisonMethod": "For each original table, compare row counts and a digest of all original-column row values. New columns are excluded by the frozen projection. Legitimate writes must be stopped or accounted for; take a fresh baseline after draining writers.",
+  "limits": [
+    "Digest is an integrity comparison, not a restorable backup.",
+    "Administrative visibility does not prove runtime accessibility; see separate runtime readonly evidence.",
+    "Private per-user visibility after C is intentional; do not demand that every actor sees every record."
+  ]
+}

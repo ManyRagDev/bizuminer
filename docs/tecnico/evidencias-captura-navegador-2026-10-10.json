@@ -1,0 +1,52 @@
+{
+  "verifiedAt": "2026-10-10T21:41:03.379Z",
+  "scope": "Uma oferta real importada pelo painel autenticado; coletor compilado leu 48 cards via DOM somente leitura. Extensão empacotada, não instalada/testada no navegador.",
+  "batch": {
+    "id": "321bb45e-b185-4736-b5e2-9ce67b2434e4",
+    "status": "ok",
+    "started_at": "2026-10-10T21:36:10.196Z",
+    "finished_at": "2026-10-10T21:40:10.435Z",
+    "phase": "finished",
+    "imported_count": "1",
+    "triage": {
+      "held": 0,
+      "approved": 0,
+      "rejected": 1,
+      "processed": 1,
+      "triageRunId": "82adfd64-1f99-4d65-b932-7b96e8823e4a",
+      "annotatedPending": 0
+    }
+  },
+  "captures": [
+    {
+      "id": "4c88ab9a-b1d0-4701-aaaa-fbcaee4f3fc5",
+      "status": "ok",
+      "items_captured": 1,
+      "capture_mode": "browser",
+      "observations": 1
+    }
+  ],
+  "decisions": [
+    {
+      "triage_run_id": "82adfd64-1f99-4d65-b932-7b96e8823e4a",
+      "actor_type": "llm",
+      "to_status": "rejected",
+      "reason_code": "low_utility",
+      "ai_score": "2",
+      "rationale": "Smartphone é um item de alto valor e uso comum, não se alinha ao foco de achadinhos inovadores ou utilidades menores para o canal."
+    }
+  ],
+  "validation": {
+    "webTestsPassed": 295,
+    "isolatedPostgresScenariosPassed": 15,
+    "webTypecheck": "passed",
+    "extensionTypecheck": "passed",
+    "webProductionBuild": "passed in isolated copy",
+    "extensionProductionBuildAndManifest": "passed",
+    "extensionVersion": "0.2.0",
+    "liveDomCardsRead": 48,
+    "liveImportedOffers": 1,
+    "extensionInstalledLiveTest": false,
+    "deployed": false
+  }
+}

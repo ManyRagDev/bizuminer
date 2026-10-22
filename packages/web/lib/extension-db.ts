@@ -5,6 +5,8 @@
  */
 
 import { db } from "./db.ts";
+import { withOwnerAccountDb } from "./owner-account-db.ts";
+import { withAccountDb, withTenantDb, type AccountContext } from "./tenant-db.ts";
 import { generateDeviceToken, generatePairingCode, hashPairingCode, hashToken, tokenPrefix } from "./extension-token.ts";
 import type { ExtensionCapturePayload } from "./extension-contract.ts";
 
@@ -16,6 +18,7 @@ export interface DeviceIdentity {
   tenantId: string;
   affiliatePublicSlug: string;
   affiliateDisplayName: string;
+  appUserId: string;
 }
 
 export type DeviceAuth =
@@ -40,11 +43,13 @@ export interface CaptureWriteResult {
 /**
  * Autentica o token do dispositivo (hash). Distingue revogado (403) de
  * desconhecido (401) para a borda responder o status correto.
+ * Usa garimpa.authenticate_extension_device (SECURITY DEFINER) para resolver
+ * dispositivo e tenant sem exigir policy irrestrita.
  */
-export async function authenticateDevice(tokenHash: string): Promise<DeviceAuth> {
-  const sql = db();
+export async function authenticateDevice(tokenHash: string, factory: typeof db=db): Promise<DeviceAuth> {
+  const sql = factory();
   try {
-    const rows = await sql<{
+    let rows: {
       device_id: string;
       affiliate_id: string;
       tenant_id: string;
@@ -53,24 +58,33 @@ export async function authenticateDevice(tokenHash: string): Promise<DeviceAuth>
       revoked_at: string | null;
       account_status: string;
       role_active: boolean;
-    }[]>`
-      select d.id as device_id, a.id as affiliate_id, a.tenant_id, a.public_slug, a.display_name,
-             d.revoked_at::text, a.status as account_status,
-             exists (
-               select 1
-               from garimpa.app_user_role aur
-               join garimpa.affiliate_membership am
-                 on am.app_user_id = aur.app_user_id
-                and am.affiliate_id = d.affiliate_id
-               where aur.app_user_id = d.created_by_app_user_id
-                 and aur.role = 'afiliado'::garimpa.app_role
-                 and aur.revoked_at is null
-             ) as role_active
-      from garimpa.extension_device d
-      join garimpa.affiliate_account a on a.id = d.affiliate_id
-      where d.token_hash = ${tokenHash}
-      limit 1
-    `;
+      app_user_id: string;
+    }[] = [];
+    try {
+      rows = await sql<typeof rows>`
+        select * from garimpa.authenticate_extension_device(${tokenHash})
+      `;
+    } catch {
+      rows = await sql<typeof rows>`
+        select d.id as device_id, d.created_by_app_user_id as app_user_id, a.id as affiliate_id, a.tenant_id, a.public_slug, a.display_name,
+               d.revoked_at::text, a.status as account_status,
+               exists (
+                 select 1
+                 from garimpa.app_user_role aur
+                 join garimpa.affiliate_membership am
+                   on am.app_user_id = aur.app_user_id
+                  and am.affiliate_id = d.affiliate_id
+                 where aur.app_user_id = d.created_by_app_user_id
+                   and aur.role = 'afiliado'::garimpa.app_role
+                   and aur.revoked_at is null
+                   and am.revoked_at is null
+               ) as role_active
+        from garimpa.extension_device d
+        join garimpa.affiliate_account a on a.id = d.affiliate_id
+        where d.token_hash = ${tokenHash}
+        limit 1
+      `;
+    }
     const row = rows[0];
     if (!row) return { kind: "unknown" };
     if (row.revoked_at !== null || row.account_status !== "active" || !row.role_active) {
@@ -84,6 +98,7 @@ export async function authenticateDevice(tokenHash: string): Promise<DeviceAuth>
         tenantId: row.tenant_id,
         affiliatePublicSlug: row.public_slug,
         affiliateDisplayName: row.display_name,
+        appUserId: row.app_user_id,
       },
     };
   } finally {
@@ -95,9 +110,8 @@ export async function authenticateDevice(tokenHash: string): Promise<DeviceAuth>
 export async function createPairingCode(input: {
   appUserId: string;
   deviceName: string;
-}): Promise<{ deviceId: string; pairingCode: string; expiresAt: Date }> {
-  const sql = db();
-  try {
+}, factory: typeof db=db): Promise<{ deviceId: string; pairingCode: string; expiresAt: Date }> {
+  return withOwnerAccountDb(input.appUserId, async (sql,affiliateId) => {
     const code = generatePairingCode();
     const expiresAt = new Date(Date.now() + PAIRING_TTL_MS);
 
@@ -105,7 +119,7 @@ export async function createPairingCode(input: {
     await sql`
       update garimpa.extension_device
       set pairing_code_hash = null, pairing_expires_at = null
-      where created_by_app_user_id = ${input.appUserId}
+      where created_by_app_user_id = ${input.appUserId} and affiliate_id=${affiliateId}
         and pairing_code_hash is not null
     `;
 
@@ -121,7 +135,8 @@ export async function createPairingCode(input: {
         on aur.app_user_id = am.app_user_id
        and aur.role = 'afiliado'::garimpa.app_role
        and aur.revoked_at is null
-      where am.app_user_id = ${input.appUserId}
+      where am.app_user_id = ${input.appUserId} and am.affiliate_id=${affiliateId} and am.role='owner'
+        and am.revoked_at is null
       order by (am.role = 'owner') desc, am.created_at asc
       limit 1
       returning id
@@ -130,9 +145,7 @@ export async function createPairingCode(input: {
     if (!rows[0]) throw new Error("affiliate_access_required");
 
     return { deviceId: rows[0]!.id, pairingCode: code, expiresAt };
-  } finally {
-    await sql.end();
-  }
+  }, factory);
 }
 
 /**
@@ -140,45 +153,18 @@ export async function createPairingCode(input: {
  * consumido, dentro do prazo; grava hash do token, limpa o código e marca
  * paired_at. Código inválido/expirado → mensagem genérica (não vaza estado).
  */
-export async function exchangePairingCode(pairingCode: string): Promise<ExchangeResult | null> {
-  const sql = db();
+export async function exchangePairingCode(pairingCode: string, factory: typeof db=db): Promise<ExchangeResult | null> {
+  const sql = factory();
   try {
     return await sql.begin(async (tx) => {
       const token = generateDeviceToken();
-      const rows = await tx<{
-        device_id: string;
-        display_name: string;
-      }[]>`
-        update garimpa.extension_device
-        set token_hash = ${hashToken(token)},
-            token_prefix = ${tokenPrefix(token)},
-            pairing_code_hash = null,
-            pairing_expires_at = null,
-            paired_at = now(),
-            revoked_at = null
-        where pairing_code_hash = ${hashPairingCode(pairingCode)}
-          and pairing_expires_at > now()
-          and token_hash is null
-          and exists (
-            select 1
-            from garimpa.app_user_role aur
-            join garimpa.affiliate_membership am
-              on am.app_user_id = aur.app_user_id
-             and am.affiliate_id = garimpa.extension_device.affiliate_id
-            join garimpa.affiliate_account a
-              on a.id = am.affiliate_id and a.status = 'active'
-            where aur.app_user_id = garimpa.extension_device.created_by_app_user_id
-              and aur.role = 'afiliado'::garimpa.app_role
-              and aur.revoked_at is null
-          )
-        returning id as device_id,
-                  (select a.display_name from garimpa.affiliate_account a where a.id = garimpa.extension_device.affiliate_id) as display_name
-      `;
+      const rows = await tx<{device_id:string;display_name:string}[]>`
+        select * from garimpa.exchange_extension_pairing(${hashPairingCode(pairingCode)},${hashToken(token)},${tokenPrefix(token)})`;
       const row = rows[0];
       if (!row) return null;
       return { deviceId: row.device_id, deviceToken: token, affiliate: { displayName: row.display_name } };
     });
-  } finally {
+  } catch { throw new Error("extension_pairing_failed"); } finally {
     await sql.end();
   }
 }
@@ -191,16 +177,25 @@ export async function exchangePairingCode(pairingCode: string): Promise<Exchange
 export async function persistExtensionCapture(
   device: DeviceIdentity,
   payload: ExtensionCapturePayload,
+  sqlFactory: typeof db = db,
 ): Promise<CaptureWriteResult> {
-  const sql = db();
   const p = payload.product;
   const clientCapturedAt = new Date(payload.clientCapturedAt);
   const originalPriceCents = p.originalPriceCents !== undefined && p.originalPriceCents > p.priceCents ? p.originalPriceCents : null;
   const claimedDiscountRate = originalPriceCents !== null ? 1 - p.priceCents / originalPriceCents : null;
   const slug = `ml-${p.externalId}-${device.affiliatePublicSlug}`;
 
-  try {
-    return await sql.begin(async (tx) => {
+  const context: AccountContext = {
+    tenantId: device.tenantId,
+    affiliateId: device.affiliateId,
+    actor: "device",
+    actorAppUserId: device.appUserId,
+    authenticatedAuthUserId: null,
+    membershipRole: "operator",
+    requestId: payload.requestId,
+  };
+
+  return await withAccountDb(context, async (tx) => {
       // Revalida dentro da transação para que revogação de role, membership,
       // conta ou dispositivo interrompa também um request já autenticado.
       const access = await tx<{ allowed: boolean }[]>`
@@ -216,9 +211,10 @@ export async function persistExtensionCapture(
             on aur.app_user_id = d.created_by_app_user_id
            and aur.role = 'afiliado'::garimpa.app_role
            and aur.revoked_at is null
+           and am.revoked_at is null
           where d.id = ${device.deviceId}
             and d.revoked_at is null
-            and d.affiliate_id = ${device.affiliateId}
+            and d.affiliate_id = ${device.affiliateId} and d.created_by_app_user_id=${device.appUserId} and a.tenant_id=${device.tenantId}
         ) as allowed
       `;
       if (!access[0]?.allowed) throw new Error("affiliate_access_required");
@@ -281,13 +277,9 @@ export async function persistExtensionCapture(
       `;
 
       // 4. marca uso do dispositivo.
-      await tx`
-        update garimpa.extension_device set last_used_at = now() where id = ${device.deviceId}
-      `;
+      const [touched]=await tx<{ok:boolean}[]>`select garimpa.touch_extension_device(${device.deviceId}) as ok`;
+      if(!touched?.ok)throw new Error('affiliate_access_required');
 
       return { ok: true, duplicate, productId, observationId, publication: { slug } };
-    });
-  } finally {
-    await sql.end();
-  }
+    }, sqlFactory);
 }

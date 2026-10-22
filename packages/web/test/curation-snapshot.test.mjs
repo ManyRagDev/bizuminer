@@ -31,6 +31,14 @@ const facts = {
     category: "Auto e moto",
     ratingStar: 4.6,
   }),
+  reviewCount: 250,
+  variant: { variantKey: "preto_110v", variantLabel: "Preto 110V", confirmed: true, description: "Preto 110V" },
+  offerEvidenceSource: {
+    marketplace: "mercadolivre",
+    method: "deals",
+    url: "https://www.mercadolivre.com.br/p/MLB123",
+    capturedAt: "2026-09-03T12:00:00.000Z",
+  },
   provenance: {
     presentingCaptureRunId: "run_1",
     presentingMarketplace: "aliexpress",
@@ -42,7 +50,7 @@ const facts = {
   },
 };
 
-test("snapshot v1 carrega versão e os fatos exibidos pela mesa", () => {
+test("snapshot v2 carrega versão nova e os fatos exibidos pela mesa", () => {
   const metadata = buildSnapshotMetadata(facts, {
     via: "bulk",
     groupId: "grp_1234abcd",
@@ -50,10 +58,15 @@ test("snapshot v1 carrega versão e os fatos exibidos pela mesa", () => {
     bulkActionId: "bulk_1",
     policyVersion: "v1",
   });
+  assert.equal(metadata.snapshot_version, 2);
   assert.equal(metadata.snapshot_version, CURATION_SNAPSHOT_VERSION);
   assert.equal(metadata.snapshot.action.via, "bulk");
   assert.equal(metadata.snapshot.action.groupId, "grp_1234abcd");
   assert.equal(metadata.snapshot.family?.key, "manoplas_moto");
+  assert.equal(metadata.snapshot.reviewCount, 250);
+  assert.equal(metadata.snapshot.variant?.confirmed, true);
+  assert.equal(metadata.snapshot.variant?.description, "Preto 110V");
+  assert.equal(metadata.snapshot.offerEvidenceSource?.marketplace, "mercadolivre");
   assert.equal(metadata.snapshot.provenance?.planId, "category-first-v1");
   assert.equal(metadata.snapshot.statusBefore, "pending");
   assert.equal(metadata.snapshot.imageUrl, "https://http2.mlstatic.com/manopla.jpg");

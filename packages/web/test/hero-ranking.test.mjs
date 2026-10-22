@@ -295,7 +295,8 @@ test("avaliação humana válida tem prioridade sem comparar escalas de notas di
     observationCount: 3, historyDays: 7, ratingStar: 5, salesCount: 999999,
     offerEvidence: { reviewCount: 20, packageContents: ["Um organizador"], packageQuantity: 1, variantKey: "60l" },
   });
-  assert.equal(classifyHeroCandidate(completeCatalog, now).score, 100);
+  // BUG-018: vendas são puramente descritivas (0 pontos no score global factual), logo soma 95
+  assert.equal(classifyHeroCandidate(completeCatalog, now).score, 95);
   const reviewed = candidate("reviewed60", adequate);
   const ranked = rankHeroCandidates([completeCatalog, reviewed], now);
   assert.deepEqual(ranked.map((entry) => entry.candidate.id), ["reviewed60", "catalog100"]);
@@ -386,7 +387,29 @@ test("estrelas inválidas e vendas sem número seguro não dão pontos", () => {
   for (const salesCount of [-1, 0, 1.5, "100", NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
     assert.equal(classifyHeroCandidate(catalogCandidate("invalid_sales", { salesCount }), now).score, 0);
   }
-  assert.equal(classifyHeroCandidate(catalogCandidate("sold", { salesCount: 999999 }), now).score, 5);
+  // BUG-018: vendas com número seguro permanecem descritivas (0 pontos no score global)
+  const sold = classifyHeroCandidate(catalogCandidate("sold", { salesCount: 999999 }), now);
+  assert.equal(sold.score, 0);
+  assert.ok(sold.catalogSignals.some((s) => /vendas informadas/i.test(s.label)));
+});
+
+test("BUG-018: vendas 10 vs 10.000 entre marketplaces distintos não alteram o score factual global", () => {
+  const itemLow = catalogCandidate("item_ml", {
+    marketplace: "mercadolivre",
+    ratingStar: 4.5,
+    salesCount: 10,
+    offerEvidence: { reviewCount: 50 },
+  });
+  const itemHigh = catalogCandidate("item_shopee", {
+    marketplace: "shopee",
+    ratingStar: 4.5,
+    salesCount: 10000,
+    offerEvidence: { reviewCount: 50 },
+  });
+
+  const scoreLow = classifyHeroCandidate(itemLow, now).score;
+  const scoreHigh = classifyHeroCandidate(itemHigh, now).score;
+  assert.equal(scoreLow, scoreHigh, "Vendas entre marketplaces diferentes não devem criar assimetria de pontuação global");
 });
 
 test("conteúdo público vem somente dos campos da fonte, nunca de título ou imagem", () => {

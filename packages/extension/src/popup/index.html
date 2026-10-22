@@ -13,17 +13,54 @@
       </header>
 
       <section id="status" class="status">
-        <p class="status-line"><span class="dot"></span><span id="status-text">verificando…</span></p>
+        <p class="status-line">
+          <span class="dot"></span><span id="status-text">verificando…</span>
+        </p>
         <p id="pending" class="pending" hidden></p>
       </section>
 
-      <button id="activate" class="primary" type="button">Ativar nesta página</button>
+      <button id="activate" class="primary" type="button">
+        Ativar nesta página
+      </button>
+
+      <section aria-labelledby="batch-title">
+        <h2 id="batch-title">Importar ofertas deste lote</h2>
+        <p class="hint">
+          Inicie o lote no painel e abra as ofertas do Mercado Livre. A extensão
+          lê somente os cards da página aberta.
+        </p>
+        <button id="batch-prepare" class="primary" type="button">
+          Ler ofertas desta página
+        </button>
+        <p id="batch-result" class="hint" role="status"></p>
+        <button id="batch-import" class="primary" type="button" hidden>
+          Importar e continuar triagem
+        </button>
+      </section>
 
       <section id="pairing" class="pairing" hidden>
-        <p class="hint">Conecte este navegador à sua conta. Gere o código no painel do BizuMiner.</p>
-        <input id="code" type="text" inputmode="text" placeholder="CÓDIGO" autocomplete="off" maxlength="8" />
+        <p class="hint">
+          Conecte este navegador à sua conta. Gere o código no painel do
+          BizuMiner.
+        </p>
+        <input
+          id="code"
+          type="text"
+          inputmode="text"
+          placeholder="CÓDIGO"
+          autocomplete="off"
+          maxlength="8"
+        />
         <button id="pair" class="primary" type="button">Conectar</button>
       </section>
+
+      <div class="env-row">
+        <label for="env-select">Servidor:</label>
+        <select id="env-select">
+          <option value="http://localhost:3100">Local (3100)</option>
+          <option value="https://www.bizuminer.com.br">Produção (bizuminer)</option>
+        </select>
+      </div>
 
       <footer>
         <button id="logout" class="ghost" type="button" hidden>Sair</button>

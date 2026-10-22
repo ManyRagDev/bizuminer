@@ -1,0 +1,1924 @@
+{
+  "grants": [
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_account",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_account",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_account",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_account",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_account",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_account",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_account",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_account",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_account",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_account",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_account",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_marketplace_config",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_membership",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_membership",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_membership",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_membership",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_membership",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_membership",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_membership",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_membership",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_membership",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_membership",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_membership",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_policy_event",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_monitoring_skip",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_secret",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_secret",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_secret",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "affiliate_secret",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_secret",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_secret",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_secret",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_secret",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_secret",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_secret",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "affiliate_secret",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "app_user",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "app_user",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "app_user",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "app_user",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "app_user_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user_role",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user_role",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user_role",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user_role",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "app_user_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "buyer_profile",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "buyer_profile",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "buyer_profile",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "buyer_profile",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "buyer_profile",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "buyer_profile",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "buyer_profile",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "buyer_profile",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "buyer_profile",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "buyer_profile",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "buyer_profile",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_batch",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_batch",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_batch",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_batch",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_batch",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_batch",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_batch",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_batch",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_batch",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_batch",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_batch",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "service_role",
+      "table_name": "capture_batch",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "service_role",
+      "table_name": "capture_batch",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "service_role",
+      "table_name": "capture_batch",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_run",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_run",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_run",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "capture_run",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_run",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_run",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_run",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_run",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_run",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_run",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "capture_run",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "click_event",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "click_event",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "click_event",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "click_event",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "click_event",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "click_event",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "click_event",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "click_event",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "click_event",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "click_event",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "click_event",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_event",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_event",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_event",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_event",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_event",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_event",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_event",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_event",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_event",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_event",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_event",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "curation_queue_facts",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_assessment",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_assessment",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_assessment",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_assessment",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_assessment",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_assessment",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_assessment",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_assessment",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_assessment",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_guideline",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_guideline",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_guideline",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_guideline",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_guideline",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_guideline",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_guideline",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_guideline",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_guideline",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_guideline",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_guideline",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_selection",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_selection",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_selection",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "editorial_selection_item",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "extension_device",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "extension_device",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "extension_device",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "extension_device",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "extension_device",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "extension_device",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "extension_device",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "extension_device",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "extension_device",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "extension_device",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "extension_device",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "favorite",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "favorite",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "favorite",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "favorite",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "favorite",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "favorite",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "favorite",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "favorite",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "favorite",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "favorite",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "favorite",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_observation",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_observation",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_observation",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_observation",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_observation",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_observation",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_observation",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_observation",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_observation",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_observation",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_observation",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_watch",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_watch",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_watch",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "price_watch",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_watch",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_watch",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_watch",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_watch",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_watch",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_watch",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "price_watch",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product_curation",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product_curation",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product_curation",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "product_curation",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product_curation",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product_curation",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product_curation",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product_curation",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product_curation",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product_curation",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "product_curation",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "publication",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "publication",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "publication",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "publication",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "publication",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "publication",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "publication",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "publication",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "publication",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "publication",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "publication",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "short_link",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "short_link",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "short_link",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "short_link",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "short_link",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "short_link",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "short_link",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "short_link",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "short_link",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "short_link",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "short_link",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "subscriber",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "subscriber",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "subscriber",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "subscriber",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "subscriber",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "subscriber",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "subscriber",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "subscriber",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "subscriber",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "subscriber",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "subscriber",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "triage_run",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "triage_run",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "triage_run",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "garimpa_app",
+      "table_name": "triage_run",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "triage_run",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "triage_run",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "triage_run",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "triage_run",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "triage_run",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "triage_run",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "postgres",
+      "table_name": "triage_run",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "service_role",
+      "table_name": "triage_run",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "service_role",
+      "table_name": "triage_run",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "service_role",
+      "table_name": "triage_run",
+      "privilege_type": "UPDATE"
+    }
+  ],
+  "baseline": {
+    "clicks": 685,
+    "version": "17.6",
+    "database": "postgres",
+    "editions": 0,
+    "products": 1657,
+    "curations": 1657,
+    "secret_rls": true,
+    "short_links": 172,
+    "observations": 9146,
+    "publications": 1494,
+    "broad_rls_present": false,
+    "m1_identity_present": true,
+    "orphan_curation_authors": 0,
+    "orphan_selection_authors": 0
+  },
+  "policies": [
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_account",
+      "policyname": "affiliate_account_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_marketplace_config",
+      "policyname": "affiliate_marketplace_config_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_membership",
+      "policyname": "affiliate_membership_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_monitoring_policy",
+      "policyname": "affiliate_monitoring_policy_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_monitoring_policy_event",
+      "policyname": "affiliate_monitoring_policy_event_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_monitoring_skip",
+      "policyname": "affiliate_monitoring_skip_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)) AND (EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.tenant_id = affiliate_secret.tenant_id) AND (a.status = 'active'::text)))))",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "affiliate_secret",
+      "policyname": "affiliate_secret_bootstrap_scope",
+      "with_check": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND ((current_setting('garimpa.membership_role'::text, true) = 'owner'::text) OR (current_setting('garimpa.actor_type'::text, true) = 'worker'::text)) AND (EXISTS ( SELECT 1\n   FROM garimpa.affiliate_account a\n  WHERE ((a.tenant_id = affiliate_secret.tenant_id) AND (a.status = 'active'::text)))))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "app_user",
+      "policyname": "app_user_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "app_user_role",
+      "policyname": "app_user_role_runtime_read",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "buyer_profile",
+      "policyname": "buyer_profile_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "capture_batch",
+      "policyname": "capture_batch_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "capture_run",
+      "policyname": "capture_run_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "click_event",
+      "policyname": "click_event_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "curation_event",
+      "policyname": "curation_event_app_access",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "curation_event",
+      "policyname": "curation_event_app_insert",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_assessment",
+      "policyname": "editorial_assessment_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_guideline",
+      "policyname": "editorial_guideline_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_selection",
+      "policyname": "editorial_selection_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "editorial_selection_item",
+      "policyname": "editorial_selection_item_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "extension_device",
+      "policyname": "extension_device_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "favorite",
+      "policyname": "favorite_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "price_observation",
+      "policyname": "price_observation_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "price_watch",
+      "policyname": "price_watch_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "product",
+      "policyname": "product_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "product_curation",
+      "policyname": "product_curation_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "publication",
+      "policyname": "publication_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "short_link",
+      "policyname": "short_link_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "subscriber",
+      "policyname": "subscriber_app_access",
+      "with_check": "true"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "true",
+      "roles": [
+        "garimpa_app"
+      ],
+      "tablename": "triage_run",
+      "policyname": "triage_run_app_access",
+      "with_check": "true"
+    }
+  ],
+  "author_constraints": [
+    {
+      "conname": "editorial_selection_actor_app_user_id_tenant_id_fkey",
+      "definition": "FOREIGN KEY (actor_app_user_id, tenant_id) REFERENCES garimpa.app_user(id, tenant_id)",
+      "convalidated": true
+    },
+    {
+      "conname": "editorial_selection_tenant_id_fkey",
+      "definition": "FOREIGN KEY (tenant_id) REFERENCES garimpa.affiliate_account(tenant_id)",
+      "convalidated": true
+    },
+    {
+      "conname": "product_curation_product_tenant_fkey",
+      "definition": "FOREIGN KEY (product_id, tenant_id) REFERENCES garimpa.product(id, tenant_id) ON DELETE RESTRICT",
+      "convalidated": true
+    },
+    {
+      "conname": "product_curation_reviewer_tenant_fkey",
+      "definition": "FOREIGN KEY (reviewed_by_app_user_id, tenant_id) REFERENCES garimpa.app_user(id, tenant_id) ON DELETE RESTRICT",
+      "convalidated": true
+    },
+    {
+      "conname": "product_curation_tenant_fkey",
+      "definition": "FOREIGN KEY (tenant_id) REFERENCES garimpa.affiliate_account(tenant_id) ON DELETE RESTRICT",
+      "convalidated": true
+    }
+  ]
+}

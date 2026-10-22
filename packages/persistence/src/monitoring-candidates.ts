@@ -24,12 +24,14 @@ export function missingRetryHours(attempts: number, watched: boolean): number {
 }
 
 export async function loadMonitoringCandidates(sql: Sql, tenantId: string): Promise<MonitoringProduct[]> {
+  const [projection]=await sql<{ready:boolean}[]>`select to_regprocedure('garimpa.monitoring_interest_counts(text)') is not null as ready`;
+  // Trusted worker context supplies the account. The definer returns aggregate counts only.
+  const watches=projection?.ready
+    ? sql.unsafe("select product_id,active_watches from garimpa.monitoring_interest_counts(current_setting('garimpa.tenant_id',true))")
+    : sql.unsafe("select product_id,count(*)::int as active_watches from (select product_id from garimpa.price_watch where tenant_id=current_setting('garimpa.tenant_id',true) and active union all select product_id from garimpa.favorite where tenant_id=current_setting('garimpa.tenant_id',true)) combined_interests group by product_id");
   const rows = await sql<CandidateRow[]>`
     with watches as (
-      select product_id, count(*)::int as active_watches
-      from garimpa.price_watch
-      where tenant_id = ${tenantId} and active
-      group by product_id
+      ${watches}
     ), clicks as (
       select pub.product_id, count(*)::int as clicks_7d
       from garimpa.click_event click
@@ -53,8 +55,12 @@ export async function loadMonitoringCandidates(sql: Sql, tenantId: string): Prom
       and p.marketplace in ('mercadolivre', 'shopee', 'aliexpress')
       and p.last_seen_at is not null
   `;
+  const [ready]=await sql<{ready:boolean}[]>`select to_regclass('garimpa.opportunity') is not null as ready`;
+  const prioritized=ready?.ready ? await sql<{product_id:string;state:"monitored"|"prioritized"}[]>`select distinct o.product_id,o.state from garimpa.opportunity o join garimpa.audience_policy_version v on v.id=o.policy_version_id and v.tenant_id=o.tenant_id join garimpa.audience_policy p on p.id=v.policy_id and p.tenant_id=v.tenant_id and p.status='active' and p.current_version=v.version where o.tenant_id=${tenantId} and o.state in ('monitored','prioritized') and o.valid_until>now()` : [];
+  const priorityIds=new Map(prioritized.map(o=>[o.product_id,o.state]));
   return rows.map((row) => ({
     productId: row.product_id,
+    opportunityState:priorityIds.get(row.product_id),
     marketplace: row.marketplace as MonitorMarketplace,
     externalId: row.external_id,
     title: row.title,

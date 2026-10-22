@@ -1,3 +1,4 @@
+import { inAccountScope } from "../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { captureRunHistory, runningRun } from "../../../../lib/admin-db";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
@@ -13,11 +14,12 @@ export async function GET(request: NextRequest) {
   const check = await checkAffiliateUser(request);
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+ return inAccountScope(check.context, async () => {
   const marketplace = request.nextUrl.searchParams.get("marketplace")?.trim() || undefined;
   try {
     const [runs, running] = await Promise.all([
-      captureRunHistory(20, "local", marketplace),
-      runningRun("local", marketplace),
+      captureRunHistory(20, check.context.tenantId, marketplace),
+      runningRun(check.context.tenantId, marketplace),
     ]);
     return sinkJson(
       check.sink,
@@ -27,4 +29,6 @@ export async function GET(request: NextRequest) {
   } catch {
     return sinkJson(check.sink, { ok: false, error: "server_error" }, { status: 500 });
   }
+
+ });
 }

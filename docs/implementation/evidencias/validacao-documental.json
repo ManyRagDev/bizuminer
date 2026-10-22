@@ -1,0 +1,13 @@
+{
+  "specs": 13,
+  "status_counts": {
+    "PRONTA": 4,
+    "CONDICIONAL": 7,
+    "BLOQUEADA": 2
+  },
+  "requirements_mapped": 62,
+  "markdown_links": "valid",
+  "existing_worktree_status_preserved": true,
+  "errors": [],
+  "note": "Validação estrutural documental; não prova implementação. Revisão semântica está em 06-AUDITORIA-CRUZADA.md."
+}

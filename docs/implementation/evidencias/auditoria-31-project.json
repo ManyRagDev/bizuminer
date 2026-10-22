@@ -1,0 +1,14 @@
+{
+  "source": "Supabase MCP read-only",
+  "raw": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"url\":\"https://spbuwcwmxlycchuwhfir.supabase.co\"}"
+      }
+    ]
+  },
+  "parsed": {
+    "url": "https://spbuwcwmxlycchuwhfir.supabase.co"
+  }
+}

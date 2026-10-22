@@ -1,0 +1,175 @@
+{
+  "order": "OS-12",
+  "authority": "Explicit human authorization in this conversation for both corrections; application conditioned on fresh auditor approval and OS06",
+  "changes": [
+    {
+      "path": "tools/editorial-tests/build-rollout.py",
+      "beforeSha256": "b53b5ab80f767b202a9b43bf403bd55b21a839a1b21f4e93d1e549bc501b8055",
+      "sha256": "3f22cd094b8c1a8e606079d8ba5ab08cae95c9d4c091c65cd513878495ced255"
+    },
+    {
+      "path": "packages/persistence/supabase/rollouts/v2/20261015194759_garimpa_v2_scoped_cutover.sql",
+      "beforeSha256": "1114987e4108745492af6c3457ec6850a999ed16be79d815d001c4b156669a21",
+      "sha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597"
+    },
+    {
+      "path": "packages/persistence/supabase/rollouts/v2/manifest.json",
+      "beforeSha256": "dafa91ab8231fa0ebed32152412586100ec3c499dfa52f5703bf1d50493ab7eb",
+      "sha256": "3c8af38ce344ef3ad8030b07a58e2503f567ab964e8842bb592290421c886081"
+    },
+    {
+      "path": "tools/editorial-tests/rollout-collation-flow.test.ts",
+      "beforeSha256": null,
+      "sha256": "f901bc57f2003825e57e3f1a505bd1340064d7a674d8b3d6677a23e63a37b014"
+    }
+  ],
+  "preserved": {
+    "A": "33e03729f9e058169844fc353cba083cb3d5fe270b98ea890dafd0fb0a87c40c",
+    "B": "02810325f1eecc16dfc05121f44b75a64c5ce0655b9329f2662ffb0d74cbecaa",
+    "catalogue": "26a510294648b9dd42e031ac7352fe5858d6a8db7b465b50893355447d69a0b7"
+  },
+  "tests": [
+    {
+      "command": [
+        "npm",
+        "run",
+        "rollout:verify",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "cwd": "/tmp/bizuminer-finalizacao/os-12/source",
+      "exitCode": 0,
+      "log": "check-0.log"
+    },
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "rollout-collation-flow.test.ts"
+      ],
+      "cwd": "/tmp/bizuminer-finalizacao/os-12/source/tools/editorial-tests",
+      "exitCode": 0,
+      "log": "check-1.log"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:replacement-rollout",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "cwd": "/tmp/bizuminer-finalizacao/os-12/source",
+      "exitCode": 0,
+      "log": "check-2.log"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:operational-maintenance",
+        "--prefix",
+        "tools/editorial-tests"
+      ],
+      "cwd": "/tmp/bizuminer-finalizacao/os-12/source",
+      "exitCode": 0,
+      "log": "check-3.log"
+    }
+  ],
+  "generatorReproduction": "PASS, byte-for-byte all A/B/C/manifest, without recapturing catalogue",
+  "applied": false,
+  "state": "CONCLUIDO",
+  "sqlApplied": false,
+  "generatorFirstAttempt": {
+    "exitCode": 1,
+    "cause": "Two recorded metadata inputs absent from isolated copy; copied unchanged files, no code repair needed"
+  },
+  "protection": {
+    "before": {
+      "id": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+      "name": "web",
+      "rootDirectory": "packages/web",
+      "nodeVersion": "24.x",
+      "paused": true,
+      "autoAssignCustomDomains": false,
+      "ssoProtection": {
+        "deploymentType": "all_except_custom_domains"
+      }
+    },
+    "after": {
+      "id": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+      "paused": false,
+      "autoAssignCustomDomains": false,
+      "ssoProtection": {
+        "deploymentType": "all"
+      }
+    },
+    "coverage": {
+      "authenticatedRedirectHosts": 24,
+      "goneHosts": [
+        {
+          "host": "web-git-agent-hero-responsivo-links-emanuels-projects-aa92a126.vercel.app",
+          "httpStatus": 410,
+          "vercelError": "GONE"
+        }
+      ],
+      "allApplicationEntrypointsClosed": true,
+      "rawProbeRetained": "protection-probes.json"
+    },
+    "sequence": "update_project all; get_project confirmed all; unpause; update autoassignfalse; raw GET confirmed configuration; HEAD all known URLs. MCP get_project omits paused field; intermediate all+paused raw API snapshot not captured."
+  },
+  "publicationAttemptCorrection": {
+    "deployment": "dpl_6UCdqJa1HzAjMgskFk83nkVayTri",
+    "state": "CANCELED",
+    "cause": "Generated tsconfig.tsbuildinfo cache outside upload allowlist; not promoted. Follow-up upload removes only this temp artifact and runs inspection and deployment in a single dependency-checked script."
+  },
+  "auditorApproval": {
+    "path": "12-auditoria-entrega.md",
+    "verdict": "CONFORME_COM_RESSALVAS documentais/operacionais",
+    "sqlVerdict": "CONFORME",
+    "approvedCutoverSha256": "a08659287c10e2b7e3358bf6029bec75277cc0ca0ce07655d7e9f70acef92597",
+    "applicationStillRequires": "OS06 CONCLUIDA; intact preflight/backup/maintenance"
+  },
+  "publicationTransferred": {
+    "order": "OS05",
+    "state": "CONCLUIDO",
+    "deployment": "dpl_EwDxnLU8t7BLFrNFVjsnxbWQVuhp",
+    "newHosts": [
+      {
+        "host": "web-75encrac6-emanuels-projects-aa92a126.vercel.app",
+        "status": "HTTP/2 302 ",
+        "redirectHost": "vercel.com",
+        "closed": true
+      },
+      {
+        "host": "web-ksp090vwr-emanuels-projects-aa92a126.vercel.app",
+        "status": "HTTP/2 302 ",
+        "redirectHost": "vercel.com",
+        "closed": true
+      },
+      {
+        "host": "web-d3a214bib-emanuels-projects-aa92a126.vercel.app",
+        "status": "HTTP/2 302 ",
+        "redirectHost": "vercel.com",
+        "closed": true
+      },
+      {
+        "host": "www.bizuminer.com.br",
+        "status": "HTTP/2 302 ",
+        "redirectHost": "vercel.com",
+        "closed": true
+      }
+    ]
+  },
+  "finalWorkspaceCheck": {
+    "headUnchanged": true,
+    "stagedUnchanged": true,
+    "preexistingTrackedDiffUnchanged": true,
+    "sources460Unchanged": true,
+    "delta4HashesMatch": true,
+    "ownDiffWhitespaceClean": true,
+    "globalDiffCheckExitCode": 2,
+    "globalWhitespacePreexisting": true
+  }
+}

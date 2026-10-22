@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   EDITORIAL_DIMENSIONS, EDITORIAL_MAX_PRODUCTS, EDITORIAL_POLICY_VERSION,
+  CATALOG_EVIDENCE_POLICY_VERSION,
   editorialEvidenceFingerprint, editorialSelectionBlockers,
+  publishedEditorialStateKey,
   validateEditorialAssessment, validateEditorialSelection,
 } from "../lib/editorial-selection.ts";
 
@@ -184,3 +186,98 @@ test("a seleção compartilhada comporta 24 produtos sem herdar o limite da hero
   assert.equal(validateEditorialSelection(selection({items}),now).ok,true);
   assert.equal(validateEditorialSelection(selection({items:[...items,{...items[0],productId:"p_24"}]}),now).error,"selection_limit");
 });
+
+test("AC-028.5: alegação de superioridade exige base comparativa estruturada e recente", () => {
+  // 1. Falha sem comparativeBasis
+  const claimWithoutBasis = assessment({
+    publicRationale: "A melhor cafeteira do mercado para café da manhã.",
+  });
+  const res1 = validateEditorialAssessment(claimWithoutBasis);
+  assert.equal(res1.ok, false);
+  assert.equal(res1.error, "superiority_claim_requires_comparative_basis");
+
+  // 2. Sucesso com comparativeBasis válida (BUG-020)
+  const claimWithBasis = assessment({
+    publicRationale: "A melhor cafeteira do mercado para café da manhã.",
+    comparativeBasis: {
+      candidateProductId: "product_1",
+      alternativeProductIds: ["product_alt_1", "product_alt_2"],
+      checkedAt: now.toISOString(),
+      usageScope: "cafeteiras elétricas com jarra de inox",
+      criteria: ["consumo elétrico", "durabilidade da jarra"],
+      rationale: "Menor consumo elétrico e maior durabilidade que as alternativas testadas.",
+      evidenceReferences: {
+        product_1: { observedAt: now.toISOString(), priceCents: 2029 },
+        product_alt_1: { observedAt: now.toISOString(), priceCents: 2500 },
+        product_alt_2: { observedAt: now.toISOString(), priceCents: 2700 },
+      },
+    },
+  });
+  const res2 = validateEditorialAssessment(claimWithBasis);
+  assert.equal(res2.ok, true);
+  if (res2.ok) {
+    assert.ok(res2.value.comparativeBasis);
+    assert.equal(res2.value.comparativeBasis.alternativeProductIds.length, 2);
+  }
+
+  // 3. Bloqueio em editorialSelectionBlockers se comparativeBasis estiver ausente
+  assert.ok(
+    editorialSelectionBlockers(candidate, { ...claimWithoutBasis, comparativeBasis: null }, now)
+      .some((b) => b.includes("superioridade sem base comparativa"))
+  );
+
+  // 4. Bloqueio se checagem tiver mais de 48h
+  const staleBasis = {
+    ...claimWithBasis,
+    comparativeBasis: {
+      ...claimWithBasis.comparativeBasis,
+      checkedAt: new Date(now.getTime() - 49 * hour).toISOString(),
+    },
+  };
+  assert.ok(
+    editorialSelectionBlockers(candidate, staleBasis, now)
+      .some((b) => b.includes("expirada"))
+  );
+
+  // 5. Sem bloqueio se comparativeBasis for recente e válida
+  assert.deepEqual(editorialSelectionBlockers(candidate, claimWithBasis, now), []);
+
+  // 6. Texto descritivo legítimo não exige comparativeBasis
+  const descriptive = assessment({
+    publicRationale: "Cafeteira elétrica prática com filtro permanente e capacidade para 15 cafezinhos.",
+  });
+  assert.equal(validateEditorialAssessment(descriptive).ok, true);
+  assert.deepEqual(editorialSelectionBlockers(candidate, descriptive, now), []);
+
+  // 7. BUG-020: Justificativa editorial idêntica à alegação pública falha no servidor
+  const duplicatedRationale = assessment({
+    publicRationale: "A melhor cafeteira do mercado para café da manhã.",
+    comparativeBasis: {
+      ...claimWithBasis.comparativeBasis,
+      rationale: "a melhor cafeteira do mercado para café da manhã.",
+    },
+  });
+  const resDup = validateEditorialAssessment(duplicatedRationale);
+  assert.equal(resDup.ok, false);
+  assert.equal(resDup.error, "comparative_basis_rationale_must_be_distinct");
+});
+
+test("BUG-018: CATALOG_EVIDENCE_POLICY_VERSION é explícita, distinta de HERO_POLICY_VERSION e incluída na chave pública", () => {
+  assert.equal(typeof CATALOG_EVIDENCE_POLICY_VERSION, "string");
+  assert.ok(CATALOG_EVIDENCE_POLICY_VERSION.length > 0);
+  assert.notEqual(CATALOG_EVIDENCE_POLICY_VERSION, "hero-v2");
+
+  const pubSelection = {
+    mode: "catalog",
+    schemaReady: true,
+    id: null,
+    version: null,
+    validUntil: now.toISOString(),
+    products: [],
+    heroProductIds: [],
+    heroValidUntil: null,
+  };
+  const key = publishedEditorialStateKey(pubSelection);
+  assert.ok(key.includes(CATALOG_EVIDENCE_POLICY_VERSION), "Chave pública de estado deve incluir a versão da política de catálogo");
+});
+

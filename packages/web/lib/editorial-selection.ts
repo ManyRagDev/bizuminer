@@ -1,7 +1,15 @@
 import type { VitrineProduct } from "./deal-view.ts";
 import { HERO_POLICY_VERSION } from "./hero-policy.ts";
+import {
+  hasSuperiorityClaim,
+  validateComparativeBasis,
+  type ComparativeBasis,
+} from "./comparison-evidence.ts";
+
+export { hasSuperiorityClaim, type ComparativeBasis };
 
 export const EDITORIAL_POLICY_VERSION = "achadinhos-v1";
+export const CATALOG_EVIDENCE_POLICY_VERSION = "catalog-evidence-v1";
 /** The shared selection is broader than the hero's three positions. */
 export const EDITORIAL_MAX_PRODUCTS = 24;
 export const EDITORIAL_DIMENSIONS = [
@@ -28,6 +36,7 @@ export interface EditorialAssessmentInput {
   publicRationale: string;
   criticalDoubts: string[];
   maxPriceCents: number;
+  comparativeBasis?: ComparativeBasis | null;
 }
 export interface EditorialAssessment extends EditorialAssessmentInput {
   id: string;
@@ -83,7 +92,7 @@ export interface PublishedEditorialSelection {
 
 /** Also changes when an item is invalidated without activating another edition. */
 export function publishedEditorialStateKey(selection: PublishedEditorialSelection): string {
-  return JSON.stringify([HERO_POLICY_VERSION, selection.mode, selection.version, selection.validUntil, selection.heroProductIds, selection.heroValidUntil,
+  return JSON.stringify([HERO_POLICY_VERSION, CATALOG_EVIDENCE_POLICY_VERSION, selection.mode, selection.version, selection.validUntil, selection.heroProductIds, selection.heroValidUntil,
     selection.products.map((product) => [product.id, product.priceCents, product.evidenceObservedAt,
       product.title, product.imageUrl, product.editorialRationale, product.editorialPurchaseContents, product.editorialContext])]);
 }
@@ -136,7 +145,25 @@ export function validateEditorialAssessment(input: unknown, allowHistoricalHeroP
   if (!audience || !benefit || !purchaseContents || !publicRationale) return { ok: false, error: "assessment_explanation_required" };
   if (!Array.isArray(raw.criticalDoubts) || raw.criticalDoubts.length > 20 || raw.criticalDoubts.some((doubt) => !cleanText(doubt, 3, 500))) return { ok: false, error: "invalid_critical_doubts" };
   if (!Number.isSafeInteger(raw.maxPriceCents) || (raw.maxPriceCents as number) <= 0 || (raw.maxPriceCents as number) > 100000000) return { ok: false, error: "invalid_max_price" };
-  return { ok: true, value: { ...(raw.heroPolicyVersion === undefined ? {} : { heroPolicyVersion: raw.heroPolicyVersion as string }), productId: raw.productId, evidenceFingerprint: fingerprint, dimensions, audience, benefit, purchaseContents, publicRationale, criticalDoubts: raw.criticalDoubts.map((v) => String(v).trim()), maxPriceCents: raw.maxPriceCents as number } };
+  const hasClaim = hasSuperiorityClaim(publicRationale);
+  let validatedBasis: ComparativeBasis | null = null;
+  if (hasClaim) {
+    if (!raw.comparativeBasis) {
+      return { ok: false, error: "superiority_claim_requires_comparative_basis" };
+    }
+    const res = validateComparativeBasis(raw.comparativeBasis, raw.productId as string, publicRationale);
+    if (!res.ok) {
+      return { ok: false, error: res.error };
+    }
+    validatedBasis = res.value;
+  } else if (raw.comparativeBasis) {
+    const res = validateComparativeBasis(raw.comparativeBasis, raw.productId as string, publicRationale);
+    if (!res.ok) {
+      return { ok: false, error: res.error };
+    }
+    validatedBasis = res.value;
+  }
+  return { ok: true, value: { ...(raw.heroPolicyVersion === undefined ? {} : { heroPolicyVersion: raw.heroPolicyVersion as string }), productId: raw.productId, evidenceFingerprint: fingerprint, dimensions, audience, benefit, purchaseContents, publicRationale, criticalDoubts: raw.criticalDoubts.map((v) => String(v).trim()), maxPriceCents: raw.maxPriceCents as number, comparativeBasis: validatedBasis } };
 }
 
 export function editorialOfferBlockers(candidate: {
@@ -165,7 +192,12 @@ export function editorialSelectionBlockers(candidate: Parameters<typeof editoria
   const blockers = editorialOfferBlockers(candidate, now);
   if (!assessment) return [...blockers, "Avaliação do destaque ainda não registrada."];
   const validated = validateEditorialAssessment(assessment, true);
-  if (!validated.ok) return [...blockers, "Avaliação incompleta ou inválida."];
+  if (!validated.ok) {
+    if (validated.error === "superiority_claim_requires_comparative_basis") {
+      return [...blockers, "Alegação de superioridade sem base comparativa estruturada."];
+    }
+    return [...blockers, "Avaliação incompleta ou inválida."];
+  }
   if (assessment.policyVersion !== EDITORIAL_POLICY_VERSION) blockers.push("Avaliação de uma política editorial anterior.");
   if (assessment.evidenceFingerprint !== candidate.evidenceFingerprint) blockers.push("O anúncio mudou depois da avaliação; revise a indicação.");
   if (candidate.priceCents > assessment.maxPriceCents) blockers.push("Preço acima do limite avaliado para a indicação.");
@@ -173,6 +205,30 @@ export function editorialSelectionBlockers(candidate: Parameters<typeof editoria
     if (["unknown", "weak"].includes(assessment.dimensions[dimension.id].level)) blockers.push(`${dimension.label} precisa de revisão.`);
   }
   if (assessment.criticalDoubts.length) blockers.push("Há dúvidas essenciais abertas sobre a compra.");
+  if (assessment && hasSuperiorityClaim(assessment.publicRationale)) {
+    if (!assessment.comparativeBasis) {
+      blockers.push("Alegação de superioridade sem base comparativa estruturada.");
+    } else {
+      if (!assessment.comparativeBasis.alternativeProductIds?.length) {
+        blockers.push("Base comparativa sem produtos alternativos para sustentação.");
+      }
+      if (!assessment.comparativeBasis.usageScope && !assessment.comparativeBasis.priceRange) {
+        blockers.push("Base comparativa sem recorte de uso ou faixa de preço.");
+      }
+      if (!assessment.comparativeBasis.criteria?.length) {
+        blockers.push("Base comparativa sem critérios explícitos de comparação.");
+      }
+      if (!assessment.comparativeBasis.evidenceReferences || Object.keys(assessment.comparativeBasis.evidenceReferences).length === 0) {
+        blockers.push("Base comparativa sem referências atuais de oferta.");
+      }
+      if (assessment.comparativeBasis.checkedAt) {
+        const checkedTime = new Date(assessment.comparativeBasis.checkedAt).getTime();
+        if (!Number.isFinite(checkedTime) || now.getTime() - checkedTime > 48 * 3600000 || checkedTime > now.getTime() + 60000) {
+          blockers.push("Base comparativa com checagem expirada ou inválida (máximo 48 horas).");
+        }
+      }
+    }
+  }
   return blockers;
 }
 

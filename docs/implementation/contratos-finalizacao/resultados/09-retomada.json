@@ -1,0 +1,337 @@
+{
+  "order": "OS-09",
+  "state": "CONCLUIDO",
+  "at": "2026-10-16T22:50:40.372479+00:00",
+  "protection": {
+    "id": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+    "paused": false,
+    "ssoProtection": {
+      "deploymentType": "all_except_custom_domains"
+    },
+    "autoAssignCustomDomains": false,
+    "productionDeployment": "dpl_EwDxnLU8t7BLFrNFVjsnxbWQVuhp"
+  },
+  "publicSmokes": [
+    {
+      "path": "/",
+      "exitCode": 0,
+      "status": "200",
+      "location": null,
+      "applicationError": false,
+      "title": "BizuMiner — Um bizu bom vale ouro"
+    },
+    {
+      "path": "/bizu/shp-49107392414",
+      "exitCode": 0,
+      "status": "200",
+      "location": null,
+      "applicationError": false,
+      "title": "Kit De Sachês Para Cuidados Com A Pele SKIN1004 3 Unidades | Seleção De Linhas Mistas | BizuMiner"
+    },
+    {
+      "path": "/p/33pu",
+      "exitCode": 0,
+      "status": "302",
+      "location": "/bizu/ali-1005012705365068",
+      "applicationError": false,
+      "title": null
+    },
+    {
+      "path": "/admin",
+      "exitCode": 0,
+      "status": "307",
+      "location": "/entrar?next=%2Fadmin",
+      "applicationError": false,
+      "title": null
+    }
+  ],
+  "github": {
+    "runId": 38977824431,
+    "url": "https://github.com/ManyRagDev/bizuminer/actions/runs/38977824431",
+    "headSha": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "monitor (shopee)",
+        "conclusion": "success"
+      },
+      {
+        "name": "monitor (aliexpress)",
+        "conclusion": "success"
+      }
+    ],
+    "summaries": [
+      {
+        "marketplace": "shopee",
+        "mode": "execute",
+        "runId": "c417f574-f016-4adb-b52e-57b7aa011ccf",
+        "attempted": 0,
+        "matched": 0
+      },
+      {
+        "marketplace": "aliexpress",
+        "mode": "execute",
+        "runId": "f86c4af6-dc6c-4d65-b87e-ab7e75b8f226",
+        "attempted": 17,
+        "matched": 17,
+        "missing": 0,
+        "failed": 0,
+        "priceChanges": 17
+      }
+    ]
+  },
+  "integrity": {
+    "at": "2026-10-16T22:50:05.802Z",
+    "originalProjection": [
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "affiliate_account",
+        "row_count": 1,
+        "original_columns_digest": "53abf21fd227918591561f55b5dc8f9e"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "affiliate_marketplace_config",
+        "row_count": 1,
+        "original_columns_digest": "17cfb59b66a8e2c3e28a5ef6482ea2d1"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "affiliate_membership",
+        "row_count": 1,
+        "original_columns_digest": "1ac57bcb38b170c34fd4fed807bee207"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "affiliate_monitoring_policy",
+        "row_count": 3,
+        "original_columns_digest": "32c01c2e3f0fa209f29e6428f82c5856"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "affiliate_monitoring_policy_event",
+        "row_count": 2,
+        "original_columns_digest": "7c89097ebfbc7e28194c3f5d1ccf659b"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "affiliate_monitoring_skip",
+        "row_count": 1,
+        "original_columns_digest": "4f23d8476079771a480c81e432bf0435"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "affiliate_secret",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "app_user",
+        "row_count": 3,
+        "original_columns_digest": "5bc67ab5b3330f42d07716d04ee47f65"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "app_user_role",
+        "row_count": 1,
+        "original_columns_digest": "cd10fc0c77a641d6a4ec19946945ef1d"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "buyer_profile",
+        "row_count": 1,
+        "original_columns_digest": "4101cdd017e96634014fd92e6d66f8d7"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "capture_batch",
+        "row_count": 11,
+        "original_columns_digest": "157a5bf406e744df4173c1ace82b10bd"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "capture_run",
+        "row_count": 413,
+        "original_columns_digest": "2753be6e27e6fadf21cc923db8c32c30"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "click_event",
+        "row_count": 767,
+        "original_columns_digest": "3149f7c356e63b567c32dc13b6268d0f"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "curation_event",
+        "row_count": 1330,
+        "original_columns_digest": "b50629030d73f29f792f765fb6b3f269"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "editorial_assessment",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "editorial_guideline",
+        "row_count": 1,
+        "original_columns_digest": "8fae2478ac2ffdb6fb94e5447ef03e6a"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "editorial_selection",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "editorial_selection_item",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "extension_device",
+        "row_count": 3,
+        "original_columns_digest": "fd3dd785d523a6f3da967268b50ee7f3"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "favorite",
+        "row_count": 7,
+        "original_columns_digest": "7d8d803b8630a4a0d4a1657e0fc48f66"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "price_observation",
+        "row_count": 9357,
+        "original_columns_digest": "73ade81af77310b1bdb6d440db2ce1ec"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "price_watch",
+        "row_count": 4,
+        "original_columns_digest": "da310d69508a666b0a0e559f90665728"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "product",
+        "row_count": 1657,
+        "original_columns_digest": "0f88dc8d6a9bb3c58c463dc6751e7ea3"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "product_curation",
+        "row_count": 1657,
+        "original_columns_digest": "4626d5bb83804a52b15ab182b9ea9d59"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "publication",
+        "row_count": 1495,
+        "original_columns_digest": "898c81137e924fc2262ea480f15adcfa"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "short_link",
+        "row_count": 172,
+        "original_columns_digest": "ecdaa73fe77efa03848794139c5e9d14"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "subscriber",
+        "row_count": 0,
+        "original_columns_digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "inspected_at": "2026-10-16 22:49:47.50734+00",
+        "table_name": "triage_run",
+        "row_count": 17,
+        "original_columns_digest": "cc204394f790be7935cca92872386395"
+      }
+    ],
+    "externalFingerprints": [
+      {
+        "schema_name": "auth",
+        "relations": 28,
+        "catalog_fingerprint": "56f9a83a675fcdf8a1d32f120f1e4857"
+      },
+      {
+        "schema_name": "brincareducando",
+        "relations": 26,
+        "catalog_fingerprint": "8f4e76a95574ebb6ba2c9bb819df681f"
+      },
+      {
+        "schema_name": "jacomprei",
+        "relations": 8,
+        "catalog_fingerprint": "28a5df0052fadb4e97135bd05d69481d"
+      },
+      {
+        "schema_name": "manylabs",
+        "relations": 9,
+        "catalog_fingerprint": "1e611465b3c59473f83dbc7dab5f298c"
+      },
+      {
+        "schema_name": "navegantes",
+        "relations": 15,
+        "catalog_fingerprint": "051328afee0032f1398eddcdc1b9de07"
+      },
+      {
+        "schema_name": "postspark",
+        "relations": 53,
+        "catalog_fingerprint": "51d5d2be46fc1a278a125511e25b243e"
+      },
+      {
+        "schema_name": "public",
+        "relations": 2,
+        "catalog_fingerprint": "979b141b28853cb968ba3298fa00dfc3"
+      },
+      {
+        "schema_name": "storage",
+        "relations": 8,
+        "catalog_fingerprint": "dab938b1558a022243f39251fb8eb104"
+      }
+    ],
+    "legitimateChangesSincePreC": [
+      {
+        "table": "capture_run",
+        "before": 409,
+        "after": 413
+      },
+      {
+        "table": "price_observation",
+        "before": 9339,
+        "after": 9357
+      },
+      {
+        "table": "product",
+        "before": 1657,
+        "after": 1657
+      }
+    ],
+    "externalSchemasPreserved": 8
+  },
+  "postCChanges": "Four normal capture_run records and18 observations since pre-C: two limited local runs plus two GitHub jobs;1 local AliExpress observation +17 GitHub. Product prices/timestamps updated for same existing products. Other25 original table projections unchanged.",
+  "orphans": {
+    "price_observation": 0,
+    "publication": 0
+  },
+  "notValidConstraints": {
+    "count": 1,
+    "explanation": "same experiment_evaluation FK NOT VALID explicitly installed in B"
+  },
+  "remainingStopped": [
+    "capture-offers.yml",
+    "unverified extension/browser capture devices",
+    "official dispatch without adapter/authorization",
+    "external pilot"
+  ],
+  "limits": [
+    "Shopee run succeeded with empty queue; no claim of provider I/O certification.",
+    "Only the observed first run and current checks are certified; no new recurring monitor created.",
+    "Post-C automated browser inspection unavailable; live HTTP/runtime/provider/DB checks supply operational evidence, with visual limit retained in OS08."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "request": {
+    "name": "garimpa_curation_membership_author",
+    "query": "set local lock_timeout='5s';\nset local statement_timeout='45s';\n-- Supplemental repair: M1 has already been applied, so preserve its history.\n-- A reviewer is a global person; account authorization stays in the checked\n-- account transaction. The product/tenant FK and RLS remain unchanged.\ndo $$ begin\n  if not exists (select 1 from pg_constraint\n    where conrelid='garimpa.product_curation'::regclass\n      and conname='product_curation_reviewer_user_fkey') then\n    alter table garimpa.product_curation\n      add constraint product_curation_reviewer_user_fkey\n      foreign key (reviewed_by_app_user_id) references garimpa.app_user(id)\n      on delete restrict not valid;\n  end if;\nend $$;\nalter table garimpa.product_curation\n  validate constraint product_curation_reviewer_user_fkey;\nalter table garimpa.product_curation\n  drop constraint if exists product_curation_reviewer_tenant_fkey;\n\n-- The edition is also authored by a global person. Its items retain their\n-- composite selection/product/assessment tenant keys without alteration.\ndo $$ begin\n  if not exists (select 1 from pg_constraint\n    where conrelid='garimpa.editorial_selection'::regclass\n      and conname='editorial_selection_actor_user_fkey') then\n    alter table garimpa.editorial_selection\n      add constraint editorial_selection_actor_user_fkey\n      foreign key (actor_app_user_id) references garimpa.app_user(id)\n      on delete restrict not valid;\n  end if;\nend $$;\nalter table garimpa.editorial_selection\n  validate constraint editorial_selection_actor_user_fkey;\nalter table garimpa.editorial_selection\n  drop constraint if exists editorial_selection_actor_app_user_id_tenant_id_fkey;\n",
+    "sourceHash": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23"
+  },
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"success\":true}"
+      }
+    ]
+  },
+  "postChecks": {
+    "baselineUnchanged": true,
+    "policiesUnchanged": true,
+    "grantsUnchanged": true,
+    "newKeysValidated": true,
+    "oldKeysAbsent": true
+  }
+}

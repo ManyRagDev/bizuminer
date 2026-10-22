@@ -1,0 +1,589 @@
+{
+  "at": "2026-10-15T20:32:30.244323+00:00",
+  "status": "APPROVED_FOR_ISOLATED_REHEARSAL_ONLY",
+  "productionApproved": false,
+  "newProductionWrites": 0,
+  "newMigrationsCreated": 3,
+  "historicalV2FilesUnchanged": 14,
+  "nativeChecksPassed": 23,
+  "nativeLocalApplicationsPassed": 6,
+  "generalChecksPassed": 26,
+  "audit": "27-AUDITORIA-INDEPENDENTE-ROLLOUT.md",
+  "files": [
+    {
+      "path": "docs/implementation/27-AUDITORIA-INDEPENDENTE-ROLLOUT.md",
+      "sha256": "65b8c7498feb89eb61e44cdfcc81e098df56aca8e7adaf2169423e0a2459ea49",
+      "bytes": 18822
+    },
+    {
+      "path": "docs/implementation/27-MIGRATIONS-SUBSTITUTAS-E-VERIFICACAO.md",
+      "sha256": "66957cb11042c03d99396c76711875c14d915c85ecadcf8e2bf1a5d57b4bda97",
+      "bytes": 13694
+    },
+    {
+      "path": "docs/implementation/CHECKPOINT-EXECUCAO-SEQUENCIAL.md",
+      "sha256": "f5fa3e2352fb95b421a0128908b14ed8316f2cdd4d62c7b6acc5cf535e24268b",
+      "bytes": 3998
+    },
+    {
+      "path": "docs/implementation/README.md",
+      "sha256": "cedb35269844b1e02ce2b10deaa6bd4e4798f11d1f56cd380acb2b01f1438096",
+      "bytes": 7435
+    },
+    {
+      "path": "docs/implementation/STATUS-EXECUCAO.md",
+      "sha256": "d874767248cdcf12cd81ef9ad8dc7b703c851cec1b5397f2d04e05ffdfb8994f",
+      "bytes": 6469
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-checks.json",
+      "sha256": "07cd90a1e6ee155f521e34ed7659994033295a6379d329ea8ea31eab608f6bf2",
+      "bytes": 8742
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-checks.py",
+      "sha256": "32d2927f181032f02a2c8b0460172ded55f1bd71812ce84625c368acab07d13c",
+      "bytes": 3256
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-persistence-tests.log",
+      "sha256": "3c8720e190d2b7e9f93e88c527c5f9eb49c538efbd2b44ce0a2dde17fe2fc18d",
+      "bytes": 7722
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-persistence-typecheck.log",
+      "sha256": "7f10efbc8b04327cacae6c46b6ed2f389b215a25a3efdaf14bcf3c31edd3e004",
+      "bytes": 56
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-auth-merge.log",
+      "sha256": "4f93360f5898f4d0af691adfb79696df4c2287f94f241ad3b1fca34ec570f416",
+      "bytes": 521
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-capture-batch.log",
+      "sha256": "466b2043d668a231abbee3c24e3c6505d85bacc1215b4e382d250d1f0368248d",
+      "bytes": 1592
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-cf-regressions.log",
+      "sha256": "d13fa6954d0147dcc627530629adbeb8431d074f9444e13504eaa77a929aedb1",
+      "bytes": 1711
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-cockpit.log",
+      "sha256": "21959431430cf6bc4c4138e9cd13946a840c685ab25bba86cd7865612566e9d6",
+      "bytes": 782
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-commercial.log",
+      "sha256": "3aa886be6cced3c4e4dab7d5d3f2dba3a4d8671f2f270b5ca53e01906503794f",
+      "bytes": 2238
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-dispatch.log",
+      "sha256": "bbda31e54b76013de58ca349000b72d14f3d4c3fb5037a9dc9d59f68c0c361ef",
+      "bytes": 1422
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-entitlement.log",
+      "sha256": "c76fe435e86844a4c44db4ab64947f6efb39bb6334b2a1f5b38cb718c4fc9328",
+      "bytes": 1494
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-experiment.log",
+      "sha256": "b9da94a4543440dcef31f90472a9b6c3151f7723f4b7ffe7adb54fe030f1fcbd",
+      "bytes": 417
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-financial.log",
+      "sha256": "c668632936acd3b526e6e284f376667df87dafef8ffa421bc926b745b99a56e1",
+      "bytes": 1375
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-migration-integrity.log",
+      "sha256": "19ce626764641b4345ecaa5fe3b4faf68b96e20232b935285060c270f4f36bff",
+      "bytes": 606
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-onboarding.log",
+      "sha256": "2d591cb99328eaae99a2e5371bde2f215962666d60ce3b970359a68a71d687d1",
+      "bytes": 1464
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-opportunity.log",
+      "sha256": "cce361c95c4406bdbdfd95075eb8dd3ad13d5ee89f8b9cb65c6de4d22813461b",
+      "bytes": 894
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-price-evidence.log",
+      "sha256": "d30f133bcb6327a296b51b0d19bdf9288c8be82b7f701683c1d42f25b0312f15",
+      "bytes": 804
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-public-readiness.log",
+      "sha256": "c34445a9d4ffe3429e007298c0019c47dbee94a4f829d26c9b529bb4bf29c441",
+      "bytes": 349
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-regressions.log",
+      "sha256": "2d1c608e91a57f28f317c87529572c50a214a6b2807269fc0d75f8616dc37ff8",
+      "bytes": 1061
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-rubric.log",
+      "sha256": "36d438db69b07eb985f220b73db13fd31f3142a9508ac5cb5ae390d0df218a3d",
+      "bytes": 1038
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-secret-bootstrap.log",
+      "sha256": "10df1e33d146ea8c4467a11f85ef1b24f2f2a6294e836391e13a2cbc6496e3e8",
+      "bytes": 283
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-triage-price.log",
+      "sha256": "308bd69bcc121e3fcfa3cb16deb1767fe891c3bd6de937ccac3d3f56ab4f53cf",
+      "bytes": 1937
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-verified-upgrade.log",
+      "sha256": "c6711bc69ece420e3729f4b2408a70a3e49c36f5c8e1101fd639e1e904978a3d",
+      "bytes": 358
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test-verified-workflows.log",
+      "sha256": "67753f62cf12359ce0ebcf9cf07a76f678fdfbf33bf8a7bd1cfc4a69b650b52c",
+      "bytes": 1350
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-sql-test.log",
+      "sha256": "7c4af94973e252c3944081cbd5e4aa918057f9329d210f5dec3e0be6399485b4",
+      "bytes": 2524
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-story.png",
+      "sha256": "6598aac5aa61c9b44e04ad15cf04912a38aa5edc196f1f31bc54ce1725893dc5",
+      "bytes": 110233
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-upgrade.json",
+      "sha256": "bc6c4e94bf67ce69b86f81fd1817babaaaa07415ece560fadcaa8d25bc15a350",
+      "bytes": 372
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-verified-workflows.json",
+      "sha256": "71cdb7707ea402c3416c93f7bb83f4069ba682a8b791ce24dc114881050d4b14",
+      "bytes": 1998
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-web-build.log",
+      "sha256": "c2994d8eebe24c8f25e5a4d358866643aa479cf5b04ba239f64ba54ed9ded9eb",
+      "bytes": 4195
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-web-tests.log",
+      "sha256": "763e65fdf5477b528c43f62bd024854b66b5e983e5a143ae31d51af54bfb74a4",
+      "bytes": 110453
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-fechamento-web-typecheck.log",
+      "sha256": "c28759cd36834d2d8bf75fb6395f6e8169de1fe41d1572f6d98405f5a1cf0a65",
+      "bytes": 68
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-ocorrencias-intermediarias.json",
+      "sha256": "f09f4dfcfeef3510374709fc603b33505bb093649989e8255a9f3a1eca0962b4",
+      "bytes": 1753
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-replacement-native.json",
+      "sha256": "01cc41ce605db7e73376d2ec00634fb23f09b347ab7de03776002e93e87ff36e",
+      "bytes": 4827
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-rollout-verify.json",
+      "sha256": "6cc865acc6432623c162fdf1411aabdea0b338ef95b2e482e78a26984a17a9a2",
+      "bytes": 778
+    },
+    {
+      "path": "docs/implementation/evidencias/execucao-27-verificacao-final.json",
+      "sha256": "5910684ffeb88bfef7ca877e5a563558575aeef82e3dde1514c802e4f5cc86ab",
+      "bytes": 2287
+    },
+    {
+      "path": "docs/implementation/evidencias/rollout-27-expansion-catalog.json",
+      "sha256": "c5be5467176006212661059da04977ac15128aa439844599d238a342e97c377e",
+      "bytes": 252737
+    },
+    {
+      "path": "docs/implementation/evidencias/rollout-27-inventory.json",
+      "sha256": "30a85994f65b551b979b59596e5759dd37e087609d62aaa5c66072b1ce8d1ed0",
+      "bytes": 86107
+    },
+    {
+      "path": "packages/persistence/bin/monitor-prices.ts",
+      "sha256": "2b1fbcf10b374f5c6d67618dce04952b733aba1326cf90c3b053ee497d9ed54e",
+      "bytes": 8654
+    },
+    {
+      "path": "packages/persistence/bin/monitoring-plan.ts",
+      "sha256": "d51dcf619ce6f745e177ddedf69e025eecaf6ddd1e56d946b9724361adee192e",
+      "bytes": 2616
+    },
+    {
+      "path": "packages/persistence/src/monitoring-candidates.ts",
+      "sha256": "e7b5aa13ce75b6949dc2c0f9f5eda51c33f411f4c21ba80ec646219fc433b2ec",
+      "bytes": 5606
+    },
+    {
+      "path": "packages/persistence/src/monitoring-db.ts",
+      "sha256": "d395f38ad7d940980d8de392242d075e37858b0d43884e7f80c121e9c10386b7",
+      "bytes": 851
+    },
+    {
+      "path": "packages/persistence/src/monitoring-schedule.ts",
+      "sha256": "3cca22f3789ea5c948236c8feec2909fc51012065700819040890dc6c7b175f9",
+      "bytes": 3124
+    },
+    {
+      "path": "packages/persistence/src/pg-store.ts",
+      "sha256": "bb03c640cd9a5c20805352aa5da428d997aa683b70b407cadd8f6827e8ba52c1",
+      "bytes": 14013
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014100000_garimpa_account_context_and_membership.sql",
+      "sha256": "3cedb291754bd21a77fec13058ecdc10ec2f550f49b9c71950a7c65245244345",
+      "bytes": 6457
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014101000_garimpa_tenant_rls_scoped.sql",
+      "sha256": "57e737818e44266dc7e59d6a4b8637cd3d83fba1637a0cc0837df3674c88e8a0",
+      "bytes": 4808
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014102000_garimpa_price_evidence_canonical.sql",
+      "sha256": "5663b934ce2240efcafa8b069e54376f08cc392ec07d87d62d4c4c98deceb2b6",
+      "bytes": 10582
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014103000_garimpa_rubric_assessment_shadow.sql",
+      "sha256": "fc2ebbd70c0c31f9a416b2026d1a0789aafa908b68031710fec41ba5e7483139",
+      "bytes": 4728
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014104000_garimpa_audience_policy_and_opportunity.sql",
+      "sha256": "f7891a8b351f3efe3da146e520c1a2a0c2c05afd0a6e8d848c2f34302331341a",
+      "bytes": 6720
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014105000_garimpa_commerce_and_campaign_link.sql",
+      "sha256": "0ac1aac79763568890d0ea5a6f8785898f338da0d981d3e49aa87e569763e648",
+      "bytes": 23513
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014106000_garimpa_commercial_financial_ledger.sql",
+      "sha256": "64e3695d1defc2dc28b69fa61f3ea2eea71a2d8bffb3f4aac0475079618ed038",
+      "bytes": 11066
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014107000_garimpa_click_attribution_and_channels.sql",
+      "sha256": "45da44abba0327b4d7c78c39f3f9ba29040f937ff291a6f9aa2961ba27686da9",
+      "bytes": 2893
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014108000_garimpa_policy_experiments.sql",
+      "sha256": "4dee052305d5d0d10a73e7139de358f2bfc9af54b9de5ae53dec4cb7e12e0f08",
+      "bytes": 3765
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014109000_garimpa_dispatch_jobs_outbox.sql",
+      "sha256": "89165a429250169ec34f11bd7db62d306fdcb429aacaa70ac6bb9a0e481225ff",
+      "bytes": 3625
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261014110000_garimpa_saas_onboarding_entitlements.sql",
+      "sha256": "0c247052eb42a56ac97edf845fda5d548f0c7194d5745d4d51ed2739d9978a7b",
+      "bytes": 15001
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015021300_garimpa_verified_workflows.sql",
+      "sha256": "f2566ff5f61b5ad605bb28ae40ed7062e81f773ca3937fe22311730525182038",
+      "bytes": 14794
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693",
+      "bytes": 1310
+    },
+    {
+      "path": "packages/persistence/supabase/migrations/20261015040727_garimpa_curation_membership_author.sql",
+      "sha256": "da4c85fe662e644a7bf663152366eec4f06c9818f39b3ae53953a34779c1dd23",
+      "bytes": 1604
+    },
+    {
+      "path": "packages/persistence/supabase/rollouts/v2/20261015194719_garimpa_v2_foundation.sql",
+      "sha256": "579fa86e8696d7bfcee701ed61e6c8b43b9538dfafa93f146883633bd3682c57",
+      "bytes": 10285
+    },
+    {
+      "path": "packages/persistence/supabase/rollouts/v2/20261015194748_garimpa_v2_expansion.sql",
+      "sha256": "e2c2dc82c2a9fd562d326f68414bf7337541f86cfc26c5126e36a11e88a75611",
+      "bytes": 119369
+    },
+    {
+      "path": "packages/persistence/supabase/rollouts/v2/20261015194759_garimpa_v2_scoped_cutover.sql",
+      "sha256": "28e08ebbb89d4d453eb0149d93f22d0e4084ea93e3ca60a87b38a5963367fa8b",
+      "bytes": 327189
+    },
+    {
+      "path": "packages/persistence/supabase/rollouts/v2/README.md",
+      "sha256": "698a38b51078b92cb6990f6bb1d06df2958a2c98b43294f26b4530ea5e470b0d",
+      "bytes": 8991
+    },
+    {
+      "path": "packages/persistence/supabase/rollouts/v2/manifest.json",
+      "sha256": "4343502eacc7291769b9bc816fbd98cc19d9531898e3c92a8089bb2988fd15c5",
+      "bytes": 14469
+    },
+    {
+      "path": "packages/web/bin/run-dispatch.mts",
+      "sha256": "2ab57546ad8265f2d28249cc27c8653a2e0a652fd6138561f8122adbbaf6bd06",
+      "bytes": 3233
+    },
+    {
+      "path": "packages/web/lib/account-scope.ts",
+      "sha256": "e2b34702a8f2123f8e05ba354a02b0957e0727404969f5bc1c5f0a489d1129c1",
+      "bytes": 2618
+    },
+    {
+      "path": "packages/web/lib/commercial-financial-db.ts",
+      "sha256": "7c9c27b14956e1dc6d3f1419860ae35843702bd699d02b01866cb3e2d5837736",
+      "bytes": 33534
+    },
+    {
+      "path": "packages/web/lib/commercial-rollout.ts",
+      "sha256": "b4ae2d2b73d44f54613c4edc9d48042ddd552f923a0886d46d3ab946c7526732",
+      "bytes": 1125
+    },
+    {
+      "path": "packages/web/lib/commercial-workflow.ts",
+      "sha256": "5dfca8cb99c3b20fffe0c4cb92aeb3c5443fac68df65cdf8a9a9b9f6a624ac41",
+      "bytes": 30109
+    },
+    {
+      "path": "packages/web/lib/dispatch-worker.ts",
+      "sha256": "9f43572b60f22f085874b716341ca8ec8adcd0af2c58204f5154fc34dd82f467",
+      "bytes": 12818
+    },
+    {
+      "path": "packages/web/lib/experiment-db.ts",
+      "sha256": "1b25ed4fb07dfbdb3be74414c3fd3b9ed2ce35712cc72144e126445afe358abb",
+      "bytes": 18206
+    },
+    {
+      "path": "packages/web/lib/governance-db.ts",
+      "sha256": "058fc93f35a1fa4a9474fef2a3d3228b2c250d20d6550916c14933898ca9a383",
+      "bytes": 5720
+    },
+    {
+      "path": "packages/web/lib/kit-artifact-db.ts",
+      "sha256": "c093b8d45378903f613b51d8cca2ac62c930931d2b90590deab7a67956e10214",
+      "bytes": 2500
+    },
+    {
+      "path": "packages/web/lib/private-artifact-db.ts",
+      "sha256": "6f5a5bb44fa6e50c2f367b5f136d82ca58368384d349c011469d74bb06ed9b52",
+      "bytes": 5584
+    },
+    {
+      "path": "packages/web/lib/public-offer-db.ts",
+      "sha256": "0aafa644626ae986329936f17be12cede240e9ebaff10dfd94d3b3ad21a0a259",
+      "bytes": 6167
+    },
+    {
+      "path": "packages/web/lib/rubric-db.ts",
+      "sha256": "6147f46848bfdcba05c5ebf97ebb0b6fb52875ee0bb5ef15854a6e76c93a355a",
+      "bytes": 21919
+    },
+    {
+      "path": "packages/web/lib/saas-onboarding-db.ts",
+      "sha256": "948fde426e8e297a1baf7ffa1db229bf86889e588ab9baebf8bf784f39ec7329",
+      "bytes": 28136
+    },
+    {
+      "path": "packages/web/lib/tenant-db.ts",
+      "sha256": "62b5ed352310f895a93dedb285b8ca976ca52a46cd2f398676b7529197d29dc5",
+      "bytes": 4423
+    },
+    {
+      "path": "packages/web/lib/workflow-readiness.ts",
+      "sha256": "a2eacceec399f7e736bee253a21e3cb0a6557f1b59deaae0cca72248e61ebe60",
+      "bytes": 654
+    },
+    {
+      "path": "tools/editorial-tests/README.md",
+      "sha256": "8bf9d9eb4e0477d31275ed0d62fa4a704d392c703ebd0f2d876014d5421c4e52",
+      "bytes": 8698
+    },
+    {
+      "path": "tools/editorial-tests/auth-merge-flow.test.ts",
+      "sha256": "08f2f34c79d719f551e6aace24ca6f97fe2c86f054d28bc775cbdcb939979932",
+      "bytes": 6855
+    },
+    {
+      "path": "tools/editorial-tests/build-rollout.py",
+      "sha256": "8eac8d2a714fd54a904d4dc5a6b5afa4b609ecced3d77959c27c8181be36f847",
+      "bytes": 20571
+    },
+    {
+      "path": "tools/editorial-tests/canonical-price-evidence.test.ts",
+      "sha256": "7143b75b3441b0581db33bb460ba170abef736f031fa3a52dd0b9613b84da5ae",
+      "bytes": 11735
+    },
+    {
+      "path": "tools/editorial-tests/capture-batch.test.ts",
+      "sha256": "d3775ee3a3250d364ac0f2ba0d3691481982e1ec127ece3215a37ef9f2e84c0c",
+      "bytes": 22799
+    },
+    {
+      "path": "tools/editorial-tests/cockpit-commercial-assisted.test.ts",
+      "sha256": "50f8d178c97b1737b38f5417fb3843e4273416e9b9fcd5adeca9066d5c4f703d",
+      "bytes": 23229
+    },
+    {
+      "path": "tools/editorial-tests/commercial-financial-flow.test.ts",
+      "sha256": "71a07965e53eb18c611b5b684ff85383bcc310ca3aaabaacec783f69184a08c2",
+      "bytes": 22302
+    },
+    {
+      "path": "tools/editorial-tests/commercial-fixture.ts",
+      "sha256": "be4568330d22879fa20a37d3df788cb00ea8f8f019f8f742680b006ee5084cda",
+      "bytes": 3058
+    },
+    {
+      "path": "tools/editorial-tests/commercial-flow.test.ts",
+      "sha256": "e5f632dcd096aa4e0eb6c240cf5c2cd3714312d624b287f05291aaaeb8147591",
+      "bytes": 25619
+    },
+    {
+      "path": "tools/editorial-tests/dispatch-worker-flow.test.ts",
+      "sha256": "b614c7594f9e1bb135471b25f9199c641139ac3ab83c3b72c7891b4441f88c57",
+      "bytes": 25569
+    },
+    {
+      "path": "tools/editorial-tests/entitlement-quota.test.ts",
+      "sha256": "f23bf068044ce61fd2f8ace262a6c1145997b528e1d0c6cd72f04f3a5e5390e6",
+      "bytes": 15437
+    },
+    {
+      "path": "tools/editorial-tests/inspect-replacement-expansion.ts",
+      "sha256": "bef0fd80cad395e05b0c4f0c46d8a62588ad95e33cc6277956dc6d86693ea65b",
+      "bytes": 4249
+    },
+    {
+      "path": "tools/editorial-tests/integration.test.ts",
+      "sha256": "fe7344ee063037903ff8bc82ef55b9dac3a0142af570b960bff5d7431f941367",
+      "bytes": 42496
+    },
+    {
+      "path": "tools/editorial-tests/metrics-experiment-flow.test.ts",
+      "sha256": "789f8a86bb3f65e6108fc45bc1e5a4675821e2ebf942d93d6254850059ace1aa",
+      "bytes": 8754
+    },
+    {
+      "path": "tools/editorial-tests/migration-integrity-flow.test.ts",
+      "sha256": "f9f2b7a6339770f7bbf3934e80c9c8dbf8f96a494018450dee4289172a3c79d9",
+      "bytes": 7565
+    },
+    {
+      "path": "tools/editorial-tests/native-migration-flow.test.ts",
+      "sha256": "2f27e8a629b0fb72862dfe096ac7e9559e3747faaab5a0847f3430b6ec95d1aa",
+      "bytes": 11319
+    },
+    {
+      "path": "tools/editorial-tests/native-postgres-fixture.ts",
+      "sha256": "4761210b592ecc6aaf3273db40cb5864c165724eabb29a3fddccb08baeaec42e",
+      "bytes": 4238
+    },
+    {
+      "path": "tools/editorial-tests/observed-baseline.ts",
+      "sha256": "a890ee13e34b6a43f0c5437cf7e78e6f42a13f0f8f8b88c9adacc68de0609d7f",
+      "bytes": 5723
+    },
+    {
+      "path": "tools/editorial-tests/opportunity-radar-flow.test.ts",
+      "sha256": "ea955564050ba22e57b4aaf17abed853786ec0022a269250ca2a4b08df8c44f2",
+      "bytes": 21612
+    },
+    {
+      "path": "tools/editorial-tests/package.json",
+      "sha256": "4d76d9f4dc84ee991acf934c20a2ade762f228b1e9f7a5d4ee2370111ec7413d",
+      "bytes": 2079
+    },
+    {
+      "path": "tools/editorial-tests/public-readiness-flow.test.ts",
+      "sha256": "06ad56083007023d21a0572f0a39e441c5bed8a95e72bccad4692b8a4030df30",
+      "bytes": 1160
+    },
+    {
+      "path": "tools/editorial-tests/regressions-cf01-cf18.test.ts",
+      "sha256": "06a4683a48f707160c83241224e4a685c0811e2b645782df43949583d45ff4d3",
+      "bytes": 21868
+    },
+    {
+      "path": "tools/editorial-tests/regressions-rv01-rv05.test.ts",
+      "sha256": "ccac230cb75c412cc54835419aa7472eae3384a71c064a8e603cbbc202797f3a",
+      "bytes": 10695
+    },
+    {
+      "path": "tools/editorial-tests/replacement-rollout-flow.test.ts",
+      "sha256": "e48d0075e6acf92a34444fe793652433a1ecb9ab4a91c006fccbbd732dbae122",
+      "bytes": 22562
+    },
+    {
+      "path": "tools/editorial-tests/replacement-rollout.ts",
+      "sha256": "622576b2d17bd5e900d3a70de306f84301e6ba095ba83667b589cbc5345317e0",
+      "bytes": 1310
+    },
+    {
+      "path": "tools/editorial-tests/rollout-monitoring-fragment.sql",
+      "sha256": "509835ae88a71352827e4ba492abc160fbbdd391f5bdccde0772ea769bf8e126",
+      "bytes": 3722
+    },
+    {
+      "path": "tools/editorial-tests/rubric-shadow-flow.test.ts",
+      "sha256": "bf5edfa5c40a41da3590ff1f06eedf767c956b80ffc53ddbdc94133b62a6c0a4",
+      "bytes": 11206
+    },
+    {
+      "path": "tools/editorial-tests/saas-onboarding-flow.test.ts",
+      "sha256": "2b9cd740c5ede1fdc329ffcd30df133a27b575ca13f85f1a08edaf43f2d88326",
+      "bytes": 22937
+    },
+    {
+      "path": "tools/editorial-tests/secret-bootstrap-flow.test.ts",
+      "sha256": "e510685dc00049f8aeddff33bd3111a61bfb95994d4d7954a884b879cba84dfa",
+      "bytes": 2708
+    },
+    {
+      "path": "tools/editorial-tests/triage-price.test.ts",
+      "sha256": "bc00dca7def55b25756a0238fe010e23073ba76452c2fdf92eca45ceb654080f",
+      "bytes": 22154
+    },
+    {
+      "path": "tools/editorial-tests/verified-upgrade.test.ts",
+      "sha256": "4f74000f08a0331c840957964e4eecf6567aede49799209c6dd3f277108b94b3",
+      "bytes": 5522
+    },
+    {
+      "path": "tools/editorial-tests/verified-workflows.test.ts",
+      "sha256": "7e8b1bd6d5d20b6de50bd491411042282459db7a40149d2595e80041ef3a3870",
+      "bytes": 31894
+    },
+    {
+      "path": "tools/editorial-tests/verify-replacement-rollout.ts",
+      "sha256": "0656aa5479415efbdc88a8fafa449e97e1ebdded0f27807fa7dedb113b8f831a",
+      "bytes": 1907
+    }
+  ]
+}

@@ -1,10 +1,12 @@
+import { scopedTenantId } from "./account-scope.ts";
 import type postgres from "postgres";
 import { PRODUCT_EVIDENCE_TTL_DAYS } from "./catalog-policy.ts";
 import { db } from "./db.ts";
+import { withTenantDb, withAccountDb, type AccountContext } from "./tenant-db.ts";
+import { projectConservativePriceEvidence } from "./offer-history.ts";
 import { productSlug } from "./marketplaces.ts";
 import type {
   CurationBulkContext,
-  CurationDecisionLoad,
   CurationReason,
   CurationStatus,
   ValidCurationBulk,
@@ -19,8 +21,10 @@ import {
   type PipelineOptions,
 } from "./curation-pipeline.ts";
 import { getEditorialGuideline, getGoldenExamples } from "./editorial-compass.ts";
+import { loadAutomatedTriageCandidates, triageInputStillCurrent } from "./triage-candidates-db.ts";
 import { curationSignalsFor, type CurationSignalId } from "./curation-signals.ts";
-import { buildSnapshotMetadata, type CurationSnapshotFacts, type CurationSnapshotProvenance } from "./curation-snapshot.ts";
+import { buildSnapshotMetadata, type CurationSnapshotFacts, type CurationSnapshotProvenance, type OfferEvidenceSourceSnapshot } from "./curation-snapshot.ts";
+import { resolveVariantEvidence } from "./comparison-evidence.ts";
 import {
   editorialGroupIdFor,
   matchesEditorialGroup,
@@ -36,6 +40,7 @@ export interface CurationSummary {
   held: number;
   approved: number;
   rejected: number;
+  deferred: number;
 }
 
 /**
@@ -55,6 +60,8 @@ export interface CurationQueueRow {
   familyVersion: string | null;
   marketplace: string;
   status: Extract<CurationStatus, "legacy_visible" | "pending" | "held">;
+  reasonCode?: CurationReason | null;
+  reasonDetail?: string | null;
   priceCents: number;
   originalPriceCents: number | null;
   claimedDiscountRate: number | null;
@@ -75,6 +82,8 @@ export interface CurationQueueRow {
   presentingMode: string | null;
   presentingTargetCategory: string | null;
   presentingTargetFamily: string | null;
+  offerEvidence?: Record<string, unknown> | null;
+  variant?: { confirmed: boolean; description: string; variantKey: string | null; variantLabel: string | null } | null;
 }
 
 export interface CurationAiInsight {
@@ -92,7 +101,7 @@ const QUEUE_FACTS_COLUMNS = `
   f.id, f.external_id, f.title, f.product_url as "productUrl", f.image_url as "imageUrl",
   f.category, f.family_key as "familyKey", f.family_label as "familyLabel",
   f.family_method as "familyMethod", f.family_version as "familyVersion",
-  f.marketplace, f.status, f.price_cents as "priceCents",
+  f.marketplace, f.status, f.reason_code as "reasonCode", f.reason_detail as "reasonDetail", f.price_cents as "priceCents",
   f.original_price_cents as "originalPriceCents",
   f.claimed_discount_rate as "claimedDiscountRate",
   f.rating_star as "ratingStar", f.sales_label as "salesLabel",
@@ -111,11 +120,21 @@ const QUEUE_FACTS_COLUMNS = `
 `;
 
 /** Conexão de transação usada nas consultas de fatos da fila. */
-type TxLike = postgres.TransactionSql;
+type TxLike = postgres.TransactionSql | postgres.Sql<{}>;
 
-export async function curationSummary(tenantId = "local"): Promise<CurationSummary> {
-  const sql = db();
-  try {
+export async function curationSummary(
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
+  context?: AccountContext,
+): Promise<CurationSummary> {
+  if (!context) {
+    throw new Error("account_context_required: private curation summary requires authorized AccountContext");
+  }
+  if (context.tenantId !== tenantId) {
+    throw new Error("forbidden: tenant inválido para o contexto de conta");
+  }
+
+  const queryFn = async (sql: any) => {
     const rows = await sql<Array<Record<string, number>>>`
       select
         count(*) filter (where status in ('legacy_visible', 'pending')
@@ -130,7 +149,11 @@ export async function curationSummary(tenantId = "local"): Promise<CurationSumma
         count(*) filter (where status = 'held'
           and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
           and (deferred_until is null or deferred_until <= now()))::int as held,
-        count(*) filter (where status = 'approved')::int as approved,
+        count(*) filter (where status = 'approved'
+          and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day'))::int as approved,
+        count(*) filter (where status in ('legacy_visible','pending','held')
+          and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
+          and deferred_until > now())::int as deferred,
         count(*) filter (where status = 'rejected')::int as rejected
       from garimpa.product_curation c
       join garimpa.product p on p.id = c.product_id and p.tenant_id = c.tenant_id
@@ -144,28 +167,40 @@ export async function curationSummary(tenantId = "local"): Promise<CurationSumma
       held: row.held ?? 0,
       approved: row.approved ?? 0,
       rejected: row.rejected ?? 0,
+      deferred: row.deferred ?? 0,
     };
-  } finally {
-    await sql.end();
-  }
+  };
+
+  return await withAccountDb(context, queryFn, sqlFactory);
 }
 
 export async function curationQueue(
   limit = 20,
-  tenantId = "local",
-  queue: "awaiting" | "held" = "awaiting",
+  tenantId = scopedTenantId(),
+  queue: "awaiting" | "held" | "deferred" = "awaiting",
+  sqlFactory: typeof db = db,
 ): Promise<CurationQueueProduct[]> {
-  const sql = db();
-  try {
+  return await withTenantDb(tenantId, async (sql) => {
     const rows = await sql<CurationQueueRow[]>`
-      select ${sql.unsafe(QUEUE_FACTS_COLUMNS)}
+      select
+        ${sql.unsafe(QUEUE_FACTS_COLUMNS)},
+        latest_obs.offer_evidence as "offerEvidence"
       from garimpa.curation_queue_facts f
+      left join lateral (
+        select obs.offer_evidence
+        from garimpa.price_observation obs
+        where obs.tenant_id = f.tenant_id and obs.product_id = f.id
+        order by obs.observed_at desc
+        limit 1
+      ) latest_obs on true
       where f.tenant_id = ${tenantId}
-        and (f.deferred_until is null or f.deferred_until <= now())
         and f.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
         and (
-          (${queue} = 'awaiting' and f.status in ('legacy_visible', 'pending'))
-          or (${queue} = 'held' and f.status = 'held')
+          (${queue} = 'awaiting' and f.status in ('legacy_visible', 'pending')
+            and (f.deferred_until is null or f.deferred_until <= now()))
+          or (${queue} = 'held' and f.status = 'held'
+            and (f.deferred_until is null or f.deferred_until <= now()))
+          or (${queue} = 'deferred' and f.status in ('legacy_visible','pending','held') and f.deferred_until > now())
         )
       order by
         (f.status = 'pending') desc,
@@ -177,17 +212,18 @@ export async function curationQueue(
 
     const productIds = rows.map((r) => r.id);
     const aiInsightMap = new Map<string, CurationAiInsight>();
+    const rationaleMap = new Map<string, string>();
     if (productIds.length > 0) {
       const events = await sql<{ product_id: string; metadata: any }[]>`
         select distinct on (product_id) product_id, metadata
         from garimpa.curation_event
         where tenant_id = ${tenantId}
           and product_id = any(${productIds})
-          and actor_type = 'llm'
         order by product_id, id desc
       `;
       for (const e of events) {
         const auto = e.metadata?.automation;
+        if (typeof auto?.rationale === "string") rationaleMap.set(e.product_id, auto.rationale);
         if (auto && typeof auto.aiScore === "number" && typeof auto.aiJustification === "string") {
           aiInsightMap.set(e.product_id, {
             score: auto.aiScore,
@@ -198,57 +234,18 @@ export async function curationQueue(
       }
     }
 
-    return rows.map((row) => ({
-      ...row,
-      slug: productSlug(row.marketplace, row.external_id),
-      aiInsight: aiInsightMap.get(row.id) ?? null,
-    }));
-  } finally {
-    await sql.end();
-  }
-}
-
-/** Carga decisória agregada para o aviso e cabeçalho (M4-E). */
-export async function curationDecisionLoad(tenantId = "local"): Promise<CurationDecisionLoad> {
-  const sql = db();
-  try {
-    const rows = await sql<{
-      open_groups: number;
-      singulars: number;
-      total_awaiting: number;
-      without_family_catalog: number;
-    }[]>`
-      select
-        count(distinct (p.family_key, p.family_method, p.family_version)) filter (
-          where p.family_key is not null
-        )::int as open_groups,
-        count(*) filter (where p.family_key is null)::int as singulars,
-        count(*)::int as total_awaiting,
-        (select count(*)::int
-         from garimpa.product p0
-         join garimpa.product_curation c0 on c0.product_id = p0.id and c0.tenant_id = p0.tenant_id
-         where p0.tenant_id = ${tenantId}
-           and p0.family_key is null
-           and c0.status in ('legacy_visible', 'pending')
-           and (c0.deferred_until is null or c0.deferred_until <= now())
-           and p0.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')) as without_family_catalog
-      from garimpa.product_curation c
-      join garimpa.product p on p.id = c.product_id and p.tenant_id = c.tenant_id
-      where c.tenant_id = ${tenantId}
-        and c.status in ('legacy_visible', 'pending')
-        and (c.deferred_until is null or c.deferred_until <= now())
-        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
-    `;
-    const row = rows[0] ?? { open_groups: 0, singulars: 0, total_awaiting: 0, without_family_catalog: 0 };
-    return {
-      openGroupsCount: row.open_groups ?? 0,
-      singularsCount: row.singulars ?? 0,
-      totalCapturedAwaiting: row.total_awaiting ?? 0,
-      withoutFamilyCount: row.without_family_catalog ?? 0,
-    };
-  } finally {
-    await sql.end();
-  }
+    return rows.map((r) => {
+      const row = projectConservativePriceEvidence(r);
+      const variant = resolveVariantEvidence({ externalId: row.external_id, title: row.title, offerEvidence: row.offerEvidence });
+      return {
+        ...row,
+        variant,
+        reasonDetail: row.reasonDetail ?? (row.status === "held" ? rationaleMap.get(row.id) ?? null : null),
+        slug: productSlug(row.marketplace, row.external_id),
+        aiInsight: aiInsightMap.get(row.id) ?? null,
+      };
+    });
+  }, sqlFactory);
 }
 
 export interface CurationGroupCard {
@@ -266,6 +263,16 @@ export interface CurationGroupCard {
 }
 
 function toGroupMemberProduct(row: CurationQueueRow, tenantId: string): GroupMemberProduct {
+  const variant = resolveVariantEvidence({
+    externalId: row.external_id,
+    title: row.title,
+    offerEvidence: row.offerEvidence,
+  });
+  const rawReviewCount = (row.offerEvidence as any)?.review_count ?? (row.offerEvidence as any)?.reviewCount;
+  const reviewCount = typeof rawReviewCount === "number" && Number.isSafeInteger(rawReviewCount) && rawReviewCount >= 0
+    ? rawReviewCount
+    : null;
+
   return {
     tenantId,
     productId: row.id,
@@ -286,6 +293,9 @@ function toGroupMemberProduct(row: CurationQueueRow, tenantId: string): GroupMem
     salesCount: row.salesCount,
     observationCount: row.observationCount,
     lowestVerified: row.lowestVerified,
+    reviewCount,
+    variant,
+    offerEvidence: row.offerEvidence ?? null,
   };
 }
 
@@ -296,10 +306,10 @@ function toGroupMemberProduct(row: CurationQueueRow, tenantId: string): GroupMem
  */
 export async function curationGroupCards(
   limit = 20,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<CurationGroupCard[]> {
-  const sql = db();
-  try {
+  return await withTenantDb(tenantId, async (sql) => {
     const withoutFamilyRow = await sql<{ count: number }[]>`
       select count(*)::int as count
       from garimpa.product p
@@ -314,8 +324,17 @@ export async function curationGroupCards(
 
     // Buscar membros de grupos com família que estão aguardando avaliação
     const rows = await sql<CurationQueueRow[]>`
-      select ${sql.unsafe(QUEUE_FACTS_COLUMNS)}
+      select
+        ${sql.unsafe(QUEUE_FACTS_COLUMNS)},
+        latest_obs.offer_evidence as "offerEvidence"
       from garimpa.curation_queue_facts f
+      left join lateral (
+        select obs.offer_evidence
+        from garimpa.price_observation obs
+        where obs.tenant_id = f.tenant_id and obs.product_id = f.id
+        order by obs.observed_at desc
+        limit 1
+      ) latest_obs on true
       where f.tenant_id = ${tenantId}
         and f.family_key is not null
         and f.status in ('legacy_visible', 'pending')
@@ -362,11 +381,18 @@ export async function curationGroupCards(
       // Obter até 5 representantes ordenados por evidência e variação
       const memberProducts = familyRows.map((r) => toGroupMemberProduct(r, tenantId));
       const repIds = selectRepresentatives(memberProducts);
-      const repIdSet = new Set(repIds);
       const repRows = repIds
         .map((id) => familyRows.find((r) => r.id === id))
         .filter((r): r is CurationQueueRow => r !== undefined)
-        .map((r) => ({ ...r, slug: productSlug(r.marketplace, r.external_id) }));
+        .map((r) => ({
+          ...projectConservativePriceEvidence(r),
+          variant: resolveVariantEvidence({
+            externalId: r.external_id,
+            title: r.title,
+            offerEvidence: r.offerEvidence,
+          }),
+          slug: productSlug(r.marketplace, r.external_id),
+        }));
 
       cards.push({
         groupId,
@@ -384,21 +410,28 @@ export async function curationGroupCards(
     }
 
     return cards;
-  } finally {
-    await sql.end();
-  }
+  }, sqlFactory);
 }
 
 /** Busca sob demanda todos os membros de um grupo específico (M4-E). */
 export async function groupMembers(
   groupId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<CurationQueueProduct[]> {
-  const sql = db();
-  try {
+  return await withTenantDb(tenantId, async (sql) => {
     const rows = await sql<CurationQueueRow[]>`
-      select ${sql.unsafe(QUEUE_FACTS_COLUMNS)}
+      select
+        ${sql.unsafe(QUEUE_FACTS_COLUMNS)},
+        latest_obs.offer_evidence as "offerEvidence"
       from garimpa.curation_queue_facts f
+      left join lateral (
+        select obs.offer_evidence
+        from garimpa.price_observation obs
+        where obs.tenant_id = f.tenant_id and obs.product_id = f.id
+        order by obs.observed_at desc
+        limit 1
+      ) latest_obs on true
       where f.tenant_id = ${tenantId}
         and f.family_key is not null
         and f.status in ('legacy_visible', 'pending')
@@ -414,146 +447,16 @@ export async function groupMembers(
         version: r.familyVersion,
       })
     );
-    return members.map((row) => ({ ...row, slug: productSlug(row.marketplace, row.external_id) }));
-  } finally {
-    await sql.end();
-  }
-}
-
-/** Fila da aba "Em espera": produtos em held ou com adiamento futuro (M4-E). */
-export async function deferredQueue(
-  limit = 50,
-  tenantId = "local",
-): Promise<CurationQueueProduct[]> {
-  const sql = db();
-  try {
-    const rows = await sql<CurationQueueRow[]>`
-      select ${sql.unsafe(QUEUE_FACTS_COLUMNS)}
-      from garimpa.curation_queue_facts f
-      where f.tenant_id = ${tenantId}
-        and f.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
-        and (
-          f.status = 'held'
-          or (f.deferred_until is not null and f.deferred_until > now())
-        )
-      order by
-        (f.deferred_until is not null and f.deferred_until > now()) desc,
-        f.deferred_until asc nulls last,
-        f.last_seen_at desc
-      limit ${Math.min(Math.max(limit, 1), 100)}
-    `;
-    return rows.map((row) => ({ ...row, slug: productSlug(row.marketplace, row.external_id) }));
-  } finally {
-    await sql.end();
-  }
-}
-
-export interface CurationLearningsData {
-  approvedCount: number;
-  rejectedCount: number;
-  heldSaturationCount: number;
-  heldEvidenceCount: number;
-  heldOtherCount: number;
-  totalDecisions: number;
-  compressionRatio: number;
-  otherReasons: Array<{
-    eventId: string;
-    productId: string;
-    title: string;
-    decision: "reject" | "hold";
-    reasonCode: string;
-    reasonDetail: string;
-    createdAt: string;
-  }>;
-}
-
-/** Dados históricos e padrões da aba "Aprendizados" (M4-E). */
-export async function curationLearnings(tenantId = "local"): Promise<CurationLearningsData> {
-  const sql = db();
-  try {
-    const summaryRows = await sql<{
-      approved_count: number;
-      rejected_count: number;
-      held_saturation_count: number;
-      held_evidence_count: number;
-      held_other_count: number;
-      total_decisions: number;
-    }[]>`
-      select
-        count(*) filter (where to_status = 'approved' and actor_type = 'human')::int as approved_count,
-        count(*) filter (where to_status = 'rejected' and actor_type = 'human')::int as rejected_count,
-        count(*) filter (where to_status = 'held' and reason_code = 'family_saturation')::int as held_saturation_count,
-        count(*) filter (where to_status = 'held' and reason_code in ('insufficient_evidence', 'weak_offer'))::int as held_evidence_count,
-        count(*) filter (where to_status = 'held' and reason_code not in ('family_saturation', 'insufficient_evidence', 'weak_offer'))::int as held_other_count,
-        count(*) filter (where actor_type = 'human')::int as total_decisions
-      from garimpa.curation_event
-      where tenant_id = ${tenantId}
-    `;
-    const s = summaryRows[0] ?? {
-      approved_count: 0,
-      rejected_count: 0,
-      held_saturation_count: 0,
-      held_evidence_count: 0,
-      held_other_count: 0,
-      total_decisions: 0,
-    };
-
-    const otherRows = await sql<{
-      id: string;
-      product_id: string;
-      title: string;
-      to_status: string;
-      reason_code: string;
-      reason_detail: string;
-      created_at: Date | string;
-    }[]>`
-      select
-        e.id::text as id, e.product_id,
-        coalesce(p.title, 'Produto sem título') as title,
-        e.to_status,
-        e.reason_code,
-        e.reason_detail,
-        e.created_at
-      from garimpa.curation_event e
-      left join garimpa.product p on p.id = e.product_id and p.tenant_id = e.tenant_id
-      where e.tenant_id = ${tenantId}
-        and e.reason_code = 'other'
-        and e.reason_detail is not null
-      order by e.id desc
-      limit 50
-    `;
-
-    const distinctActionsRow = await sql<{ count: number }[]>`
-      select count(distinct coalesce(bulk_action_id, id::text))::int as count
-      from garimpa.curation_event
-      where tenant_id = ${tenantId} and actor_type = 'human'
-    `;
-    const distinctActions = distinctActionsRow[0]?.count ?? 1;
-    const compressionRatio = distinctActions > 0
-      ? Number((s.total_decisions / distinctActions).toFixed(2))
-      : 1;
-
-    return {
-      approvedCount: s.approved_count ?? 0,
-      rejectedCount: s.rejected_count ?? 0,
-      heldSaturationCount: s.held_saturation_count ?? 0,
-      heldEvidenceCount: s.held_evidence_count ?? 0,
-      heldOtherCount: s.held_other_count ?? 0,
-      totalDecisions: s.total_decisions ?? 0,
-      compressionRatio,
-      otherReasons: otherRows.map((r) => ({
-        eventId: r.id,
-        productId: r.product_id,
-        title: r.title,
-        decision: r.to_status as "reject" | "hold",
-        reasonCode: r.reason_code,
-        reasonDetail: r.reason_detail,
-        createdAt: new Date(r.created_at).toISOString(),
-      })),
-    };
-  } finally {
-    await sql.end();
-  }
+    return members.map((row) => ({
+      ...projectConservativePriceEvidence(row),
+      variant: resolveVariantEvidence({
+        externalId: row.external_id,
+        title: row.title,
+        offerEvidence: row.offerEvidence,
+      }),
+      slug: productSlug(row.marketplace, row.external_id),
+    }));
+  }, sqlFactory);
 }
 
 /** Busca os fatos de um produto para o snapshot imutável (dentro da transação). */
@@ -563,8 +466,17 @@ async function queueFacts(
   productId: string,
 ): Promise<CurationQueueRow | null> {
   const rows = await tx<CurationQueueRow[]>`
-    select ${tx.unsafe(QUEUE_FACTS_COLUMNS)}
+    select
+      ${tx.unsafe(QUEUE_FACTS_COLUMNS)},
+      latest_obs.offer_evidence as "offerEvidence"
     from garimpa.curation_queue_facts f
+    left join lateral (
+      select obs.offer_evidence
+      from garimpa.price_observation obs
+      where obs.tenant_id = f.tenant_id and obs.product_id = f.id
+      order by obs.observed_at desc
+      limit 1
+    ) latest_obs on true
     where f.tenant_id = ${tenantId} and f.id = ${productId}
       and f.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
     limit 1
@@ -583,7 +495,6 @@ export interface ReviewContext {
   groupId?: string | null;
   reviewSessionId?: string | null;
   bulkActionId?: string | null;
-  emergencyApproval?: boolean;
 }
 
 const POLICY_VERSION = "v1";
@@ -604,6 +515,16 @@ function toSnapshotFacts(row: CurationQueueRow): CurationSnapshotFacts {
     targetCategory: row.presentingTargetCategory ?? null,
     targetFamily: row.presentingTargetFamily ?? null,
   };
+  const variant = resolveVariantEvidence({
+    externalId: row.external_id,
+    title: row.title,
+    offerEvidence: row.offerEvidence,
+  });
+  const rawReviewCount = (row.offerEvidence as any)?.review_count ?? (row.offerEvidence as any)?.reviewCount;
+  const reviewCount = typeof rawReviewCount === "number" && Number.isSafeInteger(rawReviewCount) && rawReviewCount >= 0
+    ? rawReviewCount
+    : null;
+
   return {
     productId: row.id,
     slug: productSlug(row.marketplace, row.external_id),
@@ -631,6 +552,20 @@ function toSnapshotFacts(row: CurationQueueRow): CurationSnapshotFacts {
     lowestVerified: row.lowestVerified,
     signalsShown: signals,
     provenance,
+    reviewCount,
+    variant,
+    offerEvidenceSource: (() => {
+      const rawSource = (row.offerEvidence as any)?.source;
+      if (rawSource && typeof rawSource === "object" && typeof rawSource.marketplace === "string") {
+        return {
+          marketplace: rawSource.marketplace,
+          method: typeof rawSource.method === "string" ? rawSource.method : null,
+          url: typeof rawSource.url === "string" ? rawSource.url : null,
+          capturedAt: typeof rawSource.capturedAt === "string" ? rawSource.capturedAt : null,
+        };
+      }
+      return row.marketplace ? { marketplace: row.marketplace } : null;
+    })(),
   };
 }
 
@@ -674,9 +609,7 @@ async function applyDecision(
     bulkActionId: context.bulkActionId ?? null,
     policyVersion: POLICY_VERSION,
   });
-  const metadata = context.emergencyApproval
-    ? { ...snapshotMetadata, emergencyApproval: true }
-    : snapshotMetadata;
+  const metadata = snapshotMetadata;
 
   await tx`
     update garimpa.product_curation
@@ -712,170 +645,50 @@ async function applyDecision(
 export async function reviewProduct(
   decision: ValidCurationDecision,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   context: ReviewContext = {},
+  sqlFactory: typeof db = db,
 ): Promise<ReviewResult | null> {
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
-      return applyDecision(tx as TxLike, tenantId, decision.productId, decision, reviewerAppUserId, "review", context);
-    });
-  } finally {
-    await sql.end();
-  }
+  return await withTenantDb(tenantId, async (tx) => {
+    return applyDecision(tx as TxLike, tenantId, decision.productId, decision, reviewerAppUserId, "review", context);
+  }, sqlFactory);
 }
 
 /** Ação em lote: um evento por produto, mesma transação, ids de contexto comuns. */
 export async function reviewProductsBulk(
   bulk: ValidCurationBulk,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<ReviewResult[]> {
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
-      const results: ReviewResult[] = [];
-      for (const decision of bulk.decisions) {
-        const result = await applyDecision(
-          tx as TxLike,
-          tenantId,
-          decision.productId,
-          decision,
-          reviewerAppUserId,
-          "bulk",
-          bulk.context,
-        );
-        if (!result) throw new Error(`produto indisponível para decisão em lote: ${decision.productId}`);
-        results.push(result);
-      }
-      return results;
-    });
-  } finally {
-    await sql.end();
-  }
-}
-
-export interface DailySuggestedCandidate {
-  productId: string;
-  title: string;
-  aiScore: number;
-}
-
-/**
- * Candidatos nota 3 da triagem de hoje. Bloqueios e rejeições nunca entram:
- * esta é a válvula operacional explícita, não uma forma de furar segurança.
- */
-export async function dailySuggestedCandidates(
-  tenantId = "local",
-  limit = 50,
-): Promise<DailySuggestedCandidate[]> {
-  if (!process.env.DATABASE_URL) return [];
-  const sql = db();
-  try {
-    return await sql<DailySuggestedCandidate[]>`
-      select
-        e.product_id as "productId",
-        coalesce(p.title, e.metadata->'snapshot'->>'title', 'Produto') as title,
-        coalesce((e.metadata->'automation'->>'aiScore')::int, 0) as "aiScore"
-      from garimpa.curation_event e
-      join garimpa.product_curation c
-        on c.tenant_id = e.tenant_id and c.product_id = e.product_id
-      left join garimpa.product p
-        on p.tenant_id = e.tenant_id and p.id = e.product_id
-      where e.tenant_id = ${tenantId}
-        and e.actor_type = 'llm'
-        and e.to_status = 'pending'
-        and c.status = 'pending'
-        and coalesce((e.metadata->'automation'->>'aiScore')::int, 0) = 3
-        and e.created_at >= (
-          date_trunc('day', now() at time zone 'America/Sao_Paulo')
-          at time zone 'America/Sao_Paulo'
-        )
-        and not exists (
-          select 1 from garimpa.curation_event newer
-          where newer.tenant_id = e.tenant_id
-            and newer.product_id = e.product_id
-            and newer.id > e.id
-        )
-      order by e.id desc
-      limit ${Math.min(Math.max(limit, 1), 100)}
-    `;
-  } finally {
-    await sql.end();
-  }
-}
-
-/** Aprova, numa única transação, somente os candidatos seguros sugeridos hoje. */
-export async function approveDailySuggestedCandidates(
-  reviewerAppUserId: string,
-  tenantId = "local",
-  limit = 50,
-): Promise<number> {
-  const candidates = await dailySuggestedCandidates(tenantId, limit);
-  if (candidates.length === 0) return 0;
-
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
-      let approved = 0;
-      const reviewSessionId = crypto.randomUUID();
-      for (const candidate of candidates) {
-        const eligible = await tx<{ product_id: string }[]>`
-          select c.product_id
-          from garimpa.product_curation c
-          where c.tenant_id = ${tenantId}
-            and c.product_id = ${candidate.productId}
-            and c.status = 'pending'
-            and exists (
-              select 1
-              from garimpa.curation_event e
-              where e.tenant_id = c.tenant_id
-                and e.product_id = c.product_id
-                and e.actor_type = 'llm'
-                and e.to_status = 'pending'
-                and coalesce((e.metadata->'automation'->>'aiScore')::int, 0) = 3
-                and e.created_at >= (
-                  date_trunc('day', now() at time zone 'America/Sao_Paulo')
-                  at time zone 'America/Sao_Paulo'
-                )
-                and not exists (
-                  select 1 from garimpa.curation_event newer
-                  where newer.tenant_id = e.tenant_id
-                    and newer.product_id = e.product_id
-                    and newer.id > e.id
-                )
-            )
-          for update
-        `;
-        if (eligible.length === 0) continue;
-        const result = await applyDecision(
-          tx as TxLike,
-          tenantId,
-          candidate.productId,
-          { status: "approved", reasonCode: null, reasonDetail: null },
-          reviewerAppUserId,
-          "bulk",
-          { reviewSessionId, emergencyApproval: true },
-        );
-        if (result) approved++;
-      }
-      return approved;
-    });
-  } finally {
-    await sql.end();
-  }
+  return await withTenantDb(tenantId, async (tx) => {
+    const results: ReviewResult[] = [];
+    for (const decision of bulk.decisions) {
+      const result = await applyDecision(
+        tx as TxLike,
+        tenantId,
+        decision.productId,
+        decision,
+        reviewerAppUserId,
+        "bulk",
+        bulk.context,
+      );
+      if (!result) throw new Error(`produto indisponível para decisão em lote: ${decision.productId}`);
+      results.push(result);
+    }
+    return results;
+  }, sqlFactory);
 }
 
 export async function undoReview(
   productId: string,
   eventId: string,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<boolean> {
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
-      const currentRows = await tx<StoredCurationState[]>`
+  return await withTenantDb(tenantId, async (tx) => {
+    const currentRows = await tx<StoredCurationState[]>`
         select status, reason_code as "reasonCode", reason_detail as "reasonDetail",
                deferred_until as "deferredUntil"
         from garimpa.product_curation
@@ -953,9 +766,6 @@ export async function undoReview(
       `;
       return true;
     });
-  } finally {
-    await sql.end();
-  }
 }
 
 export interface GroupActionResult {
@@ -975,19 +785,27 @@ export interface GroupActionResult {
 export async function actOnGroup(
   input: ValidGroupAction,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<GroupActionResult> {
   const selectedIdSet = new Set(input.selectedProductIds);
   if (selectedIdSet.size !== input.selectedProductIds.length) {
     throw new Error("bulk_duplicate_product");
   }
 
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
-      const openRows = await tx<CurationQueueRow[]>`
-        select ${tx.unsafe(QUEUE_FACTS_COLUMNS)}
+  return await withTenantDb(tenantId, async (tx) => {
+    const openRows = await tx<CurationQueueRow[]>`
+        select
+          ${tx.unsafe(QUEUE_FACTS_COLUMNS)},
+          latest_obs.offer_evidence as "offerEvidence"
         from garimpa.curation_queue_facts f
+        left join lateral (
+          select obs.offer_evidence
+          from garimpa.price_observation obs
+          where obs.tenant_id = f.tenant_id and obs.product_id = f.id
+          order by obs.observed_at desc
+          limit 1
+        ) latest_obs on true
         where f.tenant_id = ${tenantId}
           and f.status in ('legacy_visible', 'pending')
           and (f.deferred_until is null or f.deferred_until <= now())
@@ -1009,6 +827,30 @@ export async function actOnGroup(
       }
 
       const memberIdSet = new Set(groupMembers.map((m) => m.id));
+
+      // AC-035.3 / BUG-019: Se retainRemainingAsSaturation for true, expectedMemberProductIds
+      // é estritamente obrigatório e não pode ser ausente, vazio nem divergente.
+      if (input.retainRemainingAsSaturation) {
+        if (!input.expectedMemberProductIds || input.expectedMemberProductIds.length === 0) {
+          throw new Error("curation_group_members_changed");
+        }
+      }
+
+      if (input.expectedMemberProductIds) {
+        if (input.expectedMemberProductIds.length === 0 && input.retainRemainingAsSaturation) {
+          throw new Error("curation_group_members_changed");
+        }
+        if (input.expectedMemberProductIds.length > 0) {
+          const expectedSet = new Set(input.expectedMemberProductIds);
+          if (
+            input.expectedMemberProductIds.length !== expectedSet.size ||
+            memberIdSet.size !== expectedSet.size ||
+            !input.expectedMemberProductIds.every((id) => memberIdSet.has(id))
+          ) {
+            throw new Error("curation_group_members_changed");
+          }
+        }
+      }
 
       for (const id of input.selectedProductIds) {
         if (!memberIdSet.has(id)) {
@@ -1036,7 +878,7 @@ export async function actOnGroup(
               decision: "hold",
               status: "held",
               reasonCode: "family_saturation",
-              reasonDetail: null,
+              reasonDetail: input.saturationJustification ?? null,
             });
           }
         }
@@ -1073,10 +915,7 @@ export async function actOnGroup(
         affectedCount: results.length,
         results,
       };
-    });
-  } finally {
-    await sql.end();
-  }
+    }, sqlFactory);
 }
 
 /**
@@ -1087,12 +926,11 @@ export async function actOnGroup(
 export async function undoBulkReview(
   bulkActionId: string,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<boolean> {
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
-      const events = await tx<{
+  return await withTenantDb(tenantId, async (tx) => {
+    const events = await tx<{
         id: string;
         product_id: string;
         from_status: CurationStatus | null;
@@ -1194,19 +1032,16 @@ export async function undoBulkReview(
 
       return true;
     });
-  } finally {
-    await sql.end();
-  }
 }
 
 /** "Depois": adia o produto até a data, sem mudar o status editorial. */
 export async function deferReview(
   deferral: ValidCurationDeferral,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<boolean> {
-  const sql = db();
-  try {
+  return await withTenantDb(tenantId, async (sql) => {
     const updated = await sql<{ product_id: string }[]>`
       update garimpa.product_curation
       set deferred_until = ${new Date(deferral.deferredUntil)},
@@ -1217,19 +1052,17 @@ export async function deferReview(
       returning product_id
     `;
     return updated.length > 0;
-  } finally {
-    await sql.end();
-  }
+  }, sqlFactory);
 }
 
 /** Desfaz o adiamento (volta para a fila imediatamente). */
 export async function clearDeferredReview(
   productId: string,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<boolean> {
-  const sql = db();
-  try {
+  return await withTenantDb(tenantId, async (sql) => {
     const updated = await sql<{ product_id: string }[]>`
       update garimpa.product_curation
       set deferred_until = null,
@@ -1240,28 +1073,7 @@ export async function clearDeferredReview(
       returning product_id
     `;
     return updated.length > 0;
-  } finally {
-    await sql.end();
-  }
-}
-
-export function reasonLabel(reason: CurationReason): string {
-  const labels: Record<CurationReason, string> = {
-    adult_sexual: "Adulto/sexual",
-    misleading_claim: "Promessa enganosa",
-    low_utility: "Pouca utilidade",
-    unsafe_restricted: "Inseguro ou restrito",
-    audience_mismatch: "Fora do público",
-    low_quality_listing: "Anúncio ruim",
-    duplicate: "Duplicado",
-    insufficient_evidence: "Falta evidência",
-    weak_offer: "Oferta fraca",
-    stale_offer: "Preço desatualizado",
-    unavailable: "Indisponível",
-    family_saturation: "Saturação de família",
-    other: "Outro",
-  };
-  return labels[reason];
+  }, sqlFactory);
 }
 
 export interface TriageApplicationSummary {
@@ -1275,22 +1087,34 @@ export interface TriageApplicationSummary {
 
 export async function applyAutomatedTriageDecisions(
   decisions: TriageDecision[],
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   triageRunId?: string,
+  sqlFactory: typeof db = db,
+  captureBatch?: { id: string; workerId: string },
 ): Promise<TriageApplicationSummary> {
   if (decisions.length === 0) {
     return { processed: 0, approved: 0, rejected: 0, held: 0, annotatedPending: 0, triageRunId };
   }
 
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
+  return await withTenantDb(tenantId, async (tx) => {
+      if (captureBatch) {
+        const owners = await tx`select id from garimpa.capture_batch
+          where id=${captureBatch.id} and tenant_id=${tenantId} and status='running'
+            and metadata->'execution'->>'workerId'=${captureBatch.workerId}
+            and (metadata->'execution'->>'deadline')::timestamptz>now() for update`;
+        if (owners.length !== 1) throw new Error("capture_batch_ownership_lost");
+      }
       let approved = 0;
       let rejected = 0;
       let held = 0;
       let annotatedPending = 0;
 
       for (const d of decisions) {
+        // Ingestão atualiza o produto antes de inserir/alterar a observação.
+        // Compartilhar esse lock preserva a evidência até o commit da decisão.
+        if (d.inputVersion) await tx`
+          select id from garimpa.product where tenant_id=${tenantId} and id=${d.productId} for update
+        `;
         const currentRows = await tx<StoredCurationState[]>`
           select status, reason_code as "reasonCode", reason_detail as "reasonDetail",
                  deferred_until as "deferredUntil"
@@ -1305,13 +1129,14 @@ export async function applyAutomatedTriageDecisions(
         if (current.status === "approved" || current.status === "rejected") {
           continue;
         }
+        if (d.inputVersion && !await triageInputStillCurrent(tx, tenantId, d.productId, d.inputVersion)) continue;
 
         const facts = await queueFacts(tx as TxLike, tenantId, d.productId);
         if (!facts) continue;
 
         const snapshotMetadata = buildSnapshotMetadata(toSnapshotFacts(facts), {
           via: "review",
-          policyVersion: "ai-triage-v1",
+          policyVersion: "ai-triage-v2",
         });
 
         const automationMetadata = {
@@ -1322,10 +1147,12 @@ export async function applyAutomatedTriageDecisions(
             aiScore: d.aiScore,
             aiJustification: d.aiJustification,
             editorialCategory: d.editorialCategory,
+            pricePolicy: d.pricePolicy,
+            inputVersion: d.inputVersion,
           },
         };
 
-        if (d.status !== "pending") {
+        if (d.status !== "pending" || current.status !== "pending") {
           await tx`
             update garimpa.product_curation
             set status = ${d.status},
@@ -1339,9 +1166,8 @@ export async function applyAutomatedTriageDecisions(
           if (d.status === "approved") approved++;
           if (d.status === "rejected") rejected++;
           if (d.status === "held") held++;
-        } else {
-          annotatedPending++;
         }
+        if (d.status === "pending") annotatedPending++;
 
         await tx`
           insert into garimpa.curation_event
@@ -1351,7 +1177,7 @@ export async function applyAutomatedTriageDecisions(
           values (${tenantId}, ${d.productId}, ${current.status}, ${d.status},
                   ${d.reasonCode}, ${d.reasonDetail},
                   ${current.reasonCode}, ${current.reasonDetail}, ${current.deferredUntil},
-                  ${d.actorType}, null, 'ai-triage-v1', ${tx.json(automationMetadata)},
+                  ${d.actorType}, null, 'ai-triage-v2', ${tx.json(automationMetadata)},
                   ${triageRunId ?? null})
         `;
       }
@@ -1364,41 +1190,38 @@ export async function applyAutomatedTriageDecisions(
         annotatedPending,
         triageRunId,
       };
-    });
-  } finally {
-    await sql.end();
-  }
+    }, sqlFactory);
+}
+
+export async function automatedTriageAvailability(tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<number> {
+  return await withTenantDb(tenantId, async (sql) => {
+    return (await loadAutomatedTriageCandidates(sql, tenantId, 100)).length;
+  }, sqlFactory);
 }
 
 export async function runPendingAutomatedTriage(
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   limit = 50,
-  options?: PipelineOptions,
+  options?: PipelineOptions & { captureBatch?: { id: string; workerId: string } },
+  sqlFactory: typeof db = db,
 ): Promise<TriageApplicationSummary> {
-  const sql = db();
-  let candidateRows: CurationQueueRow[];
+  let candidates: CandidateProduct[];
   try {
-    candidateRows = await sql<CurationQueueRow[]>`
-      select ${sql.unsafe(QUEUE_FACTS_COLUMNS)}
-      from garimpa.curation_queue_facts f
-      where f.tenant_id = ${tenantId}
-        and f.status = 'pending'
-        and (f.deferred_until is null or f.deferred_until <= now())
-        and f.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
-        and not exists (
-          select 1 from garimpa.curation_event e
-          where e.tenant_id = f.tenant_id
-            and e.product_id = f.id
-            and e.actor_type in ('rule', 'llm')
-        )
-      order by case when f.price_cents >= 2000 then 0 else 1 end, f.queued_at asc, f.id asc
-      limit ${Math.min(Math.max(limit, 1), 200)}
-    `;
-  } finally {
-    await sql.end();
+    candidates = await withTenantDb(tenantId, async (sql) => {
+      if (options?.captureBatch) {
+        const owners = await sql`select id from garimpa.capture_batch
+          where id=${options.captureBatch.id} and tenant_id=${tenantId} and status='running'
+            and metadata->'execution'->>'workerId'=${options.captureBatch.workerId}
+            and (metadata->'execution'->>'deadline')::timestamptz>now()`;
+        if (owners.length !== 1) throw new Error("capture_batch_ownership_lost");
+      }
+      return await loadAutomatedTriageCandidates(sql, tenantId, limit, options?.minPriceCents, options?.captureBatch?.id);
+    }, sqlFactory);
+  } catch (err) {
+    throw err;
   }
 
-  if (candidateRows.length === 0) {
+  if (candidates.length === 0) {
     return { processed: 0, approved: 0, rejected: 0, held: 0, annotatedPending: 0 };
   }
 
@@ -1406,17 +1229,6 @@ export async function runPendingAutomatedTriage(
     getEditorialGuideline(tenantId),
     getGoldenExamples(tenantId, 6),
   ]);
-
-  const candidates: CandidateProduct[] = candidateRows.map((r) => ({
-    id: r.id,
-    marketplace: r.marketplace,
-    title: r.title,
-    priceCents: r.priceCents,
-    ratingStar: r.ratingStar,
-    salesCount: r.salesCount,
-    familyKey: r.familyKey,
-    category: r.category,
-  }));
 
   const mergedOptions: PipelineOptions = {
     ...options,
@@ -1426,20 +1238,23 @@ export async function runPendingAutomatedTriage(
     fewShotExamples: options?.fewShotExamples ?? goldenExamples,
   };
 
-  const sqlRun = db();
   let triageRunId: string | undefined;
   try {
-    const [inserted] = await sqlRun<{ id: string }[]>`
-      insert into garimpa.triage_run (tenant_id, status, total_input, model_name, pipeline_version)
-      values (
-        ${tenantId},
-        'running',
-        ${candidates.length},
-        ${process.env.GEMINI_MODEL ?? "gemini-2.5-flash"},
-        'curation-pipeline-v2'
-      )
-      returning id
-    `;
+    const inserted = await withTenantDb(tenantId, async (sqlRun) => {
+      const [row] = await sqlRun<{ id: string }[]>`
+        insert into garimpa.triage_run (tenant_id, status, total_input, model_name, pipeline_version, metadata)
+        values (
+          ${tenantId},
+          'running',
+          ${candidates.length},
+          ${process.env.GEMINI_MODEL ?? "gemini-2.5-flash"},
+          'curation-pipeline-v3',
+          ${sqlRun.json({ captureBatchId: options?.captureBatch?.id ?? null })}
+        )
+        returning id
+      `;
+      return row;
+    }, sqlFactory);
     triageRunId = inserted?.id;
   } catch (err) {
     if (typeof err === "object" && err !== null && "code" in err && err.code === "23505") {
@@ -1447,51 +1262,48 @@ export async function runPendingAutomatedTriage(
     }
     console.error("[triage] Falha ao registrar início de triage_run:", err);
     throw err;
-  } finally {
-    await sqlRun.end();
   }
 
   try {
     const decisions = await processIngestionPipeline(candidates, mergedOptions);
-    const summary = await applyAutomatedTriageDecisions(decisions, tenantId, triageRunId);
+    const summary = await applyAutomatedTriageDecisions(decisions, tenantId, triageRunId, sqlFactory, options?.captureBatch);
 
     if (triageRunId) {
-      const sqlUpdate = db();
       try {
-        await sqlUpdate`
-          update garimpa.triage_run
-          set status = 'ok',
-              finished_at = now(),
-              total_input = ${summary.processed},
-              approved_count = ${summary.approved},
-              held_count = ${summary.held},
-              rejected_count = ${summary.rejected},
-              annotated_count = ${summary.annotatedPending}
-          where id = ${triageRunId}
-        `;
+        await withTenantDb(tenantId, async (sqlUpdate) => {
+          await sqlUpdate`
+            update garimpa.triage_run
+            set status = 'ok',
+                finished_at = now(),
+                total_input = ${summary.processed},
+                approved_count = ${summary.approved},
+                held_count = ${summary.held},
+                rejected_count = ${summary.rejected},
+                annotated_count = ${summary.annotatedPending}
+            where id = ${triageRunId} and tenant_id = ${tenantId}
+          `;
+        }, sqlFactory);
       } catch (err) {
         console.error("[triage] Falha ao atualizar conclusão de triage_run:", err);
-      } finally {
-        await sqlUpdate.end();
+        throw new Error("triage_run_finalize_failed");
       }
     }
 
     return { ...summary, triageRunId };
   } catch (err) {
     if (triageRunId) {
-      const sqlErr = db();
       try {
-        await sqlErr`
-          update garimpa.triage_run
-          set status = 'error',
-              finished_at = now(),
-              error_message = ${err instanceof Error ? err.message : String(err)}
-          where id = ${triageRunId}
-        `;
+        await withTenantDb(tenantId, async (sqlErr) => {
+          await sqlErr`
+            update garimpa.triage_run
+            set status = 'error',
+                finished_at = now(),
+                error_message = ${err instanceof Error ? err.message : String(err)}
+            where id = ${triageRunId} and tenant_id = ${tenantId}
+          `;
+        }, sqlFactory);
       } catch {
         // ignore
-      } finally {
-        await sqlErr.end();
       }
     }
     throw err;
@@ -1518,88 +1330,88 @@ export interface ApprovedVitrineProduct {
 }
 
 export async function getApprovedVitrineProducts(
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   limit = 60,
+  sqlFactory: typeof db = db,
 ): Promise<ApprovedVitrineProduct[]> {
   if (!process.env.DATABASE_URL) return [];
 
-  const sql = db();
-  try {
-    const rows = await sql<{
-      id: string;
-      marketplace: string;
-      external_id: string;
-      title: string;
-      image_url: string | null;
-      product_url: string;
-      category: string | null;
-      price_cents: number;
-      original_price_cents: number | null;
-      rating_star: number | null;
-      sales_count: number | null;
-      reviewed_at: Date | string | null;
-      reason_code: string | null;
-      reason_detail: string | null;
-      actor_type: string | null;
-    }[]>`
-      select
-        p.id,
-        p.marketplace,
-        p.external_id,
-        p.title,
-        p.image_url,
-        p.product_url,
-        p.category,
-        coalesce(latest.price_cents, 0)::int as price_cents,
-        latest.original_price_cents,
-        latest.rating_star,
-        latest.sales_count,
-        pc.reviewed_at,
-        pc.reason_code,
-        pc.reason_detail,
-        last_ev.actor_type
-      from garimpa.product_curation pc
-      join garimpa.product p on p.id = pc.product_id and p.tenant_id = pc.tenant_id
-      left join lateral (
-        select price_cents, original_price_cents, rating_star, sales_count
-        from garimpa.price_observation obs
-        where obs.product_id = p.id and obs.tenant_id = p.tenant_id
-        order by observed_at desc limit 1
-      ) latest on true
-      left join lateral (
-        select actor_type
-        from garimpa.curation_event ev
-        where ev.product_id = p.id and ev.tenant_id = pc.tenant_id
-        order by ev.id desc limit 1
-      ) last_ev on true
-      where pc.tenant_id = ${tenantId}
-        and pc.status = 'approved'
-        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
-      order by pc.reviewed_at desc nulls last, p.last_seen_at desc
-      limit ${Math.min(Math.max(limit, 1), 100)}
-    `;
+  return await withTenantDb(tenantId, async (sql) => {
+    try {
+      const rows = await sql<{
+        id: string;
+        marketplace: string;
+        external_id: string;
+        title: string;
+        image_url: string | null;
+        product_url: string;
+        category: string | null;
+        price_cents: number;
+        original_price_cents: number | null;
+        rating_star: number | null;
+        sales_count: number | null;
+        reviewed_at: Date | string | null;
+        reason_code: string | null;
+        reason_detail: string | null;
+        actor_type: string | null;
+      }[]>`
+        select
+          p.id,
+          p.marketplace,
+          p.external_id,
+          p.title,
+          p.image_url,
+          p.product_url,
+          p.category,
+          coalesce(latest.price_cents, 0)::int as price_cents,
+          latest.original_price_cents,
+          latest.rating_star,
+          latest.sales_count,
+          pc.reviewed_at,
+          pc.reason_code,
+          pc.reason_detail,
+          last_ev.actor_type
+        from garimpa.product_curation pc
+        join garimpa.product p on p.id = pc.product_id and p.tenant_id = pc.tenant_id
+        left join lateral (
+          select price_cents, original_price_cents, rating_star, sales_count
+          from garimpa.price_observation obs
+          where obs.product_id = p.id and obs.tenant_id = p.tenant_id
+          order by observed_at desc limit 1
+        ) latest on true
+        left join lateral (
+          select actor_type
+          from garimpa.curation_event ev
+          where ev.product_id = p.id and ev.tenant_id = pc.tenant_id
+          order by ev.id desc limit 1
+        ) last_ev on true
+        where pc.tenant_id = ${tenantId}
+          and pc.status = 'approved'
+          and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
+        order by pc.reviewed_at desc nulls last, p.last_seen_at desc
+        limit ${Math.min(Math.max(limit, 1), 100)}
+      `;
 
-    return rows.map((r) => ({
-      id: r.id,
-      marketplace: r.marketplace,
-      externalId: r.external_id,
-      slug: productSlug(r.marketplace, r.external_id),
-      title: r.title,
-      imageUrl: r.image_url,
-      productUrl: r.product_url,
-      priceCents: r.price_cents,
-      originalPriceCents: r.original_price_cents,
-      ratingStar: r.rating_star,
-      salesCount: r.sales_count,
-      category: r.category,
-      reviewedAt: r.reviewed_at ? new Date(r.reviewed_at).toISOString() : null,
-      reasonCode: r.reason_code,
-      reasonDetail: r.reason_detail,
-      actorType: r.actor_type,
-    }));
-  } catch {
-    return [];
-  } finally {
-    await sql.end();
-  }
+      return rows.map((r) => ({
+        id: r.id,
+        marketplace: r.marketplace,
+        externalId: r.external_id,
+        slug: productSlug(r.marketplace, r.external_id),
+        title: r.title,
+        imageUrl: r.image_url,
+        productUrl: r.product_url,
+        priceCents: r.price_cents,
+        originalPriceCents: r.original_price_cents,
+        ratingStar: r.rating_star,
+        salesCount: r.sales_count,
+        category: r.category,
+        reviewedAt: r.reviewed_at ? new Date(r.reviewed_at).toISOString() : null,
+        reasonCode: r.reason_code,
+        reasonDetail: r.reason_detail,
+        actorType: r.actor_type,
+      }));
+    } catch {
+      return [];
+    }
+  }, sqlFactory);
 }

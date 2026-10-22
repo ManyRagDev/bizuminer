@@ -1,0 +1,57 @@
+name: Capturar ofertas e triar lote
+run-name: Captura ${{ inputs.batch_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_id:
+        description: Lote persistido pelo painel administrativo
+        required: true
+        type: string
+
+      account_tenant:
+        description: Conta do lote persistido (validada pelo worker)
+        required: true
+        default: local
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capture-batch-${{ inputs.batch_id }}
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      NODE_ENV: production
+      AFFILIATE_SECRETS_MASTER_KEY: ${{ secrets.AFFILIATE_SECRETS_MASTER_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SHOPEE_CAPTURE_ENABLED: ${{ vars.SHOPEE_CAPTURE_ENABLED }}
+      SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
+      SHOPEE_APP_SECRET: ${{ secrets.SHOPEE_APP_SECRET }}
+      ALIEXPRESS_CAPTURE_ENABLED: ${{ vars.ALIEXPRESS_CAPTURE_ENABLED }}
+      ALIEXPRESS_APP_KEY: ${{ secrets.ALIEXPRESS_APP_KEY }}
+      ALIEXPRESS_APP_SECRET: ${{ secrets.ALIEXPRESS_APP_SECRET }}
+      ALIEXPRESS_TRACKING_ID: ${{ secrets.ALIEXPRESS_TRACKING_ID }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            packages/persistence/package-lock.json
+            packages/web/package-lock.json
+      - run: npm ci --prefix packages/persistence
+      - run: npm ci --prefix packages/web
+      - name: Executar captura e triagem persistidas
+        env:
+          CAPTURE_ACCOUNT_TENANT: ${{ inputs.account_tenant }}
+          CAPTURE_BATCH_ID: ${{ inputs.batch_id }}
+        run: node --experimental-strip-types packages/web/bin/run-capture-batch.ts --batch "$CAPTURE_BATCH_ID" --tenant "$CAPTURE_ACCOUNT_TENANT"

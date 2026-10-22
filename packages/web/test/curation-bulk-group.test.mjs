@@ -62,15 +62,17 @@ test("M4-E Contrato: formatDecisionLoad formata textos singulares e plurais corr
   );
 });
 
-test("M4-E Contrato: validateGroupAction valida payload e impede duplicatas e dados inválidos", () => {
+test("M4-E Contrato: validateGroupAction valida payload e impede duplicatas e dados inválidos (BUG-019)", () => {
   const canonicalGroupId = editorialGroupIdFor("local", family.key, family.method, family.version);
 
-  // Válido com combo (aprovar selecionados + reter demais)
+  // Válido com combo (aprovar selecionados + reter demais com justificativa humana)
   const validCombo = validateGroupAction({
     groupId: canonicalGroupId,
     selectedProductIds: ["prod_001", "prod_002"],
     action: "approve",
     retainRemainingAsSaturation: true,
+    saturationJustification: "Saturação de modelos idênticos da família de manoplas",
+    expectedMemberProductIds: ["prod_001", "prod_002", "prod_003"],
     reviewSessionId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   });
   assert.equal(validCombo.ok, true);
@@ -78,7 +80,41 @@ test("M4-E Contrato: validateGroupAction valida payload e impede duplicatas e da
     assert.equal(validCombo.value.groupId, canonicalGroupId);
     assert.deepEqual(validCombo.value.selectedProductIds, ["prod_001", "prod_002"]);
     assert.equal(validCombo.value.retainRemainingAsSaturation, true);
+    assert.equal(validCombo.value.saturationJustification, "Saturação de modelos idênticos da família de manoplas");
+    assert.deepEqual(validCombo.value.expectedMemberProductIds, ["prod_001", "prod_002", "prod_003"]);
   }
+
+  // BUG-019: Falha com retainRemainingAsSaturation sem justificativa humana
+  const noJustification = validateGroupAction({
+    groupId: canonicalGroupId,
+    selectedProductIds: ["prod_001"],
+    action: "approve",
+    retainRemainingAsSaturation: true,
+  });
+  assert.equal(noJustification.ok, false);
+  assert.equal(noJustification.error, "saturation_justification_invalid");
+
+  // BUG-019 / AC-035.1: Falha com retainRemainingAsSaturation com justificativa mas sem expectedMemberProductIds
+  const noMembers = validateGroupAction({
+    groupId: canonicalGroupId,
+    selectedProductIds: ["prod_001"],
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "Justificativa editorial válida",
+  });
+  assert.equal(noMembers.ok, false);
+  assert.equal(noMembers.error, "expected_members_required");
+
+  // BUG-019: Falha com retainRemainingAsSaturation com justificativa em branco ou curta demais
+  const blankJustification = validateGroupAction({
+    groupId: canonicalGroupId,
+    selectedProductIds: ["prod_001"],
+    action: "approve",
+    retainRemainingAsSaturation: true,
+    saturationJustification: "  ok  ",
+  });
+  assert.equal(blankJustification.ok, false);
+  assert.equal(blankJustification.error, "saturation_justification_invalid");
 
   // Falha: groupId vazio
   const emptyGroup = validateGroupAction({

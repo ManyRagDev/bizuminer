@@ -21,5 +21,14 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pauta de Links",
+      "short_name": "Pauta",
+      "description": "Acesso direto à pauta de links reduzidos para envio rápido",
+      "url": "/pauta",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
   ]
 }

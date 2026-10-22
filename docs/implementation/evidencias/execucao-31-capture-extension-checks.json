@@ -1,0 +1,30 @@
+[
+  {
+    "package": "capture",
+    "script": "test",
+    "exitCode": 0,
+    "log": "docs/implementation/evidencias/execucao-31-capture-test.log",
+    "seconds": 4.27
+  },
+  {
+    "package": "capture",
+    "script": "typecheck",
+    "exitCode": 0,
+    "log": "docs/implementation/evidencias/execucao-31-capture-typecheck.log",
+    "seconds": 1.02
+  },
+  {
+    "package": "extension",
+    "script": "test",
+    "exitCode": 0,
+    "log": "docs/implementation/evidencias/execucao-31-extension-test.log",
+    "seconds": 0.26
+  },
+  {
+    "package": "extension",
+    "script": "typecheck",
+    "exitCode": 0,
+    "log": "docs/implementation/evidencias/execucao-31-extension-typecheck.log",
+    "seconds": 0.92
+  }
+]

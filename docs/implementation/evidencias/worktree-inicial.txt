@@ -1,0 +1,115 @@
+ M archive/site
+ M docs/tecnico/mercadolivre-engenharia-reversa.md
+ M packages/capture/src/adapters/mercadolivre/deals.ts
+ M packages/capture/test/deals.test.ts
+ M packages/extension/manifest.json
+ M packages/extension/package-lock.json
+ M packages/extension/package.json
+ M packages/extension/scripts/package.mjs
+ M packages/extension/src/background/service-worker.ts
+ M packages/extension/src/lib/storage.ts
+ M packages/extension/src/popup/index.html
+ M packages/extension/src/popup/popup.css
+ M packages/extension/src/popup/popup.ts
+ M packages/persistence/bin/monitor-prices.ts
+ M packages/persistence/bin/sweep.ts
+ M packages/persistence/package.json
+ M packages/persistence/src/monitoring-candidates.ts
+ M packages/persistence/src/pg-store.ts
+ M packages/persistence/test/monitoring-policy.test.ts
+ M packages/web/app/_components/admin-shell.tsx
+ M packages/web/app/admin/admin-panel.tsx
+ M packages/web/app/admin/batch-capture-panel.tsx
+ M packages/web/app/admin/curadoria/actions.ts
+ M packages/web/app/admin/curadoria/curation-reviewer.tsx
+ M packages/web/app/admin/curadoria/group-reviewer.tsx
+ D packages/web/app/admin/curadoria/held-queue-view.tsx
+ D packages/web/app/admin/curadoria/learnings-view.tsx
+ M packages/web/app/admin/curadoria/page.tsx
+ M packages/web/app/admin/curadoria/spot-check-view.tsx
+ M packages/web/app/admin/direcionamento/actions.ts
+ D packages/web/app/admin/direcionamento/cockpit-operacional.tsx
+ M packages/web/app/admin/direcionamento/pipeline-view.tsx
+ D packages/web/app/admin/emergency-approval.tsx
+ M packages/web/app/admin/layout.tsx
+ M packages/web/app/admin/page.tsx
+ M packages/web/app/admin/today-command-center.tsx
+ M packages/web/app/api/admin/rodagem/[marketplace]/route.ts
+ M packages/web/app/api/admin/rodagem/lote/route.ts
+ M packages/web/app/api/admin/rodagem/route.ts
+ M packages/web/app/globals.css
+ M packages/web/bin/run-triage.ts
+ M packages/web/lib/admin-db.ts
+ M packages/web/lib/admin-query-aliases.ts
+ M packages/web/lib/ai-curation-contract.ts
+ M packages/web/lib/ai-curation-service.ts
+ M packages/web/lib/curation-db.ts
+ M packages/web/lib/curation-pipeline.ts
+ M packages/web/lib/editorial-compass.ts
+ M packages/web/lib/extension-cors.ts
+ M packages/web/lib/extension-db.ts
+ M packages/web/test/admin-query-aliases.test.mjs
+ M packages/web/test/ai-curation.test.mjs
+ M packages/web/test/curation-benchmark.test.mjs
+ M packages/web/test/editorial-compass.test.mjs
+ M packages/web/test/fixtures/curation-benchmark-dataset.json
+ M tools/editorial-tests/README.md
+ M tools/editorial-tests/package.json
+?? .github/workflows/capture-offers.yml
+?? "Marketing BizuMiner 2026-2027/"
+?? docs/auditoria-comercial/
+?? docs/implementation/
+?? docs/tecnico/avaliacao-triagem-fluxos-2026-10-10.md
+?? docs/tecnico/evidencias-captura-navegador-2026-10-10.jpg
+?? docs/tecnico/evidencias-captura-navegador-2026-10-10.json
+?? docs/tecnico/evidencias-cards-mercadolivre-2026-10-10.html
+?? docs/tecnico/evidencias-correcao-piso-2026-10-10.json
+?? docs/tecnico/evidencias-diagnostico-mercadolivre-2026-10-10.json
+?? docs/tecnico/evidencias-erro-mercadolivre-2026-10-10-1750.json
+?? docs/tecnico/evidencias-estabilizacao-captura-2026-10-10.json
+?? docs/tecnico/evidencias-gatilho-verificacao-ml-2026-10-10.json
+?? docs/tecnico/evidencias-guia-captura-2026-10-10.jpg
+?? docs/tecnico/evidencias-retomada-automacao-ml-2026-10-10.json
+?? docs/tecnico/evidencias-selecao-compartilhada-2026-10-10.json
+?? docs/tecnico/evidencias-triagem-fluxos-2026-10-10.json
+?? packages/capture/bin/diagnose-ml-verification.mjs
+?? packages/capture/bin/probe-ml-deals.ts
+?? packages/extension/release/bizuminer-extension-v0.2.0/
+?? packages/extension/src/content/page-extractor.ts
+?? packages/extension/test/page-extractor.test.ts
+?? packages/persistence/bin/cleanup-lifecycle.ts
+?? packages/persistence/bin/purge-catalog.ts
+?? packages/web/app/admin/curadoria/published-selection.tsx
+?? packages/web/app/admin/curadoria/triage-control.tsx
+?? packages/web/app/admin/direcionamento/execution-history.tsx
+?? packages/web/app/admin/marketing/
+?? packages/web/app/api/admin/marketing/
+?? packages/web/app/api/admin/rodagem/navegador/
+?? packages/web/app/api/extension/capture-batches/
+?? packages/web/bin/inspect-triage-flows.mjs
+?? packages/web/bin/inspect-triage-value.mjs
+?? packages/web/bin/reconcile-capture-batches.ts
+?? packages/web/bin/run-capture-batch.ts
+?? packages/web/lib/browser-capture-bookmarklet.ts
+?? packages/web/lib/browser-capture-contract.ts
+?? packages/web/lib/browser-capture-db.ts
+?? packages/web/lib/capture-batch-db.ts
+?? packages/web/lib/capture-batch-worker.ts
+?? packages/web/lib/capture-dispatch.ts
+?? packages/web/lib/capture-process.ts
+?? packages/web/lib/curation-workflow.ts
+?? packages/web/lib/marketing-contract.ts
+?? packages/web/lib/marketing-moves.ts
+?? packages/web/lib/marketing-seed.ts
+?? packages/web/lib/marketing-storage-core.ts
+?? packages/web/lib/marketing-store.ts
+?? packages/web/lib/triage-candidates-db.ts
+?? packages/web/lib/triage-value-policy.ts
+?? packages/web/test/browser-capture.test.mjs
+?? packages/web/test/capture-process.test.mjs
+?? packages/web/test/curation-workflow.test.mjs
+?? packages/web/test/marketing-moves.test.mjs
+?? packages/web/test/marketing.test.mjs
+?? packages/web/test/triage-value.test.mjs
+?? tools/editorial-tests/capture-batch.test.ts
+?? tools/editorial-tests/triage-price.test.ts

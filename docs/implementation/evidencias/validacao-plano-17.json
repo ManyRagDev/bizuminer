@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-14",
+  "mode": "Planejamento, sem implementacao ou testes funcionais nesta rodada",
+  "head": "43700c59f4e24f68f3a2e32c20ee5147fa4816cd",
+  "basis": "docs/implementation/16-CONFERENCIA-D00-D14-PONTOS-A-CORRIGIR.md",
+  "plan": "docs/implementation/17-PLANO-SEQUENCIAL-DE-CORRECAO-CF01-CF18.md",
+  "planSha256": "a3f7e4a9c25c1ce13aa8b85b26a38561c966c12583e4c5bce5b4890284532c55",
+  "checklist": "docs/implementation/17-CHECKLIST-DE-EXECUCAO.md",
+  "checklistSha256": "7befd76c98fe014393951311d400b3edc37d4a5a3834c7d5ea51466ed12fbe74",
+  "checks": {
+    "sevenSkillSections": true,
+    "fifteenSequentialDeliveries": true,
+    "allFindingsMapped": true,
+    "allFindingsPendingInChecklist": true,
+    "allDeliveriesPendingInChecklist": true,
+    "linksExist": true,
+    "twentyThreeExistingCommands": true,
+    "orderedDependenciesAcyclic": true,
+    "functionalSourcesUnchanged": true,
+    "allCF17IntegrationsIncluded": true
+  },
+  "findingOwners": {
+    "CF-01": "R02",
+    "CF-02": "R01",
+    "CF-03": "R01",
+    "CF-04": "R04",
+    "CF-05": "R04",
+    "CF-06": "R05",
+    "CF-07": "R09",
+    "CF-08": "R08",
+    "CF-09": "R08",
+    "CF-10": "R08",
+    "CF-11": "R10",
+    "CF-12": "R10",
+    "CF-13": "R02",
+    "CF-14": "R00",
+    "CF-15": "R03",
+    "CF-16": "R11",
+    "CF-17": "R11",
+    "CF-18": "R14"
+  },
+  "dependencies": {
+    "R00": [],
+    "R01": [
+      "R00"
+    ],
+    "R02": [
+      "R01"
+    ],
+    "R03": [
+      "R02"
+    ],
+    "R04": [
+      "R01",
+      "R02",
+      "R03"
+    ],
+    "R05": [
+      "R04"
+    ],
+    "R06": [
+      "R04",
+      "R05"
+    ],
+    "R07": [
+      "R06"
+    ],
+    "R08": [
+      "R02",
+      "R03",
+      "R07"
+    ],
+    "R09": [
+      "R04",
+      "R05",
+      "R06",
+      "R07",
+      "R08"
+    ],
+    "R10": [
+      "R03",
+      "R07"
+    ],
+    "R11": [
+      "R02",
+      "R03",
+      "R04",
+      "R05",
+      "R06",
+      "R07",
+      "R08",
+      "R09",
+      "R10"
+    ],
+    "R12": [
+      "R00",
+      "R01",
+      "R02",
+      "R03",
+      "R04",
+      "R05",
+      "R06",
+      "R07",
+      "R08",
+      "R09",
+      "R10",
+      "R11"
+    ],
+    "R13": [
+      "R12"
+    ],
+    "R14": [
+      "R12"
+    ]
+  },
+  "conditionalDependencies": {
+    "R14": [
+      "R13 para declarar homologacao"
+    ]
+  },
+  "commands": [
+    {
+      "command": "npm test --prefix packages/web",
+      "scriptExists": true
+    },
+    {
+      "command": "npm test --prefix packages/capture",
+      "scriptExists": true
+    },
+    {
+      "command": "npm test --prefix packages/persistence",
+      "scriptExists": true
+    },
+    {
+      "command": "npm test --prefix packages/extension",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/web -- --incremental false",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/capture -- --incremental false",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/persistence -- --incremental false",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run typecheck --prefix packages/extension -- --incremental false",
+      "scriptExists": true
+    },
+    {
+      "command": "npm test --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:triage-price --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:capture-batch --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:commercial --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:regressions --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:entitlement --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:price-evidence --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:rubric --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:opportunity --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:cockpit --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:financial --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:experiment --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:dispatch --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run test:onboarding --prefix tools/editorial-tests",
+      "scriptExists": true
+    },
+    {
+      "command": "npm run build --prefix packages/web",
+      "scriptExists": true
+    }
+  ],
+  "sourcesCompared": 501,
+  "functionalFilesChanged": [],
+  "missingLinks": [],
+  "artifactsChanged": [
+    "docs/implementation/17-PLANO-SEQUENCIAL-DE-CORRECAO-CF01-CF18.md",
+    "docs/implementation/17-CHECKLIST-DE-EXECUCAO.md",
+    "docs/implementation/README.md",
+    "docs/implementation/evidencias/validacao-plano-17.json"
+  ]
+}

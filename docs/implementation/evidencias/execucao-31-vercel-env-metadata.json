@@ -1,0 +1,332 @@
+{
+  "at": "2026-10-16T02:02:47.989Z",
+  "source": "authenticated Vercel MCP; read-only; no environment values decrypted",
+  "projectId": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+  "teamId": "team_CdqNeIvhoe03YClNYUpP6C1w",
+  "decrypt": false,
+  "hiddenProductionEnvCount": 0,
+  "envs": [
+    {
+      "key": "GITHUB_ACTIONS_WRITE_TOKEN",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "ML_AUTOMATED_CAPTURE_PRODUCTION",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "ML_AUTOMATED_CAPTURE_ENABLED",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "SUPABASE_PUBLISHABLE_KEY",
+      "target": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive",
+      "customEnvironmentIds": []
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "target": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive",
+      "customEnvironmentIds": []
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "target": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive",
+      "customEnvironmentIds": []
+    },
+    {
+      "key": "ADMIN_EMAIL",
+      "target": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive",
+      "customEnvironmentIds": []
+    },
+    {
+      "key": "NEXT_PUBLIC_SITE_URL",
+      "target": [
+        "preview",
+        "production"
+      ],
+      "type": "encrypted",
+      "customEnvironmentIds": []
+    },
+    {
+      "key": "GEMINI_API_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "PORT",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "JWT_SECRET",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "SCREENSHOT_SERVICE_URL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "DATABASE_URL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "ML_TRACKING_ID",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "ML_TOOL_ID",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "VITE_SUPABASE_URL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "VITE_SUPABASE_ANON_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "SUPABASE_ANON_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "POLLINATIONS_API_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "GOOGLE_API_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "GROQ_API_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "SUPABASE_URL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "SUPABASE_SERVICE_ROLE_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_SECRET_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_WEBHOOK_SECRET",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_PRICE_PRO_MONTHLY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_PRICE_PRO_ANNUAL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_PRICE_AGENCY_MONTHLY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_PRICE_AGENCY_ANNUAL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_PRICE_TOPUP_STARTER",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_PRICE_TOPUP_POWER",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "STRIPE_PRICE_TOPUP_MEGA",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "OPENROUTER_API_KEY",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "OPENROUTER_SITE_URL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "OPENROUTER_APP_NAME",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "OPENROUTER_TEXT_MODEL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "OPENROUTER_VISION_MODEL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "OPENROUTER_IMAGE_MODEL",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "OPENROUTER_PLATFORM_FEE_PERCENT",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "AI_GRAPH_SHADOW",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    }
+  ]
+}

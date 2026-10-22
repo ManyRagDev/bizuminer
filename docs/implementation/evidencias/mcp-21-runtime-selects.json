@@ -1,0 +1,22 @@
+{
+  "connection": "Application credentials; role garimpa_app; SELECT-only read-only transactions; fallback because MCP cannot SET ROLE",
+  "results": {
+    "noContext": [
+      {
+        "runtime_role": "garimpa_app",
+        "secret_rls_active": true,
+        "visible_secrets": "0",
+        "anon_read": false,
+        "authenticated_read": false
+      }
+    ],
+    "house": [
+      {
+        "runtime_role": "garimpa_app",
+        "house_products": "1657",
+        "house_publications": "1494",
+        "visible_secrets": "0"
+      }
+    ]
+  }
+}

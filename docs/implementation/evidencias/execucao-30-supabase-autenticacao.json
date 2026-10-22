@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-16T01:47:34.802Z",
+  "result": "PASS",
+  "authentication": "OAuth",
+  "projectUrl": "https://spbuwcwmxlycchuwhfir.supabase.co",
+  "projectRef": "spbuwcwmxlycchuwhfir",
+  "readCalls": [
+    "get_project_url",
+    "list_migrations"
+  ],
+  "confirmedV2InstalledSubset": [
+    {
+      "version": "20261015034755",
+      "name": "garimpa_account_context_and_membership"
+    },
+    {
+      "version": "20261015035126",
+      "name": "garimpa_affiliate_secret_bootstrap_rls"
+    },
+    {
+      "version": "20261015041540",
+      "name": "garimpa_curation_membership_author"
+    }
+  ],
+  "replacementRolloutObserved": [],
+  "remoteWrites": 0
+}

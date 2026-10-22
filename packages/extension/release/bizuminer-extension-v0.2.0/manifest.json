@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "BizuMiner — captura de ofertas (dev)",
+  "version": "0.2.0",
+  "description": "Importa ofertas da página aberta do Mercado Livre para o lote do BizuMiner, após sua confirmação.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.bizuminer.com.br/*",
+    "http://localhost:3100/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "BizuMiner"
+  },
+  "content_scripts": [],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "type": "confirmed_counterexamples_not_acceptance_tests",
+  "isolatedMigrations": 11,
+  "remoteWrites": 0,
+  "findings": [
+    {
+      "probe": "legacy_house_membership_boundary",
+      "actorOnlyMemberOf": "a",
+      "correctAccountContext": "house access forbidden",
+      "legacyServiceHouseAwaiting": 1,
+      "note": "Service SQL reproduced; HTTP/layout reachability established statically, no browser session tested"
+    },
+    {
+      "probe": "legitimate_owner_config",
+      "observed": "public service rejected legitimate owner; same insert succeeds with authorized account context",
+      "sqlCode": "42501"
+    },
+    {
+      "probe": "editorial_desk",
+      "observedCandidates": 0,
+      "authorizedFactRows": 1
+    },
+    {
+      "probe": "capture_batch_expire",
+      "expiredByService": 0,
+      "authorizedOverdueRows": 1
+    },
+    {
+      "probe": "extension_bootstrap_revoked_membership",
+      "roleActiveAfterRevocation": true,
+      "accountCommand": "correctly denied"
+    },
+    {
+      "probe": "canonical_csv_strictness",
+      "malformedAccepted": {
+        "externalOrderId": "ord-a",
+        "externalItemId": null,
+        "occurredAt": "2026-10-14T10:00:00.000Z",
+        "orderValueCents": 100,
+        "commissionCents": 12,
+        "currency": "BRL",
+        "marketplace": "shopee",
+        "subId": null,
+        "status": "nonsense",
+        "commissionState": "nonsense"
+      },
+      "missingFieldsDefaulted": {
+        "externalOrderId": "ord-b",
+        "externalItemId": null,
+        "occurredAt": "2026-10-14T10:00:00.000Z",
+        "orderValueCents": null,
+        "commissionCents": 25,
+        "currency": "BRL",
+        "marketplace": "unknown",
+        "subId": null,
+        "status": "confirmed",
+        "commissionState": "confirmed"
+      },
+      "negativeCommissionAccepted": -5,
+      "distinctOrderIdsShareDigest": true
+    },
+    {
+      "probe": "validity_guards",
+      "invalidDispatchTtl": {
+        "canDispatch": true
+      },
+      "invalidInvitationExpiry": {
+        "valid": true
+      },
+      "expiredEntitlement": {
+        "allowed": true
+      }
+    }
+  ]
+}

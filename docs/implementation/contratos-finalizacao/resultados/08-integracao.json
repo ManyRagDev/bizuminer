@@ -1,0 +1,333 @@
+{
+  "order": "OS-08",
+  "state": "CONCLUIDO",
+  "at": "2026-10-16T22:46:14.854907+00:00",
+  "scope": "Core continuity for existing sole owner; public web, authorized account runtime, curation proven OS06, monitoring. Conditional commercial capabilities and untested capture devices are not certified.",
+  "version": "f60b6187ada88addd37ff5b967f1d0f2e8eca2b9",
+  "migrationC": "20261016223906",
+  "runtime": {
+    "commercialReads": {
+      "deskLoaded": true,
+      "deskSections": [
+        "campaigns",
+        "products",
+        "publications"
+      ],
+      "financialLoaded": true,
+      "financialSections": [
+        "conversions",
+        "commissions",
+        "costs",
+        "revenues"
+      ],
+      "experiments": 0,
+      "radar": 0,
+      "onboardingFactsLoaded": true
+    },
+    "identity": {
+      "role": "garimpa_app",
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "membershipResolved": true,
+    "ownerAccount": "local",
+    "foreignAccountRejected": true,
+    "counts": {
+      "products": "1657",
+      "observations": "9339",
+      "publications": "1495",
+      "shortlinks": "172"
+    },
+    "reset": {
+      "tenant_reset": true,
+      "actor_reset": true
+    },
+    "worker": {
+      "products": "1657"
+    },
+    "commercialEnabled": true,
+    "publicProjectionReady": true,
+    "detailResolved": true,
+    "monetizedTargetHost": "s.shopee.com.br",
+    "legacyShortLinkResolved": true,
+    "existingShortCode": "33pu",
+    "publicPrivateReadDenied": true,
+    "limit": "DB identity selected from an existing owner membership; this does not prove browser Google OAuth or any write/provider flow."
+  },
+  "http": [
+    {
+      "path": "/",
+      "exitCode": 0,
+      "httpStatus": "200",
+      "location": null,
+      "applicationError": false,
+      "title": "BizuMiner — Um bizu bom vale ouro"
+    },
+    {
+      "path": "/bizu/shp-49107392414",
+      "exitCode": 0,
+      "httpStatus": "200",
+      "location": null,
+      "applicationError": false,
+      "title": "Kit De Sachês Para Cuidados Com A Pele SKIN1004 3 Unidades | Seleção De Linhas Mistas | BizuMiner"
+    },
+    {
+      "path": "/p/33pu",
+      "exitCode": 0,
+      "httpStatus": "302",
+      "location": "/bizu/ali-1005012705365068",
+      "applicationError": false,
+      "title": null
+    },
+    {
+      "path": "/api/admin/affiliates",
+      "exitCode": 0,
+      "httpStatus": "401",
+      "location": null,
+      "applicationError": false,
+      "title": null
+    },
+    {
+      "path": "/admin",
+      "exitCode": 0,
+      "httpStatus": "307",
+      "location": "/entrar?next=%2Fadmin",
+      "applicationError": false,
+      "title": null
+    }
+  ],
+  "workers": [
+    {
+      "marketplace": "shopee",
+      "exitCode": 0,
+      "signal": null,
+      "limit": 1,
+      "result": {
+        "marketplace": "shopee",
+        "mode": "execute",
+        "runId": "a90e265e-4beb-4727-90b2-df4330c95066",
+        "attempted": 0,
+        "matched": 0
+      }
+    },
+    {
+      "marketplace": "aliexpress",
+      "exitCode": 0,
+      "signal": null,
+      "limit": 1,
+      "result": {
+        "marketplace": "aliexpress",
+        "mode": "execute",
+        "runId": "38ecc0a2-67b4-4923-a5a6-1d8ec2d9e2d1",
+        "attempted": 1,
+        "matched": 1,
+        "missing": 0,
+        "missingReasons": {
+          "absent": 0,
+          "id_mismatch": 0,
+          "invalid_price": 0,
+          "currency": 0
+        },
+        "failed": 0,
+        "priceChanges": 1
+      }
+    }
+  ],
+  "matrix": {
+    "T01": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Rubrica real/30–50 avaliações e ratificação não fornecidas; permanece sombra e não promovida."
+    },
+    "T02": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Rubrica real/30–50 avaliações e ratificação não fornecidas; permanece sombra e não promovida."
+    },
+    "T03": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "História original preservada por28 projeções/digests antes/depois C; deltas legítimos documentados na OS06."
+    },
+    "T04": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Rubrica real/30–50 avaliações e ratificação não fornecidas; permanece sombra e não promovida."
+    },
+    "T05": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Rubrica real/30–50 avaliações e ratificação não fornecidas; permanece sombra e não promovida."
+    },
+    "T06": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Rubrica real/30–50 avaliações e ratificação não fornecidas; permanece sombra e não promovida."
+    },
+    "T07": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Comparabilidade/calibração E3 reais não ratificadas; dados desconhecidos não completados."
+    },
+    "T08": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Comparabilidade/calibração E3 reais não ratificadas; dados desconhecidos não completados."
+    },
+    "T09": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Rubrica real/30–50 avaliações e ratificação não fornecidas; permanece sombra e não promovida."
+    },
+    "T10": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json",
+        "docs/implementation/evidencias/execucao-31-sealed-verified-workflows.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Campanha/material/Storage privado/novos links de12 caracteres não homologados no ativo; nenhum kit ou clique fictício criado."
+    },
+    "T11": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json",
+        "docs/implementation/evidencias/execucao-31-sealed-verified-workflows.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Campanha/material/Storage privado/novos links de12 caracteres não homologados no ativo; nenhum kit ou clique fictício criado."
+    },
+    "T12": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Rubrica real/30–50 avaliações e ratificação não fornecidas; permanece sombra e não promovida."
+    },
+    "T13": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json",
+        "docs/implementation/evidencias/execucao-31-sealed-verified-workflows.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Campanha/material/Storage privado/novos links de12 caracteres não homologados no ativo; nenhum kit ou clique fictício criado."
+    },
+    "T14": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json",
+        "docs/implementation/evidencias/execucao-31-sealed-verified-workflows.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Campanha/material/Storage privado/novos links de12 caracteres não homologados no ativo; nenhum kit ou clique fictício criado."
+    },
+    "T15": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Leituras financeiras reais passaram; relatório de programa/parser específico e venda real ausentes; nenhum fato financeiro inventado."
+    },
+    "T16": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "Não homologado individualmente por cenário comercial no ativo; entrada/fato real e gates de capacidade continuam exigidos.",
+      "limits": "Leituras financeiras reais passaram; relatório de programa/parser específico e venda real ausentes; nenhum fato financeiro inventado."
+    },
+    "T17": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "PASS no escopo proprietário real, bootstrap de membership, negativas sem contexto/público e reset do pool. Duas contas e concorrência: prova nativa local OS12; piloto multicliente gerenciado não homologado."
+    },
+    "T18": {
+      "local": "Reuso histórico da candidata31 e verificações específicas OS01/12; nenhum novo PASS de fixture é alegado.",
+      "evidence": [
+        "docs/implementation/evidencias/execucao-31-verificacao-final.json"
+      ],
+      "managed": "PASS no escopo de continuidade aberto: login real OS06, conta/curadoria com escrita reversível OS06, runtime/consumidores pósC, HTTP público e workers reais pósC. Captura por dispositivo/descoberta automática permanece parada; sem alegação de homologação."
+    },
+    "S-PRECO": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "S-RUBRICA": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "S-KIT": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "S-LINK": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "S-FIN": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "S-DISPATCH": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "J1": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "J2": {
+      "local": "Reuso histórico31/OS01/OS12, dados sintéticos e ambientes explicitados nas evidências originais.",
+      "managed": "Capacidade completa não homologada; depende das entradas em CAPACIDADES-PENDENTES. Sem ativação nova para produzir evidência."
+    },
+    "S-DB": {
+      "managed": "PASS: runtime real garimpa_app sem SUPER/BYPASS,19 checks de compatibilidade, owner legítimo, leitura privada sem contexto negada, contexto resetado;28 tabelas e8 schemas preservados.",
+      "local": "Native two sessions A/B/A, grants, imutabilidade, quotas/convites concorrentes: reuso OS12, mesmos bytes SQL salvo correção de collation aprovada e ensaiada."
+    },
+    "J3": {
+      "managed": "PASS de continuidade do escopo operado antes/depois C: catálogo, links, acesso legítimo e worker; nenhum claim de zero regressões em capacidades não exercitadas."
+    }
+  },
+  "localEvidenceReuse": {
+    "sourceManifest": "execucao-31-release-fontes.json with OS12 exact delta;462 original paths checked",
+    "OS01": "379 web tests, package tests/typechecks/build, commercial/readiness/upgrade/regressions PASS at that time",
+    "OS12": "corrected C collation and native rollout/operational suites PASS; not rerun without source changes"
+  },
+  "limits": [
+    "Managed second real tenant/pilot, Storage upload/download, real commercial kit/render/export and official dispatch remain unhomologated and inactive.",
+    "Post-C automated visual browser inspection unavailable due CUA timeouts. Real Google/session/owner UI and reversible curation observed in OS06, combined with actual post-C runtime consumer calls and deployment HTTP checks; no claim of newly observed commercial UI. Owner was asked for optional manual confirmation.",
+    "No synthetic sale, click, campaign, customer or commission created.",
+    "First temporary smoke used a private short_link enumeration outside context and correctly returned no rows. Fixed only the temporary enumeration to withAccountDb; same public assertions then passed."
+  ]
+}

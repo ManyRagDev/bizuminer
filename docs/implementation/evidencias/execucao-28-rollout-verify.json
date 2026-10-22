@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "scope": "local files only; no production authorization",
+  "units": [
+    {
+      "phase": "foundation",
+      "file": "20261015194719_garimpa_v2_foundation.sql",
+      "sha256": "579fa86e8696d7bfcee701ed61e6c8b43b9538dfafa93f146883633bd3682c57"
+    },
+    {
+      "phase": "expansion",
+      "file": "20261015194748_garimpa_v2_expansion.sql",
+      "sha256": "576784e3157c080051e1b23fa52c517530b93618b7ebe98adb2f2bb6931d2664"
+    },
+    {
+      "phase": "scoped_cutover",
+      "file": "20261015194759_garimpa_v2_scoped_cutover.sql",
+      "sha256": "bb7fec9f4fc8c73c8bb9762d30824e589af7da093b102791b68edb2787cd2f37"
+    }
+  ],
+  "installedSubsetPreserved": 3,
+  "supersededOriginals": 11,
+  "replacedLegacyPolicies": 28,
+  "newCommercialTables": 37
+}

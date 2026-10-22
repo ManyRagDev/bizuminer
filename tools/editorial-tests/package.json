@@ -2,6 +2,36 @@
   "name": "bizuminer-editorial-integration-tests",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --import tsx integration.test.ts" },
-  "devDependencies": { "@electric-sql/pglite": "0.5.8", "tsx": "4.21.0" }
+  "scripts": {
+    "test": "node --import tsx integration.test.ts",
+    "test:triage-price": "node --import tsx triage-price.test.ts",
+    "test:capture-batch": "node --import tsx capture-batch.test.ts",
+    "test:commercial": "node --import tsx commercial-flow.test.ts",
+    "test:regressions": "node --import tsx regressions-rv01-rv05.test.ts",
+    "test:cf-regressions": "node --import tsx regressions-cf01-cf18.test.ts",
+    "test:entitlement": "node --import tsx entitlement-quota.test.ts",
+    "test:price-evidence": "node --import tsx canonical-price-evidence.test.ts",
+    "test:rubric": "node --import tsx rubric-shadow-flow.test.ts",
+    "test:opportunity": "node --import tsx opportunity-radar-flow.test.ts",
+    "test:cockpit": "node --import tsx cockpit-commercial-assisted.test.ts",
+    "test:financial": "node --import tsx commercial-financial-flow.test.ts",
+    "test:experiment": "node --import tsx metrics-experiment-flow.test.ts",
+    "test:dispatch": "node --import tsx dispatch-worker-flow.test.ts",
+    "test:onboarding": "node --import tsx saas-onboarding-flow.test.ts",
+    "test:verified-workflows": "node --import tsx verified-workflows.test.ts",
+    "dispatch:inspect": "node --import tsx ../../packages/web/bin/run-dispatch.mts --inspect",
+    "test:verified-upgrade": "node --import tsx verified-upgrade.test.ts",
+    "test:secret-bootstrap": "node --import tsx secret-bootstrap-flow.test.ts",
+    "test:auth-merge": "node --import tsx auth-merge-flow.test.ts",
+    "test:migration-integrity": "node --import tsx migration-integrity-flow.test.ts",
+    "test:public-readiness": "node --import tsx public-readiness-flow.test.ts",
+    "test:native-migrations": "node --import tsx native-migration-flow.test.ts",
+    "test:replacement-rollout": "node --import tsx replacement-rollout-flow.test.ts",
+    "rollout:verify": "node --import tsx verify-replacement-rollout.ts",
+    "test:operational-maintenance": "node --import tsx operational-maintenance-flow.test.ts"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "tsx": "4.21.0"
+  }
 }

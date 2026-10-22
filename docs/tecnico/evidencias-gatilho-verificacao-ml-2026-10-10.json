@@ -1,0 +1,398 @@
+{
+  "startedAt": "2026-10-10T23:01:06.219Z",
+  "target": "https://www.mercadolivre.com.br/ofertas",
+  "environment": {
+    "node": "22.23.2",
+    "undici": "6.28.0",
+    "proxyEnvironmentPresent": []
+  },
+  "controls": {
+    "credentials": false,
+    "browserCookies": false,
+    "database": false,
+    "ingestion": false,
+    "ai": false,
+    "redirectsFollowed": false,
+    "intervalMs": 5000
+  },
+  "cases": [
+    {
+      "name": "node_original",
+      "checkedAt": "2026-10-10T23:01:06.520Z",
+      "status": 302,
+      "bytes": 180,
+      "cards": 0,
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:01:06 GMT",
+        "server": "nginx",
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "vary": "Accept, Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 c474a90dfebd2737f6780d6b79b3c29c.cloudfront.net (CloudFront)"
+      },
+      "cookieNames": [
+        "_d2id",
+        "_csrf",
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    },
+    {
+      "name": "node_accept_language",
+      "checkedAt": "2026-10-10T23:01:11.671Z",
+      "status": 302,
+      "bytes": 180,
+      "cards": 0,
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:01:11 GMT",
+        "server": "nginx",
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "vary": "Accept, Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 84ef3f896388a3b173c2fb2cfca841d4.cloudfront.net (CloudFront)"
+      },
+      "cookieNames": [
+        "_d2id",
+        "_csrf",
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    },
+    {
+      "name": "node_honest_user_agent",
+      "checkedAt": "2026-10-10T23:01:16.828Z",
+      "status": 302,
+      "bytes": 180,
+      "cards": 0,
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:01:16 GMT",
+        "server": "nginx",
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "vary": "Accept, Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 7ac75d10dc94e30a5a064b9f58f065a6.cloudfront.net (CloudFront)"
+      },
+      "cookieNames": [
+        "_d2id",
+        "_csrf",
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    },
+    {
+      "name": "curl_http1",
+      "checkedAt": "2026-10-10T23:01:21.999Z",
+      "status": 302,
+      "negotiatedProtocol": "1.1",
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:01:21 GMT",
+        "server": "nginx",
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "vary": "Accept, Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 5a73a0e06fc43fe7df7c5153b9995c2c.cloudfront.net (CloudFront)"
+      },
+      "cookieNames": [
+        "_d2id",
+        "_csrf",
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    },
+    {
+      "name": "curl_http2",
+      "checkedAt": "2026-10-10T23:01:27.189Z",
+      "status": 302,
+      "negotiatedProtocol": "2",
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:01:27 GMT",
+        "server": "nginx",
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "vary": "Accept, Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 0de009f95f1e3cd087fa76e8d4b94cec.cloudfront.net (CloudFront)"
+      },
+      "cookieNames": [
+        "_d2id",
+        "_csrf",
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    },
+    {
+      "name": "node_fresh_anonymous_cookies",
+      "checkedAt": "2026-10-10T23:01:32.344Z",
+      "status": 302,
+      "bytes": 180,
+      "cards": 0,
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:01:32 GMT",
+        "server": "nginx",
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "vary": "Accept, Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 6b96f6e9d50e186b3134f59794fe039a.cloudfront.net (CloudFront)"
+      },
+      "cookieNames": [
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    },
+    {
+      "name": "node_original_control",
+      "checkedAt": "2026-10-10T23:01:37.496Z",
+      "status": 302,
+      "bytes": 180,
+      "cards": 0,
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:01:37 GMT",
+        "server": "nginx",
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "vary": "Accept, Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 ff1c9f59a21caa7726173a8fe309c62c.cloudfront.net (CloudFront)"
+      },
+      "cookieNames": [
+        "_d2id",
+        "_csrf",
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    }
+  ],
+  "finishedAt": "2026-10-10T23:01:37.496Z",
+  "followUpCases": [
+    {
+      "name": "node_standard_navigation_headers",
+      "checkedAt": "2026-10-10T23:04:02.655Z",
+      "comparison": "Conjunto de cabeçalhos usuais de navegação desktop; não é uma captura dos cabeçalhos do Opera nem isola um único campo",
+      "status": 302,
+      "bytes": 180,
+      "cards": 0,
+      "location": {
+        "origin": "https://www.mercadolivre.com.br",
+        "path": "/gz/account-verification",
+        "queryKeys": [
+          "go",
+          "tid"
+        ]
+      },
+      "responseHeaderNames": [
+        "accept-ch",
+        "accept-ch-lifetime",
+        "alt-svc",
+        "cache-control",
+        "connection",
+        "content-length",
+        "content-security-policy",
+        "content-security-policy-report-only",
+        "content-type",
+        "date",
+        "location",
+        "referrer-policy",
+        "reporting-endpoints",
+        "server",
+        "set-cookie",
+        "set-cookie",
+        "set-cookie",
+        "set-cookie",
+        "strict-transport-security",
+        "vary",
+        "via",
+        "x-amz-cf-id",
+        "x-amz-cf-pop",
+        "x-api-server-segment",
+        "x-cache",
+        "x-content-type-options",
+        "x-d2id",
+        "x-dns-prefetch-control",
+        "x-download-options",
+        "x-envoy-upstream-service-time",
+        "x-permitted-cross-domain-policies",
+        "x-request-device-id",
+        "x-request-id",
+        "x-xss-protection"
+      ],
+      "responseHeaders": {
+        "date": "Sat, 10 Oct 2026 23:04:02 GMT",
+        "server": "nginx",
+        "cache-control": "private, max-age=0, no-cache, no-store, must-revalidate",
+        "x-cache": "Miss from cloudfront"
+      },
+      "cookieNames": [
+        "_d2id",
+        "_csrf",
+        "_mldataSessionId",
+        "x-theme"
+      ]
+    }
+  ],
+  "timezone": "America/Sao_Paulo",
+  "browserComparison": {
+    "recordedAt": "2026-10-10T23:05:32.751Z",
+    "browser": "Opera",
+    "url": "https://www.mercadolivre.com.br/ofertas",
+    "title": "Ofertas | Mercadolivre Brasil",
+    "cards": 48,
+    "accountLinks": [
+      "Crie a sua conta",
+      "Entre"
+    ],
+    "loginPerformed": false,
+    "captchaSolved": false,
+    "limitations": "Perfil existente; não equivale a janela anônima nem demonstra mesmo IP público que os clientes HTTP."
+  },
+  "frontendAnalysis": {
+    "source": "HTML privado da reprodução de 17:59 e assets públicos nele referenciados",
+    "mainEntry": "gz-account-verification-index",
+    "assetApplication": "suspicious-traffic-frontend",
+    "renderingFlags": {
+      "isBot": false,
+      "outdated": false
+    },
+    "renderingFlagsLimit": "São flags do framework de renderização, não o motivo da decisão do filtro de acesso.",
+    "traceIdFormat": "uuid; valor omitido",
+    "authLoginPath": "/jms/mlb/lgz/login",
+    "assets": [
+      {
+        "url": "https://www.mercadolivre.com.br/v3/security.js",
+        "status": 403,
+        "contentType": "text/html",
+        "bytes": 2585,
+        "sha256": "8bef02b55f4137dfadb3df0cdf5961411fbf157323d7909fbd81423b1cdd1504",
+        "markers": {
+          "navigator": 0,
+          "cookie": 0,
+          "localStorage": 0,
+          "sessionStorage": 0,
+          "fingerprint": 0,
+          "canvas": 0,
+          "webgl": 0,
+          "device": 0,
+          "captcha": 0,
+          "risk": 0,
+          "reason": 0,
+          "suspicious": 0,
+          "account-verification": 0,
+          "newrelic": 0,
+          "security": 0,
+          "bot": 0,
+          "isBot": 0,
+          "trace_id": 0
+        },
+        "safeConstants": []
+      },
+      {
+        "url": "https://http2.mlstatic.com/frontend-assets/suspicious-traffic-frontend/gz-account-verification-index.11110e99.js",
+        "status": 200,
+        "contentType": "text/javascript",
+        "bytes": 5496,
+        "sha256": "4dec72b3b09eb903063f3917120b2d7a6f4da4cf902077dcc9279bfbf5c12392",
+        "markers": {
+          "navigator": 0,
+          "cookie": 0,
+          "localStorage": 0,
+          "sessionStorage": 0,
+          "fingerprint": 0,
+          "canvas": 0,
+          "webgl": 0,
+          "device": 0,
+          "captcha": 0,
+          "risk": 0,
+          "reason": 0,
+          "suspicious": 4,
+          "account-verification": 1,
+          "newrelic": 0,
+          "security": 0,
+          "bot": 0,
+          "isBot": 0,
+          "trace_id": 0
+        },
+        "safeConstants": []
+      }
+    ],
+    "providerReasonCodeExposed": false
+  },
+  "conclusions": {
+    "confirmed": [
+      "O redirecionamento acontece no primeiro GET de /ofertas, antes de executar JavaScript ou o parser.",
+      "O frontend da verificação pertence ao componente suspicious-traffic-frontend do ML.",
+      "Todos os oito casos HTTP receberam 302 para /gz/account-verification.",
+      "Idioma, User-Agent alternativo, cabeçalhos usuais de navegação, outro cliente HTTP, HTTP/2 e cookies anônimos recém-emitidos não bastaram para obter ofertas nestes testes.",
+      "Resposta com horário atual, Cache-Control no-store e Miss from cloudfront; não há evidência de mero replay de cache.",
+      "Navegador existente abriu 48 ofertas sem login."
+    ],
+    "notEstablished": [
+      "A regra exata de risco do ML.",
+      "IP/reputação de rede versus sinais de navegação/dispositivo/TLS.",
+      "Ausência de todos os cookies como causa: só foram testados cookies anônimos recém-emitidos, não histórico do navegador.",
+      "Exigência universal de login, CAPTCHA, bloqueio da conta ou navegador desatualizado.",
+      "A resposta original das 17:50, que não foi retida."
+    ],
+    "nextDiscriminatingObservation": "Janela anônima sem login; se necessário, repetir sonda em outra conexão controlada. Nenhuma troca de rede ou configuração de navegador foi realizada.",
+    "providerConfirmation": "Motivo exato pode exigir consulta ao ML, correlacionando horário e identificador de requisição; nenhuma mensagem foi enviada."
+  }
+}

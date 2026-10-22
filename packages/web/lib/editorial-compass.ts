@@ -1,4 +1,7 @@
+import { scopedTenantId } from "./account-scope.ts";
 import { db } from "./db.ts";
+import { withTenantDb } from "./tenant-db.ts";
+import { PRODUCT_EVIDENCE_TTL_DAYS } from "./catalog-policy.ts";
 import { productSlug } from "./marketplaces.ts";
 
 export interface EditorialGuidelineConfig {
@@ -21,6 +24,7 @@ export interface GoldenExample {
 }
 
 export interface SpotCheckProduct {
+  sourceEventId: string;
   id: string;
   slug: string;
   title: string;
@@ -51,7 +55,7 @@ export function toDailyAuditProgress(
   corrected: number,
   target = DAILY_AUDIT_TARGET,
 ): DailyAuditProgress {
-  const safeTarget = Math.min(Math.max(target, 1), 50);
+  const safeTarget = Math.min(Math.max(target, 0), 50);
   const safeConfirmed = Math.max(0, confirmed);
   const safeCorrected = Math.max(0, corrected);
   const reviewed = safeConfirmed + safeCorrected;
@@ -67,107 +71,106 @@ export function toDailyAuditProgress(
 
 /** Progresso da sessão diária no fuso operacional do BizuMiner. */
 export async function getDailyAuditProgress(
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   target = DAILY_AUDIT_TARGET,
+  sqlFactory: typeof db = db,
 ): Promise<DailyAuditProgress> {
   const empty = toDailyAuditProgress(0, 0, target);
   if (!process.env.DATABASE_URL) return empty;
 
-  const sql = db();
-  try {
-    const rows = await sql<{ confirmed: number; corrected: number }[]>`
-      select
-        count(*) filter (where metadata ? 'spotCheckConfirm')::int as confirmed,
-        count(*) filter (where metadata ? 'spotCheckReject')::int as corrected
-      from garimpa.curation_event
-      where tenant_id = ${tenantId}
-        and actor_type = 'human'
-        and (metadata ? 'spotCheckConfirm' or metadata ? 'spotCheckReject')
-        and created_at >= (
-          date_trunc('day', now() at time zone 'America/Sao_Paulo')
-          at time zone 'America/Sao_Paulo'
-        )
-    `;
-    const confirmed = rows[0]?.confirmed ?? 0;
-    const corrected = rows[0]?.corrected ?? 0;
-    return toDailyAuditProgress(confirmed, corrected, target);
-  } catch {
-    return empty;
-  } finally {
-    await sql.end();
-  }
+  return await withTenantDb(tenantId, async (sql) => {
+    try {
+      const rows = await sql<{ confirmed: number; corrected: number }[]>`
+        select
+          count(*) filter (where metadata ? 'spotCheckConfirm')::int as confirmed,
+          count(*) filter (where metadata ? 'spotCheckReject')::int as corrected
+        from garimpa.curation_event
+        where tenant_id = ${tenantId}
+          and actor_type = 'human'
+          and (metadata ? 'spotCheckConfirm' or metadata ? 'spotCheckReject')
+          and created_at >= (
+            date_trunc('day', now() at time zone 'America/Sao_Paulo')
+            at time zone 'America/Sao_Paulo'
+          )
+      `;
+      const confirmed = rows[0]?.confirmed ?? 0;
+      const corrected = rows[0]?.corrected ?? 0;
+      return toDailyAuditProgress(confirmed, corrected, target);
+    } catch {
+      return empty;
+    }
+  }, sqlFactory);
+}
+
+/** Qualidade é uma amostra recente e opcional, independente da publicação. */
+export async function getAuditDesk(tenantId = scopedTenantId()) {
+  const [progress, available] = await Promise.all([
+    getDailyAuditProgress(tenantId), getRecentSpotCheckProducts(tenantId, DAILY_AUDIT_TARGET),
+  ]);
+  const target = Math.min(DAILY_AUDIT_TARGET, progress.reviewed + available.length);
+  const adjusted = toDailyAuditProgress(progress.confirmed, progress.corrected, target);
+  return { progress: adjusted, products: available.slice(0, adjusted.remaining) };
 }
 
 export const DEFAULT_GUIDELINE =
   "Foco em utilidades práticas de casa, cozinha, gadgets inteligentes e presentes criativos com alto apelo visual e compra por impulso. Evitar peças industriais, ferramentas secas, insumos de reposição e itens de nicho ultra-específico.";
 
-export async function getEditorialGuideline(tenantId = "local"): Promise<EditorialGuidelineConfig> {
+export async function getEditorialGuideline(tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<EditorialGuidelineConfig> {
+  const fallback: EditorialGuidelineConfig = {
+    tenantId,
+    guideline: DEFAULT_GUIDELINE,
+    autoPublish: false,
+    minScoreAutoPublish: 4,
+    updatedAt: new Date().toISOString(),
+  };
+
   if (!process.env.DATABASE_URL) {
-    return {
-      tenantId,
-      guideline: DEFAULT_GUIDELINE,
-      autoPublish: false,
-      minScoreAutoPublish: 4,
-      updatedAt: new Date().toISOString(),
-    };
+    return fallback;
   }
 
-  const sql = db();
-  try {
-    const rows = await sql<{
-      tenant_id: string;
-      guideline: string;
-      auto_publish: boolean;
-      min_score_auto_publish: number;
-      updated_at: Date | string;
-    }[]>`
-      select tenant_id, guideline, auto_publish, min_score_auto_publish, updated_at
-      from garimpa.editorial_guideline
-      where tenant_id = ${tenantId}
-      limit 1
-    `;
+  return await withTenantDb(tenantId, async (sql) => {
+    try {
+      const rows = await sql<{
+        tenant_id: string;
+        guideline: string;
+        auto_publish: boolean;
+        min_score_auto_publish: number;
+        updated_at: Date | string;
+      }[]>`
+        select tenant_id, guideline, auto_publish, min_score_auto_publish, updated_at
+        from garimpa.editorial_guideline
+        where tenant_id = ${tenantId}
+        limit 1
+      `;
 
-    if (rows.length > 0 && rows[0]) {
-      const r = rows[0];
-      return {
-        tenantId: r.tenant_id,
-        guideline: r.guideline,
-        autoPublish: r.auto_publish,
-        minScoreAutoPublish: r.min_score_auto_publish,
-        updatedAt: new Date(r.updated_at).toISOString(),
-      };
+      if (rows.length > 0 && rows[0]) {
+        const r = rows[0];
+        return {
+          tenantId: r.tenant_id,
+          guideline: r.guideline,
+          autoPublish: r.auto_publish,
+          minScoreAutoPublish: r.min_score_auto_publish,
+          updatedAt: new Date(r.updated_at).toISOString(),
+        };
+      }
+
+      return fallback;
+    } catch {
+      return fallback;
     }
-
-    return {
-      tenantId,
-      guideline: DEFAULT_GUIDELINE,
-      autoPublish: false,
-      minScoreAutoPublish: 4,
-      updatedAt: new Date().toISOString(),
-    };
-  } catch {
-    return {
-      tenantId,
-      guideline: DEFAULT_GUIDELINE,
-      autoPublish: false,
-      minScoreAutoPublish: 4,
-      updatedAt: new Date().toISOString(),
-    };
-  } finally {
-    await sql.end();
-  }
+  }, sqlFactory);
 }
 
 export async function saveEditorialGuideline(
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   guideline: string,
   autoPublish: boolean,
   minScore = 4,
+  sqlFactory: typeof db = db,
 ): Promise<boolean> {
   if (!process.env.DATABASE_URL) return false;
 
-  const sql = db();
-  try {
+  return await withTenantDb(tenantId, async (sql) => {
     await sql`
       insert into garimpa.editorial_guideline (tenant_id, guideline, auto_publish, min_score_auto_publish, updated_at)
       values (${tenantId}, ${guideline.trim()}, ${autoPublish}, ${minScore}, now())
@@ -179,75 +182,72 @@ export async function saveEditorialGuideline(
         updated_at = now()
     `;
     return true;
-  } finally {
-    await sql.end();
-  }
+  }, sqlFactory);
 }
 
 /**
  * Carrega as decisões humanas mais recentes com justificativa ou aprovação explícita.
  * Esses itens funcionam como exemplos Few-Shot dinâmicos injetados no Gemini 2.5 Flash.
  */
-export async function getGoldenExamples(tenantId = "local", limit = 6): Promise<GoldenExample[]> {
+export async function getGoldenExamples(tenantId = scopedTenantId(), limit = 6, sqlFactory: typeof db = db): Promise<GoldenExample[]> {
   if (!process.env.DATABASE_URL) return [];
 
-  const sql = db();
-  try {
-    const rows = await sql<{
-      product_id: string;
-      title: string;
-      to_status: "approved" | "rejected" | "held";
-      reason_code: string | null;
-      reason_detail: string | null;
-      metadata: Record<string, unknown>;
-      created_at: Date | string;
-      price_cents: number | null;
-    }[]>`
-      with latest_events as (
-        select distinct on (e.product_id)
-          e.product_id,
-          coalesce(p.title, (e.metadata->'snapshot'->>'title'), 'Produto') as title,
-          e.to_status,
-          e.reason_code,
-          e.reason_detail,
-          e.metadata,
-          e.created_at,
-          coalesce(latest_price.price_cents, (e.metadata->'snapshot'->>'priceCents')::int) as price_cents
-        from garimpa.curation_event e
-        left join garimpa.product p on p.id = e.product_id and p.tenant_id = e.tenant_id
-        left join lateral (
-          select price_cents from garimpa.price_observation o
-          where o.product_id = e.product_id and o.tenant_id = e.tenant_id
-          order by observed_at desc limit 1
-        ) latest_price on true
-        where e.tenant_id = ${tenantId}
-          and e.actor_type = 'human'
-        order by e.product_id, e.id desc
-      )
-      select * from latest_events
-      order by created_at desc
-      limit ${Math.min(Math.max(limit, 1), 20)}
-    `;
+  return await withTenantDb(tenantId, async (sql) => {
+    try {
+      const rows = await sql<{
+        product_id: string;
+        title: string;
+        to_status: "approved" | "rejected" | "held";
+        reason_code: string | null;
+        reason_detail: string | null;
+        metadata: Record<string, unknown>;
+        created_at: Date | string;
+        price_cents: number | null;
+      }[]>`
+        with latest_events as (
+          select distinct on (e.product_id)
+            e.product_id,
+            coalesce(p.title, (e.metadata->'snapshot'->>'title'), 'Produto') as title,
+            e.to_status,
+            e.reason_code,
+            e.reason_detail,
+            e.metadata,
+            e.created_at,
+            coalesce(latest_price.price_cents, (e.metadata->'snapshot'->>'priceCents')::int) as price_cents
+          from garimpa.curation_event e
+          left join garimpa.product p on p.id = e.product_id and p.tenant_id = e.tenant_id
+          left join lateral (
+            select price_cents from garimpa.price_observation o
+            where o.product_id = e.product_id and o.tenant_id = e.tenant_id
+            order by observed_at desc limit 1
+          ) latest_price on true
+          where e.tenant_id = ${tenantId}
+            and e.actor_type = 'human'
+          order by e.product_id, e.id desc
+        )
+        select * from latest_events
+        order by created_at desc
+        limit ${Math.min(Math.max(limit, 1), 20)}
+      `;
 
-    return rows.map((r) => {
-      const snapshot = r.metadata?.snapshot as Record<string, unknown> | undefined;
-      const priceCents = r.price_cents ?? (typeof snapshot?.priceCents === "number" ? snapshot.priceCents : null);
-      return {
-        productId: r.product_id,
-        title: r.title,
-        decision: r.to_status,
-        reasonCode: r.reason_code,
-        reasonDetail: r.reason_detail,
-        rationale: typeof snapshot?.rationale === "string" ? snapshot.rationale : undefined,
-        priceFormatted: priceCents !== null ? `R$ ${(priceCents / 100).toFixed(2)}` : undefined,
-        createdAt: new Date(r.created_at).toISOString(),
-      };
-    });
-  } catch {
-    return [];
-  } finally {
-    await sql.end();
-  }
+      return rows.map((r) => {
+        const snapshot = r.metadata?.snapshot as Record<string, unknown> | undefined;
+        const priceCents = r.price_cents ?? (typeof snapshot?.priceCents === "number" ? snapshot.priceCents : null);
+        return {
+          productId: r.product_id,
+          title: r.title,
+          decision: r.to_status,
+          reasonCode: r.reason_code,
+          reasonDetail: r.reason_detail,
+          rationale: typeof snapshot?.rationale === "string" ? snapshot.rationale : undefined,
+          priceFormatted: priceCents !== null ? `R$ ${(priceCents / 100).toFixed(2)}` : undefined,
+          createdAt: new Date(r.created_at).toISOString(),
+        };
+      });
+    } catch {
+      return [];
+    }
+  }, sqlFactory);
 }
 
 /**
@@ -260,15 +260,17 @@ export async function getGoldenExamples(tenantId = "local", limit = 6): Promise<
  * Antes, "Manter" era só visual — o produto voltava a aparecer a cada recarga.
  */
 export async function getRecentSpotCheckProducts(
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   limit = 12,
+  sqlFactory: typeof db = db,
 ): Promise<SpotCheckProduct[]> {
   if (!process.env.DATABASE_URL) return [];
 
-  const sql = db();
+  return await withTenantDb(tenantId, async (sql) => {
   try {
     const rows = await sql<{
       id: string;
+      source_event_id: string;
       marketplace: string;
       external_id: string;
       title: string;
@@ -280,7 +282,7 @@ export async function getRecentSpotCheckProducts(
       created_at: Date | string;
     }[]>`
       select
-        p.id,
+        p.id, latest.id::text as source_event_id,
         p.marketplace,
         p.external_id,
         p.title,
@@ -308,6 +310,9 @@ export async function getRecentSpotCheckProducts(
       ) latest_price on true
       where p.tenant_id = ${tenantId}
         and c.status = 'approved'
+        and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
+        and latest.created_at >= now() - interval '7 days'
+        and latest_price.price_cents > 0
         and latest.actor_type = 'llm'
         and latest.to_status = 'approved'
       order by latest.id desc
@@ -318,6 +323,7 @@ export async function getRecentSpotCheckProducts(
       const auto = (r.metadata?.automation as Record<string, unknown>) ?? {};
       return {
         id: r.id,
+        sourceEventId: r.source_event_id,
         slug: productSlug(r.marketplace, r.external_id),
         title: r.title,
         imageUrl: r.image_url,
@@ -333,9 +339,8 @@ export async function getRecentSpotCheckProducts(
     });
   } catch {
     return [];
-  } finally {
-    await sql.end();
   }
+}, sqlFactory);
 }
 
 /**
@@ -347,19 +352,25 @@ export async function getRecentSpotCheckProducts(
 export async function confirmSpotCheck(
   productId: string,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  expectedEventId?: string,
+  sqlFactory: typeof db = db,
 ): Promise<boolean> {
   if (!process.env.DATABASE_URL) return false;
 
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
+  return await withTenantDb(tenantId, async (tx) => {
+    try {
       const current = await tx<{ status: string }[]>`
         select status from garimpa.product_curation
         where tenant_id = ${tenantId} and product_id = ${productId}
         for update
       `;
-      if (!current[0]) return false;
+      if (current[0]?.status !== "approved" || !expectedEventId) return false;
+      const latest = await tx<{ id: string; actor_type: string; to_status: string }[]>`
+        select id::text as id,actor_type,to_status from garimpa.curation_event
+        where tenant_id=${tenantId} and product_id=${productId} order by id desc limit 1
+      `;
+      if (latest[0]?.id !== expectedEventId || latest[0]?.actor_type !== "llm" || latest[0]?.to_status !== "approved") return false;
 
       await tx`
         update garimpa.product_curation
@@ -375,17 +386,15 @@ export async function confirmSpotCheck(
           actor_app_user_id, metadata
         ) values (
           ${tenantId}, ${productId}, ${current[0].status}, 'approved', 'human',
-          ${reviewerAppUserId}, ${sql.json({ spotCheckConfirm: true })}
+          ${reviewerAppUserId}, ${tx.json({ spotCheckConfirm: true })}
         )
       `;
 
       return true;
-    });
-  } catch {
-    return false;
-  } finally {
-    await sql.end();
-  }
+    } catch {
+      return false;
+    }
+  }, sqlFactory);
 }
 
 /**
@@ -396,19 +405,25 @@ export async function rejectAndLearnSpotCheck(
   productId: string,
   feedback: string,
   reviewerAppUserId: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  expectedEventId?: string,
+  sqlFactory: typeof db = db,
 ): Promise<boolean> {
   if (!process.env.DATABASE_URL) return false;
 
-  const sql = db();
-  try {
-    return await sql.begin(async (tx) => {
+  return await withTenantDb(tenantId, async (tx) => {
+    try {
       const current = await tx<{ status: string }[]>`
         select status from garimpa.product_curation
         where tenant_id = ${tenantId} and product_id = ${productId}
         for update
       `;
-      if (!current[0]) return false;
+      if (current[0]?.status !== "approved" || !expectedEventId) return false;
+      const latest = await tx<{ id: string; actor_type: string; to_status: string }[]>`
+        select id::text as id,actor_type,to_status from garimpa.curation_event
+        where tenant_id=${tenantId} and product_id=${productId} order by id desc limit 1
+      `;
+      if (latest[0]?.id !== expectedEventId || latest[0]?.actor_type !== "llm" || latest[0]?.to_status !== "approved") return false;
 
       const trimmedDetail = feedback.trim();
       const reasonDetail = trimmedDetail.length >= 3 ? trimmedDetail.slice(0, 1000) : "Descartado pelo diretor no spot-check.";
@@ -431,17 +446,15 @@ export async function rejectAndLearnSpotCheck(
         ) values (
           ${tenantId}, ${productId}, ${current[0].status}, 'rejected', 'human',
           ${reviewerAppUserId}, 'other', ${reasonDetail},
-          ${sql.json({ spotCheckReject: true, feedback: reasonDetail })}
+          ${tx.json({ spotCheckReject: true, feedback: reasonDetail })}
         )
       `;
 
       return true;
-    });
-  } catch {
-    return false;
-  } finally {
-    await sql.end();
-  }
+    } catch {
+      return false;
+    }
+  }, sqlFactory);
 }
 
 export interface TriageBatchHistory {
@@ -458,228 +471,98 @@ export interface TriageBatchHistory {
   modelName?: string | null;
 }
 
-export interface SystemOperationalPulse {
-  isCaptureRunning: boolean;
-  runningMarketplace: string | null;
-  lastCaptureAt: string | null;
-  lastCaptureMarketplace: string | null;
-  lastCaptureNewItems: number;
-  lastCaptureStatus: "ok" | "error" | null;
-  lastTriageAt: string | null;
-  lastTriageTotal: number;
-  lastTriageApproved: number;
-  lastTriageHeld: number;
-  pendingCount: number;
-}
-
 /**
  * Retorna os lotes de triagem automatizada mais recentes (com ID persistido ou agrupados).
  */
 export async function getTriageBatchesHistory(
-  tenantId = "local",
+  tenantId = scopedTenantId(),
   limit = 8,
+  sqlFactory: typeof db = db,
 ): Promise<TriageBatchHistory[]> {
   if (!process.env.DATABASE_URL) return [];
 
-  const sql = db();
-  try {
-    const rows = await sql<{
-      batch_id: string;
-      run_time: Date | string;
-      total_items: number;
-      approved: number;
-      rejected: number;
-      held: number;
-      llm_count: number;
-      rule_count: number;
-      top_reason: string | null;
-      status: "running" | "ok" | "error";
-      model_name: string | null;
-    }[]>`
-      with run_batches as (
-        select
-          r.id::text as batch_id,
-          r.started_at as run_time,
-          r.total_input as total_items,
-          r.approved_count as approved,
-          r.rejected_count as rejected,
-          r.held_count as held,
-          coalesce(ev.llm_count, 0)::int as llm_count,
-          coalesce(ev.rule_count, 0)::int as rule_count,
-          coalesce(ev.top_reason, 'concluído') as top_reason,
-          r.status,
-          r.model_name
-        from garimpa.triage_run r
-        left join lateral (
+  return await withTenantDb(tenantId, async (sql) => {
+    try {
+      const rows = await sql<{
+        batch_id: string;
+        run_time: Date | string;
+        total_items: number;
+        approved: number;
+        rejected: number;
+        held: number;
+        llm_count: number;
+        rule_count: number;
+        top_reason: string | null;
+        status: "running" | "ok" | "error";
+        model_name: string | null;
+      }[]>`
+        with run_batches as (
           select
+            r.id::text as batch_id,
+            r.started_at as run_time,
+            r.total_input as total_items,
+            r.approved_count as approved,
+            r.rejected_count as rejected,
+            r.held_count as held,
+            coalesce(ev.llm_count, 0)::int as llm_count,
+            coalesce(ev.rule_count, 0)::int as rule_count,
+            coalesce(ev.top_reason, 'concluído') as top_reason,
+            r.status,
+            r.model_name
+          from garimpa.triage_run r
+          left join lateral (
+            select
+              count(*) filter (where actor_type = 'llm')::int as llm_count,
+              count(*) filter (where actor_type = 'rule')::int as rule_count,
+              mode() within group (order by coalesce(reason_code, 'none')) as top_reason
+            from garimpa.curation_event e
+            where e.triage_run_id = r.id
+          ) ev on true
+          where r.tenant_id = ${tenantId}
+        ),
+        legacy_batches as (
+          select
+            'legacy_' || to_char(date_trunc('minute', created_at), 'YYYYMMDD_HH24MI') as batch_id,
+            date_trunc('minute', created_at) as run_time,
+            count(*)::int as total_items,
+            count(*) filter (where to_status = 'approved')::int as approved,
+            count(*) filter (where to_status = 'rejected')::int as rejected,
+            count(*) filter (where to_status = 'held')::int as held,
             count(*) filter (where actor_type = 'llm')::int as llm_count,
             count(*) filter (where actor_type = 'rule')::int as rule_count,
-            mode() within group (order by coalesce(reason_code, 'none')) as top_reason
-          from garimpa.curation_event e
-          where e.triage_run_id = r.id
-        ) ev on true
-        where r.tenant_id = ${tenantId}
-      ),
-      legacy_batches as (
-        select
-          'legacy_' || to_char(date_trunc('minute', created_at), 'YYYYMMDD_HH24MI') as batch_id,
-          date_trunc('minute', created_at) as run_time,
-          count(*)::int as total_items,
-          count(*) filter (where to_status = 'approved')::int as approved,
-          count(*) filter (where to_status = 'rejected')::int as rejected,
-          count(*) filter (where to_status = 'held')::int as held,
-          count(*) filter (where actor_type = 'llm')::int as llm_count,
-          count(*) filter (where actor_type = 'rule')::int as rule_count,
-          mode() within group (order by coalesce(reason_code, 'none')) as top_reason,
-          'ok'::varchar(32) as status,
-          null::varchar(64) as model_name
-        from garimpa.curation_event
-        where actor_type in ('rule', 'llm')
-          and tenant_id = ${tenantId}
-          and triage_run_id is null
-        group by date_trunc('minute', created_at)
-      )
-      select * from run_batches
-      union all
-      select * from legacy_batches
-      order by run_time desc
-      limit ${Math.min(Math.max(limit, 1), 50)}
-    `;
+            mode() within group (order by coalesce(reason_code, 'none')) as top_reason,
+            'ok'::varchar(32) as status,
+            null::varchar(64) as model_name
+          from garimpa.curation_event
+          where actor_type in ('rule', 'llm')
+            and tenant_id = ${tenantId}
+            and triage_run_id is null
+          group by date_trunc('minute', created_at)
+        )
+        select * from run_batches
+        union all
+        select * from legacy_batches
+        order by run_time desc
+        limit ${Math.min(Math.max(limit, 1), 50)}
+      `;
 
-    return rows.map((r) => ({
-      batchId: r.batch_id,
-      runTime: new Date(r.run_time).toISOString(),
-      totalItems: Number(r.total_items),
-      approved: Number(r.approved),
-      rejected: Number(r.rejected),
-      held: Number(r.held),
-      llmCount: Number(r.llm_count),
-      ruleCount: Number(r.rule_count),
-      topReason: r.top_reason ?? "none",
-      status: r.status,
-      modelName: r.model_name,
-    }));
-  } catch {
-    return [];
-  } finally {
-    await sql.end();
-  }
-}
-
-/**
- * Retorna o "pulso" em tempo real do sistema: estado da ingestão, última triagem e volume de pendências.
- */
-export async function getOperationalPulse(
-  tenantId = "local",
-): Promise<SystemOperationalPulse> {
-  if (!process.env.DATABASE_URL) {
-    return {
-      isCaptureRunning: false,
-      runningMarketplace: null,
-      lastCaptureAt: null,
-      lastCaptureMarketplace: null,
-      lastCaptureNewItems: 0,
-      lastCaptureStatus: null,
-      lastTriageAt: null,
-      lastTriageTotal: 0,
-      lastTriageApproved: 0,
-      lastTriageHeld: 0,
-      pendingCount: 0,
-    };
-  }
-
-  const sql = db();
-  try {
-    const [runningRuns, lastRuns, triageRuns, legacyTriage, pending] = await Promise.all([
-      sql<{ marketplace: string }[]>`
-        select marketplace from garimpa.capture_run
-        where tenant_id = ${tenantId} and status = 'running'
-        order by started_at desc limit 1
-      `,
-      sql<{
-        marketplace: string;
-        finished_at: Date | string | null;
-        items_new: number;
-        status: "ok" | "error";
-      }[]>`
-        select marketplace, finished_at, items_new, status
-        from garimpa.capture_run
-        where tenant_id = ${tenantId} and status in ('ok', 'error')
-        order by finished_at desc nulls last, started_at desc limit 1
-      `,
-      sql<{
-        run_time: Date | string;
-        total: number;
-        approved: number;
-        held: number;
-      }[]>`
-        select
-          started_at as run_time,
-          total_input as total,
-          approved_count as approved,
-          held_count as held
-        from garimpa.triage_run
-        where tenant_id = ${tenantId} and status in ('ok', 'running')
-        order by started_at desc limit 1
-      `,
-      sql<{
-        run_time: Date | string;
-        total: number;
-        approved: number;
-        held: number;
-      }[]>`
-        select
-          date_trunc('minute', created_at) as run_time,
-          count(*)::int as total,
-          count(*) filter (where to_status = 'approved')::int as approved,
-          count(*) filter (where to_status = 'held')::int as held
-        from garimpa.curation_event
-        where actor_type in ('rule', 'llm') and tenant_id = ${tenantId}
-        group by date_trunc('minute', created_at)
-        order by run_time desc limit 1
-      `,
-      sql<{ count: number }[]>`
-        select count(*)::int as count
-        from garimpa.product_curation
-        where tenant_id = ${tenantId} and status = 'pending'
-      `,
-    ]);
-
-    const activeCapture = runningRuns[0];
-    const latestCapture = lastRuns[0];
-    const latestTriage = triageRuns[0] ?? legacyTriage[0];
-    const pendingTotal = pending[0]?.count ?? 0;
-
-    return {
-      isCaptureRunning: Boolean(activeCapture),
-      runningMarketplace: activeCapture?.marketplace ?? null,
-      lastCaptureAt: latestCapture?.finished_at ? new Date(latestCapture.finished_at).toISOString() : null,
-      lastCaptureMarketplace: latestCapture?.marketplace ?? null,
-      lastCaptureNewItems: latestCapture?.items_new ?? 0,
-      lastCaptureStatus: latestCapture?.status ?? null,
-      lastTriageAt: latestTriage?.run_time ? new Date(latestTriage.run_time).toISOString() : null,
-      lastTriageTotal: latestTriage?.total ?? 0,
-      lastTriageApproved: latestTriage?.approved ?? 0,
-      lastTriageHeld: latestTriage?.held ?? 0,
-      pendingCount: pendingTotal,
-    };
-  } catch {
-    return {
-      isCaptureRunning: false,
-      runningMarketplace: null,
-      lastCaptureAt: null,
-      lastCaptureMarketplace: null,
-      lastCaptureNewItems: 0,
-      lastCaptureStatus: null,
-      lastTriageAt: null,
-      lastTriageTotal: 0,
-      lastTriageApproved: 0,
-      lastTriageHeld: 0,
-      pendingCount: 0,
-    };
-  } finally {
-    await sql.end();
-  }
+      return rows.map((r) => ({
+        batchId: r.batch_id,
+        runTime: new Date(r.run_time).toISOString(),
+        totalItems: Number(r.total_items),
+        approved: Number(r.approved),
+        rejected: Number(r.rejected),
+        held: Number(r.held),
+        llmCount: Number(r.llm_count),
+        ruleCount: Number(r.rule_count),
+        topReason: r.top_reason ?? "none",
+        status: r.status,
+        modelName: r.model_name,
+      }));
+    } catch {
+      return [];
+    }
+  }, sqlFactory);
 }
 
 export interface TriageBatchItem {
@@ -706,86 +589,86 @@ export interface TriageBatchItem {
  */
 export async function getTriageBatchItems(
   batchIdOrMinute: string,
-  tenantId = "local",
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
 ): Promise<TriageBatchItem[]> {
   if (!process.env.DATABASE_URL) return [];
 
   const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(batchIdOrMinute);
 
-  const sql = db();
-  try {
-    const rows = await sql<{
-      id: string;
-      product_id: string;
-      to_status: "approved" | "rejected" | "held" | "pending";
-      reason_code: string | null;
-      reason_detail: string | null;
-      actor_type: "rule" | "llm" | "human";
-      created_at: Date | string;
-      metadata: Record<string, unknown>;
-      title: string;
-      image_url: string | null;
-      product_url: string | null;
-      marketplace: string;
-      price_cents: number;
-    }[]>`
-      select
-        e.id,
-        e.product_id,
-        e.to_status,
-        e.reason_code,
-        e.reason_detail,
-        e.actor_type,
-        e.created_at,
-        e.metadata,
-        coalesce(p.title, (e.metadata->'snapshot'->>'title'), 'Produto') as title,
-        coalesce(p.image_url, (e.metadata->'snapshot'->>'imageUrl')) as image_url,
-        coalesce(p.product_url, (e.metadata->'snapshot'->>'productUrl')) as product_url,
-        coalesce(p.marketplace, (e.metadata->'snapshot'->>'marketplace'), 'geral') as marketplace,
-        coalesce((e.metadata->'snapshot'->>'priceCents')::int, 0) as price_cents
-      from garimpa.curation_event e
-      left join garimpa.product p on p.id = e.product_id and p.tenant_id = e.tenant_id
-      where e.actor_type in ('rule', 'llm')
-        and e.tenant_id = ${tenantId}
-        and (
-          (${isUuid} and e.triage_run_id = ${isUuid ? batchIdOrMinute : null}::uuid)
-          or
-          (not ${isUuid} and date_trunc('minute', e.created_at) = ${!isUuid && !isNaN(new Date(batchIdOrMinute).getTime()) ? new Date(batchIdOrMinute) : new Date(0)})
-        )
-      order by e.id desc
-      limit 200
-    `;
+  return await withTenantDb(tenantId, async (sql) => {
+    try {
+      const rows = await sql<{
+        id: string;
+        product_id: string;
+        to_status: "approved" | "rejected" | "held" | "pending";
+        reason_code: string | null;
+        reason_detail: string | null;
+        actor_type: "rule" | "llm" | "human";
+        created_at: Date | string;
+        metadata: Record<string, unknown>;
+        title: string;
+        image_url: string | null;
+        product_url: string | null;
+        marketplace: string;
+        price_cents: number;
+      }[]>`
+        select
+          e.id,
+          e.product_id,
+          e.to_status,
+          e.reason_code,
+          e.reason_detail,
+          e.actor_type,
+          e.created_at,
+          e.metadata,
+          coalesce(p.title, (e.metadata->'snapshot'->>'title'), 'Produto') as title,
+          coalesce(p.image_url, (e.metadata->'snapshot'->>'imageUrl')) as image_url,
+          coalesce(p.product_url, (e.metadata->'snapshot'->>'productUrl')) as product_url,
+          coalesce(p.marketplace, (e.metadata->'snapshot'->>'marketplace'), 'geral') as marketplace,
+          coalesce((e.metadata->'snapshot'->>'priceCents')::int, 0) as price_cents
+        from garimpa.curation_event e
+        left join garimpa.product p on p.id = e.product_id and p.tenant_id = e.tenant_id
+        where e.actor_type in ('rule', 'llm')
+          and e.tenant_id = ${tenantId}
+          and (
+            (${isUuid} and e.triage_run_id = ${isUuid ? batchIdOrMinute : null}::uuid)
+            or
+            (not ${isUuid} and date_trunc('minute', e.created_at) = ${!isUuid && !isNaN(new Date(batchIdOrMinute).getTime()) ? new Date(batchIdOrMinute) : new Date(0)})
+          )
+        order by e.id desc
+        limit 200
+      `;
 
-    return rows.map((r) => {
-      const auto = (r.metadata?.automation as Record<string, unknown>) ?? {};
-      const rationale =
-        typeof auto.rationale === "string"
-          ? auto.rationale
-          : typeof auto.aiJustification === "string"
-          ? auto.aiJustification
-          : r.reason_detail ?? "Sem justificativa registrada";
+      return rows.map((r) => {
+        const auto = (r.metadata?.automation as Record<string, unknown>) ?? {};
+        const rationale =
+          typeof auto.rationale === "string"
+            ? auto.rationale
+            : typeof auto.aiJustification === "string"
+            ? auto.aiJustification
+            : r.reason_detail ?? "Sem justificativa registrada";
 
-      return {
-        id: r.id,
-        productId: r.product_id,
-        title: r.title,
-        imageUrl: r.image_url,
-        productUrl: r.product_url,
-        marketplace: r.marketplace,
-        priceCents: r.price_cents,
-        status: r.to_status,
-        actorType: r.actor_type,
-        reasonCode: r.reason_code,
-        reasonDetail: r.reason_detail,
-        aiScore: typeof auto.aiScore === "number" ? auto.aiScore : null,
-        editorialCategory: typeof auto.editorialCategory === "string" ? auto.editorialCategory : null,
-        rationale,
-        createdAt: new Date(r.created_at).toISOString(),
-      };
-    });
-  } catch {
-    return [];
-  } finally {
-    await sql.end();
-  }
+        return {
+          id: r.id,
+          productId: r.product_id,
+          title: r.title,
+          imageUrl: r.image_url,
+          productUrl: r.product_url,
+          marketplace: r.marketplace,
+          priceCents: r.price_cents,
+          status: r.to_status,
+          actorType: r.actor_type,
+          reasonCode: r.reason_code,
+          reasonDetail: r.reason_detail,
+          aiScore: typeof auto.aiScore === "number" ? auto.aiScore : null,
+          editorialCategory: typeof auto.editorialCategory === "string" ? auto.editorialCategory : null,
+          rationale,
+          createdAt: new Date(r.created_at).toISOString(),
+        };
+      });
+    } catch {
+      return [];
+    }
+  }, sqlFactory);
 }

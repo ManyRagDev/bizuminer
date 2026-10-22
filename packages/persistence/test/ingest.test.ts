@@ -303,4 +303,52 @@ describe("sweep", () => {
     assert.equal(summary.itemsSkippedByPolicy, 8);
     assert.equal(store.allProducts.some((product) => product.externalId === "CASA1"), false);
   });
+
+  it("AC-036.6 / AC-028.1: recaptura com mesmo external_id em InMemoryStore preserva a identidade única do produto e atualiza observação", async () => {
+    const store = new InMemoryStore();
+    const externalId = "RECAPTURE_1";
+    // Primeira varredura: cria o produto e a primeira observação de preço (R$ 100)
+    await sweep(
+      fakeAdapter([[offer({ externalId, title: "Cafeteira Expresso 110V", priceCents: 10000 })]]),
+      cred,
+      store,
+      { tenantId: "t1" },
+      ctx,
+    );
+    assert.equal(store.allProducts.filter((p) => p.externalId === externalId).length, 1);
+    const initialProduct = store.allProducts.find((p) => p.externalId === externalId)!;
+    const initialObs = await store.latestObservation(initialProduct.id);
+    assert.equal(initialObs?.priceCents, 10000);
+
+    // Segunda varredura (recaptura): mesmo externalId com novo preço (R$ 89)
+    const sweep2 = await sweep(
+      fakeAdapter([[offer({ externalId, title: "Cafeteira Expresso 110V", priceCents: 8900 })]]),
+      cred,
+      store,
+      { tenantId: "t1" },
+      ctx,
+    );
+
+    // Afirmação: identidade única do produto preservada (exatamente 1 produto)
+    const matchingProducts = store.allProducts.filter((p) => p.externalId === externalId);
+    assert.equal(matchingProducts.length, 1, "Recaptura com o mesmo external_id deve manter uma única identidade de produto no InMemoryStore");
+    assert.equal(matchingProducts[0]!.id, initialProduct.id, "ID do produto deve permanecer inalterado");
+
+    // Afirmação: observação atualizada e contagem de observações incrementada
+    const updatedObs = await store.latestObservation(initialProduct.id);
+    assert.equal(updatedObs?.priceCents, 8900, "Última observação deve refletir o novo preço");
+    assert.equal((await store.priceRange(initialProduct.id))?.observations, 2, "Contagem de observações para o produto deve ser 2");
+    assert.equal(sweep2.itemsNew, 0, "Nenhum produto novo deve ser criado na recaptura");
+    assert.equal(sweep2.priceChanges, 1, "Mudança de preço deve ser detectada");
+  });
+});
+
+// Regression: finishing a non-house run must keep its selected tenant under RLS.
+it('sweep forwards tenant to capture completion, including an empty source', async()=>{
+ const store=new InMemoryStore();
+ const original=store.finishCaptureRun.bind(store);
+ let completedTenant:string|undefined;
+ store.finishCaptureRun=async(id,input)=>{completedTenant=input.tenantId;await original(id,input);};
+ await sweep(fakeAdapter([]),cred,store,{tenantId:'tenant_b',maxPages:1},ctx);
+ assert.equal(completedTenant,'tenant_b');
 });

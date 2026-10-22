@@ -1,0 +1,11 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"url\":\"https://spbuwcwmxlycchuwhfir.supabase.co\"}"
+      }
+    ]
+  }
+}

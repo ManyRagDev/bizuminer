@@ -1,0 +1,66 @@
+{
+  "routeResults": [
+    {
+      "input": "selecao",
+      "aba": "selecao",
+      "sub": "",
+      "redirectNeeded": false
+    },
+    {
+      "input": "excecoes",
+      "aba": "excecoes",
+      "sub": "singulars",
+      "redirectNeeded": false
+    },
+    {
+      "input": "radar",
+      "aba": "selecao",
+      "sub": "",
+      "redirectNeeded": false
+    },
+    {
+      "input": "auditoria",
+      "aba": "auditoria",
+      "sub": "spotcheck",
+      "redirectNeeded": false
+    },
+    {
+      "input": "bussola",
+      "aba": "bussola",
+      "sub": "",
+      "redirectNeeded": false
+    },
+    {
+      "input": "pipeline",
+      "aba": "pipeline",
+      "sub": "",
+      "redirectNeeded": false
+    }
+  ],
+  "navResults": [
+    {
+      "route": "/admin",
+      "active": "hoje"
+    },
+    {
+      "route": "/admin/onboarding",
+      "active": "hoje"
+    },
+    {
+      "route": "/admin/governanca",
+      "active": "hoje"
+    },
+    {
+      "route": "/admin/campanhas",
+      "active": "campanhas"
+    }
+  ],
+  "cockpitViewModelProductionImportConsumers": [],
+  "radarCampaignHrefTemplate": "/admin/campanhas?conta=${encodeURIComponent(tenantId)}&productId=${encodeURIComponent(opp.productId)}",
+  "radarPassesOpportunityId": false,
+  "browser": {
+    "requested": "http://localhost:3100/admin/curadoria?aba=radar",
+    "observed": "http://localhost:3100/entrar?next=%2Fadmin%2Fcuradoria",
+    "authenticated": false
+  }
+}

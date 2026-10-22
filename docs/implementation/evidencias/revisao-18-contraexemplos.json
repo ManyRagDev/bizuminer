@@ -1,0 +1,353 @@
+{
+  "purpose": "Controles positivos e contraexemplos isolados; confirmed significa comportamento esperado pelo diagnóstico, não aceite do produto.",
+  "appliedMigrations": [
+    "20261014100000_garimpa_account_context_and_membership.sql",
+    "20261014101000_garimpa_tenant_rls_scoped.sql",
+    "20261014102000_garimpa_price_evidence_canonical.sql",
+    "20261014103000_garimpa_rubric_assessment_shadow.sql",
+    "20261014104000_garimpa_audience_policy_and_opportunity.sql",
+    "20261014105000_garimpa_commerce_and_campaign_link.sql",
+    "20261014106000_garimpa_commercial_financial_ledger.sql",
+    "20261014107000_garimpa_click_attribution_and_channels.sql",
+    "20261014108000_garimpa_policy_experiments.sql",
+    "20261014109000_garimpa_dispatch_jobs_outbox.sql",
+    "20261014110000_garimpa_saas_onboarding_entitlements.sql"
+  ],
+  "results": [
+    {
+      "name": "positive_no_context_invites_entitlements_denied",
+      "status": "behavior_confirmed",
+      "observed": {
+        "read": 0,
+        "updated": 0
+      }
+    },
+    {
+      "name": "human_v2_persisted_but_legacy_consumer_rejects",
+      "status": "behavior_confirmed",
+      "observed": {
+        "saved": {
+          "saved": true,
+          "editorialAssessmentId": "0967c680-f4e2-4d65-b9c0-a57c04ec5ade",
+          "comparisonReviewId": null,
+          "agreement": true,
+          "disagreements": [],
+          "hasShadow": false
+        },
+        "legacyConsumerValidation": {
+          "ok": false,
+          "error": "invalid_product"
+        },
+        "actualDeskBlockers": [
+          "Produto sem imagem para apresentação.",
+          "Avaliação incompleta ou inválida."
+        ]
+      }
+    },
+    {
+      "name": "rubric_thirty_replays_still_ratify",
+      "status": "behavior_confirmed",
+      "observed": {
+        "metrics": {
+          "totalReviewed": 30,
+          "agreedCount": 30,
+          "disagreedCount": 0,
+          "agreementRate": 1,
+          "disagreementByDimension": {
+            "quality": 0,
+            "value": 0,
+            "audience": 0,
+            "confidence": 0,
+            "safety": 0
+          },
+          "sampleSizeTarget": 30,
+          "minAgreementRateTarget": 0.8,
+          "gatePassed": true,
+          "status": "ratified",
+          "gateName": "G-RUBRIC"
+        },
+        "distinctProducts": 1
+      }
+    },
+    {
+      "name": "invitation_accepts_client_claimed_recipient_email",
+      "status": "behavior_confirmed",
+      "observed": {
+        "accepted": {
+          "accepted": true,
+          "affiliateId": "aff_a",
+          "tenantId": "a",
+          "role": "operator"
+        },
+        "sessionEmailNeverProvidedOrVerified": true,
+        "scope": "service + RPC; HTTP Auth action inspected statically"
+      }
+    },
+    {
+      "name": "invitation_rejects_existing_other_account_context",
+      "status": "behavior_confirmed",
+      "observed": {
+        "authenticatedMemberOfBUnableToJoinA": true
+      }
+    },
+    {
+      "name": "third_commission_change_same_state_disappears",
+      "status": "behavior_confirmed",
+      "observed": {
+        "commits": [
+          {
+            "batchId": "c3bed280-22c5-4c2d-a816-b926ff71558b",
+            "committedRowsCount": 1,
+            "adjustmentsCount": 0,
+            "alreadyCommitted": false
+          },
+          {
+            "batchId": "b11dc8a0-59b8-4448-9e6b-22cbaf418a09",
+            "committedRowsCount": 1,
+            "adjustmentsCount": 1,
+            "alreadyCommitted": false
+          },
+          {
+            "batchId": "6291bddb-eb0e-45e2-a47a-632beacd3367",
+            "committedRowsCount": 1,
+            "adjustmentsCount": 1,
+            "alreadyCommitted": false
+          },
+          {
+            "batchId": "e03bc111-7e4c-4ee9-b846-d449e78c90e8",
+            "committedRowsCount": 1,
+            "adjustmentsCount": 1,
+            "alreadyCommitted": false
+          }
+        ],
+        "ledger": [
+          {
+            "amount_cents": 100,
+            "state": "confirmed",
+            "source_key": "report:shopee:audit-order:audit-item",
+            "predecessor_id": null
+          },
+          {
+            "amount_cents": 150,
+            "state": "confirmed",
+            "source_key": "report:shopee:audit-order:audit-item:confirmed",
+            "predecessor_id": "b50a981b-a1a3-449a-9976-d9bb1053dcb5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "explicit_empty_selection_imports_all_eligible_rows",
+      "status": "behavior_confirmed",
+      "observed": {
+        "batchId": "7cf2a3e3-000a-44fe-aeeb-3873bb47ce11",
+        "committedRowsCount": 1,
+        "adjustmentsCount": 0,
+        "alreadyCommitted": false
+      }
+    },
+    {
+      "name": "experiment_one_empty_candidate_evaluation_promotes",
+      "status": "behavior_confirmed",
+      "observed": {
+        "result": {
+          "promoted": true,
+          "candidateVersion": "candidate",
+          "baselineVersion": "base"
+        },
+        "report": {
+          "experiment": {
+            "id": "95b38ff4-e7ef-4a3d-bbe5-81bd050243b4",
+            "tenantId": "a",
+            "baselineVersion": "base",
+            "candidateVersion": "candidate",
+            "hypothesis": "Synthetic",
+            "cohortSpec": {},
+            "primaryMetric": "score",
+            "minSample": 1,
+            "startedAt": "2026-10-14 22:57:27.585-03",
+            "endedAt": null,
+            "status": "reviewed",
+            "promotionRationale": null,
+            "promotedBy": null,
+            "createdAt": "2026-10-14 22:57:27.585-03",
+            "audiencePolicyId": "3a327362-0392-45a4-9c0b-34614fe86ca9"
+          },
+          "baselineMetric": {
+            "key": "score_baseline",
+            "value": null,
+            "unit": "ratio",
+            "source": "experiment_evaluation",
+            "windowStart": "2026-10-14 22:57:27.585-03",
+            "windowEnd": "2026-10-15T01:57:27.599Z",
+            "cohortDefinition": "baseline_cohort",
+            "numerator": 0,
+            "sampleSize": 0,
+            "coverage": 0,
+            "attributionMethod": "deterministic_assignment",
+            "limitations": [
+              "Denominador ausente ou zero na janela observada. Taxa não calculável."
+            ],
+            "policyVersions": [
+              "base"
+            ]
+          },
+          "candidateMetric": {
+            "key": "score_candidate",
+            "value": 0,
+            "unit": "ratio",
+            "source": "experiment_evaluation",
+            "windowStart": "2026-10-14 22:57:27.585-03",
+            "windowEnd": "2026-10-15T01:57:27.599Z",
+            "cohortDefinition": "candidate_cohort",
+            "numerator": 0,
+            "denominator": 1,
+            "sampleSize": 1,
+            "coverage": 1,
+            "attributionMethod": "deterministic_assignment",
+            "limitations": [],
+            "policyVersions": [
+              "candidate"
+            ]
+          },
+          "totalSampleSize": 1
+        }
+      }
+    },
+    {
+      "name": "dispatch_assisted_expired_plan_link_and_uncommitted_io",
+      "status": "behavior_confirmed",
+      "observed": {
+        "output": {
+          "jobProcessed": true,
+          "jobId": "ac0e6b55-2897-4ecb-a9ed-bb9bbd69f4b6",
+          "status": "succeeded"
+        },
+        "payload": {
+          "destination": {
+            "id": "dd",
+            "targetRef": "authorized-test"
+          },
+          "text": "Synthetic audit only",
+          "link": "https://garimpa.app/l/audit_code18",
+          "idempotencyKey": "audit-18-dispatch"
+        },
+        "insideTransaction": true,
+        "afterRollback": {
+          "status": "queued",
+          "io_started_at": null
+        },
+        "destinationMode": "assisted",
+        "planExpired": true,
+        "adapterWasSynthetic": true
+      }
+    },
+    {
+      "name": "onboarding_finishes_with_unresolved_evidence_reference",
+      "status": "behavior_confirmed",
+      "observed": {
+        "progress": {
+          "completedSteps": [
+            "account_created",
+            "marketplace_credentials_configured",
+            "test_link_verified",
+            "audience_policy_configured",
+            "first_campaign_created",
+            "first_kit_approved",
+            "first_publication_confirmed"
+          ],
+          "currentStep": "finished",
+          "allSteps": [
+            {
+              "step": "account_created",
+              "status": "completed",
+              "updatedAt": "2026-10-14 22:57:27.62-03"
+            },
+            {
+              "step": "marketplace_credentials_configured",
+              "status": "completed",
+              "updatedAt": "2026-10-14 22:57:27.622-03"
+            },
+            {
+              "step": "test_link_verified",
+              "status": "completed",
+              "updatedAt": "2026-10-14 22:57:27.626-03"
+            },
+            {
+              "step": "audience_policy_configured",
+              "status": "completed",
+              "updatedAt": "2026-10-14 22:57:27.631-03"
+            },
+            {
+              "step": "first_campaign_created",
+              "status": "completed",
+              "updatedAt": "2026-10-14 22:57:27.633-03"
+            },
+            {
+              "step": "first_kit_approved",
+              "status": "completed",
+              "updatedAt": "2026-10-14 22:57:27.635-03"
+            },
+            {
+              "step": "first_publication_confirmed",
+              "status": "completed",
+              "updatedAt": "2026-10-14 22:57:27.637-03"
+            }
+          ]
+        },
+        "facts": {
+          "credentials": 0,
+          "confirmed_publications": 0
+        }
+      }
+    },
+    {
+      "name": "positive_cancel_reaches_marker_and_aborts_adapter",
+      "status": "behavior_confirmed",
+      "observed": {
+        "output": {
+          "jobProcessed": true,
+          "jobId": "ac0e6b55-2897-4ecb-a9ed-bb9bbd69f4b6",
+          "status": "canceled",
+          "error": "LEASE_NOT_HELD_OR_CANCELED"
+        },
+        "cancelled": true,
+        "adapterCalls": 0
+      }
+    },
+    {
+      "name": "legacy_curation_reads_house_without_authorized_account",
+      "status": "behavior_confirmed",
+      "observed": {
+        "rows": [
+          "p_house"
+        ],
+        "authorizedAccountNotProvided": true
+      }
+    },
+    {
+      "name": "reactivation_rejects_valid_platform_admin_without_actor_GUC",
+      "status": "behavior_confirmed",
+      "observed": {
+        "validPlatformAdmin": "u_a",
+        "reactivationRejected": true,
+        "after": {
+          "status": "suspended"
+        }
+      }
+    },
+    {
+      "name": "e3_approval_accepts_nonexistent_calibration_reference",
+      "status": "behavior_confirmed",
+      "observed": {
+        "row": {
+          "status": "approved",
+          "approved_by": "u_a",
+          "e3_enabled": "true"
+        },
+        "calibrationRef": "nonexistent-calibration",
+        "scope": "approval DAL; no E3 activated remotely"
+      }
+    }
+  ]
+}

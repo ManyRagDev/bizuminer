@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-14",
+  "projectUrl": "https://spbuwcwmxlycchuwhfir.supabase.co",
+  "projectRef": "spbuwcwmxlycchuwhfir",
+  "method": "MCP get_project_url + execute_sql: catalogos/metadados somente leitura",
+  "database": "postgres",
+  "auditRole": "postgres",
+  "garimpaExists": true,
+  "v2MigrationsInHistory": 0,
+  "objectsPresent": {
+    "garimpa.account_entitlement": false,
+    "garimpa.dispatch_job": false,
+    "garimpa.policy_experiment": false
+  },
+  "runtimeCanInsertAppUserRole": false,
+  "limits": [
+    "Ambiente de staging isolado nao comprovado.",
+    "Consulta administrativa nao demonstra RLS do usuario.",
+    "Nao houve escrita, aplicacao de migration ou envio."
+  ]
+}

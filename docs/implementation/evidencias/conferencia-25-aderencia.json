@@ -1,0 +1,965 @@
+{
+  "date": "2026-10-15",
+  "scope": "Documentary/semantic plan reconciliation; no code/SQL/runtime acceptance claimed",
+  "sources": [
+    {
+      "path": "/home/many/Downloads/BLUEPRINT-MESTRE-BIZUMINER-V2.md",
+      "sha256": "79751dc238bb25eeb97e8c79ebd729e0e9320c8fc5aae36b66dd45230ad31171"
+    },
+    {
+      "path": "docs/implementation/BLUEPRINT-MESTRE-BIZUMINER-V2-fonte.md",
+      "sha256": "79751dc238bb25eeb97e8c79ebd729e0e9320c8fc5aae36b66dd45230ad31171"
+    },
+    {
+      "path": "docs/implementation/02-ARQUITETURA-GLOBAL.md",
+      "sha256": "a0a82eb20f935980b883dc828aa786679157775829e036f01e7d9a45771ac923"
+    },
+    {
+      "path": "docs/implementation/03-CONTRATOS-COMPARTILHADOS.md",
+      "sha256": "bacc8f07b1099af1533513435e9ad7d2c9c2a5c3eb730db884059fa9fca86d39"
+    },
+    {
+      "path": "docs/implementation/04-EVOLUCAO-E-MIGRATIONS.md",
+      "sha256": "2074e39e132bdc192de47ef8dff393e1bfeb52630fa190998f36158967b8a107"
+    },
+    {
+      "path": "docs/implementation/05-VERIFICACAO-INTEGRAL.md",
+      "sha256": "bb9d9bfb9d897003ef0b7da74e92627888d093f5a76c5bdadc401610f0267a6f"
+    },
+    {
+      "path": "docs/implementation/07-PRONTIDAO-E-DECISOES.md",
+      "sha256": "7b62c93dc130591788329c8f70cfc46206bf9387f88981cf7653f59d056bd866"
+    },
+    {
+      "path": "docs/implementation/08-RASTREABILIDADE.md",
+      "sha256": "b4900b60c40902efc74a1452137c611454d00813ddfe21e17ab8005cc04308fd"
+    },
+    {
+      "path": "docs/implementation/15-PLANO-DE-CONCLUSAO-SEQUENCIAL.md",
+      "sha256": "358db773c09681923d379192dbfcab88c72746011b2ae4e795b128e8530d6c34"
+    },
+    {
+      "path": "docs/implementation/17-PLANO-SEQUENCIAL-DE-CORRECAO-CF01-CF18.md",
+      "sha256": "a3f7e4a9c25c1ce13aa8b85b26a38561c966c12583e4c5bce5b4890284532c55"
+    },
+    {
+      "path": "docs/implementation/22-AUDITORIA-INDEPENDENTE-MIGRATIONS.md",
+      "sha256": "3c76989a179e82fd3a91ca6cb63ce8d6c30d3eeba5dbbd8b4e9bd9ee5d057a63"
+    },
+    {
+      "path": "docs/implementation/23-CORRECOES-AUDITADAS-E-APLICACAO-SEGURA.md",
+      "sha256": "8d306d618d4f4e840d0aeb6825c8f3ca8f44a35c587ee31b85cdc34a6d807206"
+    },
+    {
+      "path": "docs/implementation/24-CAMINHO-SEGURO-PARA-CONCLUSAO.md",
+      "sha256": "71ef8c2807ff5ab58529883d34237d0e9e4f56a92f98bb1bc42b117d0ce44746"
+    },
+    {
+      "path": "docs/implementation/25-ADERENCIA-AO-PLANO-ORIGINAL.md",
+      "sha256": "c583daafd1f14ae66a176ccdadf7ea2ebf35fe538e0e8dcf45cfc11d814dbb5c"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-00.md",
+      "sha256": "763e3ec61a25ad50b24872135cb11f379f56b7c4024be68caacb9a717f7b305f"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-01.md",
+      "sha256": "081b1e8dfe5e04f942054fce7545423cc12fe6091480062ecd1df1aa372973fa"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-02.md",
+      "sha256": "4ad09622d637a4293f77fad0f08f534196792552d35782fd7a0d8fdf3134451a"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-03.md",
+      "sha256": "4d19fe6ebc13f3f28d0fdb6967787f302c88e2fadc24b7115eab378815721930"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-04.md",
+      "sha256": "4b9e85564d1896f9473fe5644b17747cd0152d9d50fb8231b2675754d5ccaf10"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-05.md",
+      "sha256": "f9fcceb616ac3a9c966cdf41abd1041db333be9fff20ef1102c90b1c441c5ca1"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-06.md",
+      "sha256": "06a39f1221f4dd9d3f7186e7d20abef5e48227af40078b545f2e84eb0f9ac93f"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-07.md",
+      "sha256": "6b80219cc53dbb51da887015226db79f6e59f9a6f15d9bf6915ae0a506e36686"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-08.md",
+      "sha256": "f83790a4aa6f294fb0fc448fb5555858159babf1008466e8327066b4556752c3"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-09.md",
+      "sha256": "37d23df5e3ad9a6456ea8084f20a4c780b88add25a6278a827fea9feee128cb0"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-10.md",
+      "sha256": "fda5aaa67304023bf286be1f7e9dbc639acc2f69beee1545c8536d1728d8929f"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-11.md",
+      "sha256": "afa53c9dedbfc58f233a0665e4559d22d4dc3eb78d0cdf615092b07cb6bd3381"
+    },
+    {
+      "path": "docs/implementation/epicos/EP-12.md",
+      "sha256": "4284aa73112992dd8c41a3a5cc15a9b6bad02ed62c602b567822a4a68e19a9ef"
+    }
+  ],
+  "checks": {
+    "originalAndPreservedBlueprintEqual": true,
+    "blueprintRequirements": 62,
+    "normativeMatrixRequirements": 62,
+    "missingRequirements": [],
+    "extraRequirements": [],
+    "specs": 13,
+    "contracts": 9,
+    "blueprintTestCases": 18,
+    "originalDDeliveries": 15,
+    "correctiveRDeliveries": 15
+  },
+  "requirementsByFamily": {
+    "CODEX": 2,
+    "CUR": 10,
+    "DIST": 3,
+    "DOM": 5,
+    "ED": 6,
+    "KIT": 5,
+    "MET": 5,
+    "MKT": 3,
+    "MON": 3,
+    "OPS": 3,
+    "PRICE": 6,
+    "SAAS": 5,
+    "TEST": 1,
+    "UX": 5
+  },
+  "requirements": [
+    {
+      "requirement": "REQ-CODEX-01",
+      "originalTraceRow": "| REQ-CODEX-01 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-05](epicos/EP-05.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-10](epicos/EP-10.md), [EP-11](epicos/EP-11.md), [EP-12](epicos/EP-12.md) | Estrutura 1–7 das specs e auditoria | Verificação documental; modo integral prevalece sobre instrução de um épico por vez |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CODEX-02",
+      "originalTraceRow": "| REQ-CODEX-02 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-05](epicos/EP-05.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-10](epicos/EP-10.md), [EP-11](epicos/EP-11.md), [EP-12](epicos/EP-12.md) | Estrutura 1–7 das specs e auditoria | Verificação documental; modo integral prevalece sobre instrução de um épico por vez |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-01",
+      "originalTraceRow": "| REQ-CUR-01 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-02",
+      "originalTraceRow": "| REQ-CUR-02 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-03",
+      "originalTraceRow": "| REQ-CUR-03 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-04",
+      "originalTraceRow": "| REQ-CUR-04 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-05",
+      "originalTraceRow": "| REQ-CUR-05 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-06",
+      "originalTraceRow": "| REQ-CUR-06 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-07",
+      "originalTraceRow": "| REQ-CUR-07 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-08",
+      "originalTraceRow": "| REQ-CUR-08 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-09",
+      "originalTraceRow": "| REQ-CUR-09 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-CUR-10",
+      "originalTraceRow": "| REQ-CUR-10 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-06](epicos/EP-06.md) | C-02/C-03/C-04 | T01,T02,T04–06,T09,T12; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DIST-01",
+      "originalTraceRow": "| REQ-DIST-01 | [EP-04](epicos/EP-04.md), [EP-07](epicos/EP-07.md), [EP-11](epicos/EP-11.md) | C-05/C-06/C-08 | T11,T13,T14; S-LINK/S-DISPATCH |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DIST-02",
+      "originalTraceRow": "| REQ-DIST-02 | [EP-04](epicos/EP-04.md), [EP-07](epicos/EP-07.md), [EP-11](epicos/EP-11.md) | C-05/C-06/C-08 | T11,T13,T14; S-LINK/S-DISPATCH |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DIST-03",
+      "originalTraceRow": "| REQ-DIST-03 | [EP-04](epicos/EP-04.md), [EP-07](epicos/EP-07.md), [EP-11](epicos/EP-11.md) | C-05/C-06/C-08 | T11,T13,T14; S-LINK/S-DISPATCH |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DOM-01",
+      "originalTraceRow": "| REQ-DOM-01 | [EP-01](epicos/EP-01.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-10](epicos/EP-10.md) | C-01 a C-05 | T07,T13,T14,T17; J1/J2 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DOM-02",
+      "originalTraceRow": "| REQ-DOM-02 | [EP-01](epicos/EP-01.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-10](epicos/EP-10.md) | C-01 a C-05 | T07,T13,T14,T17; J1/J2 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DOM-03",
+      "originalTraceRow": "| REQ-DOM-03 | [EP-01](epicos/EP-01.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-10](epicos/EP-10.md) | C-01 a C-05 | T07,T13,T14,T17; J1/J2 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DOM-04",
+      "originalTraceRow": "| REQ-DOM-04 | [EP-01](epicos/EP-01.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-10](epicos/EP-10.md) | C-01 a C-05 | T07,T13,T14,T17; J1/J2 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-DOM-05",
+      "originalTraceRow": "| REQ-DOM-05 | [EP-01](epicos/EP-01.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-10](epicos/EP-10.md) | C-01 a C-05 | T07,T13,T14,T17; J1/J2 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-ED-01",
+      "originalTraceRow": "| REQ-ED-01 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md) | C-03 | T01,T02,T04–06,T09; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-ED-02",
+      "originalTraceRow": "| REQ-ED-02 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md) | C-03 | T01,T02,T04–06,T09; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-ED-03",
+      "originalTraceRow": "| REQ-ED-03 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md) | C-03 | T01,T02,T04–06,T09; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-ED-04",
+      "originalTraceRow": "| REQ-ED-04 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md) | C-03 | T01,T02,T04–06,T09; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-ED-05",
+      "originalTraceRow": "| REQ-ED-05 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md) | C-03 | T01,T02,T04–06,T09; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-ED-06",
+      "originalTraceRow": "| REQ-ED-06 | [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md) | C-03 | T01,T02,T04–06,T09; S-RUBRICA |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-KIT-01",
+      "originalTraceRow": "| REQ-KIT-01 | [EP-04](epicos/EP-04.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md) | C-04/C-05 | T10–13; S-KIT e J1 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-KIT-02",
+      "originalTraceRow": "| REQ-KIT-02 | [EP-04](epicos/EP-04.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md) | C-04/C-05 | T10–13; S-KIT e J1 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-KIT-03",
+      "originalTraceRow": "| REQ-KIT-03 | [EP-04](epicos/EP-04.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md) | C-04/C-05 | T10–13; S-KIT e J1 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-KIT-04",
+      "originalTraceRow": "| REQ-KIT-04 | [EP-04](epicos/EP-04.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md) | C-04/C-05 | T10–13; S-KIT e J1 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-KIT-05",
+      "originalTraceRow": "| REQ-KIT-05 | [EP-04](epicos/EP-04.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md) | C-04/C-05 | T10–13; S-KIT e J1 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MET-01",
+      "originalTraceRow": "| REQ-MET-01 | [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md) | C-07/C-08 | T15,T16; S-FIN, coortes/shadow |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MET-02",
+      "originalTraceRow": "| REQ-MET-02 | [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md) | C-07/C-08 | T15,T16; S-FIN, coortes/shadow |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MET-03",
+      "originalTraceRow": "| REQ-MET-03 | [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md) | C-07/C-08 | T15,T16; S-FIN, coortes/shadow |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MET-04",
+      "originalTraceRow": "| REQ-MET-04 | [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md) | C-07/C-08 | T15,T16; S-FIN, coortes/shadow |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MET-05",
+      "originalTraceRow": "| REQ-MET-05 | [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md) | C-07/C-08 | T15,T16; S-FIN, coortes/shadow |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MKT-01",
+      "originalTraceRow": "| REQ-MKT-01 | [EP-03](epicos/EP-03.md), [EP-05](epicos/EP-05.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-12](epicos/EP-12.md) | C-03/C-07/C-08 | J1, EXP-03/04/06; custos e proof of value |",
+      "resumptionDeliveries": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MKT-02",
+      "originalTraceRow": "| REQ-MKT-02 | [EP-03](epicos/EP-03.md), [EP-05](epicos/EP-05.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-12](epicos/EP-12.md) | C-03/C-07/C-08 | J1, EXP-03/04/06; custos e proof of value |",
+      "resumptionDeliveries": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MKT-03",
+      "originalTraceRow": "| REQ-MKT-03 | [EP-03](epicos/EP-03.md), [EP-05](epicos/EP-05.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-12](epicos/EP-12.md) | C-03/C-07/C-08 | J1, EXP-03/04/06; custos e proof of value |",
+      "resumptionDeliveries": [
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MON-01",
+      "originalTraceRow": "| REQ-MON-01 | [EP-03](epicos/EP-03.md) | C-02/C-03 | 03-B; filas/budget/frescor e S-PRECO |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MON-02",
+      "originalTraceRow": "| REQ-MON-02 | [EP-03](epicos/EP-03.md) | C-02/C-03 | 03-B; filas/budget/frescor e S-PRECO |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-MON-03",
+      "originalTraceRow": "| REQ-MON-03 | [EP-03](epicos/EP-03.md) | C-02/C-03 | 03-B; filas/budget/frescor e S-PRECO |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-OPS-01",
+      "originalTraceRow": "| REQ-OPS-01 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-05](epicos/EP-05.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-10](epicos/EP-10.md), [EP-11](epicos/EP-11.md), [EP-12](epicos/EP-12.md) | 04-EVOLUCAO-E-MIGRATIONS | Preflight, fixture, canary e relatório de execução |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-OPS-02",
+      "originalTraceRow": "| REQ-OPS-02 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-05](epicos/EP-05.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-10](epicos/EP-10.md), [EP-11](epicos/EP-11.md), [EP-12](epicos/EP-12.md) | 04-EVOLUCAO-E-MIGRATIONS | Preflight, fixture, canary e relatório de execução |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-OPS-03",
+      "originalTraceRow": "| REQ-OPS-03 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-05](epicos/EP-05.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-10](epicos/EP-10.md), [EP-11](epicos/EP-11.md), [EP-12](epicos/EP-12.md) | 04-EVOLUCAO-E-MIGRATIONS | Preflight, fixture, canary e relatório de execução |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-PRICE-01",
+      "originalTraceRow": "| REQ-PRICE-01 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-06](epicos/EP-06.md) | C-02 | T06–08,T10–12; S-PRECO/S-KIT |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-PRICE-02",
+      "originalTraceRow": "| REQ-PRICE-02 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-06](epicos/EP-06.md) | C-02 | T06–08,T10–12; S-PRECO/S-KIT |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-PRICE-03",
+      "originalTraceRow": "| REQ-PRICE-03 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-06](epicos/EP-06.md) | C-02 | T06–08,T10–12; S-PRECO/S-KIT |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-PRICE-04",
+      "originalTraceRow": "| REQ-PRICE-04 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-06](epicos/EP-06.md) | C-02 | T06–08,T10–12; S-PRECO/S-KIT |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-PRICE-05",
+      "originalTraceRow": "| REQ-PRICE-05 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-06](epicos/EP-06.md) | C-02 | T06–08,T10–12; S-PRECO/S-KIT |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-PRICE-06",
+      "originalTraceRow": "| REQ-PRICE-06 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-06](epicos/EP-06.md) | C-02 | T06–08,T10–12; S-PRECO/S-KIT |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-SAAS-01",
+      "originalTraceRow": "| REQ-SAAS-01 | [EP-10](epicos/EP-10.md), [EP-12](epicos/EP-12.md) | C-01/C-08 | T17/T18; J2/S-DB, onboarding |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-SAAS-02",
+      "originalTraceRow": "| REQ-SAAS-02 | [EP-10](epicos/EP-10.md), [EP-12](epicos/EP-12.md) | C-01/C-08 | T17/T18; J2/S-DB, onboarding |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-SAAS-03",
+      "originalTraceRow": "| REQ-SAAS-03 | [EP-10](epicos/EP-10.md), [EP-12](epicos/EP-12.md) | C-01/C-08 | T17/T18; J2/S-DB, onboarding |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-SAAS-04",
+      "originalTraceRow": "| REQ-SAAS-04 | [EP-10](epicos/EP-10.md), [EP-12](epicos/EP-12.md) | C-01/C-08 | T17/T18; J2/S-DB, onboarding |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-SAAS-05",
+      "originalTraceRow": "| REQ-SAAS-05 | [EP-10](epicos/EP-10.md), [EP-12](epicos/EP-12.md) | C-01/C-08 | T17/T18; J2/S-DB, onboarding |",
+      "resumptionDeliveries": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-TEST-01",
+      "originalTraceRow": "| REQ-TEST-01 | [EP-00](epicos/EP-00.md), [EP-01](epicos/EP-01.md), [EP-02](epicos/EP-02.md), [EP-03](epicos/EP-03.md), [EP-04](epicos/EP-04.md), [EP-05](epicos/EP-05.md), [EP-06](epicos/EP-06.md), [EP-07](epicos/EP-07.md), [EP-08](epicos/EP-08.md), [EP-09](epicos/EP-09.md), [EP-10](epicos/EP-10.md), [EP-11](epicos/EP-11.md), [EP-12](epicos/EP-12.md) | 05-VERIFICACAO-INTEGRAL | T01–T18, S-*, J1–J3 |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-UX-01",
+      "originalTraceRow": "| REQ-UX-01 | [EP-05](epicos/EP-05.md) | C-03/C-07/C-09 | 05-A/B/C; T08,T18; jornada teclado/mobile |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-UX-02",
+      "originalTraceRow": "| REQ-UX-02 | [EP-05](epicos/EP-05.md) | C-03/C-07/C-09 | 05-A/B/C; T08,T18; jornada teclado/mobile |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-UX-03",
+      "originalTraceRow": "| REQ-UX-03 | [EP-05](epicos/EP-05.md) | C-03/C-07/C-09 | 05-A/B/C; T08,T18; jornada teclado/mobile |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-UX-04",
+      "originalTraceRow": "| REQ-UX-04 | [EP-05](epicos/EP-05.md) | C-03/C-07/C-09 | 05-A/B/C; T08,T18; jornada teclado/mobile |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    },
+    {
+      "requirement": "REQ-UX-05",
+      "originalTraceRow": "| REQ-UX-05 | [EP-05](epicos/EP-05.md) | C-03/C-07/C-09 | 05-A/B/C; T08,T18; jornada teclado/mobile |",
+      "resumptionDeliveries": [
+        "E2",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "verdict": "RETAINED_AS_NORMATIVE; implementation/remote acceptance not certified by this review"
+    }
+  ],
+  "specs": [
+    "EP-00",
+    "EP-01",
+    "EP-02",
+    "EP-03",
+    "EP-04",
+    "EP-05",
+    "EP-06",
+    "EP-07",
+    "EP-08",
+    "EP-09",
+    "EP-10",
+    "EP-11",
+    "EP-12"
+  ],
+  "contracts": [
+    "C-01",
+    "C-02",
+    "C-03",
+    "C-04",
+    "C-05",
+    "C-06",
+    "C-07",
+    "C-08",
+    "C-09"
+  ],
+  "blueprintTestCases": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09",
+    "T10",
+    "T11",
+    "T12",
+    "T13",
+    "T14",
+    "T15",
+    "T16",
+    "T17",
+    "T18"
+  ],
+  "businessDecisions": [
+    "D-01",
+    "D-02",
+    "D-03",
+    "D-04",
+    "D-05",
+    "D-06"
+  ],
+  "invariants": [
+    "INV-01",
+    "INV-02",
+    "INV-03",
+    "INV-04",
+    "INV-05",
+    "INV-06",
+    "INV-07",
+    "INV-08",
+    "INV-09",
+    "INV-10"
+  ],
+  "DDeliveries": [
+    "D00",
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06",
+    "D07",
+    "D08",
+    "D09",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14"
+  ],
+  "RDeliveries": [
+    "R00",
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09",
+    "R10",
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+  ],
+  "plan24": {
+    "beforeSha256": "00f9b436f9ed16e0732b87edee7b98d19303f4193daf0b043fa33fb751264c1b",
+    "afterSha256": "71ef8c2807ff5ab58529883d34237d0e9e4f56a92f98bb1bc42b117d0ce44746",
+    "changes": [
+      "Normative inheritance of all13 specs/C01-C09/62requirements",
+      "EP10A before new commercial writes including house",
+      "Explicit T01-T18, S suites/J journeys",
+      "Real source comparability G-EVIDENCE and E3G-PRICE separated",
+      "Independent manual financial/pilot vs automation/experiments",
+      "Gradual house activation before external10B",
+      "REQ-MKT01-03 functional proofs and objective complete-epic criteria"
+    ]
+  },
+  "notPerformed": [
+    "No implementation edits",
+    "No migrations or remote SELECTs",
+    "No new tests/build",
+    "No deployment, provisioning or business decision changes"
+  ],
+  "verdict": "PLAN24_ALIGNED_AFTER_DOCUMENTED_COMPLEMENTS; SQL candidate and production approval remain conditional"
+}

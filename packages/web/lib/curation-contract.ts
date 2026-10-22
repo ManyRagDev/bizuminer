@@ -204,7 +204,10 @@ export interface GroupActionInput {
   reasonDetail?: string | null;
   /** Se true, os membros restantes (não selecionados) deste grupo são retidos como held/family_saturation. */
   retainRemainingAsSaturation?: boolean;
+  saturationJustification?: string | null;
   reviewSessionId?: string | null;
+  /** IDs de todos os membros do grupo que o operador visualizou antes de confirmar a ação (BUG-019). */
+  expectedMemberProductIds?: string[] | null;
 }
 
 export interface ValidGroupAction {
@@ -214,7 +217,9 @@ export interface ValidGroupAction {
   reasonCode: CurationReason | null;
   reasonDetail: string | null;
   retainRemainingAsSaturation: boolean;
+  saturationJustification: string | null;
   reviewSessionId: string;
+  expectedMemberProductIds?: string[] | null;
 }
 
 const GROUP_ID_RE = /^grp_[0-9a-f]{16}$/;
@@ -268,6 +273,46 @@ export function validateGroupAction(
   const reasonCode = input.action === "approve" ? null : (input.reasonCode?.trim() as CurationReason ?? null);
   const reasonDetail = reasonCode === "other" ? (input.reasonDetail?.trim() ?? null) : null;
 
+  // BUG-019 / AC-035.1: retainRemainingAsSaturation exige justificativa editorial escrita pelo operador
+  // e a lista completa dos membros confirmados (expectedMemberProductIds).
+  if (retainRemaining) {
+    if (typeof input.saturationJustification !== "string" || input.saturationJustification.trim().length < 3) {
+      return { ok: false, error: "saturation_justification_invalid" };
+    }
+    if (!Array.isArray(input.expectedMemberProductIds) || input.expectedMemberProductIds.length === 0) {
+      return { ok: false, error: "expected_members_required" };
+    }
+  }
+
+  const saturationJustification = retainRemaining && typeof input.saturationJustification === "string"
+    ? input.saturationJustification.trim()
+    : null;
+
+  let expectedMemberProductIds: string[] | null = null;
+  if (Array.isArray(input.expectedMemberProductIds)) {
+    if (retainRemaining && input.expectedMemberProductIds.length === 0) {
+      return { ok: false, error: "expected_members_required" };
+    }
+    const seen = new Set<string>();
+    expectedMemberProductIds = [];
+    for (const rawId of input.expectedMemberProductIds) {
+      const id = typeof rawId === "string" ? rawId.trim() : "";
+      if (!PRODUCT_ID_RE.test(id)) return { ok: false, error: "invalid_product" };
+      if (seen.has(id)) return { ok: false, error: "bulk_duplicate_product" };
+      seen.add(id);
+      expectedMemberProductIds.push(id);
+    }
+    if (retainRemaining) {
+      for (const selId of selectedIds) {
+        if (!seen.has(selId)) {
+          return { ok: false, error: "expected_members_must_include_selected" };
+        }
+      }
+    }
+  } else if (retainRemaining) {
+    return { ok: false, error: "expected_members_required" };
+  }
+
   const reviewSessionId = typeof input.reviewSessionId === "string" && SESSION_ID_RE.test(input.reviewSessionId.trim())
     ? input.reviewSessionId.trim()
     : crypto.randomUUID();
@@ -281,7 +326,9 @@ export function validateGroupAction(
       reasonCode,
       reasonDetail,
       retainRemainingAsSaturation: retainRemaining,
+      saturationJustification,
       reviewSessionId,
+      expectedMemberProductIds,
     },
   };
 }

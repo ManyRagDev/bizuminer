@@ -24,7 +24,7 @@ test("Benchmark: dataset canônico possui exatamente 50 casos estruturados", () 
   );
 });
 
-test("Benchmark: 10/10 casos de sub-ticket (< R$ 20) são retidos deterministamente como weak_offer", async () => {
+test("Benchmark: 10/10 preços abaixo de R$ 20 sem histórico aguardam evidência", async () => {
   const cheapJunkItems = benchmarkData.filter((d) => d.group === "cheap_junk");
   assert.equal(cheapJunkItems.length, 10);
 
@@ -46,7 +46,7 @@ test("Benchmark: 10/10 casos de sub-ticket (< R$ 20) são retidos deterministame
   assert.equal(decisions.length, 10);
   for (const dec of decisions) {
     assert.equal(dec.status, "held");
-    assert.equal(dec.reasonCode, "weak_offer");
+    assert.equal(dec.reasonCode, "insufficient_evidence");
     assert.equal(dec.actorType, "rule");
   }
 });
@@ -110,11 +110,11 @@ test("Benchmark: saturação de família retém excedentes mantendo até 3 repre
 
   assert.equal(decisions.length, 5);
 
-  const heldSaturation = decisions.filter((d) => d.status === "held" && d.reasonCode === "family_saturation");
-  const passedAntiSaturation = decisions.filter((d) => d.status !== "held" || d.reasonCode !== "family_saturation");
+  const pendingSurplus = decisions.filter((d) => d.status === "pending" && d.actorType === "rule");
+  const passedAntiSaturation = decisions.filter((d) => d.status !== "pending" || d.actorType !== "rule");
 
   assert.equal(passedAntiSaturation.length, 3);
-  assert.equal(heldSaturation.length, 2);
+  assert.equal(pendingSurplus.length, 2);
 });
 
 test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline com calibração perfeita", async () => {
@@ -156,6 +156,7 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
   const approved = decisions.filter((d) => d.status === "approved");
   const held = decisions.filter((d) => d.status === "held");
   const rejected = decisions.filter((d) => d.status === "rejected");
+  const pending = decisions.filter((d) => d.status === "pending");
 
   // 1. NENHUM produto proibido/de risco foi aprovado
   for (const riskId of benchmarkData.filter((b) => b.group === "forbidden_risk").map((b) => b.id)) {
@@ -163,11 +164,11 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
     assert.equal(dec?.status, "rejected", "Item de risco deve ser rejeitado: " + riskId);
   }
 
-  // 2. NENHUM produto < R$ 20 foi aprovado
+  // 2. Preços abaixo de R$ 20 sem referência comparável continuam em revisão
   for (const junkId of benchmarkData.filter((b) => b.group === "cheap_junk").map((b) => b.id)) {
     const dec = decisions.find((d) => d.productId === junkId);
-    assert.equal(dec?.status, "held", "Item sub-ticket deve ser retido: " + junkId);
-    assert.equal(dec?.reasonCode, "weak_offer");
+    assert.equal(dec?.status, "held", "Preço baixo sem referência deve ser verificado: " + junkId);
+    assert.equal(dec?.reasonCode, "insufficient_evidence");
   }
 
   // 3. Nenhum produto com nota regular (score < 4) foi aprovado no piloto automático
@@ -183,6 +184,7 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
   }
 
   assert.ok(approved.length >= 15, "Deve aprovar pelo menos 15 achadinhos válidos");
-  assert.ok(held.length >= 12, "Deve reter itens sub-ticket e excedentes de saturação");
+  assert.ok(held.length >= 10, "Deve reter itens sub-ticket sem histórico suficiente");
+  assert.ok(pending.length >= 2, "Excedentes de saturação devem aguardar exame humano");
   assert.ok(rejected.length >= 5, "Deve rejeitar itens de risco");
 });

@@ -9,7 +9,7 @@ import {
 } from "../lib/ai-curation-service.ts";
 import { processIngestionPipeline } from "../lib/curation-pipeline.ts";
 
-test("Estágio 1: produto com ticket abaixo do mínimo (R$ 20,00) é retido como weak_offer", async () => {
+test("Estágio 1: preço abaixo de R$ 20 sem referência é retido por falta de evidência", async () => {
   const products = [
     {
       id: "prod_cheap",
@@ -30,8 +30,8 @@ test("Estágio 1: produto com ticket abaixo do mínimo (R$ 20,00) é retido como
   assert.equal(decisions.length, 1);
   assert.equal(decisions[0].productId, "prod_cheap");
   assert.equal(decisions[0].status, "held");
-  assert.equal(decisions[0].reasonCode, "weak_offer");
-  assert.equal(decisions[0].reasonDetail, null);
+  assert.equal(decisions[0].reasonCode, "insufficient_evidence");
+  assert.match(decisions[0].reasonDetail, /falta histórico comparável/);
   assert.equal(decisions[0].actorType, "rule");
 });
 
@@ -112,7 +112,7 @@ test("Estágio 1: produto com avaliação comprovadamente ruim (< 4.0) é rejeit
   assert.equal(decisions[0].reasonDetail, null);
 });
 
-test("Estágio 2: anti-saturação preserva até 3 representantes e retém excedentes como family_saturation", async () => {
+test("Estágio 2: anti-saturação preserva até 3 representantes para IA e mantém excedentes pendentes para exame humano", async () => {
   const products = [
     { id: "fone_1", marketplace: "aliexpress", title: "Fone Bluetooth TWS Pro", priceCents: 3900, ratingStar: 4.9, salesCount: 500, familyKey: "fone-bluetooth", category: "Áudio" },
     { id: "fone_2", marketplace: "shopee", title: "Fone de Ouvido Sem Fio", priceCents: 4200, ratingStar: 4.8, salesCount: 300, familyKey: "fone-bluetooth", category: "Áudio" },
@@ -140,10 +140,11 @@ test("Estágio 2: anti-saturação preserva até 3 representantes e retém exced
   // Exatamente 3 avançaram para a triagem da IA
   assert.equal(evaluatedIds.length, 3);
 
-  // Os outros 2 foram retidos por saturação de família no Estágio 2
-  const heldSaturation = decisions.filter((d) => d.status === "held" && d.reasonCode === "family_saturation");
-  assert.equal(heldSaturation.length, 2);
-  assert.ok(heldSaturation.every((d) => d.reasonDetail === null));
+  // Os outros 2 permaneceram pendentes para exame humano (sem ir para family_saturation por posição)
+  const pendingSurplus = decisions.filter((d) => d.status === "pending" && d.actorType === "rule");
+  assert.equal(pendingSurplus.length, 2);
+  assert.ok(pendingSurplus.every((d) => d.reasonCode === null && d.reasonDetail === null));
+  assert.ok(pendingSurplus.every((d) => d.rationale.includes("Excedente de apresentação")));
 });
 
 test("Estágio 3 e 4: promessa enganosa detectada pela IA gera rejected/misleading_claim", async () => {

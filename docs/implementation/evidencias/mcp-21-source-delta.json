@@ -1,0 +1,20 @@
+{
+  "changes": [
+    {
+      "path": "packages/persistence/supabase/migrations/20261015035001_garimpa_affiliate_secret_bootstrap_rls.sql",
+      "sha256": "908a2d0c97245d443d86ddb89b187baf1cfdb5e242aef5efb5324842bb7be693"
+    },
+    {
+      "path": "tools/editorial-tests/secret-bootstrap-flow.test.ts",
+      "sha256": "82759bd18dba4a176d6d32e562165da243f0bb9fe8a39b29a3806dcb58405377"
+    },
+    {
+      "path": "tools/editorial-tests/commercial-flow.test.ts",
+      "sha256": "ccf58f2c1c97c90f1e291f2c63e2b1e9ed3a03e8b851e2259bc097f389ee16d0"
+    },
+    {
+      "path": "tools/editorial-tests/package.json",
+      "sha256": "39f0e24a44ce2bd270f400548d68b53495dbcca72e184c499f28f1c4f26fb6f2"
+    }
+  ]
+}

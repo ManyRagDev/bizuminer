@@ -1,0 +1,181 @@
+{
+  "checkedAt": "2026-10-10T15:28:41.258Z",
+  "readOnly": true,
+  "home": {
+    "mode": "catalog",
+    "schemaReady": true,
+    "id": null,
+    "version": null,
+    "count": 24,
+    "productIds": [
+      "02788a4b-3c81-4e3c-b606-61573cf1b039",
+      "13b9a587-ded5-46b9-898f-eb4f13c8572a",
+      "13f63beb-ec72-462c-9665-fdca857d628a",
+      "17497c2b-252d-4627-a903-1c8d865340a0",
+      "1984ebb7-5b87-4ae3-ab74-1b9918e57e66",
+      "1a4b0639-3fa9-4b49-9e87-ebac158b81d1",
+      "2272f091-a8b2-4b32-968d-18e9fd10d134",
+      "29869552-1bb4-4bf5-ad4b-983305441464",
+      "2df57691-4711-4d76-af6c-4b79c59727a4",
+      "3e92f14a-9b0d-48dc-8034-213071ae509a",
+      "41dd6078-6e0a-48fe-b80f-95e994de4768",
+      "47f17ede-51f8-4785-9829-74a1c7220d37",
+      "4805dc0e-3db0-4648-80cd-7c0e1e1fcd40",
+      "4a0ab3ff-ad3a-41e0-872e-04ef970e137c",
+      "4b1865a7-2ac9-479d-b560-487893d9ca27",
+      "4c355b91-2f53-4606-86b1-570aff95efde",
+      "54b1d947-5c1d-4f80-9ca0-fcd596e8036b",
+      "73eb90f6-9e76-421a-9cd9-d417dcee600c",
+      "76eda92c-50c7-43c7-9783-85cb57ec20b2",
+      "8289dfb0-a750-4e4b-80a0-900bad4fab9c",
+      "8b57f43d-ddca-4391-a414-69597311493b",
+      "8b63e9db-1046-4589-9e15-5108ee1cbeb9",
+      "8b96b7ae-6792-4b45-bcd4-ce690f68dc2a",
+      "a24938ff-b418-4d45-b0fb-9486ba10b017"
+    ],
+    "heroProductIds": [
+      "02788a4b-3c81-4e3c-b606-61573cf1b039",
+      "13b9a587-ded5-46b9-898f-eb4f13c8572a",
+      "13f63beb-ec72-462c-9665-fdca857d628a"
+    ],
+    "validUntil": "2026-10-10T20:40:00.649Z"
+  },
+  "pauta": {
+    "mode": "catalog",
+    "schemaReady": true,
+    "id": null,
+    "version": null,
+    "count": 24,
+    "productIds": [
+      "02788a4b-3c81-4e3c-b606-61573cf1b039",
+      "13b9a587-ded5-46b9-898f-eb4f13c8572a",
+      "13f63beb-ec72-462c-9665-fdca857d628a",
+      "17497c2b-252d-4627-a903-1c8d865340a0",
+      "1984ebb7-5b87-4ae3-ab74-1b9918e57e66",
+      "1a4b0639-3fa9-4b49-9e87-ebac158b81d1",
+      "2272f091-a8b2-4b32-968d-18e9fd10d134",
+      "29869552-1bb4-4bf5-ad4b-983305441464",
+      "2df57691-4711-4d76-af6c-4b79c59727a4",
+      "3e92f14a-9b0d-48dc-8034-213071ae509a",
+      "41dd6078-6e0a-48fe-b80f-95e994de4768",
+      "47f17ede-51f8-4785-9829-74a1c7220d37",
+      "4805dc0e-3db0-4648-80cd-7c0e1e1fcd40",
+      "4a0ab3ff-ad3a-41e0-872e-04ef970e137c",
+      "4b1865a7-2ac9-479d-b560-487893d9ca27",
+      "4c355b91-2f53-4606-86b1-570aff95efde",
+      "54b1d947-5c1d-4f80-9ca0-fcd596e8036b",
+      "73eb90f6-9e76-421a-9cd9-d417dcee600c",
+      "76eda92c-50c7-43c7-9783-85cb57ec20b2",
+      "8289dfb0-a750-4e4b-80a0-900bad4fab9c",
+      "8b57f43d-ddca-4391-a414-69597311493b",
+      "8b63e9db-1046-4589-9e15-5108ee1cbeb9",
+      "8b96b7ae-6792-4b45-bcd4-ce690f68dc2a",
+      "a24938ff-b418-4d45-b0fb-9486ba10b017"
+    ],
+    "heroProductIds": [
+      "02788a4b-3c81-4e3c-b606-61573cf1b039",
+      "13b9a587-ded5-46b9-898f-eb4f13c8572a",
+      "13f63beb-ec72-462c-9665-fdca857d628a"
+    ],
+    "validUntil": "2026-10-10T20:40:00.649Z"
+  },
+  "sameOrder": true,
+  "sameHero": true,
+  "audit": {
+    "checkedAt": "2026-10-10T15:29:43.210Z",
+    "progress": {
+      "target": 12,
+      "reviewed": 0,
+      "confirmed": 0,
+      "corrected": 0,
+      "remaining": 12,
+      "complete": false
+    },
+    "products": [
+      {
+        "id": "0107544a-9540-41e2-8c7c-846954fa2c52",
+        "title": "KITS Carregador Turbo 20W Iphone Cabo e Fonte USB - C Lighning 8 XR 11 12 13 14 Homologado Anatel",
+        "marketplace": "shopee",
+        "originalApprovedAt": "2026-10-06T01:24:34.381Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "ff8f1bc9-2bea-42d9-9abe-1797e5662b05",
+        "title": "Kit Colmeia Organizadora de gavetas/Guarda Roupa P, M, G e GG - Maison Plus",
+        "marketplace": "shopee",
+        "originalApprovedAt": "2026-10-06T01:24:34.381Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "03d2dc3b-2a9d-4639-b577-9245cf6c51b3",
+        "title": "1/2/3 Unidades Luminárias Solares Impermeáveis Prova De Chuva 100 Led Sensor Courtyard Light Promoção",
+        "marketplace": "shopee",
+        "originalApprovedAt": "2026-10-06T01:24:34.381Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "05bce151-1d6d-40f2-880c-fe4a0cd4ea55",
+        "title": "10 Peças 9Mm Gancho Adesivo Parede Transparente Multifuncional Autocolante",
+        "marketplace": "shopee",
+        "originalApprovedAt": "2026-10-06T01:24:34.381Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "fd360e8f-4da7-4810-868d-b1766e18ad45",
+        "title": "Suporte para Telefone de Motocicleta Kewig M26A com Carregador Sem Fio de 15W e Carregamento USB C de 36W, Amortecedor de Vibrações e Montagem Antifurto para Guidão",
+        "marketplace": "aliexpress",
+        "originalApprovedAt": "2026-09-29T12:54:25.309Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "af814d0c-765d-4640-a843-3374ecb89462",
+        "title": "Gub plus 21 suporte de carro para suporte de telefone de carro suporte de telefone celular de bicicleta ajustável antiderrapante suporte de telefone de motocicleta",
+        "marketplace": "aliexpress",
+        "originalApprovedAt": "2026-09-29T12:54:25.309Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "d36d4726-a92b-43d2-aa85-724a33d1af5a",
+        "title": "Alumínio Alloy Mobile Phone Holder para bicicleta, montagem do telefone, carro elétrico, motocicleta, Bike Stand, ciclismo Parte",
+        "marketplace": "aliexpress",
+        "originalApprovedAt": "2026-09-29T12:54:25.309Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "bf296bd2-6a39-400e-a845-ba164b1233ba",
+        "title": "Kit de limpeza multifuncional, escova para limpeza de fones de ouvido, caneta para limpeza de teclado, airpods pro 1 2 3, fones de ouvido bluetooth",
+        "marketplace": "aliexpress",
+        "originalApprovedAt": "2026-09-29T12:54:25.309Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "394a09e1-747a-4c0f-ad57-6cd0b9780874",
+        "title": "Diy ciência brinquedo kit de ferramentas experimentais modelo canhão ar física compressão ar aprendizagem crianças brinquedos educativos material escolar",
+        "marketplace": "aliexpress",
+        "originalApprovedAt": "2026-09-29T12:54:25.309Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "ac18ffb8-7192-42f2-a3c0-926a6a4dfc8a",
+        "title": "Parafusadeira DESOON 20V Com Motor de Cobre, Maleta e 13 Acessórios",
+        "marketplace": "mercadolivre",
+        "originalApprovedAt": "2026-09-24T18:22:12.516Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "9a0203c8-92f4-4e83-b431-b2909380ce60",
+        "title": "Fone Bluetooth OWS Sem Fio 5.3 Open Ear Confortável para Academia Caminhada e Uso Diário",
+        "marketplace": "shopee",
+        "originalApprovedAt": "2026-09-24T18:22:12.516Z",
+        "inCurrentSharedSelection": false
+      },
+      {
+        "id": "769bed81-93e8-4d78-92ff-7cfcd5b4e73a",
+        "title": "Panela Pressao Brinox Ceramic Pressure Indução 6,8l Vanilla",
+        "marketplace": "mercadolivre",
+        "originalApprovedAt": "2026-09-24T18:22:12.516Z",
+        "inCurrentSharedSelection": false
+      }
+    ]
+  }
+}

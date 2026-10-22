@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-16T01:13:28.131Z",
+  "supabase": {
+    "availableMcpTools": 0,
+    "configuredProjectRef": "spbuwcwmxlycchuwhfir",
+    "currentRemoteBaselineVerified": false
+  },
+  "vercel": {
+    "projectId": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+    "teamId": "team_CdqNeIvhoe03YClNYUpP6C1w",
+    "status": 403,
+    "code": "forbidden",
+    "message": "Vercel API request failed (403: forbidden). Not authorized: Trying to access resource under scope \"emanuels-projects-aa92a126\". You must re-authenticate to this scope or use a token with access to this scope.",
+    "cliAvailable": false
+  },
+  "productionWrites": 0,
+  "staging": {
+    "identified": false,
+    "created": false,
+    "supabaseAuthStorageSupavisorHomologated": false
+  },
+  "requestForAccessPending": true
+}

@@ -70,6 +70,7 @@ export function extractCard(html: string): ExtractedCard | null {
 
   const currentSection = html.slice(html.indexOf("poly-price__current"));
   const currentLabel = /aria-label="(?!Antes:)([^"]*?reais[^"]*?)"/.exec(currentSection)?.[1];
+  if (currentLabel && /\b(?:a\s+partir\s+de|faixa|entre)\b/i.test(currentLabel)) return null;
   const current = currentLabel ? parseMoneyAria(currentLabel) : null;
   if (!current) return null;
   const priceCents = current.reais * 100 + current.centavos;
