@@ -2,7 +2,10 @@ import postgres from "postgres";
 import { authorizeAccountTransaction } from "./account-scope.ts";
 import type { AccountContext } from "./account-context.ts";
 
-export const WEB_DATABASE_CONNECTIONS = 3;
+// Each server instance shares the Supabase session pool with every other
+// concurrent instance. One queued connection per instance prevents a burst of
+// page requests from exhausting the database's small session-mode allowance.
+export const WEB_DATABASE_CONNECTIONS = 1;
 const registryKey = Symbol.for("bizuminer.web-database-pools.v1");
 const registryHost = globalThis as typeof globalThis & { [registryKey]?: Map<string, postgres.Sql> };
 const pools = registryHost[registryKey] ??= new Map<string, postgres.Sql>();

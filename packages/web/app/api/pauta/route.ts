@@ -4,6 +4,7 @@ import { checkAffiliateUser, sinkJson } from "../../../lib/api-auth";
 import { getPublishedEditorialSelection } from "../../../lib/editorial-selection-db";
 import { shortCodesForSlugs } from "../../../lib/short-link-db";
 import { shareBaseUrl } from "../../../lib/site-url";
+import { productPreview } from "../../../lib/product-preview";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +18,11 @@ export async function GET(request: NextRequest) {
   const selection = await getPublishedEditorialSelection("pauta");
   const host = shareBaseUrl().replace(/\/$/, "");
   const codes = selection.products.length
-    ? await shortCodesForSlugs(selection.products.map((product) => product.slug))
+    ? await shortCodesForSlugs(selection.products.map((product) => product.slug), check.context.tenantId)
     : new Map<string, string>();
   const products = selection.products.map((product) => ({
     ...product,
+    previewUrl: `${host}${productPreview(product).path}`,
     isHeroHighlight: selection.heroProductIds.includes(product.id),
     shareUrl: codes.has(product.slug)
       ? `${host}/p/${codes.get(product.slug)}`

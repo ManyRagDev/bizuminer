@@ -1,13 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { copyToClipboard } from "../../lib/clipboard";
 import { productShareUrl } from "../../lib/product-share";
+import { createPreviewWarmer } from "../../lib/product-preview-warmup";
 
-export default function CopyProductLink({ slug, title }: { slug: string; title: string }) {
+export default function CopyProductLink({ slug, title, previewUrl }: { slug: string; title: string; previewUrl?: string }) {
   const [copied, setCopied] = useState(false);
+  const previewWarmer = useRef<ReturnType<typeof createPreviewWarmer> | null>(null);
+
+  useEffect(() => {
+    if (!previewUrl) return;
+    const warmer = createPreviewWarmer();
+    previewWarmer.current = warmer;
+    void warmer.warm(previewUrl);
+    return () => {
+      warmer.dispose();
+      if (previewWarmer.current === warmer) previewWarmer.current = null;
+    };
+  }, [previewUrl]);
 
   async function copy() {
+    if (previewUrl) void previewWarmer.current?.warm(previewUrl, true);
     const url = productShareUrl(slug);
     const ok = await copyToClipboard(url);
     if (!ok) {

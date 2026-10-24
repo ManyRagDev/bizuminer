@@ -1,15 +1,16 @@
 import { NextRequest } from "next/server";
 import { inAccountScope } from "../../../../lib/account-scope";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
-import { dealDetail } from "../../../../lib/db";
+import { getPublishedEditorialSelection } from "../../../../lib/editorial-selection-db";
 import { fetchProductImage, ogFonts } from "../../../../lib/og-assets";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Pré-aquecimento da pauta (warmup):
- * Resolve no servidor os dados e a imagem original dos produtos da pauta,
- * populando o cache em memória do Node.js antes do primeiro compartilhamento.
+ * Lê a seleção da conta uma vez e aquece suas imagens originais e fontes
+ * antes do primeiro compartilhamento. Evita uma consulta de detalhe por slug
+ * disputando a conexão do servidor com a geração do preview Open Graph.
  */
 export async function POST(request: NextRequest) {
   const check = await checkAffiliateUser(request);
@@ -27,17 +28,17 @@ export async function POST(request: NextRequest) {
       return sinkJson(check.sink, { ok: true, warmed: 0 });
     }
 
-    // Aquece fontes e carrega detalhes/imagens dos produtos em paralelo
+    const requestedSlugs = new Set<string>(slugs);
+    const selection = await getPublishedEditorialSelection("pauta");
+    const products = selection.products.filter((product) => requestedSlugs.has(product.slug));
+
+    // As URLs vêm da seleção autorizada no servidor, nunca do corpo enviado
+    // pelo navegador. O pool fica livre enquanto fontes e fotos são aquecidas.
     await Promise.allSettled([
       ogFonts(),
-      ...slugs.map(async (slug: string) => {
-        const detail = await dealDetail(slug);
-        if (detail?.deal.image_url) {
-          await fetchProductImage(detail.deal.image_url);
-        }
-      }),
+      ...products.map((product) => fetchProductImage(product.imageUrl)),
     ]);
 
-    return sinkJson(check.sink, { ok: true, warmed: slugs.length });
+    return sinkJson(check.sink, { ok: true, warmed: products.length });
   });
 }

@@ -40,6 +40,6 @@ test('only handles for the same destination reuse a transport; credentials remai
  const b=accountDatabase('postgres://synthetic_b@localhost:1/b');
  assert.equal(a.options,same.options);assert.notEqual(a.options,b.options);
  assert.equal(a.options.user,'synthetic_a');assert.equal(b.options.user,'synthetic_b');
- assert.equal(a.options.max,3);assert.equal(a.options.idle_timeout,5);
+ assert.equal(a.options.max,1);assert.equal(a.options.idle_timeout,5);
  await Promise.all([a.end(),same.end(),b.end()]);
 });

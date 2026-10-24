@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -148,7 +149,7 @@ export default function AdminShell({
       {/* Top Header */}
       <header className="detail-header admin-shell-header">
         <div className="admin-header-left">
-          <a className="brand" href="/" aria-label="BizuMiner, início">
+          <Link className="brand" href="/" aria-label="BizuMiner, início">
             <Image
               src="/brand/bizuminer-icon-light.svg"
               alt=""
@@ -162,20 +163,20 @@ export default function AdminShell({
               <b>Bizu</b>
               <i>Miner</i>
             </span>
-          </a>
+          </Link>
           <span className="admin-tag admin-shell-tag">{sectionTitle}</span>
           {accountHeader}
         </div>
 
         <div className="detail-header-actions">
           {!onPauta && activeId !== "marketing" && (
-            <a
+            <Link
               href="/pauta"
               className="admin-shell-pauta-link"
               title="Abrir mesa de links rápidos para Stories e Reels"
             >
               📱 Pauta de Stories
-            </a>
+            </Link>
           )}
           <a href="/" className="admin-shell-site-link" target="_blank" rel="noopener noreferrer">
             Ver Vitrine ↗
@@ -213,7 +214,7 @@ export default function AdminShell({
                   {group.items.map((item) => {
                     const isActive = activeId === item.id;
                     return (
-                      <a
+                      <Link
                         key={item.id}
                         href={item.href}
                         className={"admin-shell-nav-item" + (isActive ? " active" : "")}
@@ -237,7 +238,7 @@ export default function AdminShell({
                             {item.badge}
                           </span>
                         )}
-                      </a>
+                      </Link>
                     );
                   })}
                 </div>
@@ -245,9 +246,9 @@ export default function AdminShell({
             ))}
 
             <div className="admin-shell-nav-foot">
-              <a href="/" className="nav-foot-site">
+              <Link href="/" className="nav-foot-site">
                 🌐 Ver Vitrine Pública
-              </a>
+              </Link>
               <form action="/auth/sair" method="post">
                 <button className="auth-signout" type="submit">
                   Encerrar Sessão

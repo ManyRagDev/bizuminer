@@ -55,7 +55,7 @@ if (!scheduleDecision.allowed) {
   process.exit(0);
 }
 const {candidates,suppressed} = await withMonitoringDb(sql,tenantId,async tx=>{
- const candidates=await loadMonitoringCandidates(tx,tenantId);
+ const candidates=await loadMonitoringCandidates(tx,tenantId,marketplace);
  return {candidates,suppressed:await suppressedMonitoringIds(tx,tenantId,marketplace,candidates)};
 });
 const selected = monitoringQueue(candidates.filter((candidate) => !suppressed.has(candidate.productId)), marketplace, limit);

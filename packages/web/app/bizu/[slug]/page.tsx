@@ -1,7 +1,9 @@
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getPageSession, isAffiliate } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
 import { getEditorialProductPresentation } from "../../../lib/editorial-selection-db";
@@ -17,10 +19,16 @@ import DetailHeader from "../../_components/detail-header";
 import SaveDealButton from "./save-deal-button";
 import RedirectBanner from "./redirect-banner";
 import { campaignExitPath } from "../../../lib/campaign-exit";
+import { productPreview, PRODUCT_PREVIEW_SIZE } from "../../../lib/product-preview";
+import { shareBaseUrl } from "../../../lib/site-url";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ direto?: string; c?: string }> };
+
+// Metadata and the page body request the same product during one render. React
+// keeps this result per request, avoiding a second public database transaction.
+const getDealDetail = cache((slug: string) => dealDetail(slug));
 
 const brl = (cents: number) => (cents / 100)
   .toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 });
@@ -43,30 +51,31 @@ function Chart({ points }: { points: Array<{ price_cents: number; observed_at: D
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const detail = await dealDetail(slug);
+  const detail = await getDealDetail(slug);
   if (!detail) return { title: "Achado não encontrado | BizuMiner" };
   const title = `${detail.deal.title} | BizuMiner`;
   const description = productShareDescription(detail.deal);
+  const preview = productPreview(toVitrineProduct(detail.deal));
+  const image = { url: preview.path, ...PRODUCT_PREVIEW_SIZE, type: "image/png", alt: detail.deal.title };
   return {
     title,
     description,
-    // Sem isto, o preview no WhatsApp/Telegram mostrava o título genérico do
-    // site (herdado do layout raiz) ao lado da foto do produto — o card fica
-    // com a foto certa mas o texto errado. og:image continua vindo sozinho
-    // da convenção opengraph-image.tsx; aqui só título/descrição/url.
-    openGraph: { title, description, url: `/bizu/${slug}` },
-    twitter: { title, description },
+    // The metadata and pauta use the same versioned image URL. The explicit
+    // route preserves old URLs without Next adding a separate build hash.
+    openGraph: { title, description, url: `/bizu/${slug}`, images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
 export default async function DealPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const { direto, c } = await searchParams;
-  const detail = await dealDetail(slug);
+  const detail = await getDealDetail(slug);
   if (!detail) notFound();
 
   const { deal, price_history: history } = detail;
-  const editorial = await getEditorialProductPresentation(deal.id);
+  const editorialPromise = getEditorialProductPresentation(deal.id);
+  const relatedPromise = deal.category ? topDeals({ category: deal.category, limit: 6, sort: "signal" }) : Promise.resolve(null);
   const mp = marketplaceDef(deal.marketplace);
   const mpLabel = mp?.label ?? deal.marketplace;
   const mpCta = mp?.ctaLabel ?? `ver na ${mpLabel}`;
@@ -77,10 +86,12 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   const high = history.length ? Math.max(...history.map((point) => point.price_cents)) : null;
   const product = toVitrineProduct(deal);
   const uid = (await cookies()).get("bm_uid")?.value;
-  const session = await getPageSession(validUserId(uid) ? uid : null);
-  const isUserAdmin = session ? await isAffiliate(session.authUser) : false;
-  const savedInAccount = session ? (await savedProductIds(session.appUserId)).includes(deal.id) : false;
-  const relatedPage = deal.category ? await topDeals({ category: deal.category, limit: 6, sort: "signal" }) : null;
+  const sessionPromise = getPageSession(validUserId(uid) ? uid : null);
+  const [editorial, relatedPage, session] = await Promise.all([editorialPromise, relatedPromise, sessionPromise]);
+  const [isUserAdmin, savedIds] = session
+    ? await Promise.all([isAffiliate(session.authUser), savedProductIds(session.appUserId)])
+    : [false, []];
+  const savedInAccount = savedIds.includes(deal.id);
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
@@ -89,7 +100,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
       actions={
         <>
           {isUserAdmin && <AdminBadge />}
-          <a href="/#achados">← voltar aos achados</a>
+          <Link href="/#achados">← voltar aos achados</Link>
           <SaveDealButton product={product} initialSaved={savedInAccount} />
         </>
       }
@@ -113,12 +124,12 @@ export default async function DealPage({ params, searchParams }: PageProps) {
           </div>
         )}
         <a className="deal-cta" href={campaignExitPath(deal.slug, c)} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a>
-        <CopyProductLink slug={deal.slug} title={deal.title} />
+        <CopyProductLink slug={deal.slug} title={deal.title} previewUrl={`${shareBaseUrl().replace(/\/$/, "")}${productPreview(product).path}`} />
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       </section>
     </article>
     <section className="history-section" aria-labelledby="history-title"><div><p className="eyebrow">Histórico disponível</p><h2 id="history-title">Preço com contexto, não só com etiqueta.</h2><p>Há {deal.observation_count} registro{deal.observation_count === 1 ? "" : "s"} do anúncio em {deal.history_days} dia{deal.history_days === 1 ? "" : "s"} de acompanhamento. A alegação de menor preço exige a mesma configuração confirmada, moeda e condições comparáveis, além de cobertura e frescor suficientes pela política homologada. Quando não há essa comprovação, não apresentamos uma alegação de recorde.</p></div><div className="history-card"><Chart points={history} /><dl><div><dt>menor preço observado no anúncio</dt><dd>{low === null ? "—" : brl(low)}</dd></div><div><dt>maior preço observado no anúncio</dt><dd>{high === null ? "—" : brl(high)}</dd></div><div><dt>última atualização</dt><dd>{freshnessLabel(deal.evidence_observed_at) ?? "sem data"}</dd></div></dl></div></section>
-    {related.length > 0 && <section className="related-section" aria-labelledby="related-title"><div className="related-heading"><p className="eyebrow">Continue descobrindo</p><h2 id="related-title">Mais em {deal.category}</h2></div><div className="related-rail">{related.map((item) => <article key={item.id} className="related-card"><a className="related-image" href={`/bizu/${item.slug}`}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill sizes="(max-width: 820px) 68vw, 22vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</a><p>{item.category}</p><h3><a href={`/bizu/${item.slug}`}>{item.title}</a></h3><strong>{brl(item.priceCents)}</strong><a className="related-link" href={`/bizu/${item.slug}`}>ver detalhes <span>→</span></a></article>)}</div></section>}
+    {related.length > 0 && <section className="related-section" aria-labelledby="related-title"><div className="related-heading"><p className="eyebrow">Continue descobrindo</p><h2 id="related-title">Mais em {deal.category}</h2></div><div className="related-rail">{related.map((item) => <article key={item.id} className="related-card"><Link className="related-image" href={`/bizu/${item.slug}`} prefetch={false}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill sizes="(max-width: 820px) 68vw, 22vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</Link><p>{item.category}</p><h3><Link href={`/bizu/${item.slug}`} prefetch={false}>{item.title}</Link></h3><strong>{brl(item.priceCents)}</strong><Link className="related-link" href={`/bizu/${item.slug}`} prefetch={false}>ver detalhes <span>→</span></Link></article>)}</div></section>}
     <div className="deal-sticky-cta"><a href={campaignExitPath(deal.slug, c)} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a></div>
   </main>;
 }

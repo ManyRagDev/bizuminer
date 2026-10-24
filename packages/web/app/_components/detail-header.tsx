@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 /**
  * Cabeçalho compartilhado das páginas internas (entrar, detalhe do produto,
@@ -12,7 +13,7 @@ import Image from "next/image";
 export default function DetailHeader({ actions }: { actions?: React.ReactNode }) {
   return (
     <header className="detail-header">
-      <a className="brand" href="/" aria-label="BizuMiner, início">
+      <Link className="brand" href="/" aria-label="BizuMiner, início">
         <Image
           src="/brand/bizuminer-icon-light.svg"
           alt=""
@@ -26,7 +27,7 @@ export default function DetailHeader({ actions }: { actions?: React.ReactNode })
           <b>Bizu</b>
           <i>Miner</i>
         </span>
-      </a>
+      </Link>
       <div className="detail-header-actions">{actions}</div>
     </header>
   );

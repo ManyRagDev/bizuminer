@@ -58,19 +58,33 @@ export function db() {
   return accountDatabase(process.env.DATABASE_URL!, currentAccount());
 }
 
+export interface CatalogPresentation {
+  categories: string[];
+  marketplaceCounts: Record<string, number>;
+}
+
+export interface CatalogPage {
+  page: DealsPage;
+  presentation: CatalogPresentation;
+}
+
+function publicCatalogQuery(query: DealQuery): Record<string, unknown> {
+  const bounds = priceRangeForBand(query.priceBand ?? "all");
+  return {
+    category: query.category?.trim() || null, search: query.search?.trim() || null,
+    marketplace: query.marketplace?.trim() || null, minPriceCents: bounds.min, maxPriceCents: bounds.max,
+    minRating: query.minRating ?? null, minDiscount: query.minDiscount ?? null,
+    freshnessDays: freshnessDays(query.freshness ?? "2d"), sort: query.sort ?? "signal",
+    lowestOnly: query.lowestOnly ?? false, hasHistory: query.hasHistory ?? false,
+    limit: query.limit ?? 12, offset: query.offset ?? 0,
+  };
+}
+
 /** A seleção editorial determina a ordem inicial; filtros explícitos preservam sua ordenação. */
 export async function topDeals(query: DealQuery = {}, tenantId = "local", publishedSelection?: PublishedEditorialSelection, sqlFactory: typeof db = db): Promise<DealsPage> {
   const publicReader = await import("./public-offer-db.ts");
   if (await publicReader.publicProjectionReady(sqlFactory)) {
-    const bounds = priceRangeForBand(query.priceBand ?? "all");
-    return publicReader.publicCatalog(tenantId, {
-      category: query.category?.trim() || null, search: query.search?.trim() || null,
-      marketplace: query.marketplace?.trim() || null, minPriceCents: bounds.min, maxPriceCents: bounds.max,
-      minRating: query.minRating ?? null, minDiscount: query.minDiscount ?? null,
-      freshnessDays: freshnessDays(query.freshness ?? "2d"), sort: query.sort ?? "signal",
-      lowestOnly: query.lowestOnly ?? false, hasHistory: query.hasHistory ?? false,
-      limit: query.limit ?? 12, offset: query.offset ?? 0,
-    }, sqlFactory);
+    return publicReader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
   }
   const limit = Math.min(Math.max(query.limit ?? 12, 1), 24);
   const offset = Math.max(query.offset ?? 0, 0);
@@ -238,6 +252,64 @@ export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantI
       group by p.marketplace
     `;
     return Object.fromEntries(rows.map((row) => [row.marketplace, row.count]));
+  } finally {
+    await sql.end();
+  }
+}
+
+/** Lista e facetas públicas reutilizam a mesma projeção no banco. */
+export async function catalogPage(query: DealQuery = {}, tenantId = "local", sqlFactory: typeof db = db): Promise<CatalogPage> {
+  const reader = await import("./public-offer-db.ts");
+  if (await reader.publicProjectionReady(sqlFactory)) {
+    const page = await reader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
+    if (Array.isArray(page.categories) && page.marketplaceCounts && typeof page.marketplaceCounts === "object") {
+      return { page, presentation: { categories: page.categories, marketplaceCounts: page.marketplaceCounts } };
+    }
+    // Mantém compatibilidade no intervalo entre publicar o app e a migração.
+    return { page, presentation: await catalogPresentation(query.freshness, tenantId) };
+  }
+  const [page, presentation] = await Promise.all([
+    topDeals(query, tenantId, undefined, sqlFactory),
+    catalogPresentation(query.freshness, tenantId),
+  ]);
+  return { page, presentation };
+}
+
+/**
+ * Dados auxiliares do catálogo carregados juntos pela vitrine e pela API.
+ * No caminho público, isso evita executar a projeção cara duas vezes para
+ * obter categorias e contagens de marketplace da mesma janela.
+ */
+export async function catalogPresentation(freshness: FreshnessBand = "7d", tenantId = "local"): Promise<CatalogPresentation> {
+  const reader = await import("./public-offer-db.ts");
+  const days = Math.min(freshnessDays(freshness) ?? PRODUCT_EVIDENCE_TTL_DAYS, PRODUCT_EVIDENCE_TTL_DAYS);
+  if (await reader.publicProjectionReady()) {
+    const stats = await reader.publicCatalogStats(tenantId, days);
+    return { categories: stats.categories, marketplaceCounts: stats.marketplaces };
+  }
+
+  const sql = db();
+  try {
+    const [row] = await sql<{ categories: string[] | null; marketplace_counts: Record<string, number> | null }[]>`
+      with visible as (
+        select p.category, p.marketplace
+        from garimpa.product p
+        join garimpa.product_curation pc
+          on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+         and pc.status = ${PUBLIC_CURATION_STATUS}
+        where p.tenant_id = ${tenantId}
+          and p.last_seen_at >= now() - (${days} * interval '1 day')
+      ), categories as (
+        select array_agg(category order by category) as value
+        from (select distinct category from visible where category is not null) listed
+      ), marketplaces as (
+        select jsonb_object_agg(marketplace, count) as value
+        from (select marketplace, count(*)::int as count from visible group by marketplace) counted
+      )
+      select categories.value as categories, marketplaces.value as marketplace_counts
+      from categories cross join marketplaces
+    `;
+    return { categories: row?.categories ?? [], marketplaceCounts: row?.marketplace_counts ?? {} };
   } finally {
     await sql.end();
   }

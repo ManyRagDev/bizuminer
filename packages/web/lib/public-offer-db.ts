@@ -1,8 +1,25 @@
 import { db } from "./db.ts";
-import type { DealDetail, DealsPage } from "./db.ts";
+import type { CatalogPresentation, DealDetail, DealsPage } from "./db.ts";
+
+export type PublicCatalogPage = DealsPage & Partial<CatalogPresentation>;
 
 export async function publicProjectionReady(sqlFactory: typeof db = db): Promise<boolean> {
   if (sqlFactory === db && !process.env.DATABASE_URL) return false;
+  if (sqlFactory === db) {
+    const registryKey = Symbol.for("bizuminer.public-projection-ready.v1");
+    const registry = globalThis as typeof globalThis & { [registryKey]?: Promise<boolean> };
+    if (!registry[registryKey]) {
+      registry[registryKey] = inspectPublicProjection(sqlFactory).catch((error) => {
+        delete registry[registryKey];
+        throw error;
+      });
+    }
+    return registry[registryKey];
+  }
+  return inspectPublicProjection(sqlFactory);
+}
+
+async function inspectPublicProjection(sqlFactory: typeof db): Promise<boolean> {
   const sql = sqlFactory();
   try {
     // Select the restricted path only once its whole consumer surface exists,
@@ -61,9 +78,9 @@ export async function publicDealDetail(slug: string, sqlFactory: typeof db = db)
   }, sqlFactory);
 }
 
-export async function publicCatalog(tenantId: string, query: Record<string, unknown>, sqlFactory: typeof db = db): Promise<DealsPage> {
+export async function publicCatalog(tenantId: string, query: Record<string, unknown>, sqlFactory: typeof db = db): Promise<PublicCatalogPage> {
   return withPublicDb(async tx => {
-    const [row] = await tx<{ value: DealsPage }[]>`select garimpa.public_catalog(${tenantId},${tx.json(query as never)}) as value`;
+    const [row] = await tx<{ value: PublicCatalogPage }[]>`select garimpa.public_catalog(${tenantId},${tx.json(query as never)}) as value`;
     return row!.value;
   }, sqlFactory);
 }

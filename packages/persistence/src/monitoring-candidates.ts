@@ -23,7 +23,7 @@ export function missingRetryHours(attempts: number, watched: boolean): number {
   return [0, 24, 72, 168, 336][Math.min(Math.max(attempts, 0), 4)]!;
 }
 
-export async function loadMonitoringCandidates(sql: Sql, tenantId: string): Promise<MonitoringProduct[]> {
+export async function loadMonitoringCandidates(sql: Sql, tenantId: string, marketplace?: MonitorMarketplace): Promise<MonitoringProduct[]> {
   const [projection]=await sql<{ready:boolean}[]>`select to_regprocedure('garimpa.monitoring_interest_counts(text)') is not null as ready`;
   // Trusted worker context supplies the account. The definer returns aggregate counts only.
   const watches=projection?.ready
@@ -53,6 +53,7 @@ export async function loadMonitoringCandidates(sql: Sql, tenantId: string): Prom
       and pc.tenant_id = p.tenant_id
     where p.tenant_id = ${tenantId}
       and p.marketplace in ('mercadolivre', 'shopee', 'aliexpress')
+      and (${marketplace ?? null}::text is null or p.marketplace = ${marketplace ?? null})
       and p.last_seen_at is not null
   `;
   const [ready]=await sql<{ready:boolean}[]>`select to_regclass('garimpa.opportunity') is not null as ready`;

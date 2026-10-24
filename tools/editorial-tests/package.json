@@ -25,6 +25,7 @@
     "test:auth-merge": "node --import tsx auth-merge-flow.test.ts",
     "test:migration-integrity": "node --import tsx migration-integrity-flow.test.ts",
     "test:public-readiness": "node --import tsx public-readiness-flow.test.ts",
+    "test:public-navigation-native": "node --import tsx public-navigation-native.test.ts",
     "test:native-migrations": "node --import tsx native-migration-flow.test.ts",
     "test:replacement-rollout": "node --import tsx replacement-rollout-flow.test.ts",
     "rollout:verify": "node --import tsx verify-replacement-rollout.ts",

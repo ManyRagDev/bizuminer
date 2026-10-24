@@ -1,14 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { VitrineProduct } from "../../lib/deal-view";
 import { marketplaceDef } from "../../lib/marketplaces";
 import type { PautaQrBundle } from "../../lib/qr-service";
 import { copyToClipboard } from "../../lib/clipboard";
+import { createPreviewWarmer } from "../../lib/product-preview-warmup";
 
 interface PautaProduct extends VitrineProduct {
   shareUrl: string;
+  previewUrl: string;
   editorialRationale: string;
   editorialPurchaseContents: string;
   editorialContext?: string | null;
@@ -76,6 +78,7 @@ export default function PautaClient({
     qrBundle?.defaultMode ?? "local"
   );
   const [copiedMobileUrl, setCopiedMobileUrl] = useState(false);
+  const previewWarmer = useRef<ReturnType<typeof createPreviewWarmer> | null>(null);
 
   useEffect(() => {
     // No mobile pequeno, inicia colapsado para economizar espaço de tela
@@ -87,6 +90,8 @@ export default function PautaClient({
   useEffect(() => {
     setDoneIds(readDoneIds());
     const controller = new AbortController();
+    const warmer = createPreviewWarmer();
+    previewWarmer.current = warmer;
     let checking = false;
     const load = async () => {
       if (document.visibilityState === "hidden" || checking) return;
@@ -103,12 +108,10 @@ export default function PautaClient({
         setHeroValidUntil(data.heroValidUntil);
         setHeroBadgeCurrent(data.heroValidUntil !== null && Date.parse(data.heroValidUntil) > Date.now());
         setLoadError("");
-        if (data.products.length > 0) {
-          fetch("/api/pauta/warmup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ slugs: data.products.slice(0, 10).map((p) => p.slug) }),
-          }).catch(() => {});
+        // The URL contains the offer revision. The warmer skips unchanged,
+        // still-cached images and downloads at most two final previews at once.
+        for (const product of data.products.slice(0, 10)) {
+          if (product.previewUrl) void warmer.warm(product.previewUrl);
         }
       } catch {
         if (!controller.signal.aborted) setLoadError("Não foi possível carregar a seleção. Atualize a página para tentar novamente.");
@@ -121,6 +124,8 @@ export default function PautaClient({
     window.addEventListener("focus", onVisible);
     return () => {
       controller.abort(); window.clearInterval(timer);
+      warmer.dispose();
+      if (previewWarmer.current === warmer) previewWarmer.current = null;
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
@@ -140,12 +145,9 @@ export default function PautaClient({
   }, [selectionValidUntil]);
 
   async function copyLink(product: PautaProduct) {
-    if (product.slug) {
-      fetch(`/bizu/${encodeURIComponent(product.slug)}/opengraph-image`, {
-        method: "GET",
-        priority: "high",
-      } as RequestInit).catch(() => {});
-    }
+    if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true);
+    // Keep clipboard access in the user gesture, including on iOS. Preview
+    // preparation runs ahead of the click instead of delaying the copy.
     const ok = await copyToClipboard(product.shareUrl);
     if (!ok && typeof window !== "undefined") {
       window.prompt("Copie o link abaixo:", product.shareUrl);
@@ -297,6 +299,8 @@ export default function PautaClient({
             <button
               key={product.id}
               className="pauta-done-item"
+              onPointerEnter={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
+              onFocus={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
               onClick={() => copyLink(product)}
               title="Copiar novamente"
             >
@@ -349,6 +353,8 @@ export default function PautaClient({
                 </div>
                 <button
                   className="pauta-copy-btn"
+                  onPointerEnter={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
+                  onFocus={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
                   onClick={() => copyLink(product)}
                 >
                   {copiedId === product.id ? "✓ COPIADO" : "COPIAR LINK"}

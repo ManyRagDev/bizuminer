@@ -147,6 +147,18 @@ async function mintPublicCodes(slugs:string[],tenantId:string) {
  const {withPublicDb}=await import("./public-offer-db.ts");
  return withPublicDb(async tx=>{
   const result=new Map<string,string>();
+  const [batch]=await tx<{ready:boolean}[]>`select to_regprocedure('garimpa.public_mint_short_links(text,text[],text[])') is not null as ready`;
+  if(batch?.ready) {
+   let pending=slugs;
+   for(let attempt=0;attempt<MAX_ATTEMPTS && pending.length;attempt++) {
+    const codes=pending.map(()=>generateShortCode());
+    const rows=await tx<{slug:string;code:string}[]>`select * from garimpa.public_mint_short_links(${tenantId},${pending}::text[],${codes}::text[])`;
+    for(const row of rows) result.set(row.slug,row.code);
+    pending=pending.filter(slug=>!result.has(slug));
+   }
+   if(pending.length) throw new Error("short_link_unavailable");
+   return result;
+  }
   for(const slug of slugs) {
    for(let attempt=0;attempt<MAX_ATTEMPTS;attempt++) {
     const [r]=await tx<{code:string|null}[]>`select garimpa.public_mint_short_link(${slug},${tenantId},${generateShortCode()}) as code`;
