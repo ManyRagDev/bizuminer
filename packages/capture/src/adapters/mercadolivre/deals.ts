@@ -23,6 +23,7 @@
  * continuam disponíveis e testados para investigação offline — sem rede.
  */
 
+import { normalizeSourceTitle } from "../../title.ts";
 import { CaptureError } from "../../errors.ts";
 import { paginate } from "../../types.ts";
 import type {
@@ -63,32 +64,6 @@ function parseMoneyAria(label: string): { reais: number; centavos: number } | nu
   return { reais, centavos: m[2] ? Number(m[2]) : 0 };
 }
 
-function decodeHtmlEntities(value: string): string {
-  const named: Record<string, string> = {
-    amp: "&",
-    quot: '"',
-    apos: "'",
-    lt: "<",
-    gt: ">",
-  };
-  let decoded = value;
-  for (let pass = 0; pass < 3; pass++) {
-    const next = decoded.replace(/&(#x[\da-f]+|#\d+|[a-z][a-z\d]+);/gi, (entity, body: string) => {
-      if (body.startsWith("#x")) {
-        const codePoint = Number.parseInt(body.slice(2), 16);
-        return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
-      }
-      if (body.startsWith("#")) {
-        const codePoint = Number.parseInt(body.slice(1), 10);
-        return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
-      }
-      return named[body.toLowerCase()] ?? entity;
-    });
-    if (next === decoded) break;
-    decoded = next;
-  }
-  return decoded;
-}
 
 function parseMarketplaceEvidence(chunk: string): { ratingStar?: number; salesLabel?: string; salesCount?: number } {
   const ratingText = /Classificação\s+([0-5](?:[.,]\d+)?)\s+de\s+5\s+estrelas/i.exec(chunk)?.[1];
@@ -134,7 +109,7 @@ function parseCard(chunk: string, capturedAt: Date): RawOffer | null {
     /<a\s+href="([^"]+)"[^>]*class="[^"]*poly-component__title[^"]*"[^>]*>([^<]+)</.exec(chunk);
   const titleAlt = /class="[^"]*poly-component__title[^"]*"[^>]*>([^<]+)</.exec(chunk);
   const href = anchor?.[1]?.replace(/&amp;/g, "&");
-  const title = (anchor?.[2] ?? titleAlt?.[1]) ? decodeHtmlEntities((anchor?.[2] ?? titleAlt?.[1])!.trim()) : undefined;
+  const title = (anchor?.[2] ?? titleAlt?.[1]) ? normalizeSourceTitle((anchor?.[2] ?? titleAlt?.[1])!) : undefined;
   if (!href || !title) return null;
 
   // Regra §4 do doc: usar sempre o href REAL do card, nunca reconstruir.
@@ -200,8 +175,12 @@ function parseCard(chunk: string, capturedAt: Date): RawOffer | null {
     claimedDiscountRate,
     ...parseMarketplaceEvidence(chunk),
     offerEvidence: {
-      version: 1,
+      version: 2,
       source: { marketplace: ML_MARKETPLACE, method: "http_html", url: DEALS_URL, capturedAt: capturedAt.toISOString() },
+      currency: "BRL",
+      priceType: /a\s+partir\s+de/i.test(currentLabel ?? "") ? "from" : /\b(?:faixa|entre)\b/i.test(currentLabel ?? "") ? "unknown" : "exact",
+      variantIdentity: { state: "unknown" },
+      originalPriceKind: claimedDiscountRate ? "source_claimed" : "unknown",
     },
     capturedAt,
     source: "http_html",

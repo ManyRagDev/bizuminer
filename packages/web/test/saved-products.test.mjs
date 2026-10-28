@@ -54,3 +54,13 @@ test("unionSavedIds deduplica local + conta preservando a ordem e descartando in
   assert.deepEqual(unionSavedIds(["b"], ["a", "b"]), ["b", "a"]);
   assert.deepEqual(unionSavedIds(), []);
 });
+
+test("contas e sessão anônima não compartilham salvos nem importam chaves antigas", () => {
+  const data = new Map([["bizuminer:salvos", JSON.stringify(["legacy"])]]);
+  const storage = {getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value)};
+  writeSavedState(storage, {ids:["a"], products:[product("a")]}, "account-a");
+  writeSavedState(storage, {ids:["b"], products:[product("b")]}, "account-b");
+  assert.deepEqual(readSavedState(storage, "account-a").ids, ["a"]);
+  assert.deepEqual(readSavedState(storage, "account-b").ids, ["b"]);
+  assert.deepEqual(readSavedState(storage).ids, []);
+});

@@ -8,6 +8,7 @@ import { db } from "./db.ts";
 import { withOwnerAccountDb } from "./owner-account-db.ts";
 import { withAccountDb, withTenantDb, type AccountContext } from "./tenant-db.ts";
 import { generateDeviceToken, generatePairingCode, hashPairingCode, hashToken, tokenPrefix } from "./extension-token.ts";
+import { browserOfferEvidence } from "./extension-contract.ts";
 import type { ExtensionCapturePayload } from "./extension-contract.ts";
 
 export const PAIRING_TTL_MS = 10 * 60 * 1000; // 10 minutos
@@ -219,6 +220,18 @@ export async function persistExtensionCapture(
       `;
       if (!access[0]?.allowed) throw new Error("affiliate_access_required");
 
+      // Serialize retries before touching the product. Reusing a request ID
+      // cannot overwrite the product while retaining an older observation.
+      await tx`select pg_advisory_xact_lock(hashtextextended(${`extension-capture:${device.deviceId}:${payload.requestId}`},0))`;
+      const [previousRequest] = await tx<{id:string;product_id:string;external_id:string}[]>`
+        select o.id,o.product_id,product.external_id from garimpa.price_observation o
+        join garimpa.product product on product.id=o.product_id and product.tenant_id=o.tenant_id
+        where o.tenant_id=${device.tenantId} and o.extension_device_id=${device.deviceId}
+          and o.client_request_id=${payload.requestId}::uuid limit 1`;
+      if(previousRequest) return {ok:true,duplicate:true,productId:previousRequest.product_id,
+        observationId:previousRequest.id,publication:{slug:`ml-${previousRequest.external_id}-${device.affiliatePublicSlug}`}};
+
+
       // 1. produto (upsert por tenant+marketplace+external_id)
       const product = await tx<{ id: string; is_new: boolean }[]>`
         insert into garimpa.product as prod
@@ -243,11 +256,12 @@ export async function persistExtensionCapture(
         insert into garimpa.price_observation
           (id, tenant_id, product_id, price_cents, original_price_cents, claimed_discount_rate,
            observed_at, capture_source, extension_device_id, client_request_id,
-           source_page_url, client_captured_at, title_snapshot, product_url_snapshot, image_url_snapshot)
+           source_page_url, client_captured_at, title_snapshot, product_url_snapshot, image_url_snapshot, offer_evidence)
         select gen_random_uuid()::text, ${device.tenantId}, ${productId}, ${p.priceCents},
                ${originalPriceCents}, ${claimedDiscountRate}, now(),
                'extension', ${device.deviceId}, ${payload.requestId}::uuid,
-               ${payload.page.url}, ${clientCapturedAt}, ${p.title}, ${p.productUrl}, ${p.imageUrl ?? null}
+               ${payload.page.url}, ${clientCapturedAt}, ${p.title}, ${p.productUrl}, ${p.imageUrl ?? null},
+               ${tx.json({ ...browserOfferEvidence(p, p.productUrl, payload.clientCapturedAt) } as any)}
         on conflict (extension_device_id, client_request_id)
           where extension_device_id is not null and client_request_id is not null
         do nothing

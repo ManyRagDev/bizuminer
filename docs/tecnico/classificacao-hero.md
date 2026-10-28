@@ -1,63 +1,74 @@
-# Classificação dos melhores produtos para a hero
+# Seleção da página inicial e classificação dos destaques
 
-A política `hero-v2` escolhe até três melhores produtos disponíveis por posição relativa. Não existe nota mínima de 90 nem exigência de todas as dimensões fortes. A nota organiza os candidatos; validade da oferta e decisões editoriais continuam sendo requisitos.
+A política `home-v1` compõe uma edição compartilhada de até 24 produtos e até três destaques. A rubrica individual `hero-v2` continua separada da composição da página: ter boa nota individual não garante ocupar uma posição se a seleção já contém produtos semelhantes.
 
-## Avaliação editorial
+## Qualidade antes de variedade
 
-| Critério | Peso |
-| --- | --- |
-| Adequação ao público | 30% |
-| Utilidade ou interesse | 25% |
-| Valor da oferta | 25% |
-| Confiança | 10% |
-| Clareza da compra | 10% |
+Toda indicação respeita aprovação, publicação web e conta ativas, imagem, preço positivo observado em 48 horas e presença em sete dias. Uma avaliação existente nunca é apagada para transformar uma revisão negativa ou desatualizada em candidato automático.
 
-Os níveis mantêm seus descritores em `hero-policy.ts`: desconhecido = sem nota; fraco = 20; adequado = 60; forte = 80; excepcional = 100. A soma ponderada permite comparar os produtos. Todas as dimensões adequadas resultam em 60/100 e todas fortes em 80/100; ambos podem ocupar a hero se estiverem entre os melhores disponíveis.
+As avaliações editoriais usam público (30%), utilidade (25%), valor (25%), confiança (10%) e clareza (10%). Dimensões fracas ou desconhecidas, dúvidas essenciais, mudança material do anúncio e preço acima do teto avaliado bloqueiam a indicação. Avaliações compatíveis anteriores continuam comparáveis; dados de variante, moeda, condições e estados da evidência também fazem parte da identidade material.
 
-A política v2 altera a admissão, mantendo as dimensões anteriores. Avaliações `hero-v1` e avaliações sem versão específica da hero continuam comparáveis. Novas gravações usam `hero-v2`; uma versão desconhecida exige revisão, sem reetiquetar avaliações históricas.
+Sem avaliação, a seleção automática exige configuração confirmada, conteúdo e quantidade informados e preço exato. Um campo explicitamente marcado pela fonte como não aplicável é diferente de um dado ausente. Título e imagem não comprovam conteúdo ou variante. O painel indica o que falta e permite registrar uma avaliação completa com as limitações da compra explicadas.
 
-A indicação precisa continuar aprovada, com imagem, preço positivo observado em 48 horas e presença em sete dias. Avaliação inválida, mudança material do anúncio, dúvida essencial, dimensão fraca/desconhecida ou preço acima do teto aceito suspendem a indicação. O preço pode subir dentro do máximo explicitamente avaliado sem criar um impedimento exclusivo da hero. O snapshot permanece imutável e não é um campo aceito do formulário.
+O índice factual existente ordena evidências, sem inventar notas humanas de utilidade ou público. Avaliações editoriais válidas precedem esse índice; as duas escalas não são somadas. Desconto anunciado, preço riscado e vendas brutas não comprovam valor da oferta. Percentual positivo e estrelas mantêm suas unidades e amostras distintas.
 
-Dentro de uma edição ativa, a hero compara todos os itens válidos destinados à home. Nota decrescente, posição editorial e ID resolvem a ordem. Os três primeiros aparecem; produtos destinados apenas à pauta não competem pela hero. A ordem geral da edição permanece editorial.
+## Composição e continuidade
 
-## Antes da primeira edição
+Os parâmetros iniciais são hipóteses editoriais para acompanhar com dados de uso:
 
-A leitura pública também funciona quando ainda não existe edição editorial: classifica o catálogo aprovado completo e fornece uma seleção compartilhada de até 24 produtos para home, pauta e detalhe. Somente os três primeiros ocupam a hero; a pauta recebe a seleção mais ampla, na mesma ordem. É uma projeção calculada, sem inserir avaliações, atribuir autoria humana ou inventar uma versão publicada.
+- Até dois produtos da mesma família em cada janela de 12 posições. Uma edição pode conter menos itens; a regra não é relaxada para preencher espaços.
+- Penalidades graduais por concentração de família, categoria, marketplace e faixa de preço, sem cotas que obriguem incluir uma oferta inadequada.
+- Até três destaques de famílias diferentes. Produtos sem família reconhecida permanecem independentes, sem um balde genérico de “outros”. O dicionário de famílias do projeto é reutilizado, com reconhecimento adicional de fones/earbuds para controlar repetição na home.
+- Ordem e destaques preservados entre renovações, enquanto continuarem aptos. A renovação é diária, processada na próxima atualização do worker; na edição completa, até um quarto das posições pode receber produtos ainda não apresentados ou candidatos já conhecidos com evidências melhores que as dos itens substituídos. Invalidações podem exigir substituições adicionais.
+- O histórico de apresentação usa identidade do produto. Atualizar a data da captura não cria novidade nem apaga exposições anteriores.
 
-Avaliações editoriais válidas têm prioridade. Produtos sem avaliação são ordenados por um índice separado de evidências disponíveis. Essas escalas não são comparadas como se medissem a mesma qualidade:
+Edições manuais continuam respeitando destino, avaliação mais recente, vigência e retirada explícita. Uma edição vazia, vencida ou retirada não é preenchida automaticamente. A composição da home também organiza a seleção compartilhada, mantendo produtos exclusivos da pauta fora da disputa pelos destaques.
 
-| Sinal do catálogo | Pontos possíveis | Restrição |
-| --- | --- | --- |
-| Menor preço e redução no histórico | 35 | Somente histórico da mesma configuração comprovada; preço riscado e desconto anunciado não pontuam. |
-| Avaliações do marketplace | 25 | Estrelas ou percentual positivo, mantendo suas unidades distintas; amostra desconhecida reduz o peso pela metade, amostra de 0–20 aumenta gradualmente o peso. |
-| Clareza informada na fonte | 25 | Conteúdo do pacote (12), quantidade (3) e configuração identificada (10). |
-| Histórico suficiente | 10 | Configuração comparável, ao menos três observações em sete dias. |
-| Vendas informadas | 5 | Crescimento logarítmico com teto; popularidade não determina sozinha o ranking. |
+## Persistência e leitura pública
 
-Dados ausentes não recebem pontos. Preço absoluto, categoria, ticket médio, marketplace e percentual anunciado não dão bônus. Sem sinais extras, um produto com oferta válida ainda pode ser o melhor disponível: não existe corte mínimo do índice.
+A migration `20261027030237_compose_homepage_editions.sql` acrescenta somente objetos privados do schema `garimpa`:
 
-O índice não atribui notas de público ou utilidade e não comprova qualidade. É o ponto de partida até registrar avaliações pela rubrica. Na conferência inicial, havia 238 candidatos aprovados recentes, 151 preços observados em 48 horas e nenhuma avaliação detalhada, edição ou evidência estruturada de configuração. Por isso, o ranking atual depende principalmente de avaliações e vendas informadas; referências comparáveis e conteúdo do pacote poderão melhorar a classificação conforme forem capturados.
+- `homepage_edition`: edição atual, produtos públicos e provas privadas usadas para revalidar sua origem.
+- `homepage_product_history`: primeira apresentação de cada produto, para controlar descoberta.
+- `homepage_engagement`: ações deduplicadas por visita, produto, superfície e posição.
 
-Uma avaliação existente é respeitada: produto com revisão negativa, incompleta ou desatualizada não volta à disputa como se nunca tivesse sido avaliado. A apresentação automática usa apenas sinais observados e identifica o marketplace como fonte; não afirma conteúdo do pacote ausente nem deduz conteúdo pela imagem.
+A computação ampla acontece na atualização, dentro de uma transação com snapshot consistente e bloqueio por conta. A leitura pública consulta a edição guardada e revalida somente seus produtos: aprovação, conta/publicação canônica, última observação, título, imagem, categoria, fonte, avaliação e prazos. Alegações comparativas também guardam dependências das alternativas. Uma captura que substitui a observação retira o item até a atualização concluir; nunca conserva preço anterior como atual.
 
-**Depois da primeira ativação, a edição editorial passa a controlar as superfícies.** Uma edição explicitamente vazia, vencida, retirada ou cujos produtos foram invalidados não é preenchida pelo catálogo. Essa regra preserva a decisão do editor de retirar os destaques.
+As funções públicas usam a role restrita existente, com `search_path` fixo e sem privilégios diretos nas novas tabelas. Políticas RLS e chaves por tenant protegem a edição, o histórico e o relatório. Evidências, avaliações e notas internas não entram no DTO público.
 
-## Operação e atualização
+A grade inicial usa a mesma edição dos destaques. Busca, filtros e ordens explícitas continuam consultando o catálogo completo, com a mesma assinatura de estado. O link “Explorar catálogo completo” fica disponível no celular e desktop. A assinatura de versão é compacta e não retransmite os produtos. A home verifica a versão a cada cinco minutos enquanto visível, ao receber foco e no prazo local de validade.
 
-A mesa mostra a origem da classificação: avaliação editorial ou sinais do catálogo. Os pontos de evidência não aparecem como nota de qualidade. A prévia inicial reproduz os destaques públicos; ao preparar um rascunho, passa a mostrar a próxima edição destinada à home.
+## Atualização e ativação inicial
 
-O botão Preparar seleção com até 24 produtos usa avaliações válidas para montar um rascunho local; a ativação publica a edição. A prévia da hero continua mostrando somente os três melhores do rascunho. Impedimentos para incluir na edição são identificados separadamente da elegibilidade do catálogo inicial.
+Os workflows existentes atualizam a edição depois da captura/triagem e do monitoramento, inclusive quando o lote não encontra produtos. Revisões no painel e capturas da extensão também solicitam atualização. Nenhum novo agendamento é criado.
 
-Home e pauta usam `getPublishedEditorialSelection`. Busca, filtros, marketplace, ordenação e paginação não alteram o pool da hero. A projeção pública não expõe avaliações internas, dúvidas, snapshots ou notas. O prazo vem das observações e, quando houver, da vigência da edição; não é renovado artificialmente em cada leitura. No modo inicial, o prazo da seleção considera todos os seus produtos, enquanto o prazo da hero considera somente seus três destaques: o vencimento de outro item não suspende os destaques ainda válidos.
+A ativação inicial é explícita. Antes dela, o catálogo de transição permanece disponível, mesmo com a migration instalada. Atualizações rotineiras não inicializam a edição; o primeiro catálogo automático vazio também é recusado. Depois de inicializada, uma edição que perder todos os produtos permanece vazia até haver candidatos aptos ou uma nova decisão editorial.
 
-A home verifica mudanças a cada 60 segundos enquanto visível e ao receber foco. Sua assinatura incorpora política, modo, produtos, preços, prazos e apresentação pública, incluindo mudanças de avaliação sem nova edição. A pauta usa o mesmo serviço e marca os destaques da hero. Prazos locais ocultam itens vencidos; a verificação remota pode levar até o próximo ciclo. A rotação do carrossel pausa durante foco por teclado e passagem do mouse.
+Para ativar, primeiro complete evidências ou avaliações suficientes para uma seleção útil. Confirme a conta e a autorização de produção antes da migration e publicação. A interface permite preparar a edição e ativá-la. Pela CLI, a partir de `packages/web`:
+
+```sh
+# Prévia sem gravação, após instalar a migration no ambiente escolhido:
+node --env-file=.env.local --experimental-strip-types bin/refresh-homepage.ts --tenant local
+
+# Primeira ativação deliberada, somente após conferir a prévia:
+node --env-file=.env.local --experimental-strip-types bin/refresh-homepage.ts --tenant local --execute --initialize
+
+# Atualizações seguintes; este comando não inicializa uma conta por acidente:
+node --env-file=.env.local --experimental-strip-types bin/refresh-homepage.ts --tenant local --execute
+```
+
+Instalar a migration não significa que a edição foi ativada. Sem a migration, a aplicação mantém a leitura anterior durante a transição. A primeira ativação pelo painel ocorre ao publicar uma edição editorial, sem atribuir autoria humana a avaliações automáticas.
+
+## Interesse observado
+
+A coleta exige um ticket assinado emitido pelo servidor para uma visita pública. Administradores não recebem ticket. Robôs conhecidos são ignorados, requisições exigem mesma origem, tamanho e quantidade limitados, e a persistência aceita somente produto e posição presentes na edição.
+
+Uma exibição exige metade do cartão visível por um segundo, com aba visível. Desktop/mobile, carrossel e eventos repetidos compartilham deduplicação. Exibições são enviadas em lote; detalhes, salvamento e saída para loja podem antecipar o envio. Não há insert periódico quando a fila está vazia. Nenhum IP, e-mail, termo de busca ou identificador de conta do visitante é gravado nessa medição.
+
+O relatório privado da seleção mostra contagens dos últimos sete dias por produto, superfície e posição; as taxas usam somente ações de visitas com exibição registrada. Abaixo de 50 exibições por posição, informa amostra insuficiente. Esse é um parâmetro inicial, não prova estatística de preferência. As taxas ainda não alteram automaticamente o ranking. Não representam compras ou conversão confirmada. A limpeza de registros antigos ocorre nas atualizações da edição, dentro da própria conta.
 
 ## Verificação
 
-- 27 testes puros do ranking: classificação relativa, compatibilidade, desempates, escassez, sinais e bloqueios.
-- 266 testes da suíte web passaram.
-- 29 cenários PostgreSQL isolados passaram: serviços e SQL reais, integridade, isolamento, ativação, projeções, ranking inicial sem escrita, decisão vazia/vencida/retirada, seleção com 24 produtos e hero com três, prazos independentes e atualização sem nova versão.
-- Typecheck e build de produção web passaram. O build usou uma cópia isolada em `/tmp`, preservando o servidor ativo na porta 3100.
-- No ambiente conectado, os serviços reais retornaram 24 produtos na mesma ordem para home e pauta e três IDs de hero, sem criar avaliações ou edições. Os destaques da hero são os três primeiros da seleção compartilhada.
+Os testes puros cobrem admissão, repetição, estabilidade, renovação, ausência de evidências, filtros e tickets. A suíte `tools/editorial-tests/homepage-flow.test.ts` executa serviços e SQL reais em PostgreSQL PGlite isolado, incluindo RLS, projeção pública, transição, inicialização explícita, expiração, retirada, preço alterado e deduplicação. A suíte editorial anterior continua verificando as decisões manuais e o modo de transição. A prévia de navegador utiliza dados fictícios e banco isolado; não comprova latência ou interesse do público em produção.
 
-Nenhuma nova migration é necessária. O mecanismo ainda não agrupa famílias automaticamente nem dispõe de qualidade editorial calibrada; a revisão humana continua sendo a melhor fonte para comparar utilidade, público e custo-benefício.
+Para executar a verificação integrada: `npm run test:homepage --prefix tools/editorial-tests`.

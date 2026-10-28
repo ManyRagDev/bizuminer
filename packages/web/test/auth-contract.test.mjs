@@ -22,6 +22,9 @@ test("sanitizeNext só deixa caminho interno passar", () => {
   // Open redirect: absolutos, protocolos e protocol-relativo são rejeitados.
   assert.equal(sanitizeNext("https://evil.example"), "/minha-area");
   assert.equal(sanitizeNext("//evil.example"), "/minha-area");
+  assert.equal(sanitizeNext("/\\evil.example"), "/minha-area");
+  assert.equal(sanitizeNext("/\n/evil.example"), "/minha-area");
+  assert.equal(sanitizeNext("/bizu/ali-5"), "/bizu/ali-5");
   assert.equal(sanitizeNext("javascript:alert(1)"), "/minha-area");
   assert.equal(sanitizeNext("a/minha-area"), "/minha-area");
   // Fallback customizado respeitado.

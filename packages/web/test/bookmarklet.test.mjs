@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import vm from "node:vm";
+import { decodeManualCaptureBlock } from "../lib/manual-capture.ts";
 import {
   bookmarkletCompiles,
   bookmarkletHref,
@@ -45,4 +47,33 @@ test("bookmarklet não embute credencial nem envia direto", () => {
 test("versão do bookmarklet é exposta para o painel", () => {
   assert.equal(typeof BOOKMARKLET_VERSION, "string");
   assert.ok(BOOKMARKLET_VERSION.length > 0);
+});
+
+test("bookmarklet preserves full source title, actual listing, currency and lower-bound price into BM1", () => {
+  const title = "Transmissor ".repeat(35) + "USB-C | Kit com 2 unidades";
+  const page = new URL("https://www.mercadolivre.com.br/transmissor/p/MLB1234567?wid=MLB9876543210");
+  const meta = (property, content) => ({ getAttribute: key => key === "property" ? property : key === "content" ? content : null });
+  let block;
+  vm.runInNewContext(bookmarkletSource(), {
+    URL, URLSearchParams, TextEncoder, btoa,
+    window: { location: { href: page.href, pathname: page.pathname } },
+    document: {
+      title,
+      querySelectorAll(selector) {
+        if (selector === "meta") return [meta("og:title", title)];
+        if (selector === "link") return [{ getAttribute: key => key === "rel" ? "canonical" : page.origin + page.pathname }];
+        if (selector === ".andes-money-amount") return [{ getAttribute: () => "A partir de 137 reais" }];
+        return [];
+      },
+    },
+    navigator: {}, prompt: (_label, value) => { block = value; },
+    alert: message => { throw Error(message); },
+  });
+  const payload = decodeManualCaptureBlock(block);
+  assert.equal(payload.t, title);
+  assert.equal(payload.i, "MLB9876543210");
+  assert.equal(new URL(payload.u).searchParams.get("wid"), payload.i);
+  assert.equal(payload.currency, "BRL");
+  assert.equal(payload.priceType, "from");
+  assert.equal(payload.p, 13700);
 });

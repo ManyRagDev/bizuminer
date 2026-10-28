@@ -6,6 +6,7 @@
  * Supabase/Postgres sem acoplar o serviço de ingestão ao driver SQL.
  */
 
+import { normalizeSourceTitle } from "../../capture/src/title.ts";
 import { classifyActivity } from "./activity.ts";
 import type { ActivityCounts } from "./activity.ts";
 import type { ProductFamilyInfo } from "./product-family.ts";
@@ -159,6 +160,7 @@ export class InMemoryStore implements OfferStore {
     offerEvidence?: OfferEvidence;
     observedAt: Date;
   }): Promise<UpsertResult> {
+    input = { ...input, title: normalizeSourceTitle(input.title) };
     const key = `${input.tenantId}|${input.marketplace}|${input.externalId}`;
     const existing = this.products.get(key);
 
@@ -227,13 +229,24 @@ export class InMemoryStore implements OfferStore {
           previous.productUrlSnapshot === observation.productUrlSnapshot &&
           previous.imageUrlSnapshot === observation.imageUrlSnapshot &&
           previous.categorySnapshot === observation.categorySnapshot &&
-          previous.priceCents === observation.priceCents
+          previous.priceCents === observation.priceCents &&
+          previous.originalPriceCents === observation.originalPriceCents &&
+          previous.claimedDiscountRate === observation.claimedDiscountRate &&
+          previous.ratingStar === observation.ratingStar &&
+          previous.salesLabel === observation.salesLabel &&
+          previous.salesCount === observation.salesCount
             ? previous.offerEvidence
             : undefined
         ),
       };
     }
-    else observations.push(observation);
+    else {
+      const latest = observations.at(-1);
+      // Stable samples are intentionally limited to one per 20h. Compare only
+      // the latest sample: an A → B → A transition is material both times.
+      if (!latest || input.observedAt.getTime() - latest.observedAt.getTime() >= 20 * 60 * 60_000
+        || observationMaterialKey(latest) !== observationMaterialKey(observation)) observations.push(observation);
+    }
     this.observations.set(product.id, observations);
 
     return {
@@ -320,4 +333,24 @@ export class InMemoryStore implements OfferStore {
   get allProducts(): readonly ProductRecord[] {
     return [...this.products.values()];
   }
+}
+
+/** Canonical JSON ignores key order and the capture clock, never commercial facts. */
+export function observationMaterialKey(observation: PriceObservationRecord): string {
+  const evidence = observation.offerEvidence;
+  const { capturedAt: _clock, ...source } = evidence?.source ?? {};
+  const material = {
+    title: observation.titleSnapshot, url: observation.productUrlSnapshot,
+    image: observation.imageUrlSnapshot, category: observation.categorySnapshot,
+    price: observation.priceCents, originalPrice: observation.originalPriceCents,
+    discount: observation.claimedDiscountRate, rating: observation.ratingStar,
+    salesLabel: observation.salesLabel, salesCount: observation.salesCount,
+    evidence: evidence ? { ...evidence, source } : undefined,
+  };
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([,v]) => v !== undefined).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => [k,canonical(v)]));
+    return value;
+  };
+  return JSON.stringify(canonical(material));
 }

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { resolveMemberIdentity, sinkJson } from "../../../../lib/api-auth";
 import { parseFavoriteBulkPayload, parseFavoritePayload } from "../../../../lib/member-contract";
-import { bulkFavorites, ensureUser, setFavorite } from "../../../../lib/member-db";
+import { bulkFavorites, ensureUser, savedProductIds, setFavorite } from "../../../../lib/member-db";
 
 async function safeJson(request: NextRequest): Promise<unknown> {
   try {
@@ -35,7 +35,8 @@ export async function PUT(request: NextRequest) {
   try {
     await ensureUser(identity.userId);
     const imported = await bulkFavorites(identity.userId, payload.productIds);
-    return sinkJson(identity.sink, { ok: true, imported });
+    const confirmed = new Set(await savedProductIds(identity.userId));
+    return sinkJson(identity.sink, { ok: true, imported, acceptedIds: payload.productIds.filter((id) => confirmed.has(id)) });
   } catch {
     return sinkJson(identity.sink, { ok: false, error: "server_error" }, { status: 500 });
   }

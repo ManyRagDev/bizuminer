@@ -18,6 +18,9 @@
  * existir). Até lá, a distinção é a ausência de capture_run vinculado.
  */
 
+import { createHash } from "node:crypto";
+import { normalizeSourceTitle, MAX_SOURCE_TITLE_LENGTH } from "../../capture/src/title.ts";
+import { browserOfferEvidence } from "./extension-contract.ts";
 import { db } from "./db.ts";
 import { currentAccount } from "./account-scope.ts";
 import { withAccountDb } from "./tenant-db.ts";
@@ -43,6 +46,8 @@ export interface ManualCapturePayload {
   p: number;
   /** Preço original/anterior em centavos (opcional). */
   op?: number;
+  currency?: "BRL";
+  priceType?: "exact" | "from" | "unknown";
   /** URL da imagem principal (opcional). */
   img?: string;
   /** Epoch ms em que o bookmarklet rodou. */
@@ -113,6 +118,7 @@ export function parseManualPayload(raw: unknown): ManualCapturePayload {
   if (typeof p.t !== "string" || p.t.trim().length === 0) {
     throw new Error("bloco inválido: título ausente");
   }
+  if (normalizeSourceTitle(p.t).length > MAX_SOURCE_TITLE_LENGTH) throw new Error("bloco inválido: título excede 2000 caracteres");
   if (typeof p.p !== "number" || !Number.isInteger(p.p) || p.p <= 0) {
     throw new Error("bloco inválido: preço ausente ou inválido");
   }
@@ -128,7 +134,9 @@ export function parseManualPayload(raw: unknown): ManualCapturePayload {
     m: "mercadolivre",
     u: p.u,
     i: p.i,
-    t: p.t.trim(),
+    t: normalizeSourceTitle(p.t),
+    ...(p.currency === "BRL" ? {currency: "BRL" as const} : {}),
+    ...(p.priceType === "exact" || p.priceType === "from" ? {priceType: p.priceType} : {}),
     p: p.p,
     op: p.op as number | undefined,
     img: typeof p.img === "string" && p.img.length > 0 ? p.img : undefined,
@@ -185,7 +193,12 @@ export async function persistManualCapture(
   tenantId = "local",
   factory: typeof db=db,
 ): Promise<ManualCaptureResult> {
+  payload = parseManualPayload(payload);
   const capturedAt = new Date(payload.c);
+  // BM1 predates request IDs. Its complete normalized contents are its retry
+  // identity; two human captures at different instants remain distinct.
+  const digest = createHash("sha256").update(JSON.stringify(payload)).digest("hex").slice(0,32);
+  const requestId = `${digest.slice(0,8)}-${digest.slice(8,12)}-${digest.slice(12,16)}-${digest.slice(16,20)}-${digest.slice(20)}`;
   const originalPriceCents =
     payload.op !== undefined && payload.op > payload.p ? payload.op : null;
   const claimedDiscountRate =
@@ -194,6 +207,19 @@ export async function persistManualCapture(
   const context=currentAccount();
   if(!context || context.actor!=='human' || context.actorAppUserId!==appUserId || context.tenantId!==tenantId)throw new Error('affiliate_access_required');
   return withAccountDb(context, async sql => {
+    // Serialize legacy BM1 retries even when the listing does not exist yet.
+    await sql`select pg_advisory_xact_lock(hashtextextended(${`manual-capture:${tenantId}:${payload.i}`},0))`;
+    const [previousRequest] = await sql<{product_id:string;last_price_cents:number}[]>`
+      select observation.product_id, product.last_price_cents
+      from garimpa.price_observation observation
+      join garimpa.product product on product.id=observation.product_id and product.tenant_id=observation.tenant_id
+      where observation.tenant_id=${tenantId} and product.marketplace='mercadolivre' and product.external_id=${payload.i}
+        and observation.capture_source='bookmarklet' and observation.client_request_id=${requestId}::uuid limit 1`;
+    if (previousRequest) return {
+      productId: previousRequest.product_id, externalId: payload.i, title: payload.t,
+      priceCents: payload.p, originalPriceCents, claimedDiscountRate, isNew: false,
+      previousPriceCents: previousRequest.last_price_cents, capturedAt,
+    };
     const rows = await sql<{
       id: string;
       is_new: boolean;
@@ -237,11 +263,15 @@ export async function persistManualCapture(
         insert into garimpa.price_observation
           (id, tenant_id, product_id, price_cents, original_price_cents,
            claimed_discount_rate, observed_at,
-           title_snapshot, product_url_snapshot, image_url_snapshot)
+           title_snapshot, product_url_snapshot, image_url_snapshot, offer_evidence, capture_source, source_page_url, client_captured_at, client_request_id)
         select gen_random_uuid()::text, ${tenantId}, id, ${payload.p},
                ${originalPriceCents}, ${claimedDiscountRate}, ${capturedAt},
-               ${payload.t}, ${payload.u}, ${payload.img ?? null}
+               ${payload.t}, ${payload.u}, ${payload.img ?? null},
+               ${sql.json({ ...browserOfferEvidence({ currency: payload.currency, priceType: payload.priceType, originalPriceCents: originalPriceCents ?? undefined }, payload.u, capturedAt.toISOString()) } as any)},
+               'bookmarklet', ${payload.u}, ${capturedAt}, ${requestId}::uuid
         from up
+        where not exists (select 1 from garimpa.price_observation prior where prior.tenant_id=${tenantId}
+          and prior.product_id=up.id and prior.capture_source='bookmarklet' and prior.client_request_id=${requestId}::uuid)
       )
       select up.id, up.is_new, prev.last_price_cents as previous_price_cents
       from up left join prev on true

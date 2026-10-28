@@ -13,6 +13,7 @@ import { slugCaseSql } from "./marketplaces.ts";
 
 export interface SavedDealRow extends DealRow {
   saved_at: Date | string;
+  available: boolean;
 }
 
 export interface WatchRow {
@@ -23,10 +24,14 @@ export interface WatchRow {
   image_url: string | null;
   category: string | null;
   baseline_price_cents: number;
+  baseline_currency: string | null;
   target_price_cents: number | null;
   current_price_cents: number | null;
   current_observed_at: Date | string | null;
   watched_at: Date | string;
+  benefit?: string; audience?: string; caveat?: string; purchaseContents?: string;
+  comparison_status: "comparable" | "configuration_changed" | "unavailable";
+  available: boolean;
 }
 
 export type RecommendationOrigin = "salvos" | "acompanhando" | "perfil";
@@ -72,7 +77,9 @@ async function setFavoriteInternal(sql: SqlClient, userId: string, productId: st
       on conflict (user_id, product_id) do nothing
       returning id
     `;
-    return rows.length > 0;
+    if (rows.length > 0) return true;
+    const existing = await sql`select 1 from garimpa.favorite where tenant_id = ${tenantId} and user_id = ${userId} and product_id = ${productId}`;
+    return existing.length > 0;
   }
   const rows = await sql`
     delete from garimpa.favorite
@@ -171,15 +178,14 @@ async function savedDealsInternal(sql: SqlClient, userId: string, tenantId: stri
            s.previous_min_price_cents as min_price_cents,
            s.previous_min_price_cents, s.observation_count, s.history_days,
            (s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents) as lowest_verified,
-           f.created_at as saved_at
+           f.created_at as saved_at,
+           (coalesce(pc.status = ${PUBLIC_CURATION_STATUS}, false) and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')) as available
     from fav f
     join garimpa.product p on p.id = f.product_id and p.tenant_id = ${tenantId}
-    join garimpa.product_curation pc
+    left join garimpa.product_curation pc
       on pc.product_id = p.id and pc.tenant_id = p.tenant_id
-     and pc.status = ${PUBLIC_CURATION_STATUS}
     join latest l on l.product_id = p.id
     join stats s on s.product_id = p.id
-    where p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
     order by f.created_at desc
   `;
   return rows.map((r) => projectConservativePriceEvidence(r));
@@ -188,27 +194,40 @@ async function savedDealsInternal(sql: SqlClient, userId: string, tenantId: stri
 async function watchedDealsInternal(sql: SqlClient, userId: string, tenantId: string): Promise<WatchRow[]> {
   return await sql<WatchRow[]>`
     with watching as (
-      select id, product_id, baseline_price_cents, target_price_cents, created_at
-      from garimpa.price_watch
-      where tenant_id = ${tenantId} and user_id = ${userId} and active
+      select * from garimpa.price_watch where tenant_id = ${tenantId} and user_id = ${userId} and active
     ), latest as (
-      select distinct on (product_id) product_id, price_cents, observed_at
-      from garimpa.price_observation
-      where tenant_id = ${tenantId} and product_id in (select product_id from watching)
+      select distinct on (product_id) product_id, price_cents, observed_at, offer_evidence
+      from garimpa.price_observation where tenant_id = ${tenantId} and product_id in (select product_id from watching)
       order by product_id, observed_at desc, id desc
+    ), presentation_batches as (
+      select array_agg(product_id) as ids from (
+        select product_id, (row_number() over (order by product_id) - 1) / 200 as batch from watching
+      ) grouped group by batch
+    ), presentation as (
+      select pr.* from presentation_batches b
+      cross join lateral garimpa.public_product_presentations(${tenantId}, b.ids) pr
     )
-    select w.id as watch_id, w.product_id, w.baseline_price_cents, w.target_price_cents,
-           w.created_at as watched_at,
-           p.title, ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug, p.image_url, p.category,
-           l.price_cents as current_price_cents, l.observed_at as current_observed_at
-    from watching w
-    join garimpa.product p on p.id = w.product_id and p.tenant_id = ${tenantId}
-    join garimpa.product_curation pc
-      on pc.product_id = p.id and pc.tenant_id = p.tenant_id
-     and pc.status = ${PUBLIC_CURATION_STATUS}
+    select w.id as watch_id, w.product_id, w.baseline_price_cents, w.baseline_currency, w.target_price_cents,
+      w.created_at as watched_at,
+      (coalesce(pc.status = ${PUBLIC_CURATION_STATUS}, false) and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')) as available,
+      coalesce(pr.presentation->>'displayTitle', p.title) as title,
+      pr.presentation->>'benefit' as benefit, pr.presentation->>'audience' as audience,
+      pr.presentation->>'caveat' as caveat, pr.presentation->>'purchaseContents' as "purchaseContents",
+      ${sql.unsafe(slugCaseSql("p.marketplace", "p.external_id"))} as slug, p.image_url, p.category,
+      case when w.baseline_currency is not null and w.baseline_configuration is not null
+        and l.offer_evidence->>'currency' = w.baseline_currency
+        and garimpa.offer_configuration_key(l.offer_evidence) = w.baseline_configuration
+        and l.observed_at >= greatest(w.baseline_observed_at, now() - interval '48 hours') then l.price_cents end as current_price_cents,
+      l.observed_at as current_observed_at,
+      case when w.baseline_currency is null or w.baseline_configuration is null or l.observed_at is null
+        or l.observed_at < greatest(w.baseline_observed_at, now() - interval '48 hours') then 'unavailable'
+        when l.offer_evidence->>'currency' is distinct from w.baseline_currency
+          or garimpa.offer_configuration_key(l.offer_evidence) is distinct from w.baseline_configuration then 'configuration_changed'
+        else 'comparable' end as comparison_status
+    from watching w join garimpa.product p on p.id = w.product_id and p.tenant_id = ${tenantId}
+    left join garimpa.product_curation pc on pc.product_id = p.id and pc.tenant_id = p.tenant_id
     left join latest l on l.product_id = w.product_id
-    where p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
-    order by w.created_at desc
+    left join presentation pr on pr.product_id = w.product_id order by w.created_at desc
   `;
 }
 
@@ -338,30 +357,35 @@ export async function startWatch(
   sqlFactory: typeof db = db,
 ): Promise<WatchRow | null> {
   return await withUserDb(tenantId, userId, async (sql) => {
+    const existing = await watchedDealsInternal(sql, userId, tenantId);
+    const active = existing.find((watch) => watch.product_id === productId);
+    if (active) return active;
     const rows = await sql`
-      insert into garimpa.price_watch (tenant_id, user_id, product_id, baseline_price_cents, target_price_cents)
-      select ${tenantId}, ${userId}, latest.product_id, latest.price_cents, ${targetPriceCents}
+      insert into garimpa.price_watch (tenant_id, user_id, product_id, baseline_price_cents, target_price_cents, baseline_currency, baseline_configuration, baseline_observed_at)
+      select ${tenantId}, ${userId}, latest.product_id, latest.price_cents, ${targetPriceCents},
+        case when latest.offer_evidence->>'currency' ~ '^[A-Z]{3}$' then latest.offer_evidence->>'currency' end, garimpa.offer_configuration_key(latest.offer_evidence), latest.observed_at
       from (
-        select o.product_id, o.price_cents
+        select o.product_id, o.price_cents, o.offer_evidence, o.observed_at
         from garimpa.price_observation o
         join garimpa.product p on p.id = o.product_id and p.tenant_id = o.tenant_id
-        join garimpa.product_curation pc
-          on pc.product_id = o.product_id and pc.tenant_id = o.tenant_id
-         and pc.status = ${PUBLIC_CURATION_STATUS}
+        join garimpa.product_curation pc on pc.product_id = o.product_id and pc.tenant_id = o.tenant_id and pc.status = ${PUBLIC_CURATION_STATUS}
         where o.tenant_id = ${tenantId} and o.product_id = ${productId}
           and p.last_seen_at >= now() - (${PRODUCT_EVIDENCE_TTL_DAYS} * interval '1 day')
-        order by o.observed_at desc, o.id desc
-        limit 1
+        order by o.observed_at desc, o.id desc limit 1
       ) latest
+      where latest.observed_at >= now() - interval '48 hours'
       on conflict (user_id, product_id) do update set
-        active = true,
-        deactivated_at = null,
-        baseline_price_cents = excluded.baseline_price_cents,
-        target_price_cents = excluded.target_price_cents,
+        active = true, deactivated_at = null, baseline_price_cents = excluded.baseline_price_cents,
+        target_price_cents = excluded.target_price_cents, baseline_currency = excluded.baseline_currency,
+        baseline_configuration = excluded.baseline_configuration, baseline_observed_at = excluded.baseline_observed_at,
         created_at = now()
+      where not garimpa.price_watch.active
       returning id
     `;
-    if (rows.length === 0) return null;
+    if (rows.length === 0) {
+      const current = await watchedDealsInternal(sql, userId, tenantId);
+      return current.find((watch) => watch.product_id === productId) ?? null;
+    }
     const watches = await watchedDealsInternal(sql, userId, tenantId);
     return watches.find((watch) => watch.product_id === productId) ?? null;
   }, sqlFactory);
@@ -455,4 +479,8 @@ export async function memberSnapshot(userId: string, tenantId = "local", sqlFact
     const recommended = await recommendedDealsInternal(sql, userId, 8, tenantId);
     return { saved, watches, recommended, profile };
   }, sqlFactory);
+}
+
+export async function isWatching(userId: string, productId: string, tenantId = "local"): Promise<boolean> {
+  return (await watchedDeals(userId, tenantId)).some((watch) => watch.product_id === productId);
 }

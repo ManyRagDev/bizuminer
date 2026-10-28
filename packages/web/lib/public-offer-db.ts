@@ -72,17 +72,19 @@ export async function withPublicDb<T>(run: (tx: ReturnType<typeof db>) => Promis
 }
 
 export async function publicDealDetail(slug: string, sqlFactory: typeof db = db): Promise<DealDetail | null> {
-  return withPublicDb(async tx => {
+  const detail = await withPublicDb(async tx => {
     const [row] = await tx<{ value: DealDetail | null }[]>`select garimpa.public_deal_detail(${slug}) as value`;
     return row?.value ?? null;
   }, sqlFactory);
+  return detail;
 }
 
 export async function publicCatalog(tenantId: string, query: Record<string, unknown>, sqlFactory: typeof db = db): Promise<PublicCatalogPage> {
-  return withPublicDb(async tx => {
+  const page = await withPublicDb(async tx => {
     const [row] = await tx<{ value: PublicCatalogPage }[]>`select garimpa.public_catalog(${tenantId},${tx.json(query as never)}) as value`;
     return row!.value;
   }, sqlFactory);
+  return page;
 }
 
 export async function publicCampaignLink(code: string, slug?: string | null, sqlFactory: typeof db = db) {
@@ -121,5 +123,6 @@ export async function publicCatalogStats(tenantId:string,days:number,sqlFactory:
  },sqlFactory);
 }
 export async function publicHeroCandidates(tenantId:string,sqlFactory:typeof db=db) {
- return withPublicDb(async tx=>{const [r]=await tx<{value:import('./db.ts').DealRow[]}[]>`select garimpa.public_hero_candidates(${tenantId}) as value`;return r!.value;},sqlFactory);
+ const rows = await withPublicDb(async tx=>{const [r]=await tx<{value:import('./db.ts').DealRow[]}[]>`select garimpa.public_hero_candidates(${tenantId}) as value`;return r!.value;},sqlFactory);
+ return rows;
 }

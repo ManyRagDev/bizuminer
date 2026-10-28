@@ -8,7 +8,15 @@ test("link do produto usa domínio público e página com metadados", () => {
 
 test("prévia distingue preço recente de última captura antiga", () => {
   const now = new Date("2026-09-29T12:00:00Z");
-  const product = { price_cents: 12990, marketplace: "mercadolivre", evidence_observed_at: "2026-09-29T09:00:00Z" };
+  const product = { currency: "BRL", priceType: "exact", price_cents: 12990, marketplace: "mercadolivre", evidence_observed_at: "2026-09-29T09:00:00Z" };
   assert.match(productShareDescription(product, now), /R\$\s?129,90.*Mercado Livre.*preço monitorado/);
   assert.match(productShareDescription({ ...product, evidence_observed_at: "2026-09-25T12:00:00Z" }, now), /Última captura:.*há 4 dias.*Confira o preço atual/);
+});
+
+test("compartilhamento preserva preço mínimo, faixa, moeda e benefício aprovado", () => {
+  const now = new Date("2026-10-28T12:00:00Z");
+  const product = { price_cents: 2500, marketplace: "aliexpress", evidence_observed_at: "2026-10-28T10:00:00Z", benefit: "Conecta aparelhos compatíveis.", currency: "BRL" };
+  assert.match(productShareDescription({ ...product, priceType: "from" }, now), /Conecta aparelhos compatíveis.*a partir de R\$ 25/);
+  assert.match(productShareDescription({ ...product, priceType: "range", priceMinCents: 2500, priceMaxCents: 4000 }, now), /R\$ 25 a R\$ 40/);
+  assert.match(productShareDescription({ ...product, currency: "USD" }, now), /US\$ 25/);
 });

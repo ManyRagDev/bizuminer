@@ -1,5 +1,7 @@
 import type { VitrineProduct } from "./deal-view.ts";
+import { validateEditorialPresentation, type EditorialPresentationInput } from "./product-presentation.ts";
 import { HERO_POLICY_VERSION } from "./hero-policy.ts";
+import { HOMEPAGE_POLICY_VERSION } from "./homepage-policy.ts";
 import {
   hasSuperiorityClaim,
   validateComparativeBasis,
@@ -26,6 +28,8 @@ export type EditorialDestination = "home" | "pauta";
 export type EditorialDimensions = Record<EditorialDimensionId, { level: EditorialLevel; reason: string }>;
 
 export interface EditorialAssessmentInput {
+  presentation?: EditorialPresentationInput;
+  expectedAssessmentId?: string | null;
   heroPolicyVersion?: string;
   productId: string;
   evidenceFingerprint: string;
@@ -39,6 +43,7 @@ export interface EditorialAssessmentInput {
   comparativeBasis?: ComparativeBasis | null;
 }
 export interface EditorialAssessment extends EditorialAssessmentInput {
+  presentationInvalidatedAt?: string | null;
   id: string;
   createdAt: string;
   policyVersion: string;
@@ -80,6 +85,9 @@ export type EditorialPublishedProduct = VitrineProduct & {
   editorialContext: string;
 };
 export interface PublishedEditorialSelection {
+  /** Shared materialized edition, separate from a human editorial version. */
+  homepageEditionId?: string | null;
+  homepageReady?: boolean;
   mode: "catalog" | "editorial" | "unavailable";
   schemaReady: boolean;
   id: string | null;
@@ -92,9 +100,17 @@ export interface PublishedEditorialSelection {
 
 /** Also changes when an item is invalidated without activating another edition. */
 export function publishedEditorialStateKey(selection: PublishedEditorialSelection): string {
-  return JSON.stringify([HERO_POLICY_VERSION, CATALOG_EVIDENCE_POLICY_VERSION, selection.mode, selection.version, selection.validUntil, selection.heroProductIds, selection.heroValidUntil,
+  const state = JSON.stringify([HOMEPAGE_POLICY_VERSION, HERO_POLICY_VERSION, CATALOG_EVIDENCE_POLICY_VERSION, selection.homepageReady, selection.homepageEditionId, selection.mode, selection.version, selection.validUntil, selection.heroProductIds, selection.heroValidUntil,
     selection.products.map((product) => [product.id, product.priceCents, product.evidenceObservedAt,
-      product.title, product.imageUrl, product.editorialRationale, product.editorialPurchaseContents, product.editorialContext])]);
+      product.title, product.displayTitle, product.editorialRevisionId, product.benefit, product.audience, product.caveat, product.purchaseContents, product.coverHeadline, product.coverImageApproved,
+      product.priceType, product.currency, product.originalPriceKind, product.imageUrl, product.editorialRationale, product.editorialPurchaseContents, product.editorialContext])]);
+  // Change detection only, not authorization. Polling sends a version, not the whole selection.
+  let hash = 0xcbf29ce484222325n;
+  for (let index = 0; index < state.length; index++) {
+    hash ^= BigInt(state.charCodeAt(index));
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
+  }
+  return `${HOMEPAGE_POLICY_VERSION}:${HERO_POLICY_VERSION}:${CATALOG_EVIDENCE_POLICY_VERSION}:${hash.toString(16).padStart(16, "0")}`;
 }
 
 function canonical(value: unknown): unknown {
@@ -111,7 +127,7 @@ export function editorialEvidenceFingerprint(product: {
   ratingStar?: number | null;
 }): string {
   const evidence = product.offerEvidence && typeof product.offerEvidence === "object" ? product.offerEvidence as Record<string, unknown> : {};
-  const identityKeys = ["description", "variantKey", "variantLabel", "packageContents", "packageQuantity", "dimensions", "positiveReviewRate", "priceMinCents", "priceMaxCents"];
+  const identityKeys = ["description", "variantKey", "variantLabel", "variantIdentity", "packageContents", "packageQuantity", "dimensions", "positiveReviewRate", "currency", "priceType", "fieldStates", "payment", "coupon", "region", "sellerId", "priceMinCents", "priceMaxCents"];
   // Price-range *values* may change with ordinary price updates. Only a change
   // between a single price and a range is a material ambiguity signal.
   const facts = Object.fromEntries(identityKeys.filter((key) => !key.startsWith("price") && key in evidence).map((key) => [key, evidence[key]]));
@@ -126,6 +142,13 @@ const cleanText = (value: unknown, min: number, max: number): string | null => t
 export function validateEditorialAssessment(input: unknown, allowHistoricalHeroPolicy = false): { ok: true; value: EditorialAssessmentInput } | { ok: false; error: string } {
   if (!input || typeof input !== "object") return { ok: false, error: "invalid_assessment" };
   const raw = input as Record<string, unknown>;
+  const presentation = raw.presentation === undefined ? undefined : validateEditorialPresentation(raw.presentation);
+  if (presentation === null) return { ok: false, error: "invalid_presentation" };
+  if (raw.expectedAssessmentId !== undefined && raw.expectedAssessmentId !== null && (typeof raw.expectedAssessmentId !== "string" || !idPattern.test(raw.expectedAssessmentId))) return { ok: false, error: "invalid_assessment_version" };
+  if (presentation?.status === "published") {
+    const durableCopy = [presentation.title, presentation.caveat, presentation.cover?.headline, raw.audience, raw.benefit, raw.purchaseContents].join(" ");
+    if (hasSuperiorityClaim(durableCopy) || /R\$|\b\d+[.,]?\d*\s*%|(?:menor|melhor|baixo|bom) pre[çc]o|(?:oferta|promo[çc][aã]o|desconto) (?:de |por |hoje|imperd[ií]vel)/iu.test(durableCopy)) return { ok: false, error: "presentation_requires_durable_copy" };
+  }
   if (raw.heroPolicyVersion !== undefined && (typeof raw.heroPolicyVersion !== "string" || !/^hero-v[1-9]\d*$/.test(raw.heroPolicyVersion)
     || (!allowHistoricalHeroPolicy && raw.heroPolicyVersion !== HERO_POLICY_VERSION))) return { ok: false, error: "invalid_hero_policy" };
   if (typeof raw.productId !== "string" || !idPattern.test(raw.productId)) return { ok: false, error: "invalid_product" };
@@ -163,7 +186,7 @@ export function validateEditorialAssessment(input: unknown, allowHistoricalHeroP
     }
     validatedBasis = res.value;
   }
-  return { ok: true, value: { ...(raw.heroPolicyVersion === undefined ? {} : { heroPolicyVersion: raw.heroPolicyVersion as string }), productId: raw.productId, evidenceFingerprint: fingerprint, dimensions, audience, benefit, purchaseContents, publicRationale, criticalDoubts: raw.criticalDoubts.map((v) => String(v).trim()), maxPriceCents: raw.maxPriceCents as number, comparativeBasis: validatedBasis } };
+  return { ok: true, value: { ...(presentation ? { presentation } : {}), ...(raw.expectedAssessmentId === undefined ? {} : { expectedAssessmentId: raw.expectedAssessmentId as string | null }), ...(raw.heroPolicyVersion === undefined ? {} : { heroPolicyVersion: raw.heroPolicyVersion as string }), productId: raw.productId, evidenceFingerprint: fingerprint, dimensions, audience, benefit, purchaseContents, publicRationale, criticalDoubts: raw.criticalDoubts.map((v) => String(v).trim()), maxPriceCents: raw.maxPriceCents as number, comparativeBasis: validatedBasis } };
 }
 
 export function editorialOfferBlockers(candidate: {

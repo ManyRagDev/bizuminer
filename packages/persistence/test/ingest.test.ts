@@ -352,3 +352,20 @@ it('sweep forwards tenant to capture completion, including an empty source', asy
  await sweep(fakeAdapter([]),cred,store,{tenantId:'tenant_b',maxPages:1},ctx);
  assert.equal(completedTenant,'tenant_b');
 });
+
+it('stable sampling preserves each material change at same price and A → B → A', async () => {
+ const store=new InMemoryStore();const at=new Date('2026-10-28T00:00Z');
+ const input={captureRunId:'r1',tenantId:'tenant_a',marketplace:'shopee',externalId:'facts',title:' Kit\n  USB-C &amp; 2 unidades ',productUrl:'https://shopee.com/facts',priceCents:1000,observedAt:at};
+ const evidence={version:2 as const,source:{marketplace:'shopee',method:'official_api' as const,url:input.productUrl,capturedAt:at.toISOString()},currency:'BRL',priceType:'exact' as const,variantIdentity:{state:'source_verified' as const,key:'usb-c'},packageContents:['2 unidades'],originalPriceKind:'source_claimed' as const};
+ const {product}=await store.upsertProductWithObservation({...input,offerEvidence:evidence});let run=1;
+ const write=async(e:any,delta=60_000)=>store.upsertProductWithObservation({...input,captureRunId:'r'+(++run),observedAt:new Date(at.getTime()+run*delta),offerEvidence:e});
+ await write({...evidence,source:{...evidence.source,capturedAt:new Date(at.getTime()+60_000).toISOString()}});
+ assert.equal((await store.priceRange(product.id))?.observations,1);
+ for(const patch of [{currency:'USD'},{variantIdentity:{state:'source_verified',key:'lightning'}},{packageContents:['1 unidade']},{conditions:{coupon:'X'}},{originalPriceKind:'derived_from_claim'},{priceType:'from'}]) {
+  const before=(await store.priceRange(product.id))!.observations;await write({...evidence,...patch});await write(evidence);
+  assert.equal((await store.priceRange(product.id))?.observations,before+2);
+ }
+ await write(evidence,21*60*60_000);assert.equal((await store.priceRange(product.id))?.observations,14);
+ assert.equal((await store.latestObservation(product.id))?.titleSnapshot,'Kit USB-C & 2 unidades');assert.equal(store.allProducts[0]!.title,'Kit USB-C & 2 unidades');
+ await store.upsertProductWithObservation({...input,tenantId:'tenant_b',offerEvidence:evidence});assert.equal(store.allProducts.length,2);assert.notEqual(store.allProducts[0]!.id,store.allProducts[1]!.id);
+});

@@ -3,6 +3,7 @@
  * Uso: node --env-file=.env.local --experimental-strip-types bin/run-triage.ts [--limit 50] [--tenant local]
  */
 import { runPendingAutomatedTriage } from "../lib/curation-db.ts";
+import { refreshHomepageAfterChange } from "../lib/homepage-db.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string): string | undefined => {
@@ -21,6 +22,7 @@ console.log(`[triage-cli] Iniciando triagem automatizada (limite: ${limit}, tena
 try {
   const summary = await runPendingAutomatedTriage(tenantId, limit,
     batchId && workerId ? { captureBatch: { id: batchId, workerId } } : undefined);
+  if (!batchId) await refreshHomepageAfterChange(tenantId);
   console.log(`[triage-cli] Triagem concluída:`);
   console.log(`  Processados: ${summary.processed}`);
   console.log(`  Aprovados:   ${summary.approved}`);

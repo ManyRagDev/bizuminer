@@ -36,7 +36,15 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: packages/persistence/package-lock.json
+          cache-dependency-path: |
+            packages/persistence/package-lock.json
+            packages/web/package-lock.json
       - run: npm ci --prefix packages/persistence
       - name: Reconsultar produtos priorizados
         run: node --experimental-strip-types packages/persistence/bin/monitor-prices.ts --marketplace ${{ matrix.marketplace }} --limit "$MONITOR_PLAN_BUDGET" --execute
+      - name: Preparar atualização da vitrine
+        if: ${{ always() && !cancelled() }}
+        run: npm ci --prefix packages/web --omit=dev
+      - name: Atualizar edição compartilhada
+        if: ${{ always() && !cancelled() }}
+        run: node --experimental-strip-types packages/web/bin/refresh-homepage.ts --execute

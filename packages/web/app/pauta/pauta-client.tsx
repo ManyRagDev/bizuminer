@@ -7,6 +7,7 @@ import { marketplaceDef } from "../../lib/marketplaces";
 import type { PautaQrBundle } from "../../lib/qr-service";
 import { copyToClipboard } from "../../lib/clipboard";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
+import { offerPriceLabel } from "../../lib/offer-price";
 
 interface PautaProduct extends VitrineProduct {
   shareUrl: string;
@@ -16,13 +17,6 @@ interface PautaProduct extends VitrineProduct {
   editorialContext?: string | null;
   isHeroHighlight?: boolean;
 }
-
-const brl = (cents: number) =>
-  (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: cents % 100 === 0 ? 0 : 2,
-  });
 
 const STORAGE_KEY = "bm_pauta_copied";
 const localDay = () => new Intl.DateTimeFormat("en-CA", {
@@ -305,7 +299,7 @@ export default function PautaClient({
               title="Copiar novamente"
             >
               <span className="pauta-done-check">✓</span>
-              <span className="pauta-done-title">{product.title}</span>
+              <span className="pauta-done-title">{product.displayTitle ?? product.title}</span>
               <span className="pauta-done-code">
                 {product.shareUrl.replace(/^https?:\/\/[^/]+/, "")}
               </span>
@@ -329,7 +323,7 @@ export default function PautaClient({
                     <div className="pauta-card-image">
                       <Image
                         src={product.imageUrl}
-                        alt={product.title}
+                        alt={product.displayTitle ?? product.title}
                         width={80}
                         height={80}
                         unoptimized
@@ -340,13 +334,14 @@ export default function PautaClient({
                     {isNext && (
                       <span className="pauta-card-signal">PRÓXIMO</span>
                     )}
-                    <h3>{product.title}</h3>
-                    <p className="pauta-editorial-rationale">{product.editorialRationale}</p>
+                    <h3>{product.displayTitle ?? product.title}</h3>
+                    <p className="pauta-editorial-rationale">{product.benefit ?? product.editorialRationale}</p>
                     {product.isHeroHighlight && heroBadgeCurrent && <span className="pauta-card-signal">DESTAQUE DA HERO</span>}
-                    {product.editorialPurchaseContents && <p className="pauta-editorial-contents"><b>O que vem:</b> {product.editorialPurchaseContents}</p>}
+                    {(product.purchaseContents ?? product.editorialPurchaseContents) && <p className="pauta-editorial-contents"><b>O que vem:</b> {product.purchaseContents ?? product.editorialPurchaseContents}</p>}
+                    {product.caveat && <p className="pauta-editorial-context"><b>Ressalva:</b> {product.caveat}</p>}
                     {product.editorialContext && <p className="pauta-editorial-context">{product.editorialContext}</p>}
                     <div className="pauta-card-meta">
-                      <strong>{brl(product.priceCents)}</strong>
+                      <strong>{offerPriceLabel(product)}</strong>
                       {mp && <span>{mp.stampLabel}</span>}
                     </div>
                   </div>

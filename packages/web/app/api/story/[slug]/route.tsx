@@ -1,8 +1,10 @@
 import { ImageResponse } from "next/og";
 import { dealDetail } from "../../../../lib/db";
-import { priceHighlight } from "../../../../lib/deal-signal";
+import { priceFreshness, priceHighlight } from "../../../../lib/deal-signal";
 import { marketplaceDef } from "../../../../lib/marketplaces";
-import { brl, fetchProductImage, ogFonts, truncate } from "../../../../lib/og-assets";
+import { fetchProductImage, ogFonts } from "../../../../lib/og-assets";
+import { toVitrineProduct } from "../../../../lib/deal-view";
+import { formatOfferMoney, offerPriceLabel } from "../../../../lib/offer-price";
 import { storyLinkLabel } from "../../../../lib/story-link";
 
 export const runtime = "nodejs";
@@ -64,6 +66,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   }
 
   const { deal } = detail;
+  const product = toVitrineProduct(deal);
+  const stale = priceFreshness(deal.evidence_observed_at) === "stale";
+  const title = product.displayTitle ?? product.title;
   const highlight = priceHighlight({
     priceCents: deal.price_cents,
     previousMinPriceCents: deal.previous_min_price_cents,
@@ -73,14 +78,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   });
   // Mesma regra do card OG: "ainda sem histórico" é selo negativo, e um selo
   // negativo numa peça de divulgação só ocupa espaço. Silêncio é o padrão.
-  const badge = highlight?.tone === "unproven" ? null : highlight;
+  const badge = stale || product.priceType !== "exact" || product.currency !== "BRL" || highlight?.tone === "unproven" ? null : highlight;
   const photo = await fetchProductImage(deal.image_url);
   const marketplace = marketplaceDef(deal.marketplace);
   const stamp = marketplace
     ? { label: marketplace.stampLabel, style: marketplace.stampStyle }
     : { label: deal.marketplace, style: "outlined" as const };
 
-  const hasReference = deal.original_price_cents !== null && deal.original_price_cents > deal.price_cents;
+  const hasReference = !stale && !!product.currency && product.originalPriceKind === "source_claimed" && product.priceType === "exact" && deal.original_price_cents !== null && deal.original_price_cents > deal.price_cents;
 
   return new ImageResponse(
     (
@@ -178,38 +183,30 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
               {badge.label}
             </div>
           )}
-          {/* 2 linhas EXATAS (44px × 1.1 = 48.4px cada; 97 = 2 × 48.4). Múltiplo
-              do line-height faz o corte cair no limite da linha em vez de
-              fatiar letras ao meio. ~26 caracteres por linha nesta largura. */}
           <div
             style={{
               display: "flex",
-              maxHeight: 97,
-              overflow: "hidden",
-              fontSize: 44,
+              fontSize: title.length <= 100 ? 44 : title.length <= 180 ? 36 : title.length <= 300 ? 28 : 22,
               fontWeight: 800,
               lineHeight: 1.1,
               letterSpacing: "-0.02em",
               color: INK,
             }}
           >
-            {truncate(deal.title, 52)}
+            {title}
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {/* Satori não suporta `text-decoration` (erro minificado "u2 is not
-              iterable" no pipe da resposta), então o preço anterior não pode
-              ser riscado. A preposição "de" resolve melhor que o risco: diz
-              explicitamente que aquele valor é o ponto de partida, e sobrevive
-              a ser lido de longe, que é como um story é visto. */}
           {hasReference && (
             <div style={{ display: "flex", fontSize: 34, fontWeight: 600, color: INK_QUIET }}>
-              de {brl(deal.original_price_cents!)}
+              Na loja: {formatOfferMoney(deal.original_price_cents!, product.currency)}
             </div>
           )}
-          <div style={{ display: "flex", marginTop: 4, fontSize: 104, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
-            {brl(deal.price_cents)}
+          {stale && <div style={{ display: "flex", fontSize: 26, color: INK_MUTED }}>Última captura · confira o preço atual</div>}
+          {!product.currency && <div style={{ display: "flex", fontSize: 26, color: INK_MUTED }}>Moeda não confirmada · confira na loja</div>}
+          <div style={{ display: "flex", marginTop: 4, fontSize: offerPriceLabel(product).length > 18 ? 54 : 104, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
+            {offerPriceLabel(product)}
           </div>
 
           {/* O LINK IMPRESSO NA ARTE

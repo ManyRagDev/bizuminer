@@ -55,3 +55,8 @@ jobs:
           CAPTURE_ACCOUNT_TENANT: ${{ inputs.account_tenant }}
           CAPTURE_BATCH_ID: ${{ inputs.batch_id }}
         run: node --experimental-strip-types packages/web/bin/run-capture-batch.ts --batch "$CAPTURE_BATCH_ID" --tenant "$CAPTURE_ACCOUNT_TENANT"
+      - name: Atualizar edição após captura e triagem
+        if: ${{ always() && !cancelled() }}
+        env:
+          CAPTURE_ACCOUNT_TENANT: ${{ inputs.account_tenant }}
+        run: node --experimental-strip-types packages/web/bin/refresh-homepage.ts --tenant "$CAPTURE_ACCOUNT_TENANT" --execute

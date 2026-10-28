@@ -8,6 +8,8 @@
  * visual. Card incompleto devolve `null` (o botão oferece "Abrir produto").
  */
 
+import { MAX_SOURCE_TITLE_LENGTH, normalizeSourceTitle } from "../../../capture/src/title.ts";
+
 export interface ExtractedCard {
   externalId: string;
   title: string;
@@ -15,28 +17,10 @@ export interface ExtractedCard {
   imageUrl?: string;
   priceCents: number;
   originalPriceCents?: number;
+  currency: "BRL";
+  priceType: "exact" | "from";
 }
 
-function decodeHtmlEntities(value: string): string {
-  const named: Record<string, string> = { amp: "&", quot: '"', apos: "'", lt: "<", gt: ">" };
-  let decoded = value;
-  for (let pass = 0; pass < 3; pass++) {
-    const next = decoded.replace(/&(#x[\da-f]+|#\d+|[a-z][a-z\d]+);/gi, (entity, body: string) => {
-      if (body.startsWith("#x")) {
-        const cp = Number.parseInt(body.slice(2), 16);
-        return Number.isFinite(cp) ? String.fromCodePoint(cp) : entity;
-      }
-      if (body.startsWith("#")) {
-        const cp = Number.parseInt(body.slice(1), 10);
-        return Number.isFinite(cp) ? String.fromCodePoint(cp) : entity;
-      }
-      return named[body.toLowerCase()] ?? entity;
-    });
-    if (next === decoded) break;
-    decoded = next;
-  }
-  return decoded;
-}
 
 function parseMoneyAria(label: string): { reais: number; centavos: number } | null {
   const m = /(\d[\d.]*)\s*reais(?:\s+com\s+(\d{1,2})\s*centavos)?/.exec(label);
@@ -52,8 +36,8 @@ export function extractCard(html: string): ExtractedCard | null {
     /<a\s+href="([^"]+)"[^>]*class="[^"]*poly-component__title[^"]*"[^>]*>([^<]+)</.exec(html);
   const titleAlt = /class="[^"]*poly-component__title[^"]*"[^>]*>([^<]+)</.exec(html);
   const href = anchor?.[1]?.replace(/&amp;/g, "&");
-  const title = (anchor?.[2] ?? titleAlt?.[1]) ? decodeHtmlEntities((anchor?.[2] ?? titleAlt?.[1])!.trim()) : undefined;
-  if (!href || !title) return null;
+  const title = (anchor?.[2] ?? titleAlt?.[1]) ? normalizeSourceTitle((anchor?.[2] ?? titleAlt?.[1])!) : undefined;
+  if (!href || !title || title.length > MAX_SOURCE_TITLE_LENGTH) return null;
 
   let url: URL;
   try {
@@ -62,15 +46,19 @@ export function extractCard(html: string): ExtractedCard | null {
     return null;
   }
 
-  const externalId = url.searchParams.get("wid") ?? url.pathname.match(/(MLB\d{6,})/)?.[1];
-  if (!externalId) return null;
+  if (url.protocol !== "https:" || !/(^|\.)mercadolivre\.com\.br$/.test(url.hostname)) return null;
+  const fragment = new URLSearchParams(url.hash.slice(1));
+  const externalId = url.searchParams.get("wid") ?? fragment.get("wid")
+    ?? url.searchParams.get("pdp_filters")?.match(/item_id:(MLB\d{6,})/)?.[1]
+    ?? (!url.pathname.includes("/p/") ? url.pathname.match(/MLB-?(\d{6,})/)?.[1]?.replace(/^(\d)/, "MLB$1") : undefined);
+  if (!externalId || !/^MLB\d{6,}$/.test(externalId)) return null;
 
   // href REAL, limpo de query/fragment de tracking (a afiliação entra no servidor).
-  const productUrl = `${url.origin}${url.pathname}`;
+  const productUrl = `${url.origin}${url.pathname}${url.pathname.includes("/p/") ? `?wid=${externalId}` : ""}`;
 
   const currentSection = html.slice(html.indexOf("poly-price__current"));
   const currentLabel = /aria-label="(?!Antes:)([^"]*?reais[^"]*?)"/.exec(currentSection)?.[1];
-  if (currentLabel && /\b(?:a\s+partir\s+de|faixa|entre)\b/i.test(currentLabel)) return null;
+  if (currentLabel && /\b(?:faixa|entre)\b/i.test(currentLabel)) return null;
   const current = currentLabel ? parseMoneyAria(currentLabel) : null;
   if (!current) return null;
   const priceCents = current.reais * 100 + current.centavos;
@@ -89,6 +77,8 @@ export function extractCard(html: string): ExtractedCard | null {
     productUrl,
     imageUrl,
     priceCents,
+    currency: "BRL",
+    priceType: /a\s+partir\s+de/i.test(currentLabel ?? "") ? "from" : "exact",
     originalPriceCents: originalPriceCents && originalPriceCents > priceCents ? originalPriceCents : undefined,
   };
 }

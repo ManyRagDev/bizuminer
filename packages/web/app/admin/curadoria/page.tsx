@@ -32,6 +32,8 @@ import CurationReviewer from "./curation-reviewer.tsx";
 import GroupReviewer from "./group-reviewer.tsx";
 import SpotCheckView from "./spot-check-view.tsx";
 import PublishedSelection from "./published-selection.tsx";
+import HomepageMetrics from "./homepage-metrics.tsx";
+import { homepageEngagementReport } from "../../../lib/homepage-db.ts";
 import TriageControl from "./triage-control.tsx";
 import BussolaView from "../direcionamento/bussola-view.tsx";
 import PipelineView from "../direcionamento/pipeline-view.tsx";
@@ -68,10 +70,11 @@ async function CurationPage({
   const secondary = aba === "bussola" || aba === "pipeline" || aba === "radar";
   let content;
   if (aba === "selecao") {
-    const [desk, published, eligible] = await Promise.all([
+    const [desk, published, eligible, engagement] = await Promise.all([
       getEditorialSelectionDesk(),
       getPublishedEditorialSelection("all"),
       automatedTriageAvailability(),
+      homepageEngagementReport(scopedTenantId()),
     ]);
     const state = selectionWorkflowState({
       schemaReady: published.schemaReady,
@@ -101,6 +104,7 @@ async function CurationPage({
         </section>
         <TriageControl eligible={eligible} />
         <PublishedSelection selection={published} />
+        <HomepageMetrics rows={engagement} />
         <details className="curation-manual-edition">
           <summary>Personalizar uma edição editorial (opcional)</summary>
           <p>

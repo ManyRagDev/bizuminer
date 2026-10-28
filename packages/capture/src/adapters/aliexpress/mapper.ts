@@ -21,6 +21,7 @@
  */
 
 import { toCents, toRate } from "../../money.ts";
+import { normalizeSourceTitle } from "../../title.ts";
 import type { RawOffer } from "../../types.ts";
 import { MARKETPLACE } from "./client.ts";
 
@@ -104,7 +105,7 @@ export function mapProductNodes(
 
   for (const node of nodes) {
     const externalId = node.product_id != null ? String(node.product_id) : undefined;
-    const title = node.product_title?.trim();
+    const title = node.product_title ? normalizeSourceTitle(node.product_title) : undefined;
     // `promotion_link` é o link afiliado que a própria query devolve; o
     // detail_url é o link cru. Preferimos o afiliado quando existir.
     const productUrl = node.promotion_link?.trim() || node.product_detail_url?.trim();
@@ -163,13 +164,18 @@ export function mapProductNodes(
       // e o produto inteiro se sustenta em não afirmar o que não se mediu.
       salesCount,
       offerEvidence: {
-        version: 1,
+        version: 2,
         source: {
           marketplace: MARKETPLACE,
           method: "official_api",
           url: node.product_detail_url?.trim() || productUrl,
           capturedAt: capturedAt.toISOString(),
         },
+        currency: node.target_sale_price_currency!.trim().toUpperCase(),
+        sellerId: node.shop_id != null ? String(node.shop_id) : undefined,
+        priceType: "unknown",
+        variantIdentity: { state: "unknown" },
+        originalPriceKind: originalPriceCents ? "source_claimed" : "unknown",
         positiveReviewRate: percentToRate(node.evaluate_rate),
       },
       capturedAt,

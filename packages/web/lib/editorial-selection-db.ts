@@ -1,8 +1,11 @@
 import { scopedTenantId } from "./account-scope.ts";
 import { sameOfferConfigurationSql } from "./offer-history.ts";
 import { db } from "./db.ts";
+import { getProductPresentations, hydrateProductPresentations } from "./product-presentation-db.ts";
+import { sourceProductPresentation } from "./product-presentation.ts";
 import { productSlug } from "./marketplaces.ts";
 import { catalogHeroPresentation, rankHeroCandidates } from "./hero-ranking.ts";
+import { composeHomepage, type HomepageContinuity } from "./homepage-policy.ts";
 import {
   EDITORIAL_MAX_PRODUCTS, EDITORIAL_POLICY_VERSION, editorialEvidenceFingerprint, editorialSelectionBlockers,
   hasSuperiorityClaim,
@@ -348,12 +351,18 @@ async function candidateRows(sql: QueryClient, tenantId: string, productIds?: st
 }
 
 function toCandidate(row: CandidateRow, assessment: EditorialAssessment | null, now = new Date()): EditorialCandidate {
+  const evidence = row.offer_evidence && typeof row.offer_evidence === "object" ? row.offer_evidence as Record<string, unknown> : {};
   const material = { title: row.title, imageUrl: row.image_url, category: row.category, productUrl: row.product_url,
     ratingStar: row.rating_star, offerEvidence: row.offer_evidence };
   const candidate: EditorialCandidate = {
     id: row.id, slug: productSlug(row.marketplace, row.external_id), title: row.title,
     marketplace: row.marketplace, imageUrl: row.image_url, category: row.category,
     priceCents: row.price_cents, originalPriceCents: row.original_price_cents,
+    currency: typeof evidence.currency === "string" && /^[A-Z]{3}$/.test(evidence.currency) ? evidence.currency : undefined,
+    priceType: ["exact", "from", "range", "unknown"].includes(String(evidence.priceType)) ? evidence.priceType as EditorialCandidate["priceType"] : undefined,
+    priceMinCents: typeof evidence.priceMinCents === "number" ? evidence.priceMinCents : undefined,
+    priceMaxCents: typeof evidence.priceMaxCents === "number" ? evidence.priceMaxCents : undefined,
+    originalPriceKind: ["source_claimed", "derived_from_claim", "unknown"].includes(String(evidence.originalPriceKind)) ? evidence.originalPriceKind as EditorialCandidate["originalPriceKind"] : undefined,
     previousMinPriceCents: row.history_comparable ? row.previous_min_price_cents : null,
     discountPercent: row.claimed_discount_rate == null ? null : Math.round(row.claimed_discount_rate * 100),
     ratingStar: row.rating_star && row.rating_star > 0 ? row.rating_star : null,
@@ -368,14 +377,15 @@ function toCandidate(row: CandidateRow, assessment: EditorialAssessment | null, 
   return candidate;
 }
 
-type AssessmentRow = { id: string; product_id: string; assessment: EditorialAssessmentInput; snapshot: { price_cents?: number }; policy_version: string; created_at: Date | string };
+type AssessmentRow = { id: string; product_id: string; assessment: EditorialAssessmentInput; snapshot: { price_cents?: number }; policy_version: string; created_at: Date | string; presentation_invalidated_at?: string | null };
 function toAssessment(row: AssessmentRow): EditorialAssessment {
   return { ...row.assessment, id: row.id, policyVersion: row.policy_version, createdAt: new Date(row.created_at).toISOString(),
-    priceCentsAtAssessment: row.snapshot?.price_cents };
+    priceCentsAtAssessment: row.snapshot?.price_cents, presentationInvalidatedAt: row.presentation_invalidated_at ?? null };
 }
 async function latestAssessments(sql: QueryClient, tenantId: string): Promise<Map<string, EditorialAssessment>> {
   const rows = await sql.unsafe<AssessmentRow[]>(`select distinct on (product_id)
-    id, product_id, assessment, snapshot, policy_version, created_at from garimpa.editorial_assessment
+    id, product_id, assessment, snapshot, policy_version, created_at,
+    to_jsonb(editorial_assessment)->>'presentation_invalidated_at' as presentation_invalidated_at from garimpa.editorial_assessment
     where tenant_id=$1 and coalesce(assessment->>'schemaVersion','1')<>'2' order by product_id, created_at desc, id desc`, [tenantId]);
   return new Map(rows.map((row) => [row.product_id, toAssessment(row)]));
 }
@@ -428,7 +438,17 @@ export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sql
       const selection = await readSelection(tx, tenantId);
       const assessments = await latestAssessments(tx, tenantId);
       const rows = await candidateRows(tx, tenantId);
-      return { schemaReady: true, selection, candidates: rows.map((row) => toCandidate(row, assessments.get(row.id) ?? null)),
+      // The latest assessment may be a draft; cover status comes from the current
+      // public revision, using this same snapshot and one bounded batch per 200 IDs.
+      const presentationFactory = (() => {
+        const local = (...args: unknown[]) => (tx as unknown as (...values: unknown[]) => unknown)(...args);
+        return Object.assign(local, { end: async () => {} });
+      }) as typeof db;
+      const presentations = await getProductPresentations(rows.map(row => row.id), tenantId, presentationFactory);
+      return { schemaReady: true, selection, candidates: rows.map((row) => ({
+        ...toCandidate(row, assessments.get(row.id) ?? null),
+        ...(presentations.get(row.id) ?? sourceProductPresentation(row.title)),
+      })),
         catalogHeroActive: !selection && !await hasEditorialEdition(tx, tenantId) };
     });
   } finally { await sql.end(); }
@@ -446,6 +466,13 @@ Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: stri
       const actors = await tx`select m.app_user_id as id from garimpa.affiliate_membership m join garimpa.affiliate_account a on a.id=m.affiliate_id where m.app_user_id=${reviewerId} and a.tenant_id=${tenantId} and ${tx.unsafe(columns?.revocation?"m.revoked_at is null":"true")}`;
       if (!actors.length) return { ok: false as const, error: "forbidden" };
       await tx`select id from garimpa.product where id=${input.productId} and tenant_id=${tenantId} for no key update`;
+      if (input.presentation) {
+        const [schema] = await tx`select to_regprocedure('garimpa.public_product_presentations(text,text[])') is not null as ready`;
+        if (!schema?.ready) return { ok: false as const, error: "presentation_migration_required" };
+        const current = await tx<{ id: string }[]>`select id from garimpa.editorial_assessment where tenant_id=${tenantId} and product_id=${input.productId}
+          and coalesce(assessment->>'schemaVersion','1')<>'2' order by created_at desc,id desc limit 1`;
+        if (input.expectedAssessmentId === undefined || (current[0]?.id ?? null) !== input.expectedAssessmentId) return { ok: false as const, error: "assessment_conflict" };
+      }
       const rows = await candidateRows(tx, tenantId, [input.productId]);
       if (!rows[0] || rows[0].status !== "approved") return { ok: false as const, error: "product_not_approved" };
       const candidate = toCandidate(rows[0], null);
@@ -621,7 +648,8 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
   } finally { await sql.end(); }
 }
 
-export async function getPublishedEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
+/** Background computation. Public requests consume the stored edition below. */
+export async function computeEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db, previous?: HomepageContinuity, compose = true): Promise<PublishedEditorialSelection> {
   const empty: PublishedEditorialSelection = { mode: "unavailable", schemaReady: false, id: null, version: null, validUntil: null, products: [], heroProductIds: [], heroValidUntil: null };
   if (!process.env.DATABASE_URL) return empty;
   const sql = sqlFactory();
@@ -629,15 +657,29 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
     if (!await editorialSelectionSchemaReady(sql)) return empty;
     return await sql.begin("isolation level repeatable read read only", async (tx) => {
       await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
+      const presentationFactory = (() => {
+        const local = (...args: unknown[]) => (tx as unknown as (...values: unknown[]) => unknown)(...args);
+        return Object.assign(local, { end: async () => {} });
+      }) as typeof db;
+      const present = async (value: PublishedEditorialSelection): Promise<PublishedEditorialSelection> => ({
+        ...value, products: await hydrateProductPresentations(value.products, tenantId, presentationFactory),
+      });
       const selection = await readSelection(tx, tenantId);
       const now = new Date();
+      const published = compose ? await tx<{ product_id: string; slug: string }[]>`select distinct on(pub.product_id) pub.product_id,pub.slug
+        from garimpa.publication pub join garimpa.affiliate_account a on a.id=pub.affiliate_id and a.tenant_id=pub.tenant_id and a.status='active'
+        where pub.tenant_id=${tenantId} and pub.channel='web' and pub.status='active'
+        order by pub.product_id,pub.published_at desc,pub.id` : [];
+      const publicSlugs = new Map(published.map(p => [p.product_id, p.slug]));
       if (!selection) {
         // Bootstrap only: never resurrect an explicitly empty, expired or
         // retired edition through the approved catalog.
         if (await hasEditorialEdition(tx, tenantId)) return { ...empty, schemaReady: true, mode: "editorial" };
         const assessments = await latestAssessments(tx, tenantId);
         const rows = await candidateRows(tx, tenantId);
-        const candidates = rows.map((row) => toCandidate(row, assessments.get(row.id) ?? null, now));
+        const candidates = rows.filter(row => !compose || publicSlugs.has(row.id)).map((row) => ({
+          ...toCandidate(row, assessments.get(row.id) ?? null, now), ...(compose ? { slug: publicSlugs.get(row.id)! } : {}),
+        }));
 
         // Revalidação de alegações de superioridade no ramo de catálogo antes da 1ª edição (BUG-021)
         const candidateAssessments = candidates
@@ -655,16 +697,16 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
           return true;
         });
 
-        const selected = rankHeroCandidates(eligibleCandidates, now)
-          .filter((entry) => entry.classification.status === "hero").slice(0, EDITORIAL_MAX_PRODUCTS);
-        const highlights = selected.filter((entry) => entry.selectedForHero);
+        const ranked = rankHeroCandidates(eligibleCandidates, now).filter(entry => entry.classification.status === "hero").slice(0, EDITORIAL_MAX_PRODUCTS);
+        const { selected, heroes: highlights } = compose ? composeHomepage(eligibleCandidates, now, previous)
+          : { selected: ranked, heroes: ranked.filter(entry => entry.selectedForHero) };
         const validUntil = highlightDeadline(selected.map(({ candidate }) => candidate));
         const heroValidUntil = highlightDeadline(highlights.map(({ candidate }) => candidate));
-        return { ...empty, schemaReady: true, mode: "catalog", validUntil, heroValidUntil,
+        return present({ ...empty, schemaReady: true, mode: "catalog", validUntil, heroValidUntil,
           heroProductIds: highlights.map(({ candidate }) => candidate.id),
           products: selected.map(({ candidate, classification }) => ({ ...publicProduct(candidate),
             ...(candidate.assessment ? { editorialRationale: candidate.assessment.publicRationale, editorialPurchaseContents: candidate.assessment.purchaseContents } : catalogHeroPresentation(candidate, classification)),
-            selectionItemId: `catalog:${candidate.id}`, editorialContext: "" })) };
+            selectionItemId: `catalog:${candidate.id}`, editorialContext: "" })) });
       }
       const result: PublishedEditorialSelection = { mode: "editorial", schemaReady: true, id: selection.id, version: selection.version, validUntil: selection.validUntil, products: [], heroProductIds: [], heroValidUntil: null };
       if (new Date(selection.validUntil) <= now) return result;
@@ -696,6 +738,10 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
         if (!row || !assessment) continue;
         if (newest.get(item.productId)?.id !== assessment.id) continue;
         const candidate = toCandidate(row, assessment, now);
+        if (compose) {
+          if (!publicSlugs.has(candidate.id)) continue;
+          candidate.slug = publicSlugs.get(candidate.id)!;
+        }
         if (candidate.selectionBlockers.length) continue;
         const hasClaim = hasSuperiorityClaim(assessment.publicRationale) || hasSuperiorityClaim(item.context);
         if (hasClaim) {
@@ -709,15 +755,30 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
           selectionItemId: `${selection.id}:${candidate.id}`, editorialContext: item.context });
       }
       const positions = new Map(items.map((item) => [item.productId, item.position]));
-      const highlights = rankHeroCandidates(heroCandidates, now, positions).filter((entry) => entry.selectedForHero);
+      const legacy = rankHeroCandidates(heroCandidates, now, positions);
+      const { selected: home, heroes: highlights } = compose ? composeHomepage(heroCandidates, now, previous, positions)
+        : { selected: legacy, heroes: legacy.filter(entry => entry.selectedForHero) };
+      if (compose && (destination === "home" || destination === "all")) {
+        const products = new Map(result.products.map(product => [product.id, product]));
+        const pautaOnly = destination === "all" ? result.products.filter(p => !heroCandidates.some(c => c.id === p.id)) : [];
+        result.products = [...home.flatMap(({ candidate }) => products.has(candidate.id) ? [products.get(candidate.id)!] : []), ...pautaOnly];
+      }
       result.heroProductIds = highlights.map(({ candidate }) => candidate.id);
       result.heroValidUntil = highlightDeadline(highlights.map(({ candidate }) => candidate), selection.validUntil);
-      return result;
+      return present(result);
     });
   } finally { await sql.end(); }
 }
 
+export async function getPublishedEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
+  const { readHomepageEdition } = await import("./homepage-db.ts");
+  const stored = await readHomepageEdition(destination, tenantId, sqlFactory);
+  // Transition until explicit initialization. An initialized empty edition stays empty.
+  return stored ?? await computeEditorialSelection(destination, tenantId, sqlFactory, undefined, false);
+}
+
 export async function getEditorialProductPresentation(productId: string, tenantId = scopedTenantId()) {
-  const selection = await getPublishedEditorialSelection("all", tenantId);
-  return selection.products.find((product) => product.id === productId) ?? null;
+  const presentation = (await getProductPresentations([productId], tenantId)).get(productId);
+  if (!presentation || presentation.titleOrigin !== "editorial") return null;
+  return { ...presentation, editorialRationale: presentation.benefit ?? "", editorialPurchaseContents: presentation.purchaseContents ?? "" };
 }

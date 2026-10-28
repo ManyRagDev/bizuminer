@@ -5,7 +5,7 @@ import postgres from "postgres";
 import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "./catalog-policy.ts";
 import { publishedEditorialStateKey, type PublishedEditorialSelection } from "./editorial-selection.ts";
 import type { DealQuery, FreshnessBand } from "./deal-query";
-import { freshnessDays, priceRangeForBand } from "./deal-query.ts";
+import { freshnessDays, priceRangeForBand, isHomepageSelectionQuery } from "./deal-query.ts";
 import { categoryDesirabilityFromStats, heroScore, type CategoryStats, type HeroScorable } from "./desirability.ts";
 import { toVitrineProduct, type VitrineProduct } from "./deal-view.ts";
 import { parseProductSlug, slugCaseSql } from "./marketplaces.ts";
@@ -15,7 +15,12 @@ import { parseProductSlug, slugCaseSql } from "./marketplaces.ts";
  * Handles por operação compartilham um pool limitado no processo.
  */
 
-export interface DealRow {
+import type { ProductPresentation } from "./product-presentation.ts";
+import { hydrateProductPresentations } from "./product-presentation-db.ts";
+import type { HistoryContext } from "./price-history.ts";
+import { buildConfigurationKey, type OfferEvidence } from "./price-evidence.ts";
+
+export interface DealRow extends Partial<ProductPresentation> {
   id: string;
   title: string;
   slug: string;
@@ -44,6 +49,7 @@ export interface PricePoint {
 export interface DealDetail {
   deal: DealRow;
   price_history: PricePoint[];
+  history_context?: HistoryContext;
 }
 
 export interface DealsPage {
@@ -82,9 +88,22 @@ function publicCatalogQuery(query: DealQuery): Record<string, unknown> {
 
 /** A seleção editorial determina a ordem inicial; filtros explícitos preservam sua ordenação. */
 export async function topDeals(query: DealQuery = {}, tenantId = "local", publishedSelection?: PublishedEditorialSelection, sqlFactory: typeof db = db): Promise<DealsPage> {
+  const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId, sqlFactory);
+  if (isHomepageSelectionQuery(query) && selection.homepageReady) {
+    const deals: DealRow[] = selection.products.map(p => ({ coverHeadline:p.coverHeadline,coverImageApproved:p.coverImageApproved,displayTitle:p.displayTitle,sourceTitle:p.sourceTitle,titleOrigin:p.titleOrigin,
+      editorialRevisionId:p.editorialRevisionId,editorialReviewedAt:p.editorialReviewedAt,benefit:p.benefit,audience:p.audience,caveat:p.caveat,purchaseContents:p.purchaseContents,
+      priceType:p.priceType,priceMinCents:p.priceMinCents,priceMaxCents:p.priceMaxCents,currency:p.currency,originalPriceKind:p.originalPriceKind, id: p.id, slug: p.slug, title: p.title, marketplace: p.marketplace,
+      price_cents: p.priceCents, original_price_cents: p.originalPriceCents, claimed_discount_rate: p.discountPercent === null ? null : p.discountPercent / 100,
+      min_price_cents: p.previousMinPriceCents, previous_min_price_cents: p.previousMinPriceCents, observation_count: p.observationCount,
+      history_days: p.historyDays, lowest_verified: p.lowestVerified, category: p.category, image_url: p.imageUrl,
+      rating_star: p.ratingStar, sales_label: p.salesLabel, sales_count: p.salesCount, evidence_observed_at: p.evidenceObservedAt }));
+    const offset = Math.max(0, query.offset ?? 0), limit = Math.min(24, Math.max(1, query.limit ?? 12));
+    return { deals: deals.slice(offset, offset + limit), total: deals.length, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) };
+  }
   const publicReader = await import("./public-offer-db.ts");
   if (await publicReader.publicProjectionReady(sqlFactory)) {
-    return publicReader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
+    const page = await publicReader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
+    return { ...page, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) };
   }
   const limit = Math.min(Math.max(query.limit ?? 12, 1), 24);
   const offset = Math.max(query.offset ?? 0, 0);
@@ -97,14 +116,20 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local", publis
   const minDiscount = query.minDiscount ?? null;
   const lowestOnly = query.lowestOnly ?? false;
   const hasHistory = query.hasHistory ?? false;
-  const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId);
   const selectedIds = sort === "signal" ? selection.products.map((product) => product.id) : [];
   const { min: minPriceCents, max: maxPriceCents } = priceRangeForBand(query.priceBand ?? "all");
   // Filtros antigos como "all" e "14d" não furam a validade global de 7 dias.
   // Valores menores continuam restringindo a captura dentro desse teto.
   const freshnessDaysValue = freshnessDays(freshness);
-  const sql = sqlFactory();
+  const connection = sqlFactory();
   try {
+    return await connection.begin("isolation level repeatable read read only", async transaction => {
+    const sql = transaction as unknown as ReturnType<typeof db>;
+    const snapshotFactory = (() => new Proxy(sql, { get(target, key) {
+      if (key === "end") return async () => {};
+      const value = Reflect.get(target, key, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    } })) as typeof db;
     const { editorialSelectionSchemaReady } = await import("./editorial-selection-db.ts");
     const schemaReady = await editorialSelectionSchemaReady(sql);
     const configurationComparison = schemaReady ? sameOfferConfigurationSql("l", "o") : "false";
@@ -197,9 +222,10 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local", publis
       limit ${limit}
       offset ${offset}
     `;
-    return { deals: rows, total: rows[0]?.total_count ?? 0, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) };
+    return { deals: await hydrateProductPresentations(rows, tenantId, snapshotFactory), total: rows[0]?.total_count ?? 0, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) };
+    }) as unknown as DealsPage;
   } finally {
-    await sql.end();
+    await connection.end();
   }
 }
 
@@ -258,19 +284,26 @@ export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantI
 }
 
 /** Lista e facetas públicas reutilizam a mesma projeção no banco. */
-export async function catalogPage(query: DealQuery = {}, tenantId = "local", sqlFactory: typeof db = db): Promise<CatalogPage> {
+export async function catalogPage(query: DealQuery = {}, tenantId = "local", sqlFactory: typeof db = db, publishedSelection?: PublishedEditorialSelection): Promise<CatalogPage> {
+  const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId, sqlFactory);
+  if (isHomepageSelectionQuery(query) && selection.homepageReady) {
+    const [page, presentation] = await Promise.all([topDeals(query, tenantId, selection, sqlFactory), catalogPresentation(query.freshness, tenantId, sqlFactory)]);
+    return { page, presentation };
+  }
   const reader = await import("./public-offer-db.ts");
   if (await reader.publicProjectionReady(sqlFactory)) {
     const page = await reader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
+    page.selectionVersion = selection.version;
+    page.selectionStateKey = publishedEditorialStateKey(selection);
     if (Array.isArray(page.categories) && page.marketplaceCounts && typeof page.marketplaceCounts === "object") {
       return { page, presentation: { categories: page.categories, marketplaceCounts: page.marketplaceCounts } };
     }
     // Mantém compatibilidade no intervalo entre publicar o app e a migração.
-    return { page, presentation: await catalogPresentation(query.freshness, tenantId) };
+    return { page, presentation: await catalogPresentation(query.freshness, tenantId, sqlFactory) };
   }
   const [page, presentation] = await Promise.all([
-    topDeals(query, tenantId, undefined, sqlFactory),
-    catalogPresentation(query.freshness, tenantId),
+    topDeals(query, tenantId, selection, sqlFactory),
+    catalogPresentation(query.freshness, tenantId, sqlFactory),
   ]);
   return { page, presentation };
 }
@@ -280,15 +313,15 @@ export async function catalogPage(query: DealQuery = {}, tenantId = "local", sql
  * No caminho público, isso evita executar a projeção cara duas vezes para
  * obter categorias e contagens de marketplace da mesma janela.
  */
-export async function catalogPresentation(freshness: FreshnessBand = "7d", tenantId = "local"): Promise<CatalogPresentation> {
+export async function catalogPresentation(freshness: FreshnessBand = "7d", tenantId = "local", sqlFactory: typeof db = db): Promise<CatalogPresentation> {
   const reader = await import("./public-offer-db.ts");
   const days = Math.min(freshnessDays(freshness) ?? PRODUCT_EVIDENCE_TTL_DAYS, PRODUCT_EVIDENCE_TTL_DAYS);
-  if (await reader.publicProjectionReady()) {
-    const stats = await reader.publicCatalogStats(tenantId, days);
+  if (await reader.publicProjectionReady(sqlFactory)) {
+    const stats = await reader.publicCatalogStats(tenantId, days, sqlFactory);
     return { categories: stats.categories, marketplaceCounts: stats.marketplaces };
   }
 
-  const sql = db();
+  const sql = sqlFactory();
   try {
     const [row] = await sql<{ categories: string[] | null; marketplace_counts: Record<string, number> | null }[]>`
       with visible as (
@@ -353,8 +386,15 @@ export async function dealDetail(slug: string, tenantId = "local", sqlFactory: t
   if (!parsed) return null;
   const { marketplace, externalId } = parsed;
 
-  const sql = sqlFactory();
+  const connection = sqlFactory();
   try {
+    return await connection.begin("isolation level repeatable read read only", async transaction => {
+    const sql = transaction as unknown as ReturnType<typeof db>;
+    const snapshotFactory = (() => new Proxy(sql, { get(target, key) {
+      if (key === "end") return async () => {};
+      const value = Reflect.get(target, key, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    } })) as typeof db;
     const { editorialSelectionSchemaReady } = await import("./editorial-selection-db.ts");
     const schemaReady = await editorialSelectionSchemaReady(sql);
     const configurationComparison = schemaReady ? sameOfferConfigurationSql("l", "o") : "false";
@@ -400,17 +440,27 @@ export async function dealDetail(slug: string, tenantId = "local", sqlFactory: t
     const deal = deals[0];
     if (!deal) return null;
 
-    const history = await sql<PricePoint[]>`
-      select price_cents, observed_at
+    const observations = await sql<(PricePoint & { offer_evidence: OfferEvidence | null })[]>`
+      select price_cents, observed_at, ${sql.unsafe(schemaReady ? "offer_evidence" : "null::jsonb as offer_evidence")}
       from garimpa.price_observation
-      where tenant_id = ${tenantId}
-        and product_id = ${deal.id}
-        and observed_at >= now() - interval '90 days'
+      where tenant_id = ${tenantId} and product_id = ${deal.id}
+        and observed_at >= now() - interval '90 days' and observed_at <= now()
       order by observed_at asc, id asc
     `;
-    return { deal, price_history: history };
+    const evidence = observations.at(-1)?.offer_evidence;
+    const configuration = buildConfigurationKey(evidence);
+    const history = observations.filter(o => o.price_cents > 0 && evidence?.currency && o.offer_evidence?.currency === evidence.currency
+      && configuration !== null && buildConfigurationKey(o.offer_evidence) === configuration)
+      .map(({ price_cents, observed_at }) => ({ price_cents, observed_at }));
+    const comparison: HistoryContext["comparison"] = evidence?.priceType && evidence.priceType !== "exact" ? "non_exact"
+      : !evidence?.currency ? "currency_unknown" : !configuration ? "configuration_unknown" : "comparable";
+    const [presented] = await hydrateProductPresentations([projectConservativePriceEvidence(deal)], tenantId, snapshotFactory);
+    return { deal: presented, price_history: history, history_context: { windowDays: 90, totalCount: deal.observation_count,
+      windowCount: observations.length, comparableCount: history.length, excludedCount: observations.length - history.length,
+      comparison, currency: evidence?.currency } };
+    }) as unknown as DealDetail | null;
   } finally {
-    await sql.end();
+    await connection.end();
   }
 }
 

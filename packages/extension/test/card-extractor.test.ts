@@ -20,7 +20,7 @@ describe("extractCard", () => {
     assert.ok(card);
     assert.equal(card.externalId, "MLB123456789");
     assert.equal(card.title, "Fone Bluetooth & Ouvido Sem Fio");
-    assert.equal(card.productUrl, "https://www.mercadolivre.com.br/p/MLB123456789");
+    assert.equal(card.productUrl, "https://www.mercadolivre.com.br/p/MLB123456789?wid=MLB123456789");
     assert.equal(card.priceCents, 13700);
     assert.equal(card.originalPriceCents, 26900);
     assert.equal(card.imageUrl, "https://http2.mlstatic.com/D_ABC-N_123-X.jpg");
@@ -28,7 +28,7 @@ describe("extractCard", () => {
 
   it("limpa query/fragment do href real (não reconstrói permalink)", () => {
     const card = extractCard(CARD)!;
-    assert.ok(!card.productUrl.includes("wid="));
+    assert.ok(card.productUrl.includes("wid=MLB123456789"));
     assert.ok(!card.productUrl.includes("#"));
   });
 
@@ -48,8 +48,18 @@ describe("extractCard", () => {
     assert.equal(card.originalPriceCents, undefined);
   });
 
-  it("rejeita preço em faixa ('a partir de') para não virar preço exato", () => {
+  it("transporta preço a partir de com sua natureza explícita", () => {
     const html = CARD.replace("aria-label=\"137 reais\"", "aria-label=\"A partir de 137 reais\"");
-    assert.equal(extractCard(html), null);
+    assert.equal(extractCard(html)?.priceType, "from");
+    assert.equal(extractCard(html)?.currency, "BRL");
   });
+});
+
+it("não corta título longo e recusa excesso em vez de truncar", () => {
+  const title = "Transmissor ".repeat(35) + "Bluetooth 5.3 USB-C 2 unidades";
+  assert.equal(extractCard(CARD.replace("Fone Bluetooth &amp; Ouvido Sem Fio",title))?.title,title);
+  assert.equal(extractCard(CARD.replace("Fone Bluetooth &amp; Ouvido Sem Fio","x".repeat(2001))),null);
+});
+it("catálogo sem anúncio identificado não vira captura de vendedor desconhecido", () => {
+  assert.equal(extractCard(CARD.replace("?wid=MLB123456789#deal_print_id=xyz", "")),null);
 });

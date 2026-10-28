@@ -13,6 +13,7 @@ import {
 const BASE = "https://bizuminer.com.br";
 
 const verified = {
+  currency: "BRL", priceType: "exact",
   slug: "ml-MLB11111111",
   title: "Lavadora De Alta Pressão Wap 4100",
   priceCents: 148900,
@@ -24,6 +25,7 @@ const verified = {
 };
 
 const drop = {
+  currency: "BRL", priceType: "exact",
   slug: "ml-MLB00000001",
   title: "Monitor LG UltraGear 27",
   priceCents: 144900,
@@ -35,6 +37,7 @@ const drop = {
 };
 
 const fresh = {
+  currency: "BRL", priceType: "exact",
   slug: "ml-MLB33333333",
   title: "Secador Philco 2200W",
   priceCents: 18990,
@@ -162,4 +165,15 @@ test("desconto declarado NÃO entra na mensagem compartilhada", () => {
   // BizuMiner assina é o próprio sinal, não o número da loja.
   const message = composeSingle(drop, BASE);
   assert.doesNotMatch(message, /%\s*(OFF|off|de desconto|no anúncio)/);
+});
+
+test("compositor utiliza título revisado, contexto e preço mínimo sem afirmar recorde", () => {
+  const message = composeSingle({ ...verified, displayTitle: "Lavadora Wap 4100 220V", benefit: "Ajuda na limpeza de áreas externas.", priceType: "from" }, BASE);
+  assert.match(message, /Lavadora Wap 4100 220V/);
+  assert.match(message, /Ajuda na limpeza de áreas externas/);
+  assert.match(message, /a partir de R\$ 1\.489/);
+  assert.doesNotMatch(message, /menor preço|caiu/);
+  const stale = composeSingle({ ...verified, evidenceObservedAt: "2020-01-01T00:00:00Z" }, BASE);
+  assert.match(stale, /Última captura/);
+  assert.doesNotMatch(stale, /menor preço|caiu/);
 });

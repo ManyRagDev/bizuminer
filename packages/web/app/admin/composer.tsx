@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { composeMessage, COMPOSER_MAX_SELECTION } from "../../lib/composer";
 import { priceHighlight } from "../../lib/deal-signal";
+import { offerPriceLabel } from "../../lib/offer-price";
+import type { ProductPresentation } from "../../lib/product-presentation";
 
-type SearchProduct = {
+type SearchProduct = Partial<ProductPresentation> & {
   id: string;
   slug: string;
   title: string;
@@ -18,10 +20,8 @@ type SearchProduct = {
 
 type Destination = "whatsapp" | "telegram";
 
-const priceBRL = (cents: number) =>
-  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 });
-
 function signalLabel(product: SearchProduct): string | null {
+  if (product.priceType !== "exact" || product.currency !== "BRL") return null;
   const highlight = priceHighlight({
     priceCents: product.priceCents,
     previousMinPriceCents: product.previousMinPriceCents,
@@ -58,6 +58,8 @@ export default function Composer({ baseUrl }: { baseUrl: string }) {
   const [selected, setSelected] = useState<SearchProduct[]>([]);
   const [destination, setDestination] = useState<Destination>("whatsapp");
   const [copied, setCopied] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [copyError, setCopyError] = useState("");
   const message = composeMessage(selected, destination, baseUrl);
   const selectedIds = useRef(new Set<string>());
 
@@ -111,9 +113,21 @@ export default function Composer({ baseUrl }: { baseUrl: string }) {
   }
 
   async function copy() {
-    if (!message) return;
-    const ok = await copyText(message);
-    setCopied(ok);
+    if (!message || copying) return;
+    setCopying(true); setCopyError(""); setCopied(false);
+    try {
+      const response = await fetch(`/api/deals/selected?ids=${encodeURIComponent(selected.map(product => product.id).join(","))}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Não foi possível conferir as ofertas agora. Tente novamente.");
+      const payload = await response.json() as { ready: boolean; products: SearchProduct[] };
+      if (!payload.ready) throw new Error("A conferência de ofertas ainda não está disponível neste ambiente.");
+      setSelected(payload.products);
+      if (payload.products.length !== selected.length) throw new Error("Um produto deixou de estar disponível. Confira a seleção atualizada antes de copiar.");
+      const currentMessage = composeMessage(payload.products, destination, baseUrl);
+      const ok = await copyText(currentMessage);
+      setCopied(ok);
+      if (!ok) setCopyError("Não foi possível copiar. Selecione o texto atualizado abaixo.");
+    } catch (error) { setCopyError(error instanceof Error ? error.message : "Não foi possível conferir as ofertas agora."); }
+    finally { setCopying(false); }
   }
 
   const lot = selected.length > 1;
@@ -149,8 +163,8 @@ export default function Composer({ baseUrl }: { baseUrl: string }) {
                 <label>
                   <input type="checkbox" checked={checked} disabled={disabled} onChange={() => toggle(product)} />
                   <span className="composer-result-main">
-                    <b>{product.title}</b>
-                    <small>{priceBRL(product.priceCents)}{label ? ` · ${label}` : ""}</small>
+                    <b>{product.displayTitle ?? product.title}</b>
+                    <small>{offerPriceLabel(product)}{label ? ` · ${label}` : ""}</small>
                   </span>
                 </label>
                 <a href={`/bizu/${product.slug}`} target="_blank" rel="noreferrer">ver no site ↗</a>
@@ -169,8 +183,8 @@ export default function Composer({ baseUrl }: { baseUrl: string }) {
           <div className="composer-chips">
             {selected.map((product) => (
               <span key={product.id} className="composer-chip">
-                {product.title}
-                <button type="button" aria-label={`Remover ${product.title}`} onClick={() => remove(product.id)}>×</button>
+                {product.displayTitle ?? product.title}
+                <button type="button" aria-label={`Remover ${product.displayTitle ?? product.title}`} onClick={() => remove(product.id)}>×</button>
               </span>
             ))}
           </div>
@@ -214,8 +228,9 @@ export default function Composer({ baseUrl }: { baseUrl: string }) {
         value={message}
         placeholder="Selecione um ou mais produtos acima para gerar a mensagem."
       />
-      <button type="button" className="composer-copy" disabled={!message} onClick={() => void copy()}>
-        {copied ? "copiado!" : "copiar mensagem"}
+      {copyError && <p role="alert">{copyError}</p>}
+      <button type="button" className="composer-copy" disabled={!message || copying} onClick={() => void copy()}>
+        {copying ? "Conferindo ofertas…" : copied ? "copiado!" : "copiar mensagem"}
       </button>
     </section>
   );

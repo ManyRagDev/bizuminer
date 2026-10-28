@@ -23,6 +23,8 @@ export function collectBrowserOffers() {
     productUrl: string;
     priceCents: number;
     originalPriceCents?: number;
+    currency: "BRL";
+    priceType: "exact" | "from";
     imageUrl?: string;
     ratingStar?: number;
     salesLabel?: string;
@@ -56,7 +58,10 @@ export function collectBrowserOffers() {
       fragment.get("wid") ||
       (filtered ? filtered[1] : "") ||
       (direct ? "MLB" + direct[1] : "");
-    const title = (anchor.textContent || "").trim().slice(0, 250);
+    const title = (anchor.textContent || "").replace(/\s+/gu, " ").trim();
+    const priceLabel = card
+      .querySelector('.poly-price__current [aria-label*="reais"]')
+      ?.getAttribute("aria-label") || "";
     const priceCents = money(
       card
         .querySelector('.poly-price__current [aria-label*="reais"]')
@@ -64,7 +69,7 @@ export function collectBrowserOffers() {
     );
     if (
       !/^MLB\d{6,}$/.test(externalId) ||
-      !title ||
+      !title || title.length > 2000 || /\b(?:faixa|entre)\b/i.test(priceLabel) ||
       !priceCents ||
       seen.has(externalId)
     )
@@ -94,6 +99,8 @@ export function collectBrowserOffers() {
         url.pathname +
         (url.pathname.includes("/p/") ? "?wid=" + externalId : ""),
       priceCents,
+      currency: "BRL",
+      priceType: /a\s+partir\s+de/i.test(priceLabel) ? "from" : "exact",
     };
     if (original && original > priceCents)
       product.originalPriceCents = original;

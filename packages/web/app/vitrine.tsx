@@ -2,16 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment, FormEvent, type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CATALOG_PAGE_SIZE, catalogStateFromSearchParams, catalogStateToDealQuery, catalogStateToSearchParams } from "../lib/deal-query";
 import type { CatalogState, DealSort, FreshnessBand, PriceBand } from "../lib/deal-query";
-import { freshnessLabel, priceFreshness, priceHighlight, priceNarrative, priceSignal, seenAgo } from "../lib/deal-signal";
-import { mergeSavedProducts, readSavedState, unionSavedIds, writeSavedState } from "../lib/saved-products";
+import { freshnessLabel, priceFreshness, priceHighlight, priceNarrative, seenAgo } from "../lib/deal-signal";
+import { mergeSavedProducts, readSavedState, writeSavedState } from "../lib/saved-products";
 import type { VitrineProduct } from "../lib/deal-view";
 import { MARKETPLACES, marketplaceDef, type MarketplaceDef } from "../lib/marketplaces";
 import CopyProductLink from "./_components/copy-product-link";
 import { ThemeToggle } from "./theme-toggle";
 import { HERO_MAX_PRODUCTS } from "../lib/hero-policy";
+import { isHomepageSelectionQuery } from "../lib/deal-query";
+import { requestFavorite } from "../lib/member-actions";
+import { offerPriceLabel, offerPriceNote } from "../lib/offer-price";
+import { CATALOG_RETURN_KEY, parseCatalogReturn } from "../lib/catalog-navigation";
+import { useHomepageEngagement } from "./_components/use-homepage-engagement";
+import HomeBanner from "./_components/home-banner";
+import { selectCoverProduct } from "../lib/home-cover";
 
 type EditorialProduct = VitrineProduct & { editorialRationale: string; editorialContext: string; editorialPurchaseContents: string };
 
@@ -30,14 +37,10 @@ const historyInput = (product: VitrineProduct) => ({ priceCents: product.priceCe
 /** Percentual de desconto declarado pelo anúncio, ou null. Alegação do vendedor — nunca cálculo nosso. */
 const discountPercentOf = (product: VitrineProduct): number | null => {
   if (product.discountPercent && product.discountPercent > 0) return product.discountPercent;
-  if (product.originalPriceCents && product.originalPriceCents > product.priceCents) {
+  if (product.originalPriceKind === "source_claimed" && product.originalPriceCents && product.originalPriceCents > product.priceCents) {
     return Math.round((1 - product.priceCents / product.originalPriceCents) * 100);
   }
   return null;
-};
-const discountLabel = (product: VitrineProduct) => {
-  const pct = discountPercentOf(product);
-  return pct === null ? null : `−${pct}% no anúncio`;
 };
 const trackInteraction = (event: string, productId?: string) => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("bizuminer:interaction", { detail: { event, productId } })); };
 
@@ -112,10 +115,10 @@ function MarketplaceFilter({ className, active, counts, onChoose }: { className:
 }
 
 function SearchForm({ className, id, placeholder, query, disabled, onQuery, onSubmit }: { className: string; id: string; placeholder: string; query: string; disabled: boolean; onQuery: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
-  return <form className={className} onSubmit={onSubmit} role="search">
+  return <form className={className} action="/" method="get" onSubmit={onSubmit} role="search">
     <span aria-hidden="true">⌕</span>
     <label className="sr-only" htmlFor={id}>Buscar produtos</label>
-    <input id={id} value={query} onChange={(event) => onQuery(event.target.value)} placeholder={placeholder} />
+    <input id={id} type="search" name="busca" value={query} onChange={(event) => onQuery(event.target.value)} placeholder={placeholder} />
     <button type="submit" disabled={disabled}>buscar</button>
   </form>;
 }
@@ -127,54 +130,7 @@ function CategoryList({ className, categories, active, onChoose }: { className: 
   </div>;
 }
 
-function EditorialSlide({ products, hidden }: { products: VitrineProduct[]; hidden: boolean }) {
-  const primary = products[0];
-  const secondary = products[1];
-  return <article className="hero-slide hero-editorial-slide" aria-hidden={hidden}>
-    <div className="hero-editorial-copy">
-      <p className="hero-kicker">Curadoria de ponta a ponta</p>
-      <h2>Menos tempo procurando.<br /><em>Mais clareza</em> para decidir.</h2>
-      <p>O BizuMiner reúne ofertas, acompanha preços e organiza as evidências que ajudam você a comparar sem abrir dezenas de abas.</p>
-      <a href="#achados" tabIndex={hidden ? -1 : undefined}>ver catálogo <b>↓</b></a>
-    </div>
-    <div className="hero-editorial-board" aria-hidden="true">
-      <span className="hero-edition">EDIÇÃO<br /><b>01</b></span>
-      <div className="hero-grid-lines" />
-      {primary?.imageUrl && <div className="hero-cutout hero-cutout-primary"><Image src={primary.imageUrl} alt="" fill priority sizes="(max-width: 900px) 64vw, 30vw" /></div>}
-      {secondary?.imageUrl && <div className="hero-cutout hero-cutout-secondary"><Image src={secondary.imageUrl} alt="" fill sizes="(max-width: 900px) 30vw, 18vw" /></div>}
-      <div className="hero-note"><small>COMO ESCOLHEMOS</small><b>utilidade e público</b><b>valor da oferta</b><b>clareza da compra</b></div>
-      <span className="hero-tape" />
-    </div>
-  </article>;
-}
-
-function ProductHeroSlide({ product, index, hidden, onImageClick }: { product: EditorialProduct; index: number; hidden: boolean; onImageClick: (event: MouseEvent<HTMLAnchorElement>, productId: string) => void }) {
-  const fresh = priceFreshness(product.evidenceObservedAt);
-  const status = fresh === "current" ? priceSignal(historyInput(product)) : { tone: "monitoring" as const, label: `última vez visto ${seenAgo(product.evidenceObservedAt)}` };
-  return <article className={`hero-slide hero-product-slide hero-product-${index + 1}`} aria-hidden={hidden}>
-    <div className="hero-product-copy">
-      <p>Destaque {String(index + 2).padStart(2, "0")} · seleção BizuMiner</p>
-      <span className={`hero-history-label ${status.tone}`}>{status.label}</span>
-      <h2>{product.title}</h2>
-      <p className="hero-product-reason">{product.editorialRationale}</p>
-      {product.editorialPurchaseContents && <p className="hero-product-contents"><b>O que vem:</b> {product.editorialPurchaseContents}</p>}
-      {product.editorialContext && <p className="hero-product-context">{product.editorialContext}</p>}
-      <div className="hero-product-facts">
-        <span><small>{fresh === "current" ? "preço atual" : "última vez visto"}</small><strong>{brl(product.priceCents)}</strong></span>
-        {product.ratingStar !== null && <span><small>{marketplaceDef(product.marketplace)?.ratingLabel ?? `avaliação em ${product.marketplace}`}</small><strong>★ {product.ratingStar.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}</strong></span>}
-        {product.salesLabel && <span><small>vendas informadas</small><strong>{product.salesLabel}</strong></span>}
-      </div>
-      <Link href={`/bizu/${product.slug}`} prefetch={false} tabIndex={hidden ? -1 : undefined} onClick={() => trackInteraction("hero_detail_click", product.id)}>ver detalhes <b>↗</b></Link>
-    </div>
-    <Link className="hero-product-image" href={`/bizu/${product.slug}`} prefetch={false} tabIndex={hidden ? -1 : undefined} aria-label={`Ver detalhes de ${product.title}`} onClick={(event) => onImageClick(event, product.id)}>
-      <span className="hero-product-number">{String(index + 2).padStart(2, "0")}</span>
-      {product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes="(max-width: 900px) 100vw, 55vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}
-      {fresh === "current" && discountLabel(product) && <span className="hero-discount">{discountLabel(product)}</span>}
-    </Link>
-  </article>;
-}
-
-export default function Vitrine({ editorialProducts = [], editorialHeroIds = [], editorialHeroValidUntil = null, editorialStateKey = null, editorialVersion = null, initialProducts, initialTotal, initialState, categories: initialCategories, dateLabel, initialSavedIds = [], marketplaceCounts: initialMarketplaceCounts = {}, isUserAdmin = false }: { editorialProducts?: EditorialProduct[]; editorialHeroIds?: string[]; editorialHeroValidUntil?: string | null; editorialStateKey?: string | null; editorialVersion?: number | null; initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string; initialSavedIds?: string[]; marketplaceCounts?: Record<string, number>; isUserAdmin?: boolean }) {
+export default function Vitrine({ homepageReady = false, homepageEngagement = null, homepageEditionId = null, editorialProducts = [], editorialHeroIds = [], editorialHeroValidUntil = null, editorialStateKey = null, editorialVersion = null, initialProducts, initialTotal, initialState, categories: initialCategories, dateLabel, initialSavedIds = [], initialSavedProducts = [], cacheScope = null, marketplaceCounts: initialMarketplaceCounts = {}, isUserAdmin = false }: { homepageReady?: boolean; homepageEngagement?: { token: string; viewId: string } | null; homepageEditionId?: string | null; editorialProducts?: EditorialProduct[]; editorialHeroIds?: string[]; editorialHeroValidUntil?: string | null; editorialStateKey?: string | null; editorialVersion?: number | null; initialProducts: VitrineProduct[]; initialTotal: number; initialState: CatalogState; categories: string[]; dateLabel: string; initialSavedIds?: string[]; initialSavedProducts?: VitrineProduct[]; cacheScope?: string | null; marketplaceCounts?: Record<string, number>; isUserAdmin?: boolean }) {
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
   const [marketplaceCounts, setMarketplaceCounts] = useState(initialMarketplaceCounts);
@@ -186,48 +142,52 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
   const [favorites, setFavorites] = useState<string[]>([]);
   const [favoriteProducts, setFavoriteProducts] = useState<VitrineProduct[]>([]);
   const [favoritesReady, setFavoritesReady] = useState(false);
+  const [pendingSessionSaves, setPendingSessionSaves] = useState(0);
   const [showSaved, setShowSaved] = useState(false);
   const [mobileView, setMobileView] = useState<MobileView>("home");
   const [categoryQuery, setCategoryQuery] = useState("");
   const [notice, setNotice] = useState("");
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [carouselHovered, setCarouselHovered] = useState(false);
-  const [carouselFocused, setCarouselFocused] = useState(false);
-  const carouselPaused = carouselHovered || carouselFocused;
   const [heroCurrent, setHeroCurrent] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [navOpen, setNavOpen] = useState(false);
-  const pointerStart = useRef<number | null>(null);
-  const carouselDragged = useRef(false);
   const requestVersion = useRef(0);
+  const firstMobilePage = useRef(initialState.page);
   const editorialById = new Map(editorialProducts.map((product) => [product.id, product]));
   const heroProducts = heroCurrent ? editorialHeroIds.slice(0, HERO_MAX_PRODUCTS).flatMap((id) => editorialById.has(id) ? [editorialById.get(id)!] : []) : [];
   const editorialContents = useMemo(() => new Map(editorialProducts.map((product) => [product.id, product.editorialPurchaseContents])), [editorialProducts]);
   const editorialRationales = useMemo(() => new Map(editorialProducts.map((product) => [product.id, product.editorialRationale])), [editorialProducts]);
   const savedProducts = useMemo(() => mergeSavedProducts(favorites, favoriteProducts, [...mobileProducts, ...products]), [favoriteProducts, favorites, mobileProducts, products]);
   const shownProducts = showSaved ? savedProducts : products;
+  const isEdition = homepageReady && isHomepageSelectionQuery(catalogStateToDealQuery(catalog));
+  useHomepageEngagement(homepageEditionId, homepageEngagement, editorialProducts.map(p => p.id), heroProducts.map(p => p.id), !isUserAdmin && isEdition && !showSaved && !isLoading && mobileView === "home" && !navOpen);
   const totalPages = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
   const visibleFrom = total === 0 ? 0 : (catalog.page - 1) * CATALOG_PAGE_SIZE + 1;
   const visibleTo = total === 0 ? 0 : visibleFrom + products.length - 1;
-  const slideCount = heroProducts.length + 1;
-  const featuredProduct = heroProducts[0];
   const filteredCategories = categories.filter((item) => item.toLocaleLowerCase("pt-BR").includes(categoryQuery.trim().toLocaleLowerCase("pt-BR")));
   const discoveryCategories = categories.filter((item) => item !== catalog.category).slice(0, 3);
   const mobileHasMore = mobileLoadedPage < totalPages;
 
   useEffect(() => {
-    const saved = readSavedState(window.localStorage);
-    // O localStorage continua a régua local (cache); os ids da conta (servidor)
-    // entram na união para a bancada aparecer em qualquer aparelho logado.
-    setFavorites(unionSavedIds(saved.ids, initialSavedIds));
-    setFavoriteProducts(saved.products);
+    // Account state remains usable even when browser storage is unavailable.
+    try {
+      const storage = window.sessionStorage;
+      const saved = readSavedState(storage, cacheScope);
+      setPendingSessionSaves(cacheScope ? readSavedState(storage).ids.length : 0);
+      setFavorites(cacheScope ? initialSavedIds : saved.ids);
+      setFavoriteProducts(cacheScope ? initialSavedProducts : saved.products);
+    } catch {
+      setPendingSessionSaves(0);
+      setFavorites(cacheScope ? initialSavedIds : []);
+      setFavoriteProducts(cacheScope ? initialSavedProducts : []);
+      if (!cacheScope) setNotice("Não foi possível acessar os salvos desta sessão neste navegador.");
+    }
     setFavoritesReady(true);
-  }, [initialSavedIds]);
+  }, [initialSavedIds, initialSavedProducts, cacheScope]);
   useEffect(() => {
     if (!favoritesReady) return;
-    writeSavedState(window.localStorage, { ids: favorites, products: favoriteProducts });
-  }, [favoriteProducts, favorites, favoritesReady]);
+    try { writeSavedState(window.sessionStorage, { ids: favorites, products: favoriteProducts }, cacheScope); } catch { /* Cache is optional when the server holds the state. */ }
+  }, [favoriteProducts, favorites, favoritesReady, cacheScope]);
   useEffect(() => {
     if (!favoritesReady) return;
     const next = mergeSavedProducts(favorites, favoriteProducts, [...mobileProducts, ...products]);
@@ -240,9 +200,33 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
   useEffect(() => {
     syncUrl(initialState, "replace");
     trackInteraction("catalog_impression");
+    let cancelled = false;
+    try {
+      const snapshot = parseCatalogReturn(sessionStorage.getItem(CATALOG_RETURN_KEY));
+      if (snapshot && snapshot.url === `${location.pathname}${location.search}`) {
+        const restore = async () => {
+          if (window.matchMedia("(max-width: 820px)").matches && snapshot.firstPage < snapshot.lastPage) {
+            firstMobilePage.current = snapshot.firstPage;
+            for (let page = snapshot.firstPage; page <= snapshot.lastPage && !cancelled; page++) {
+              if (!await fetchDeals({ ...initialState, page }, false, page === snapshot.firstPage ? "replace" : "append")) return;
+            }
+          }
+          if (!cancelled) requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (cancelled) return;
+            try { sessionStorage.removeItem(CATALOG_RETURN_KEY); } catch {}
+            window.scrollTo(0, snapshot.scrollY);
+            const links = document.querySelectorAll<HTMLAnchorElement>('a[href^="/bizu/"]');
+            const link = Array.from(links).filter((item) => item.getAttribute("href") === `/bizu/${snapshot.productSlug}` && item.getClientRects().length > 0).sort((a, b) => Math.abs(a.getBoundingClientRect().top) - Math.abs(b.getBoundingClientRect().top))[0];
+            link?.focus({ preventScroll: true });
+          }));
+        };
+        void restore();
+      }
+    } catch { /* Navigation still works without session storage. */ }
     const handlePopState = () => {
       const next = catalogStateFromSearchParams(new URLSearchParams(window.location.search));
       setCatalog(next);
+      firstMobilePage.current = next.page;
       setMobileLoadedPage(next.page);
       setQuery(next.search);
       setShowSaved(false);
@@ -250,20 +234,16 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
       void fetchDeals(next, true, "replace");
     };
     window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    return () => { cancelled = true; window.removeEventListener("popstate", handlePopState); };
     // O estado inicial pertence à navegação que produziu este Server Component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => {
-    if (carouselPaused) return;
-    const timer = window.setTimeout(() => setCurrentSlide((slide) => (slide + 1) % slideCount), 6200);
-    return () => window.clearTimeout(timer);
-  }, [carouselPaused, currentSlide, slideCount]);
+
   useEffect(() => {
     if (!editorialStateKey) return;
     const controller = new AbortController();
     let checking = false;
-    const invalidate = () => { setHeroCurrent(false); setCurrentSlide(0); };
+    const invalidate = () => { setHeroCurrent(false); };
     const verify = async () => {
       if (document.visibilityState === "hidden" || checking) return;
       checking = true;
@@ -280,7 +260,7 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
     };
     const deadline = editorialHeroValidUntil ? Date.parse(editorialHeroValidUntil) : NaN;
     const expiry = Number.isFinite(deadline) ? window.setTimeout(() => { invalidate(); void verify(); }, Math.max(0, deadline - Date.now() + 50)) : null;
-    const timer = window.setInterval(() => { void verify(); }, 60_000);
+    const timer = window.setInterval(() => { void verify(); }, 300_000);
     const onVisible = () => { void verify(); };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
@@ -344,28 +324,34 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
   }
 
   function changeCatalog(next: CatalogState, mode: "push" | "replace", scrollToCatalog: boolean) {
+    firstMobilePage.current = next.page;
     setCatalog(next); setMobileLoadedPage(next.page); setShowSaved(false); syncUrl(next, mode); void fetchDeals(next, scrollToCatalog, "replace");
   }
   function showNotice(message: string) { setNotice(message); window.setTimeout(() => setNotice(""), 4200); }
-  function toggleFavorite(product: VitrineProduct) {
+  async function toggleFavorite(product: VitrineProduct) {
     const saved = favorites.includes(product.id);
+    if (cacheScope) {
+      try {
+        await requestFavorite(product.id, !saved);
+      } catch { showNotice("Não foi possível atualizar seus salvos. Tente de novo."); return; }
+    }
+    if (!cacheScope) {
+      try {
+        const ids = saved ? favorites.filter((id) => id !== product.id) : [...favorites, product.id];
+        writeSavedState(window.sessionStorage, { ids, products: mergeSavedProducts(ids, favoriteProducts, saved ? [] : [product]) });
+      } catch { showNotice("Não foi possível guardar neste navegador."); return; }
+    }
     trackInteraction(saved ? "favorite_remove" : "favorite_add", product.id);
-    showNotice(saved ? "Removido dos seus salvos." : "Produto salvo nos seus salvos.");
+    showNotice(saved ? "Removido dos seus salvos." : cacheScope ? "Salvo na sua conta." : "Salvo neste navegador.");
     setFavorites((current) => saved ? current.filter((item) => item !== product.id) : [...current, product.id]);
     setFavoriteProducts((current) => saved ? current.filter((item) => item.id !== product.id) : mergeSavedProducts([...favorites, product.id], current, [product]));
-    // Espelha no servidor (área do comprador); o localStorage segue valendo como cache local.
-    void fetch("/api/minha/favoritos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: product.id, saved: !saved }),
-    }).catch(() => {});
   }
   function toggleSavedView() {
     if (!showSaved && !favorites.length) { showNotice("Toque no coração de um produto para guardá-lo aqui."); return; }
     setShowSaved((current) => !current);
     document.querySelector("#achados")?.scrollIntoView({ behavior: "smooth" });
   }
-  function submitSearch(event: FormEvent<HTMLFormElement>) { event.preventDefault(); trackInteraction("search"); setMobileView("home"); changeCatalog({ ...catalog, page: 1, search: query.trim() }, "replace", true); }
+  function submitSearch(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const search = String(new FormData(event.currentTarget).get("busca") ?? "").trim(); setQuery(search); trackInteraction("search"); setMobileView("home"); changeCatalog({ ...catalog, page: 1, search }, "replace", true); }
   function clearFilters() { const next: CatalogState = { page: 1, category: null, priceBand: "all", sort: "signal", search: "", marketplace: null, freshness: "2d", minRating: null, minDiscount: null, lowestOnly: false, hasHistory: false }; setQuery(""); setMobileView("home"); changeCatalog(next, "replace", false); }
   function changePage(page: number) {
     if (page < 1 || page > totalPages || page === catalog.page || isLoading) return;
@@ -394,29 +380,24 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
       const response = await fetch("/api/newsletter", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
       const data = await response.json() as { ok: boolean; already?: boolean };
       if (!data.ok) throw new Error();
-      showNotice(data.already ? "Você já estava na lista." : "Pronto! As próximas ofertas chegam primeiro para você."); form.reset();
+      showNotice(data.already ? "Seu interesse já estava registrado." : "Seu interesse foi registrado. Ainda não há envio de ofertas por e-mail."); form.reset();
     } catch { showNotice("Não deu para salvar agora. Tente de novo em instantes."); }
   }
-  const changeSlide = (direction: number) => setCurrentSlide((slide) => (slide + direction + slideCount) % slideCount);
-  function handleHeroImageClick(event: MouseEvent<HTMLAnchorElement>, productId: string) {
-    if (carouselDragged.current) { event.preventDefault(); return; }
-    trackInteraction("hero_detail_click", productId);
-  }
-  function finishCarouselGesture(clientX: number) {
-    if (pointerStart.current === null) return;
-    const distance = clientX - pointerStart.current;
-    if (Math.abs(distance) > 48) { carouselDragged.current = true; changeSlide(distance > 0 ? -1 : 1); window.setTimeout(() => { carouselDragged.current = false; }, 0); }
-    pointerStart.current = null;
-  }
-
-  return <main className="vitrine-page">
+  return <main className="vitrine-page" onClickCapture={(event) => {
+    const target = event.target as Element;
+    const link = target.closest<HTMLAnchorElement>('a[href^="/bizu/"]');
+    if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const slug = link.getAttribute("href")?.slice("/bizu/".length);
+    if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) return;
+    try { sessionStorage.setItem(CATALOG_RETURN_KEY, JSON.stringify({ url: `${location.pathname}${location.search}`, firstPage: firstMobilePage.current, lastPage: mobileLoadedPage, scrollY: window.scrollY, productSlug: slug, savedAt: Date.now() })); } catch { /* The detail keeps a safe fallback. */ }
+  }}>
     <div className="signal-bar"><span>Bizu bom não espera.</span><span>Curadoria de ponta a ponta · links de afiliado</span></div>
     <header className="site-header">
       <a className="brand" href="#topo" aria-label="BizuMiner, início">
         <Image src="/brand/bizuminer-icon-light.svg" alt="" aria-hidden="true" width={32} height={32} priority className="brand-mark-img" />
         <span className="brand-name"><b>Bizu</b><i>Miner</i></span>
       </a>
-      <SearchForm className="search-box header-search" id="busca-mobile" placeholder="Buscar oferta" query={query} disabled={isLoading} onQuery={setQuery} onSubmit={submitSearch} />
+      <a className="catalog-jump" href="#explorar">Buscar achados ↗</a>
       <button className="nav-toggle" aria-expanded={navOpen} aria-controls="main-nav" onClick={() => setNavOpen((value) => !value)}>menu</button>
       <nav id="main-nav" className={navOpen ? "open" : ""} aria-label="Navegação principal"><a href="#achados" onClick={() => setNavOpen(false)}>Ofertas</a><a href="#criterios" onClick={() => setNavOpen(false)}>Como escolhemos</a><a href="#vendedores" onClick={() => setNavOpen(false)}>Para vendedores</a><Link href="/minha-area" prefetch={false} onClick={() => setNavOpen(false)}>Minha área</Link>{isUserAdmin && <Link href="/admin" prefetch={false} onClick={() => setNavOpen(false)} style={{ color: "var(--blue-text, #1d4ed8)", fontWeight: 800 }}>⚡ Painel Admin</Link>}</nav>
       <div className="header-actions">
@@ -448,16 +429,16 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
       </div>
     </header>
 
-    <section className="hero" id="topo" data-selection-version={editorialVersion ?? undefined} onFocusCapture={() => setCarouselFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCarouselFocused(false); }}>
-      <div className="hero-carousel" role="region" aria-roledescription="carrossel" aria-label="Destaques BizuMiner" onMouseEnter={() => setCarouselHovered(true)} onMouseLeave={() => setCarouselHovered(false)} onPointerDown={(event) => { pointerStart.current = event.clientX; carouselDragged.current = false; }} onPointerUp={(event) => finishCarouselGesture(event.clientX)} onPointerCancel={() => { pointerStart.current = null; carouselDragged.current = false; }}>
-        <div className="hero-track" style={{ transform: `translateX(-${currentSlide * 100}%)` }}><EditorialSlide products={heroProducts} hidden={currentSlide !== 0} />{heroProducts.map((product, index) => <ProductHeroSlide key={product.id} product={product} index={index} hidden={currentSlide !== index + 1} onImageClick={handleHeroImageClick} />)}</div>
-      </div>
-      <div className="carousel-bar"><div className="carousel-arrows"><button onClick={() => changeSlide(-1)} aria-label="Destaque anterior">←</button><button onClick={() => changeSlide(1)} aria-label="Próximo destaque">→</button></div><div className="carousel-progress" aria-hidden="true"><i key={currentSlide} className={carouselPaused ? "paused" : ""} /></div><span className="carousel-count">{String(currentSlide + 1).padStart(2, "0")} / {String(slideCount).padStart(2, "0")}</span><div className="carousel-dots">{Array.from({ length: slideCount }, (_, index) => <button key={index} className={currentSlide === index ? "active" : ""} aria-label={`Ir para o destaque ${index + 1}`} aria-current={currentSlide === index ? "true" : undefined} onClick={() => setCurrentSlide(index)} />)}</div></div>
-      <div className="hero-tools"><div className="hero-tool-copy"><p className="eyebrow">Escolha com contexto</p><h1>Bons achados, sem perder tempo procurando.</h1><p className="hero-tool-lead">O BizuMiner acompanha preços e organiza as informações importantes para você decidir.</p><a href="#achados">ver ofertas <span>↓</span></a></div><SearchForm className="search-box hero-search" id="busca" placeholder="O que você está procurando?" query={query} disabled={isLoading} onQuery={setQuery} onSubmit={submitSearch} />{featuredProduct && <Link className="hero-bizu" href={`/bizu/${featuredProduct.slug}`} prefetch={false}><span><small>destaque selecionado</small>{featuredProduct.title}</span><b>↗</b></Link>}</div>
-    </section>
+    {cacheScope && pendingSessionSaves > 0 && <p className="pending-session-saves" role="status">Você tem {pendingSessionSaves} {pendingSessionSaves === 1 ? "salvo desta sessão" : "salvos desta sessão"}. <Link href="/minha-area" prefetch={false}>Escolher sincronizar com sua conta →</Link></p>}
+    <HomeBanner
+      product={isEdition && !showSaved ? selectCoverProduct(heroProducts) : null}
+      selectionVersion={editorialVersion}
+      onProductClick={(id) => trackInteraction("hero_detail_click", id)}
+    />
 
-    <section className="filter-stack" aria-label="Filtrar ofertas">
+    <section className="filter-stack" id="explorar" aria-label="Buscar e filtrar ofertas">
       <div className="filter-nav-row">
+        <SearchForm className="search-box catalog-search" id="busca" placeholder="Qual vai ser seu próximo achado?" query={query} disabled={isLoading} onQuery={setQuery} onSubmit={submitSearch} />
         <CategoryList className="category-list" categories={categories} active={catalog.category} onChoose={chooseCategory} />
         <MarketplaceFilter className="mp-filter" active={catalog.marketplace} counts={marketplaceCounts} onChoose={chooseMarketplace} />
       </div>
@@ -479,21 +460,21 @@ export default function Vitrine({ editorialProducts = [], editorialHeroIds = [],
     </section>
 
     <section className="finds" id="achados" aria-busy={isLoading}>
-      <div className="section-heading"><div><p className="eyebrow">{showSaved ? "Seus salvos · viajam com você" : `Ofertas monitoradas · ${dateLabel}`}</p><h2>{showSaved ? "Seus salvos" : "Catálogo de ofertas"}</h2><p className="mobile-result-count">{isLoading ? "atualizando…" : `${total} ofertas monitoradas · ${dateLabel}`}</p></div><button className="section-help" type="button" aria-label="Como ler os preços e o desconto" onClick={() => setMobileView("guide")}>?</button><p className="result-count">{isLoading ? "atualizando…" : showSaved ? `${savedProducts.length} salvos` : `Mostrando ${visibleFrom}–${visibleTo} de ${total} ofertas`}</p></div>
-      {!showSaved && catalog.category === null && catalog.priceBand === "all" && !catalog.search && <p className="catalog-intro">{catalogGuide}</p>}
+      <div className="section-heading"><div><p className="eyebrow">{showSaved ? cacheScope ? "Seus salvos · sua conta" : "Seus salvos · neste navegador" : `Ofertas monitoradas · ${dateLabel}`}</p><h2>{showSaved ? "Seus salvos" : isEdition ? "Seleção de ofertas" : "Catálogo de ofertas"}</h2><p className="mobile-result-count">{isLoading ? "atualizando…" : `${total} ofertas monitoradas · ${dateLabel}`}</p></div><button className="section-help" type="button" aria-label="Como ler os preços e o desconto" onClick={() => setMobileView("guide")}>?</button><p className="result-count">{isLoading ? "atualizando…" : showSaved ? `${savedProducts.length} salvos` : `Mostrando ${visibleFrom}–${visibleTo} de ${total} ofertas`}</p></div>
+      {!showSaved && isEdition && <p className="selection-discovery"><Link href="/?ordem=recent#achados" prefetch={false}>Explorar catálogo completo →</Link></p>}
       {loadError && <p className="catalog-error" role="alert">{loadError} <button onClick={() => void fetchDeals(catalog, false)}>tentar de novo</button></p>}
-      <div className="desktop-catalog">{shownProducts.length ? <><div className="product-grid">{shownProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} editorialRationale={editorialRationales.get(product.id)} editorialPurchaseContents={editorialContents.get(product.id)} />)}</div>{!showSaved && totalPages > 1 && <CatalogPagination current={catalog.page} total={totalPages} disabled={isLoading} onChange={changePage} />}</> : !isLoading && <EmptyState onClear={clearFilters} saved={showSaved} />}</div>
-      <div className="mobile-catalog"><div className="mobile-catalog-toolbar"><CategoryList className="category-list toolbar-chips" categories={categories} active={catalog.category} onChoose={chooseCategory} /><button className="toolbar-filters" aria-label={`Filtros${(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") ? " (ativos)" : ""}`} onClick={() => setMobileView("filters")}><span aria-hidden="true">⚙</span>{(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") && <em aria-hidden="true" />}</button></div>{mobileProducts.length ? <div className="mobile-product-grid">{mobileProducts.map((product, index) => <Fragment key={product.id}><ProductCard product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} editorialRationale={editorialRationales.get(product.id)} editorialPurchaseContents={editorialContents.get(product.id)} featured={index === 0} />{index === 5 && discoveryCategories.length > 0 && <DiscoveryBreak categories={discoveryCategories} onChoose={chooseCategory} />}</Fragment>)}</div> : !isLoading && <EmptyState onClear={clearFilters} />}{mobileHasMore && <button className="mobile-load-more" type="button" disabled={isLoading} onClick={() => void loadMore()}>{isLoading ? "carregando…" : "carregar mais 24"}<span>{mobileProducts.length} de {total} ofertas</span></button>}</div>
+      <div className="desktop-catalog">{shownProducts.length ? <><div className="product-grid">{shownProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} editorialRationale={product.benefit || editorialRationales.get(product.id)} editorialPurchaseContents={product.purchaseContents || editorialContents.get(product.id)} />)}</div>{!showSaved && totalPages > 1 && <CatalogPagination current={catalog.page} total={totalPages} disabled={isLoading} onChange={changePage} />}</> : !isLoading && <EmptyState onClear={clearFilters} saved={showSaved} />}</div>
+      <div className="mobile-catalog"><div className="mobile-catalog-toolbar"><CategoryList className="category-list toolbar-chips" categories={categories} active={catalog.category} onChoose={chooseCategory} /><button className="toolbar-filters" aria-label={`Filtros${(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") ? " (ativos)" : ""}`} onClick={() => setMobileView("filters")}><span aria-hidden="true">⚙</span>{(catalog.priceBand !== "all" || catalog.sort !== "signal" || catalog.minRating !== null || catalog.minDiscount !== null || catalog.lowestOnly || catalog.hasHistory || catalog.freshness !== "2d") && <em aria-hidden="true" />}</button></div>{mobileProducts.length ? <div className="mobile-product-grid">{mobileProducts.map((product, index) => <Fragment key={product.id}><ProductCard product={product} favorite={favorites.includes(product.id)} onFavorite={toggleFavorite} editorialRationale={product.benefit || editorialRationales.get(product.id)} editorialPurchaseContents={product.purchaseContents || editorialContents.get(product.id)} />{index === 5 && discoveryCategories.length > 0 && <DiscoveryBreak categories={discoveryCategories} onChoose={chooseCategory} />}</Fragment>)}</div> : !isLoading && <EmptyState onClear={clearFilters} />}{mobileHasMore && <button className="mobile-load-more" type="button" disabled={isLoading} onClick={() => void loadMore()}>{isLoading ? "carregando…" : "carregar mais 24"}<span>{mobileProducts.length} de {total} ofertas</span></button>}</div>
     </section>
 
     <section className="price-radar" aria-label="Como avaliamos os preços"><div><p className="eyebrow">Histórico BizuMiner</p><h2>Desconto chama atenção.<br /><em>Histórico</em> ajuda a decidir.</h2></div><div className="radar-note"><span className="radar-orbit"><i>R$</i></span><p>Registramos o preço em cada captura. Enquanto o acompanhamento ainda é curto, mostramos exatamente quantos registros existem — sem transformar pouca informação em certeza.</p></div></section>
     <section className="criteria" id="criterios"><div className="criteria-intro"><p className="eyebrow">Da busca à recomendação</p><h2>Todo bizu passa por camadas.</h2><p>O BizuMiner combina automação com critérios claros. Antes de uma oferta chegar até você, organizamos produto, preço e evidências do anúncio.</p></div><ol className="criteria-list"><li><span>01</span><div><h3>Encontrar produtos úteis</h3><p>Selecionamos itens com função clara e potencial de melhorar a rotina.</p></div></li><li><span>02</span><div><h3>Conferir preço e histórico</h3><p>Comparamos o preço atual com os registros que já coletamos, sem prometer o que os dados ainda não provam.</p></div></li><li><span>03</span><div><h3>Apresentar com contexto</h3><p>Preço, avaliação, vendas informadas e link de afiliado aparecem com a fonte identificada.</p></div></li></ol></section>
     <section className="seller-callout" id="vendedores"><div className="seller-stamp">TEM UM<br />BIZU?</div><div><p className="eyebrow">Quer apresentar seu produto?</p><h2>Entre no nosso processo de seleção.</h2></div><div className="seller-copy"><p>Automatizar ofertas é fácil. Conquistar público qualificado é BizuMiner. Marcas e vendedores podem sugerir produtos; a curadoria continua independente.</p><a href="mailto:oi@bizuminer.com.br?subject=Quero%20mandar%20um%20bizu">enviar um produto <span>↗</span></a></div></section>
-    <section className="newsletter"><div><span className="newsletter-icon"><Image src="/brand/bizuminer-icon-square-blue.svg" alt="" width={44} height={44} className="rounded-xl" /></span></div><div><p className="eyebrow">Bizus antes de todo mundo</p><h2>As próximas ofertas chegam na sua caixa.</h2></div><form onSubmit={submitEmail}><label className="sr-only" htmlFor="email">Seu melhor e-mail</label><input id="email" type="email" required placeholder="seu melhor e-mail" /><button type="submit">quero receber <span>→</span></button></form></section>
+    <section className="newsletter"><div><span className="newsletter-icon"><Image src="/brand/bizuminer-icon-square-blue.svg" alt="" width={44} height={44} className="rounded-xl" /></span></div><div><p className="eyebrow">Novidades BizuMiner</p><h2>Registre seu interesse.</h2><p className="newsletter-note">Ainda não enviamos ofertas por e-mail. Seu cadastro registra seu interesse em novidades.</p></div><form onSubmit={submitEmail}><label className="sr-only" htmlFor="email">Seu melhor e-mail</label><input id="email" type="email" required placeholder="seu melhor e-mail" /><button type="submit">registrar interesse <span>→</span></button></form></section>
     <footer><a className="brand footer-brand" href="#topo" aria-label="BizuMiner, início"><Image src="/brand/bizuminer-icon-dark.svg" alt="" aria-hidden="true" width={30} height={30} className="brand-mark-img" /><span className="brand-name"><b>Bizu</b><i>Miner</i></span></a><p>A gente acompanha preços para trazer ofertas que valem a sua atenção.</p><div><a href="#criterios">transparência</a><a href="#vendedores">vendedores</a><a href="mailto:oi@bizuminer.com.br">contato</a></div><small>Alguns links são de afiliado. Podemos receber comissão sem custo adicional para você.</small></footer>
 
     {mobileView === "categories" && <MobilePanel view="categories" title="Categorias" onClose={() => setMobileView("home")}><p className="mobile-panel-intro">Explore por interesse e volte ao feed quando quiser.</p><label className="mobile-panel-search"><span aria-hidden="true">⌕</span><span className="sr-only">Buscar categoria</span><input value={categoryQuery} onChange={(event) => setCategoryQuery(event.target.value)} placeholder="Buscar uma categoria" /></label><div className="mobile-category-cards"><button onClick={() => chooseCategory(null)}><b>Todas as ofertas</b><span>Ver o catálogo completo</span><i>→</i></button>{filteredCategories.map((item) => <button key={item} onClick={() => chooseCategory(item)}><b>{item}</b><span>Ver ofertas monitoradas</span><i>→</i></button>)}</div></MobilePanel>}
-    {mobileView === "saved" && <MobilePanel view="saved" title="Seus salvos" meta={`${favorites.length}`} onClose={() => setMobileView("home")}><p className="mobile-panel-intro">Os seus salvos ficam na conta: na <Link href="/minha-area" prefetch={false}>minha área</Link> dá para acompanhar o preço de cada um.</p>{savedProducts.length ? <div className="mobile-product-grid mobile-saved-grid">{savedProducts.map((product) => <ProductCard key={product.id} product={product} favorite onFavorite={toggleFavorite} editorialRationale={editorialRationales.get(product.id)} editorialPurchaseContents={editorialContents.get(product.id)} />)}</div> : <EmptyState onClear={() => setMobileView("home")} saved />}</MobilePanel>}
+    {mobileView === "saved" && <MobilePanel view="saved" title="Seus salvos" meta={`${favorites.length}`} onClose={() => setMobileView("home")}><p className="mobile-panel-intro">{cacheScope ? <>Seus salvos ficam na conta. Na <Link href="/minha-area" prefetch={false}>minha área</Link> você pode acompanhar preços.</> : <>Seus salvos ficam nesta sessão. Entre na <Link href="/minha-area" prefetch={false}>minha área</Link> para sincronizá-los.</>}</p>{savedProducts.length ? <div className="mobile-product-grid mobile-saved-grid">{savedProducts.map((product) => <ProductCard key={product.id} product={product} favorite onFavorite={toggleFavorite} editorialRationale={product.benefit || editorialRationales.get(product.id)} editorialPurchaseContents={product.purchaseContents || editorialContents.get(product.id)} />)}</div> : <EmptyState onClear={() => setMobileView("home")} saved />}</MobilePanel>}
     {mobileView === "filters" && <MobilePanel view="filters" title="Filtros refinados" onClose={() => setMobileView("home")}><div className="mobile-filter-group"><h3>Faixa de preço</h3><div>{priceFilters.map((item) => <button key={item.value} className={catalog.priceBand === item.value ? "active" : ""} onClick={() => { trackInteraction("price_filter"); changeCatalog({ ...catalog, page: 1, priceBand: item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Frescura do preço</h3><div>{freshnessOptions.map((item) => <button key={item.value} className={catalog.freshness === item.value ? "active" : ""} onClick={() => { trackInteraction("freshness_filter"); changeCatalog({ ...catalog, page: 1, freshness: item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Avaliação mínima</h3><div>{ratingOptions.map((item) => <button key={item.value} className={catalog.minRating === item.value ? "active" : ""} onClick={() => { trackInteraction("rating_filter"); changeCatalog({ ...catalog, page: 1, minRating: catalog.minRating === item.value ? null : item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Desconto informado</h3><div>{discountOptions.map((item) => <button key={item.value} className={catalog.minDiscount === item.value ? "active" : ""} onClick={() => { trackInteraction("discount_filter"); changeCatalog({ ...catalog, page: 1, minDiscount: catalog.minDiscount === item.value ? null : item.value }, "replace", false); }}>{item.label}</button>)}</div></div><div className="mobile-filter-group"><h3>Confiança BizuMiner</h3><div className="mobile-toggles"><button className={catalog.lowestOnly ? "active" : ""} onClick={() => { trackInteraction("confidence_filter"); changeCatalog({ ...catalog, page: 1, lowestOnly: !catalog.lowestOnly }, "replace", false); }}>menor preço verificado</button><button className={catalog.hasHistory ? "active" : ""} onClick={() => { trackInteraction("confidence_filter"); changeCatalog({ ...catalog, page: 1, hasHistory: !catalog.hasHistory }, "replace", false); }}>com histórico (3+ obs.)</button></div></div><label className="mobile-sort-control"><span>Ordenar por</span><select value={catalog.sort} onChange={(event) => { trackInteraction("sort"); changeCatalog({ ...catalog, page: 1, sort: event.target.value as DealSort }, "replace", false); }}>{sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><button className="mobile-clear-filters" onClick={clearFilters}>limpar filtros</button></MobilePanel>}
     {mobileView === "guide" && <MobilePanel view="guide" title="Como ler os preços" onClose={() => setMobileView("home")}><p className="mobile-panel-intro">{catalogGuide}</p><ul className="guide-legend"><li><span className="signal-badge verified">menor preço que já vimos</span><p>O preço atual é o menor observado para a mesma configuração confirmada, com pelo menos 3 registros distribuídos em 7 dias. Sem identificar a configuração, mostramos apenas o histórico do anúncio.</p></li><li><span className="signal-badge drop">caiu 12% desde o menor que vimos</span><p>O preço caiu abaixo do menor valor registrado para a mesma configuração confirmada. A comparação usa nosso histórico e não afirma que está barato no mercado.</p></li><li><span className="signal-badge unproven">ainda sem histórico</span><p>Vimos este produto uma vez só. Não há com o que comparar, então trate o desconto do anúncio com cautela extra.</p></li><li><span className="guide-discount">−38% no anúncio</span><p>Desconto informado pelo próprio anúncio no Mercado Livre — é alegação do vendedor, não cálculo nosso.</p></li><li><span className="guide-silence">sem selo</span><p>O preço não se moveu em relação ao que já tínhamos registrado. Silêncio aqui quer dizer que não há novidade — e é por isso que, quando um selo aparece, ele merece atenção.</p></li></ul></MobilePanel>}
     {mobileView === "menu" && <MobilePanel view="menu" title="Menu" onClose={() => setMobileView("home")}><div className="mobile-theme-row"><div><b>Aparência</b><span>Claro ou escuro, do seu jeito</span></div><ThemeToggle className="theme-toggle-wide" withLabel /></div><nav className="mobile-menu-links" aria-label="Menu mobile"><Link href="/minha-area" prefetch={false}><span>Minha área</span><b>→</b></Link>{isUserAdmin && <Link href="/admin" prefetch={false}><span>⚡ Painel Admin</span><b>→</b></Link>}<a href="#achados" onClick={() => setMobileView("home")}><span>Ofertas</span><b>→</b></a><a href="#criterios" onClick={() => setMobileView("home")}><span>Como escolhemos</span><b>→</b></a><a href="#vendedores" onClick={() => setMobileView("home")}><span>Para vendedores</span><b>→</b></a><a href="mailto:oi@bizuminer.com.br"><span>Contato</span><b>↗</b></a></nav></MobilePanel>}
@@ -530,5 +511,5 @@ function ProductCard({ product, favorite, onFavorite, editorialRationale, editor
   const marketplaceLabel = marketplaceDefinition?.label ?? product.marketplace;
   const ctaLabel = marketplaceDefinition?.ctaLabel ?? `ver na ${marketplaceLabel}`;
   const marketplaceLogo = marketplaceDefinition?.logo;
-  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`}><div className="product-image"><Link href={`/bizu/${product.slug}`} prefetch={false} aria-label={`Abrir detalhes de ${product.title}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={product.title} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></Link>{discountPct !== null && <span className="discount"><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${product.title}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><Link href={`/bizu/${product.slug}`} prefetch={false}>{product.title}</Link></h3><MarketplaceEvidence product={product} />{editorialRationale && <p className="product-editorial-rationale">{editorialRationale}</p>}{editorialPurchaseContents && <p className="product-editorial-contents"><b>O que vem:</b> {editorialPurchaseContents}</p>}<p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div>{fresh === "current" ? <><small>{product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{brl(product.priceCents)}</strong>{freshness && <em>{freshness}</em>}</> : <span className="stale-price"><strong>{brl(product.priceCents)}</strong><em>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></div><CopyProductLink slug={product.slug} title={product.title} /></article>;
+  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`} data-home-product={product.id} data-home-surface="grid"><div className="product-image"><Link href={`/bizu/${product.slug}`} prefetch={false} aria-label={`Abrir detalhes de ${(product.displayTitle || product.title)}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={(product.displayTitle || product.title)} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></Link>{discountPct !== null && <span className="discount"><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${(product.displayTitle || product.title)}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><Link href={`/bizu/${product.slug}`} prefetch={false}>{(product.displayTitle || product.title)}</Link></h3><MarketplaceEvidence product={product} />{editorialRationale && <p className="product-editorial-rationale">{editorialRationale}</p>}{editorialPurchaseContents && <p className="product-editorial-contents"><b>O que vem:</b> {editorialPurchaseContents}</p>}<p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div>{fresh === "current" ? <><small>{product.originalPriceKind === "source_claimed" && product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em>{offerPriceNote(product)}</em>}{freshness && <em>{freshness}</em>}</> : <span className="stale-price"><strong>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em>{offerPriceNote(product)}</em>}<em>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></div><CopyProductLink slug={product.slug} title={(product.displayTitle || product.title)} /></article>;
 }

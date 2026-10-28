@@ -32,7 +32,7 @@
  */
 
 /** Versão do bookmarklet — muda quando o script mudar (cache do painel). */
-export const BOOKMARKLET_VERSION = "2.0.0";
+export const BOOKMARKLET_VERSION = "2.1.0";
 
 /** Corpo legível (multi-linha, apenas documentação). Vira UMA linha em produção. */
 const BOOKMARKLET_BODY = String.raw`(function(){
@@ -40,24 +40,30 @@ function meta(name){var i,ms=document.querySelectorAll('meta');for(i=0;i<ms.leng
 function canonicalHref(){var i,ls=document.querySelectorAll('link');for(i=0;i<ls.length;i++){if(ls[i].getAttribute('rel')==='canonical'&&ls[i].getAttribute('href'))return ls[i].getAttribute('href');}return window.location.href;}
 function fnv1a32(input){var hash=0x811c9dc5;for(var i=0;i<input.length;i++){hash^=input.charCodeAt(i);hash=Math.imul(hash,0x01000193)>>>0;}return hash>>>0;}
 function b64url(input){var bytes=new TextEncoder().encode(input);var binary='';for(var i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function extractItemId(){var url=new URL(window.location.href);var wid=url.searchParams.get('wid');if(wid&&/^MLB\d{6,}$/.test(wid))return wid;var m=window.location.pathname.match(/MLB-?(\d{6,})/);if(m)return 'MLB'+m[1];return null;}
+function extractItemId(){var url=new URL(window.location.href);var wid=url.searchParams.get('wid');if(wid&&/^MLB\d{6,}$/.test(wid))return wid;var f=new URLSearchParams(url.hash.slice(1));var fid=f.get('wid');if(fid&&/^MLB\d{6,}$/.test(fid))return fid;var filter=(url.searchParams.get('pdp_filters')||'').match(/item_id:(MLB\d{6,})/);if(filter)return filter[1];if(url.pathname.indexOf('/p/')>=0)return null;var m=window.location.pathname.match(/MLB-?(\d{6,})/);if(m)return 'MLB'+m[1];return null;}
 function ariaToCents(label){var m=/(\d[\d.]*)\s*reais(?:\s+com\s+(\d{1,2})\s*centavos)?/.exec(label);if(!m)return NaN;var reais=Number(m[1].replace(/\./g,''));if(!isFinite(reais))return NaN;var centavos=m[2]?Number(m[2]):0;return reais*100+centavos;}
-function priceFromPage(){var p=meta('og:price:amount');if(p){var c=ariaToCents(p);if(!isFinite(c)){var n=parseFloat(String(p).replace(/\./g,'').replace(',','.'));c=isFinite(n)&&n>0?Math.round(n*100):NaN;}if(isFinite(c)&&c>0)return c;}var i,am=document.querySelectorAll('.andes-money-amount');for(i=0;i<am.length;i++){var lab=am[i].getAttribute('aria-label');if(lab&&lab.indexOf('Antes')!==0){var c2=ariaToCents(lab);if(isFinite(c2)&&c2>0)return c2;}}return NaN;}
+var priceCurrency='',priceType='unknown';
+function priceFromPage(){var p=meta('og:price:amount');if(p){var c=ariaToCents(p);if(!isFinite(c)){var n=parseFloat(String(p).replace(/\./g,'').replace(',','.'));c=isFinite(n)&&n>0?Math.round(n*100):NaN;}if(isFinite(c)&&c>0){if((meta('og:price:currency')||meta('product:price:currency')).toUpperCase()==='BRL')priceCurrency='BRL';return c;}}var i,am=document.querySelectorAll('.andes-money-amount');for(i=0;i<am.length;i++){var lab=am[i].getAttribute('aria-label');if(lab&&lab.indexOf('Antes')!==0){var c2=ariaToCents(lab);if(isFinite(c2)&&c2>0){if(/faixa|entre/i.test(lab))return NaN;priceCurrency='BRL';priceType=/a\s+partir\s+de/i.test(lab)?'from':'exact';return c2;}}}return NaN;}
 function originalFromPage(){var p=meta('og:price:standard_amount');if(p){var c=ariaToCents(p);if(!isFinite(c)){var n=parseFloat(String(p).replace(/\./g,'').replace(',','.'));c=isFinite(n)&&n>0?Math.round(n*100):NaN;}if(isFinite(c)&&c>0)return c;}var i,am=document.querySelectorAll('.andes-money-amount');for(i=0;i<am.length;i++){var lab=am[i].getAttribute('aria-label');if(lab&&lab.indexOf('Antes')===0){var c2=ariaToCents(lab);if(isFinite(c2)&&c2>0)return c2;}}return undefined;}
 function buildBlock(payload){var json=JSON.stringify(payload);var encoded=b64url(json);var checksum=fnv1a32(encoded).toString(16);return 'BM1.'+encoded+'.'+checksum;}
 function copyBlock(block){function fb(){prompt('BizuMiner: copie o bloco abaixo e cole no painel:',block);}function ok(){alert('BizuMiner: bloco copiado!\nCole no painel → Captura manual.');}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(block).then(ok,fb);}else{fb();}}
 try{
   var itemId=extractItemId();
   if(!itemId){alert('BizuMiner: não reconheci o anúncio nesta página.\nAbra uma página de produto do Mercado Livre.');return;}
-  var url=canonicalHref();
+  var canonical=new URL(canonicalHref());
+  if(canonical.pathname.indexOf('/p/')>=0)canonical.searchParams.set('wid',itemId);
+  var url=canonical.href;
   var title=meta('og:title')||document.title||'';
-  if(title.indexOf('|')>0)title=title.slice(0,title.indexOf('|')).trim();
+  title=title.replace(/\s+/g,' ').trim();
+  if(title.length>2000){alert('BizuMiner: título excede o limite de transporte.');return;}
   var priceCents=priceFromPage();
   if(!isFinite(priceCents)||priceCents<=0){alert('BizuMiner: não consegui ler o preço nesta página.\nO produto carregou o preço?');return;}
   var originalCents=originalFromPage();
   if(originalCents!==undefined&&originalCents<=priceCents)originalCents=undefined;
   var image=meta('og:image');
   var payload={v:1,m:'mercadolivre',u:url,i:itemId,t:title,p:priceCents,c:Date.now()};
+  if(priceCurrency)payload.currency=priceCurrency;
+  payload.priceType=priceType;
   if(originalCents!==undefined)payload.op=originalCents;
   if(image)payload.img=image;
   copyBlock(buildBlock(payload));

@@ -1,7 +1,10 @@
 import type { VitrineProduct } from "./deal-view";
 
-const SAVED_IDS_KEY = "bizuminer:salvos";
-const SAVED_PRODUCTS_KEY = "bizuminer:salvos-produtos";
+// Old unscoped keys may contain another account's data and are never imported.
+function keys(scope: string | null) {
+  const suffix = scope ? `account:${encodeURIComponent(scope)}` : "anonymous-session";
+  return [`bizuminer:salvos:v2:${suffix}`, `bizuminer:salvos-produtos:v2:${suffix}`];
+}
 
 type SavedState = {
   ids: string[];
@@ -34,7 +37,8 @@ export function normalizeSavedState(idsValue: unknown, productsValue: unknown): 
   return { ids, products: ids.flatMap((id) => byId.get(id) ?? []) };
 }
 
-export function readSavedState(storage: Pick<Storage, "getItem">): SavedState {
+export function readSavedState(storage: Pick<Storage, "getItem">, scope: string | null = null): SavedState {
+  const [SAVED_IDS_KEY, SAVED_PRODUCTS_KEY] = keys(scope);
   try {
     const ids = JSON.parse(storage.getItem(SAVED_IDS_KEY) ?? "[]") as unknown;
     const products = JSON.parse(storage.getItem(SAVED_PRODUCTS_KEY) ?? "[]") as unknown;
@@ -44,7 +48,8 @@ export function readSavedState(storage: Pick<Storage, "getItem">): SavedState {
   }
 }
 
-export function writeSavedState(storage: Pick<Storage, "setItem">, state: SavedState) {
+export function writeSavedState(storage: Pick<Storage, "setItem">, state: SavedState, scope: string | null = null) {
+  const [SAVED_IDS_KEY, SAVED_PRODUCTS_KEY] = keys(scope);
   const normalized = normalizeSavedState(state.ids, state.products);
   storage.setItem(SAVED_IDS_KEY, JSON.stringify(normalized.ids));
   storage.setItem(SAVED_PRODUCTS_KEY, JSON.stringify(normalized.products));
@@ -77,3 +82,9 @@ export function unionSavedIds(...lists: string[][]): string[] {
   return out;
 }
 
+
+/** Only server-confirmed IDs may leave the anonymous session after explicit sync. */
+export function remainingAfterConfirmedSync(state: SavedState, acceptedIds: string[]): SavedState {
+  const accepted = new Set(acceptedIds);
+  return normalizeSavedState(state.ids.filter((id) => !accepted.has(id)), state.products.filter((item) => !accepted.has(item.id)));
+}

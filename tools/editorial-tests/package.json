@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:homepage": "node --import tsx homepage-flow.test.ts",
     "test": "node --import tsx integration.test.ts",
     "test:triage-price": "node --import tsx triage-price.test.ts",
     "test:capture-batch": "node --import tsx capture-batch.test.ts",
@@ -29,7 +30,11 @@
     "test:native-migrations": "node --import tsx native-migration-flow.test.ts",
     "test:replacement-rollout": "node --import tsx replacement-rollout-flow.test.ts",
     "rollout:verify": "node --import tsx verify-replacement-rollout.ts",
-    "test:operational-maintenance": "node --import tsx operational-maintenance-flow.test.ts"
+    "test:operational-maintenance": "node --import tsx operational-maintenance-flow.test.ts",
+    "test:buyer-retention": "node --import tsx buyer-retention.test.ts",
+    "test:price-history": "node --import tsx price-history-flow.test.ts",
+    "test:capture-facts": "node --import tsx capture-facts-flow.test.ts",
+    "test:product-presentation": "node --import tsx product-presentation-flow.test.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

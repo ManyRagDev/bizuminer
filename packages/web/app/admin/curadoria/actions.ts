@@ -4,6 +4,7 @@ import { accountOperation } from "../../../lib/page-account.ts";
 import { scopedTenantId } from "../../../lib/account-scope.ts";
 
 import { revalidatePath } from "next/cache";
+import { refreshHomepageAfterChange } from "../../../lib/homepage-db.ts";
 import {
   getEditorialSelectionDesk,
   replaceEditorialSelection,
@@ -105,6 +106,7 @@ export async function submitCurationDecision(
 
     const result = await reviewProduct(parsed.value, reviewer);
     if (!result) return { ok: false, error: "not_found" };
+    await refreshHomepageAfterChange();
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/admin/curadoria");
@@ -125,6 +127,7 @@ export async function undoCurationDecision(
 
     const undone = await undoReview(productId, eventId, reviewer);
     if (!undone) return { ok: false, error: "undo_conflict" };
+    await refreshHomepageAfterChange();
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/admin/curadoria");
@@ -154,6 +157,7 @@ export async function deferCurationProduct(
     const ok = await deferReview(parsed.value, reviewer);
     if (!ok) return { ok: false, error: "defer_failed" };
 
+    await refreshHomepageAfterChange();
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/admin/curadoria");
@@ -175,6 +179,7 @@ export async function clearDeferredCurationProduct(
     const ok = await clearDeferredReview(productId, reviewer);
     if (!ok) return { ok: false, error: "clear_failed" };
 
+    await refreshHomepageAfterChange();
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/admin/curadoria");
@@ -195,6 +200,7 @@ export async function submitGroupAction(
 
     try {
       const result = await actOnGroup(parsed.value, reviewer);
+      await refreshHomepageAfterChange();
       revalidatePath("/");
       revalidatePath("/admin");
       revalidatePath("/admin/curadoria");
@@ -224,6 +230,7 @@ export async function undoGroupAction(
     const undone = await undoBulkReview(bulkActionId, reviewer);
     if (!undone) return { ok: false, error: "undo_conflict" };
 
+    await refreshHomepageAfterChange();
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/admin/curadoria");
@@ -274,6 +281,7 @@ export async function runAutomatedTriageAction(
 
     try {
       const summary = await runPendingAutomatedTriage(scopedTenantId(), limit);
+      await refreshHomepageAfterChange();
       revalidatePath("/");
       revalidatePath("/admin");
       revalidatePath("/admin/curadoria");
@@ -300,7 +308,11 @@ export async function saveEditorialAssessmentAction(
       );
       if (!result.ok) return result;
       const desk = await getEditorialSelectionDesk(scopedTenantId());
+      revalidatePath("/bizu/[slug]", "page");
+      revalidatePath("/api/deals");
+      revalidatePath("/api/pauta");
       revalidatePath("/admin/curadoria");
+      await refreshHomepageAfterChange();
       revalidatePath("/");
       revalidatePath("/pauta");
       return {
@@ -332,6 +344,7 @@ export async function replaceEditorialSelectionAction(
         scopedTenantId(),
       );
       if (result.ok) {
+        await refreshHomepageAfterChange(scopedTenantId(), true);
         revalidatePath("/");
         revalidatePath("/pauta");
         revalidatePath("/api/deals");
@@ -546,4 +559,3 @@ export async function ratifyRubricPolicyAction(input: {
     }
   });
 }
-

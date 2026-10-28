@@ -5,13 +5,15 @@ import { useEffect, useMemo, useState } from "react";
 import type { PriceBand } from "../../lib/deal-query";
 import { priceHighlight } from "../../lib/deal-signal";
 import type { VitrineProduct } from "../../lib/deal-view";
+import { offerPriceLabel, offerPriceNote } from "../../lib/offer-price";
+import { formatWatchMoney, countComparableDrops } from "../../lib/watch-format";
 import { movementLabel, watchMovement } from "../../lib/member-contract";
-import { readSavedState, writeSavedState } from "../../lib/saved-products";
+import { readSavedState, writeSavedState, remainingAfterConfirmedSync } from "../../lib/saved-products";
 import AdminBadge from "../_components/admin-badge";
 import DetailHeader from "../_components/detail-header";
 import { ThemeToggle } from "../theme-toggle";
 
-export type MemberSaved = VitrineProduct & { savedAt: string };
+export type MemberSaved = VitrineProduct & { savedAt: string; available: boolean };
 
 export type MemberWatch = {
   watchId: string;
@@ -21,9 +23,13 @@ export type MemberWatch = {
   imageUrl: string | null;
   category: string | null;
   baselineCents: number;
+  baselineCurrency: string | null;
   targetCents: number | null;
   currentCents: number | null;
   currentObservedAt: string | null;
+  comparisonStatus: "comparable" | "configuration_changed" | "unavailable";
+  available: boolean;
+  benefit?: string; audience?: string; caveat?: string; purchaseContents?: string;
   watchedAt: string;
 };
 
@@ -75,11 +81,11 @@ function highlightFor(product: VitrineProduct) {
   });
 }
 
-function MemberCard({ product, meta, actions }: { product: VitrineProduct; meta?: React.ReactNode; actions?: React.ReactNode }) {
+function MemberCard({ product, meta, actions, available = true }: { product: VitrineProduct; meta?: React.ReactNode; actions?: React.ReactNode; available?: boolean }) {
   const highlight = highlightFor(product);
   return (
     <article className="member-card">
-      <a className="member-card-image" href={`/bizu/${product.slug}`} aria-label={`Abrir detalhes de ${product.title}`}>
+      <a className="member-card-image" href={available ? `/bizu/${product.slug}` : "#saved-title"} aria-label={available ? `Abrir detalhes de ${product.title}` : `${product.title}: oferta indisponível`}>
         {product.imageUrl
           ? <Image src={product.imageUrl} alt={product.title} fill sizes="(max-width: 820px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 24vw" />
           : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}
@@ -88,11 +94,12 @@ function MemberCard({ product, meta, actions }: { product: VitrineProduct; meta?
         <span>{product.category ?? "Mercado Livre"}</span>
         {highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}
       </p>
-      <h3><a href={`/bizu/${product.slug}`}>{product.title}</a></h3>
+      <h3>{available ? <a href={`/bizu/${product.slug}`}>{product.title}</a> : product.title}</h3>
       {meta}
+      {offerPriceNote(product) && <p className="member-card-note">{offerPriceNote(product)}</p>}
       <div className="member-card-foot">
-        <strong>{brl(product.priceCents)}</strong>
-        <a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored">ver no ML ↗</a>
+        <strong>{available ? offerPriceLabel(product) : `Último preço: ${offerPriceLabel(product)}`}</strong>
+        {available && <a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored">ver oferta ↗</a>}
       </div>
       {actions}
     </article>
@@ -141,12 +148,7 @@ export default function MemberArea({
 
   const watchedIds = useMemo(() => new Set(watches.map((watch) => watch.productId)), [watches]);
 
-  // Queda acumulada: só soma o que de fato caiu desde a marcação. Nunca é
-  // chamada de "economia" — a pessoa não comprou, o preço é que se moveu.
-  const totalDrop = useMemo(() => watches.reduce((sum, watch) => {
-    const movement = watchMovement(watch.baselineCents, watch.currentCents);
-    return movement.state === "down" ? sum + movement.deltaCents : sum;
-  }, 0), [watches]);
+  const comparableDrops = useMemo(() => countComparableDrops(watches), [watches]);
 
   // Quando toda recomendação nasce do mesmo motivo, ele é dito uma vez no
   // cabeçalho. Repetir a mesma frase em sete cartões é a cicatriz dos 24
@@ -158,9 +160,8 @@ export default function MemberArea({
   }, [recommended]);
 
   useEffect(() => {
-    const local = readSavedState(window.localStorage);
-    const serverIds = new Set(initialSaved.map((item) => item.id));
-    setPendingLocalIds(local.ids.filter((id) => !serverIds.has(id)));
+    try { setPendingLocalIds(readSavedState(window.sessionStorage).ids); }
+    catch { setPendingLocalIds([]); setNotice("Não foi possível acessar os salvos desta sessão neste navegador."); }
   }, [initialSaved]);
 
   function showNotice(message: string) {
@@ -170,11 +171,6 @@ export default function MemberArea({
 
   async function removeSaved(product: MemberSaved) {
     setSaved((current) => current.filter((item) => item.id !== product.id));
-    const local = readSavedState(window.localStorage);
-    writeSavedState(window.localStorage, {
-      ids: local.ids.filter((id) => id !== product.id),
-      products: local.products.filter((item) => item.id !== product.id),
-    });
     try {
       const result = await api("/api/minha/favoritos", "POST", { productId: product.id, saved: false });
       if (!result.ok) throw new Error();
@@ -193,14 +189,18 @@ export default function MemberArea({
       const watch: MemberWatch = {
         watchId: String(row.watch_id),
         productId: String(row.product_id),
-        title: String(row.title),
+        title: product.displayTitle || product.title,
         slug: String(row.slug),
         imageUrl: (row.image_url as string | null) ?? null,
         category: (row.category as string | null) ?? null,
         baselineCents: Number(row.baseline_price_cents),
+        baselineCurrency: typeof row.baseline_currency === "string" ? row.baseline_currency : null,
         targetCents: row.target_price_cents === null ? null : Number(row.target_price_cents),
         currentCents: row.current_price_cents === null ? null : Number(row.current_price_cents),
         currentObservedAt: row.current_observed_at ? new Date(row.current_observed_at as string).toISOString() : null,
+        comparisonStatus: row.comparison_status as MemberWatch["comparisonStatus"],
+        available: Boolean(row.available),
+        benefit: product.benefit, audience: product.audience, caveat: product.caveat, purchaseContents: product.purchaseContents,
         watchedAt: new Date(row.watched_at as string).toISOString(),
       };
       setWatches((current) => [watch, ...current.filter((item) => item.productId !== watch.productId)]);
@@ -226,8 +226,12 @@ export default function MemberArea({
     if (!pendingLocalIds.length || syncing) return;
     setSyncing(true);
     try {
-      const result = await api("/api/minha/favoritos", "PUT", { productIds: pendingLocalIds });
-      if (!result.ok) throw new Error();
+      const result = await api("/api/minha/favoritos", "PUT", { productIds: pendingLocalIds.slice(0, 200) });
+      if (!result.ok || !Array.isArray(result.acceptedIds)) throw new Error();
+      const accepted = result.acceptedIds.filter((id): id is string => typeof id === "string");
+      const local = readSavedState(window.sessionStorage);
+      writeSavedState(window.sessionStorage, remainingAfterConfirmedSync(local, accepted));
+      if (accepted.length === 0) { setSyncing(false); showNotice("Os itens desta sessão não estão disponíveis para sincronização agora."); return; }
       window.location.reload();
     } catch {
       setSyncing(false);
@@ -298,9 +302,9 @@ export default function MemberArea({
               <small>{profileDraft.preferredCategories.length === 1 ? "categoria" : "categorias"}</small>
             </div>
           </div>
-          {totalDrop > 0 && (
+          {comparableDrops > 0 && (
             <p className="member-state-drop">
-              <b>{brl(totalDrop)}</b> de queda somada desde que você marcou.
+              <b>{comparableDrops}</b> {comparableDrops === 1 ? "item com queda comparável" : "itens com queda comparável"} desde que você marcou.
             </p>
           )}
         </aside>
@@ -319,7 +323,7 @@ export default function MemberArea({
             </p>
             <ol className="watch-how">
               <li><span>01</span>Guardamos o preço exato do dia em que você marca o produto.</li>
-              <li><span>02</span>Cada nova varredura do robô compara o preço atual com aquele valor.</li>
+              <li><span>02</span>Comparamos apenas observações recentes da mesma configuração e condições.</li>
               <li><span>03</span>A diferença aparece aqui, em reais e em porcentagem — sem depender da sua memória.</li>
             </ol>
           </div>
@@ -330,25 +334,27 @@ export default function MemberArea({
               const since = shortDate(watch.watchedAt);
               return (
                 <li key={watch.watchId} className="watch-card">
-                  <a className="watch-image" href={`/bizu/${watch.slug}`} aria-label={`Abrir detalhes de ${watch.title}`}>
+                  <a className="watch-image" href={watch.available ? `/bizu/${watch.slug}` : "#watch-title"} aria-label={watch.available ? `Abrir detalhes de ${watch.title}` : `${watch.title}: oferta indisponível`}>
                     {watch.imageUrl
                       ? <Image src={watch.imageUrl} alt="" fill sizes="96px" />
                       : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={24} height={24} /></div>}
                   </a>
                   <div className="watch-body">
-                    <h3><a href={`/bizu/${watch.slug}`}>{watch.title}</a></h3>
+                    <h3>{watch.available ? <a href={`/bizu/${watch.slug}`}>{watch.title}</a> : watch.title}</h3>
+                    {watch.benefit && <p className="member-card-note">{watch.benefit}</p>}
+                    {watch.caveat && <p className="member-card-note">{watch.caveat}</p>}
                     <p className={`watch-move ${movement.state}`}>
                       {movement.state === "down" && <b aria-hidden="true">▼</b>}
                       {movement.state === "up" && <b aria-hidden="true">▲</b>}
-                      {movementLabel(movement, brl, since)}
+                      {watch.comparisonStatus === "configuration_changed" ? "A configuração ou condições mudaram. Pare e inicie novamente para acompanhar a nova opção." : watch.comparisonStatus === "unavailable" ? "Ainda não é possível comparar este preço com segurança." : movementLabel(movement, (cents) => formatWatchMoney(cents, watch.baselineCurrency), since)}
                     </p>
                     <p className="watch-facts">
-                      <span>marcado a {brl(watch.baselineCents)} em {since}</span>
-                      {watch.currentCents !== null && <span>· agora {brl(watch.currentCents)}</span>}
+                      <span>marcado a {formatWatchMoney(watch.baselineCents, watch.baselineCurrency)} em {since}</span>
+                      {watch.currentCents !== null && <span>· agora {formatWatchMoney(watch.currentCents, watch.baselineCurrency)}</span>}
                     </p>
                   </div>
                   <div className="watch-actions">
-                    <a href={`/go/${watch.slug}`} target="_blank" rel="noreferrer sponsored">ver no ML ↗</a>
+                    {watch.available && <a href={`/go/${watch.slug}`} target="_blank" rel="noreferrer sponsored">ver oferta ↗</a>}
                     <button type="button" onClick={() => void unwatch(watch)}>parar de acompanhar</button>
                   </div>
                 </li>
@@ -373,12 +379,13 @@ export default function MemberArea({
               <MemberCard
                 key={product.id}
                 product={product}
-                meta={<p className="member-card-note">salvo em {shortDate(product.savedAt)}</p>}
+                available={product.available}
+                meta={<p className="member-card-note">{product.available ? `salvo em ${shortDate(product.savedAt)}` : "Oferta indisponível ou desatualizada"}</p>}
                 actions={
                   <div className="member-card-actions">
                     {watchedIds.has(product.id)
                       ? <span className="member-watching">✓ de olho no preço</span>
-                      : <button type="button" onClick={() => void watchProduct(product)}>de olho no preço</button>}
+                      : product.available && <button type="button" onClick={() => void watchProduct(product)}>de olho no preço</button>}
                     <button type="button" className="member-remove" onClick={() => void removeSaved(product)}>remover</button>
                   </div>
                 }

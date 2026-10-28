@@ -1,8 +1,9 @@
 import { ImageResponse } from "next/og";
 import type { VitrineProduct } from "./deal-view";
 import { marketplaceDef } from "./marketplaces";
-import { brl, fetchProductImage, ogFonts, truncate } from "./og-assets";
+import { fetchProductImage, ogFonts } from "./og-assets";
 import { productPreview, PRODUCT_PREVIEW_SIZE } from "./product-preview";
+import { formatOfferMoney, offerPriceLabel } from "./offer-price";
 
 // Paleta fixa (tema claro de globals.css): o card é uma imagem estática, sem
 // contexto de tema do visitante — usa sempre a identidade de superfície clara.
@@ -16,17 +17,13 @@ const BLUE = "#2563eb";
 const BLUE_TEXT = "#1d4ed8";
 const LINE = "rgba(21, 21, 21, 0.18)";
 
-/**
- * ~21 caracteres por linha nesta largura/corpo; 63 mantém o título dentro das
- * 3 linhas do bloco. Era 78, que transbordava e virava corte seco — reticências
- * comunicam "tem mais texto", corte no meio da palavra comunica defeito.
- */
-const TITLE_MAX_CHARS = 63;
-
 export async function renderProductPreview(deal: VitrineProduct, now = new Date()) {
   const [fonts, photo] = await Promise.all([ogFonts(), fetchProductImage(deal.imageUrl)]);
   const { stale, badge, ageLabel } = productPreview(deal, now);
   const marketplace = marketplaceDef(deal.marketplace);
+  const title = deal.displayTitle ?? deal.title;
+  const titleSize = title.length <= 65 ? 50 : title.length <= 110 ? 40 : title.length <= 180 ? 32 : title.length <= 300 ? 24 : 20;
+  const price = offerPriceLabel(deal);
   const stamp = marketplace
     ? { label: marketplace.stampLabel, style: marketplace.stampStyle }
     : { label: deal.marketplace, style: "outlined" as const };
@@ -115,34 +112,28 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
             <div
               style={{
                 display: "flex",
-                // 3 linhas EXATAS (50px × 1.08 = 54px cada). Antes era 132px,
-                // que dá 2,44 linhas: a terceira era fatiada ao meio da altura
-                // das letras e o card compartilhado parecia quebrado. Múltiplo
-                // do line-height faz o corte cair sempre no limite da linha.
-                maxHeight: 162,
-                overflow: "hidden",
-                fontSize: 50,
+                fontSize: titleSize,
                 fontWeight: 800,
                 lineHeight: 1.08,
                 letterSpacing: "-0.02em",
                 color: INK,
               }}
             >
-              {truncate(deal.title, TITLE_MAX_CHARS)}
+              {title}
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
-              {!stale && deal.originalPriceCents !== null && deal.originalPriceCents > deal.priceCents && (
+              {!stale && deal.currency && deal.originalPriceKind === "source_claimed" && deal.priceType === "exact" && deal.originalPriceCents !== null && deal.originalPriceCents > deal.priceCents && (
                 // Satori não suporta text-decoration (mesmo bug de "fit-content": erro
                 // minificado "u2 is not iterable" no pipe da resposta). Sem risco de
                 // reintroduzir — o contraste de tamanho/cor já distingue o preço anterior.
                 <div style={{ display: "flex", fontSize: 26, fontWeight: 600, color: INK_QUIET }}>
-                  {brl(deal.originalPriceCents)}
+                  {formatOfferMoney(deal.originalPriceCents, deal.currency)}
                 </div>
               )}
-              <div style={{ display: "flex", fontSize: 64, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
-                {brl(deal.priceCents)}
+              <div style={{ display: "flex", fontSize: price.length > 18 ? 36 : price.length > 12 ? 44 : 64, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
+                {price}
               </div>
             </div>
             <div
@@ -156,7 +147,7 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
                 color: INK_MUTED,
               }}
             >
-              {stale ? `Última captura ${ageLabel ?? "sem data"} · confira o preço atual` : "Ofertas monitoradas · link de afiliado"}
+              {stale ? `Última captura ${ageLabel ?? "sem data"} · confira o preço atual` : deal.currency ? "Ofertas monitoradas · link de afiliado" : "Moeda não confirmada · confira na loja · link de afiliado"}
             </div>
           </div>
         </div>

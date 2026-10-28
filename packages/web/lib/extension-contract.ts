@@ -7,7 +7,11 @@
  * simplesmente ignorados — o schema só aceita o que é data do produto.
  */
 
-const MAX_TITLE = 250;
+import { MAX_SOURCE_TITLE_LENGTH, normalizeSourceTitle } from "../../capture/src/title.ts";
+
+import type { OfferEvidenceV2 } from "../../capture/src/types.ts";
+
+const MAX_TITLE = MAX_SOURCE_TITLE_LENGTH;
 const MIN_TITLE = 3;
 /** Teto defensivo de preço: R$ 1.000.000,00 em centavos. */
 const MAX_PRICE_CENTS = 100_000_000;
@@ -40,6 +44,9 @@ export interface ExtensionCaptureProduct {
   imageUrl?: string;
   priceCents: number;
   originalPriceCents?: number;
+  /** Absent on installed legacy extensions/outbox entries. */
+  currency?: "BRL";
+  priceType?: "exact" | "from" | "unknown";
 }
 
 export interface ExtensionCapturePayload {
@@ -82,8 +89,8 @@ export function validateExtensionCapturePayload(raw: unknown): ExtensionCaptureP
   const externalId = typeof prod.externalId === "string" ? prod.externalId : "";
   if (!/^MLB\d{6,}$/.test(externalId)) bad("product.externalId inválido");
 
-  const title = typeof prod.title === "string" ? prod.title.trim() : "";
-  if (title.length < MIN_TITLE || title.length > MAX_TITLE) bad("product.title fora do tamanho (3–250)");
+  const title = typeof prod.title === "string" ? normalizeSourceTitle(prod.title) : "";
+  if (title.length < MIN_TITLE || title.length > MAX_TITLE) bad(`product.title fora do tamanho (3–${MAX_TITLE})`);
 
   const productUrl = typeof prod.productUrl === "string" ? prod.productUrl : "";
   const productHost = hostOf(productUrl);
@@ -116,6 +123,21 @@ export function validateExtensionCapturePayload(raw: unknown): ExtensionCaptureP
     marketplace: "mercadolivre",
     clientCapturedAt,
     page: { kind: pageKind, url: pageUrl },
-    product: { externalId, title, productUrl, imageUrl, priceCents, originalPriceCents },
+    product: { externalId, title, productUrl, imageUrl, priceCents, originalPriceCents,
+      currency: prod.currency === "BRL" ? "BRL" : undefined,
+      priceType: prod.priceType === "exact" || prod.priceType === "from" ? prod.priceType : undefined,
+    },
+  };
+}
+
+/** Only facts explicitly transported by the reader; legacy payloads remain unknown. */
+export function browserOfferEvidence(product: Pick<ExtensionCaptureProduct, 'currency' | 'priceType' | 'originalPriceCents'>, url: string, capturedAt: string): OfferEvidenceV2 {
+  return {
+    version: 2,
+    source: { marketplace: 'mercadolivre', method: 'browser', url, capturedAt },
+    currency: product.currency,
+    priceType: product.priceType ?? 'unknown',
+    variantIdentity: { state: 'unknown' },
+    originalPriceKind: product.originalPriceCents ? 'source_claimed' : 'unknown',
   };
 }

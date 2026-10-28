@@ -16,6 +16,7 @@ export default function PublishedSelection({
       aria-labelledby="published-selection-title"
     >
       <h2 id="published-selection-title">Produtos da seleção atual</h2>
+      {!selection.homepageReady && <p>A nova composição aguarda ativação inicial. Complete as evidências ou avaliações e ative uma edição. O catálogo de transição continua disponível até lá.</p>}
       <p className="curation-muted">
         {selection.mode === "catalog"
           ? "A seleção automática já está disponível. Personalizar uma edição é opcional."

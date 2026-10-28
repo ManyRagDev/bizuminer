@@ -1,9 +1,11 @@
-import { priceDifferencePercent, priceHighlight } from "./deal-signal.ts";
+import { priceDifferencePercent, priceFreshness, priceHighlight } from "./deal-signal.ts";
 import { marketplaceDef } from "./marketplaces.ts";
+import { offerPriceLabel } from "./offer-price.ts";
+import type { ProductPresentation } from "./product-presentation.ts";
 
 export type ComposerDestination = "whatsapp" | "telegram";
 
-export interface ComposerProduct {
+export interface ComposerProduct extends Partial<ProductPresentation> {
   slug: string;
   title: string;
   priceCents: number;
@@ -13,6 +15,7 @@ export interface ComposerProduct {
   lowestVerified: boolean;
   /** Loja de origem. Com duas lojas no ar, a mensagem compartilhada precisa dizer qual. */
   marketplace: string;
+  evidenceObservedAt?: string | null;
 }
 
 export const COMPOSER_MAX_SELECTION = 5;
@@ -32,7 +35,7 @@ const OPENERS: Record<"verified" | "drop" | "unproven", string[]> = {
     "esse baixou de novo, olha aí",
   ],
   unproven: [
-    "achei esse hoje, tá em conta",
+    "confira este produto e as condições na loja",
     "dá um bizu nessa",
   ],
 };
@@ -63,6 +66,8 @@ export function formatBRL(cents: number): string {
 }
 
 function toneFor(product: ComposerProduct): "verified" | "drop" | "unproven" {
+  if (product.evidenceObservedAt !== undefined && priceFreshness(product.evidenceObservedAt) === "stale") return "unproven";
+  if (product.priceType !== "exact" || product.currency !== "BRL") return "unproven";
   const highlight = priceHighlight({
     priceCents: product.priceCents,
     previousMinPriceCents: product.previousMinPriceCents,
@@ -108,7 +113,8 @@ export function directLink(baseUrl: string, slug: string): string {
  * aberturas já falam do nosso sinal, que é o que sustentamos.
  */
 export function priceLine(product: ComposerProduct): string {
-  const price = formatBRL(product.priceCents);
+  const stale = product.evidenceObservedAt !== undefined && priceFreshness(product.evidenceObservedAt) === "stale";
+  const price = `${stale ? "Última captura: " : ""}${offerPriceLabel(product).replace(/\u00A0/g, " ")}${product.currency ? "" : " · moeda não confirmada"}`;
   // Degrada em silêncio: marketplace ausente OMITE o segmento, nunca imprime
   // "undefined". Esta mensagem é colada num grupo de WhatsApp com a assinatura
   // do BizuMiner — texto quebrado ali custa credibilidade, e o modo de falha
@@ -121,12 +127,12 @@ export function priceLine(product: ComposerProduct): string {
 
 export function composeSingle(product: ComposerProduct, baseUrl: string): string {
   const link = directLink(baseUrl, product.slug);
-  return [composeOpener(product), product.title, priceLine(product), link, FOOTER].join("\n");
+  return [composeOpener(product), product.displayTitle ?? product.title, product.benefit, priceLine(product), link, FOOTER].filter(Boolean).join("\n");
 }
 
 export function composeLot(products: ComposerProduct[], baseUrl: string): string {
   const lines = products.map(
-    (product, index) => `${index + 1}. ${product.title} — ${priceLine(product)} — ${directLink(baseUrl, product.slug)}`,
+    (product, index) => `${index + 1}. ${product.displayTitle ?? product.title} — ${priceLine(product)} — ${directLink(baseUrl, product.slug)}`,
   );
   return ["bizus de hoje:", ...lines, FOOTER].join("\n");
 }

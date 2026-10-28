@@ -281,3 +281,20 @@ test("BUG-018: CATALOG_EVIDENCE_POLICY_VERSION é explícita, distinta de HERO_P
   assert.ok(key.includes(CATALOG_EVIDENCE_POLICY_VERSION), "Chave pública de estado deve incluir a versão da política de catálogo");
 });
 
+
+test("capa publicada exige texto duradouro e preserva fichas sem capa", () => {
+  const presentation = { status: "published", title: "Organizador de 60 litros", caveat: "Cobertores não incluídos." };
+  assert.equal(validateEditorialAssessment(assessment({ presentation })).ok, true);
+  for (const headline of ["R$ 25 hoje", "O melhor preço", "Desconto de 50%"])
+    assert.equal(validateEditorialAssessment(assessment({ presentation: { ...presentation, cover: { headline, imageApproved: true } } })).error, "presentation_requires_durable_copy");
+  assert.equal(validateEditorialAssessment(assessment({ presentation: { ...presentation, cover: { headline: "Cobertores organizados", imageApproved: true } } })).ok, true);
+});
+
+test("chave de estado muda com headline e aprovação da foto da capa", () => {
+  const product = { id: "p", displayTitle: "Organizador", coverHeadline: "Cobertores organizados", coverImageApproved: true };
+  const published = { products: [product], heroProductIds: ["p"] };
+  const key = publishedEditorialStateKey(published);
+  assert.equal(key, publishedEditorialStateKey(structuredClone(published)));
+  assert.notEqual(key, publishedEditorialStateKey({ ...published, products: [{ ...product, coverHeadline: "Tudo em seu lugar" }] }));
+  assert.notEqual(key, publishedEditorialStateKey({ ...published, products: [{ ...product, coverImageApproved: false }] }));
+});

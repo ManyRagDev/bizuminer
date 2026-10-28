@@ -9,12 +9,15 @@ const CACHE_SECONDS = 300;
 export function productPreview(product: VitrineProduct, now = new Date()) {
   const stale = priceFreshness(product.evidenceObservedAt, now) === "stale";
   const highlight = priceHighlight(product);
-  const badge = stale || highlight?.tone === "unproven" ? null : highlight;
+  const imprecise = product.priceType !== "exact";
+  const badge = stale || imprecise || product.currency !== "BRL" || highlight?.tone === "unproven" ? null : highlight;
   const observedAt = product.evidenceObservedAt ? new Date(product.evidenceObservedAt).toISOString() : null;
   const ageLabel = stale ? seenAgo(product.evidenceObservedAt, now) : null;
   const version = createHash("sha256").update(JSON.stringify([
-    "product-preview-v1", product.slug, product.title, product.marketplace, product.imageUrl,
-    product.priceCents, product.originalPriceCents, observedAt, stale, ageLabel, badge,
+    "product-preview-v2", product.slug, product.displayTitle ?? product.title, product.marketplace, product.imageUrl,
+    product.editorialRevisionId, product.benefit, product.caveat, product.purchaseContents,
+    product.priceCents, product.priceType, product.currency, product.priceMinCents, product.priceMaxCents,
+    product.originalPriceCents, product.originalPriceKind, observedAt, stale, ageLabel, badge,
   ])).digest("hex").slice(0, 24);
   // Never keep a "current" price across the existing 48-hour freshness boundary.
   const currentUntil = observedAt ? Date.parse(observedAt) + PRICE_CURRENT_WINDOW_HOURS * 3_600_000 : 0;

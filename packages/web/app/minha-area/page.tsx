@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getPageSession, isAffiliate } from "../../lib/auth";
 import { catalogCategories } from "../../lib/db";
 import { toVitrineProduct } from "../../lib/deal-view";
+import { hydrateProductPresentations } from "../../lib/product-presentation-db";
 import { allowedProfileCategories, validUserId } from "../../lib/member-contract";
 import { memberSnapshot, type MemberSnapshot } from "../../lib/member-db";
 import MemberArea, { type MemberRec, type MemberSaved, type MemberWatch } from "./member-area";
@@ -23,6 +24,7 @@ function serializeSnapshot(snapshot: MemberSnapshot) {
   const saved: MemberSaved[] = snapshot.saved.map((row) => ({
     ...toVitrineProduct(row),
     savedAt: iso(row.saved_at)!,
+    available: row.available,
   }));
   const watches: MemberWatch[] = snapshot.watches.map((row) => ({
     watchId: row.watch_id,
@@ -32,10 +34,14 @@ function serializeSnapshot(snapshot: MemberSnapshot) {
     imageUrl: row.image_url,
     category: row.category,
     baselineCents: row.baseline_price_cents,
+    baselineCurrency: row.baseline_currency,
     targetCents: row.target_price_cents,
     currentCents: row.current_price_cents,
     currentObservedAt: iso(row.current_observed_at),
     watchedAt: iso(row.watched_at)!,
+    comparisonStatus: row.comparison_status,
+    available: row.available,
+    benefit: row.benefit, audience: row.audience, caveat: row.caveat, purchaseContents: row.purchaseContents,
   }));
   const recommended: MemberRec[] = snapshot.recommended.map((row) => ({
     ...toVitrineProduct(row),
@@ -54,7 +60,8 @@ export default async function MinhaAreaPage() {
     memberSnapshot(appUserId),
     catalogCategories(),
   ]);
-  const data = serializeSnapshot(snapshot);
+  const [saved, recommended] = await Promise.all([hydrateProductPresentations(snapshot.saved), hydrateProductPresentations(snapshot.recommended)]);
+  const data = serializeSnapshot({ ...snapshot, saved, recommended });
   const profileCategories = allowedProfileCategories(categories, snapshot.profile.preferredCategories);
 
   return (

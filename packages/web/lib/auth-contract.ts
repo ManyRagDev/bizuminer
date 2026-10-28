@@ -21,7 +21,7 @@ export function isAppRole(value: unknown): value is AppRole {
  */
 export function sanitizeNext(value: unknown, fallback = "/minha-area"): string {
   if (typeof value !== "string" || value.length === 0 || value.length > 200) return fallback;
-  if (!value.startsWith("/") || value.startsWith("//")) return fallback;
+  if (!value.startsWith("/") || value.startsWith("//") || /[\\\u0000-\u001f\u007f]/.test(value)) return fallback;
   return value;
 }
 

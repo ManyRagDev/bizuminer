@@ -69,3 +69,12 @@ test("isMlHost aceita CDN e domínios ML, rejeita estranhos", () => {
   assert.equal(isMlHost("http2.mlstatic.com"), true);
   assert.equal(isMlHost("evil.com"), false);
 });
+
+test('v1 supports old outbox and complete long titles, accepting only declared currency', () => {
+ const title='Transmissor '.repeat(35)+'USB-C 5.3 2 unidades';
+ const p=validateExtensionCapturePayload({...valid,product:{...valid.product,title:'  '+title+'  ',currency:'BRL',priceType:'from'}});
+ assert.equal(p.product.title,title);assert.equal(p.product.currency,'BRL');assert.equal(p.product.priceType,'from');
+ const legacy=validateExtensionCapturePayload(valid);assert.equal(legacy.product.currency,undefined);assert.equal(legacy.product.priceType,undefined);
+ assert.equal(validateExtensionCapturePayload({...valid,product:{...valid.product,currency:'USD'}}).product.currency,undefined);
+ assert.throws(()=>validateExtensionCapturePayload({...valid,product:{...valid.product,title:'x'.repeat(2001)}}),/title/);
+});

@@ -8,6 +8,7 @@
  */
 
 import { toCents, toRate, fromEpochSeconds } from "../../money.ts";
+import { normalizeSourceTitle } from "../../title.ts";
 import type { RawOffer } from "../../types.ts";
 import { MARKETPLACE } from "./client.ts";
 
@@ -48,7 +49,7 @@ export function mapProductNode(
   capturedAt: Date = new Date(),
 ): RawOffer | null {
   const externalId = node.itemId != null ? String(node.itemId) : undefined;
-  const title = node.productName?.trim();
+  const title = node.productName ? normalizeSourceTitle(node.productName) : undefined;
 
   if (!externalId || !title) return null;
 
@@ -56,6 +57,10 @@ export function mapProductNode(
   const priceCents = toCents(node.price ?? node.priceMin);
   if (priceCents == null || priceCents <= 0) return null;
 
+  const priceMinCents = positiveCents(node.priceMin);
+  const priceMaxCents = positiveCents(node.priceMax);
+  const priceType = priceMinCents && priceMaxCents && priceMaxCents > priceMinCents
+    ? "range" : node.price == null ? "from" : "exact";
   const discountRate = toRate(node.priceDiscountRate);
 
   // A Shopee não devolve "preço de". Derivamos a partir do desconto declarado
@@ -86,10 +91,14 @@ export function mapProductNode(
     salesCount: numberOrUndefined(node.sales),
     ratingStar: ratingOrUndefined(node.ratingStar),
     offerEvidence: {
-      version: 1,
+      version: 2,
       source: { marketplace: MARKETPLACE, method: "official_api", url: productUrl, capturedAt: capturedAt.toISOString() },
-      priceMinCents: positiveCents(node.priceMin),
-      priceMaxCents: positiveCents(node.priceMax),
+      priceType,
+      sellerId: shopId,
+      variantIdentity: { state: "unknown" },
+      originalPriceKind: originalPriceCents ? "derived_from_claim" : "unknown",
+      priceMinCents,
+      priceMaxCents: priceMaxCents && (!priceMinCents || priceMaxCents >= priceMinCents) ? priceMaxCents : undefined,
     },
     startsAt: fromEpochSeconds(node.periodStartTime),
     endsAt: fromEpochSeconds(node.periodEndTime),

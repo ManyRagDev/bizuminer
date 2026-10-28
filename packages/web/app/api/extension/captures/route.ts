@@ -1,4 +1,5 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
+import { refreshHomepageAfterChange } from "../../../../lib/homepage-db.ts";
 import { extensionCorsHeaders } from "../../../../lib/extension-cors";
 import { validateExtensionCapturePayload } from "../../../../lib/extension-contract";
 import { authenticateDevice, persistExtensionCapture } from "../../../../lib/extension-db";
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await persistExtensionCapture(device.device, payload);
+    if (!result.duplicate) after(async () => { await refreshHomepageAfterChange(device.device.tenantId); });
     return Response.json(
       {
         ok: true,

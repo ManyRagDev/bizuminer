@@ -8,6 +8,7 @@
  * - `(xmax = 0)` no RETURNING distingue insert novo de update.
  */
 
+import { normalizeSourceTitle } from "../../capture/src/title.ts";
 import postgres, { type Sql } from "postgres";
 import { withMonitoringDb } from "./monitoring-db.ts";
 import { RECENT_WINDOW_DAYS, type ActivityCounts } from "./activity.ts";
@@ -87,6 +88,7 @@ export class PostgresStore implements OfferStore {
     offerEvidence?: OfferEvidence;
     observedAt: Date;
   }): Promise<UpsertResult> {
+    input = { ...input, title: normalizeSourceTitle(input.title) };
     return await this.withTenant(input.tenantId, async (sql) => {
       const rows = await sql<UpsertRow[]>`
         with prev as (
@@ -131,13 +133,28 @@ export class PostgresStore implements OfferStore {
                  ${input.offerEvidence ? sql.json({ ...input.offerEvidence } as any) : null}
           from up
           left join prev on true
-          where up.is_new
+          where exists (select 1 from ${sql(this.s)}.price_observation same_request where same_request.capture_run_id = ${input.captureRunId} and same_request.product_id = up.id)
+             or up.is_new
              or prev.last_price_cents is distinct from ${input.priceCents}
              or not exists (
-               select 1 from ${sql(this.s)}.price_observation o
-               where o.product_id = up.id
-                 and o.observed_at >= (${input.observedAt}::timestamptz - interval '20 hours')
-                 and coalesce(o.offer_evidence->>'variantKey', '') = coalesce(${input.offerEvidence?.variantKey ?? null}, '')
+               select 1 from (
+                 select o.* from ${sql(this.s)}.price_observation o
+                 where o.product_id = up.id and o.tenant_id = ${input.tenantId}
+                 order by o.observed_at desc, o.id desc limit 1
+               ) latest
+               where latest.observed_at > (${input.observedAt}::timestamptz - interval '20 hours')
+                 and latest.title_snapshot is not distinct from ${input.title}
+                 and latest.product_url_snapshot is not distinct from ${input.productUrl}
+                 and latest.image_url_snapshot is not distinct from ${input.imageUrl ?? null}
+                 and latest.category_snapshot is not distinct from ${input.category ?? null}
+                 and latest.price_cents = ${input.priceCents}
+                 and latest.original_price_cents is not distinct from ${input.originalPriceCents ?? null}
+                 and latest.claimed_discount_rate is not distinct from ${input.claimedDiscountRate ?? null}::numeric
+                 and latest.rating_star is not distinct from ${input.ratingStar ?? null}::numeric
+                 and latest.sales_label is not distinct from ${input.salesLabel ?? null}
+                 and latest.sales_count is not distinct from ${input.salesCount ?? null}::bigint
+                 and (latest.offer_evidence #- '{source,capturedAt}') is not distinct from
+                   (${input.offerEvidence ? sql.json({ ...input.offerEvidence } as any) : null}::jsonb #- '{source,capturedAt}')
              )
           on conflict (capture_run_id, product_id) do update set
             price_cents = excluded.price_cents,
@@ -157,7 +174,12 @@ export class PostgresStore implements OfferStore {
                and observation.product_url_snapshot is not distinct from excluded.product_url_snapshot
                and observation.image_url_snapshot is not distinct from excluded.image_url_snapshot
                and observation.category_snapshot is not distinct from excluded.category_snapshot
-               and observation.price_cents = excluded.price_cents then observation.offer_evidence
+               and observation.price_cents = excluded.price_cents
+               and observation.original_price_cents is not distinct from excluded.original_price_cents
+               and observation.claimed_discount_rate is not distinct from excluded.claimed_discount_rate
+               and observation.rating_star is not distinct from excluded.rating_star
+               and observation.sales_label is not distinct from excluded.sales_label
+               and observation.sales_count is not distinct from excluded.sales_count then observation.offer_evidence
               else null
             end
         )

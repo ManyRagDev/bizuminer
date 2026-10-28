@@ -38,6 +38,13 @@ export type DealQuery = {
 
 export const CATALOG_PAGE_SIZE = 24;
 
+/** Explicit searches, filters and sort orders retain catalog semantics. */
+export function isHomepageSelectionQuery(query: DealQuery): boolean {
+  return (query.sort ?? "signal") === "signal" && !query.category && !query.search?.trim() && !query.marketplace
+    && (query.priceBand ?? "all") === "all" && (query.freshness ?? "2d") === "2d"
+    && query.minRating == null && query.minDiscount == null && !query.lowestOnly && !query.hasHistory;
+}
+
 export type CatalogState = {
   page: number;
   category: string | null;

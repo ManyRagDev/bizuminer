@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getPageAuth } from "../../lib/auth";
+import { sanitizeNext } from "../../lib/auth-contract";
 import { ThemeToggle } from "../theme-toggle";
 import DetailHeader from "../_components/detail-header";
 import GoogleButton from "./google-button";
@@ -13,10 +14,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** A porta de volta para a bancada: login único com o Google. */
-export default async function EntrarPage() {
+/** Mantém o produto de origem durante a entrada na conta. */
+export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const next = sanitizeNext((await searchParams).next);
   const user = await getPageAuth();
-  if (user) redirect("/minha-area");
+  if (user) redirect(next);
 
   return (
     <main className="auth-page">
@@ -24,29 +26,27 @@ export default async function EntrarPage() {
         actions={
           <>
             <ThemeToggle />
-            <a href="/#achados">← voltar aos achados</a>
+            <a href={next.startsWith("/bizu/") ? next : "/#achados"}>← voltar</a>
           </>
         }
       />
 
       <section className="auth-stage" aria-label="Entrar na sua área">
         <div className="auth-card">
-          <p className="eyebrow">Sua bancada</p>
+          <p className="eyebrow">Sua área</p>
           <h1>Entrar na sua área</h1>
           <p className="auth-lead">
-            Seus salvos, os itens de olho no preço e as recomendações — a mesma bancada, em qualquer aparelho.
+            Consulte seus salvos e acompanhe mudanças de preço com a mesma conta, em qualquer aparelho.
           </p>
 
           <GoogleButton />
 
           <p className="auth-note">
-            Sem senha para decorar: a conta é a do Google que você já usa. O painel operacional aparece somente
-            para contas que receberam a role de afiliado.
+            Entre com a conta Google que você já usa, sem criar outra senha.
           </p>
 
           <aside className="auth-ticket" role="note">
-            Seus salvos e acompanhamentos deste navegador entram na conta sozinhos — sem formulário, sem
-            importação manual.
+            Na sua área, você pode escolher sincronizar os salvos desta sessão com a conta.
           </aside>
         </div>
       </section>

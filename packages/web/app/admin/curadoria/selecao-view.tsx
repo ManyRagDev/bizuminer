@@ -13,7 +13,12 @@ import {
 } from "../../../lib/editorial-selection.ts";
 import { saveEditorialAssessmentAction, replaceEditorialSelectionAction } from "./actions.ts";
 import { marketplaceDef } from "../../../lib/marketplaces.ts";
+import { offerPriceLabel, offerPriceNote } from "../../../lib/offer-price.ts";
 import { rankHeroCandidates, type HeroClassification } from "../../../lib/hero-ranking.ts";
+import { composeHomepage, homepageClarityBlockers } from "../../../lib/homepage-policy.ts";
+import HomeBanner from "../../_components/home-banner";
+import { coverBlockers, selectCoverProduct } from "../../../lib/home-cover";
+import { COVER_HEADLINE_MAX_LENGTH, COVER_DESCRIPTION_MAX_LENGTH, COVER_TITLE_MAX_LENGTH } from "../../../lib/product-presentation";
 import { HERO_MAX_PRODUCTS, HERO_POLICY_VERSION, HERO_RUBRIC, HERO_WEIGHTS } from "../../../lib/hero-policy.ts";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -23,6 +28,10 @@ function errorMessage(error: string): string {
     schema_not_ready: "A migração da seleção ainda não foi aplicada.",
     migration_required: "A migração da seleção ainda não foi aplicada.",
     evidence_changed: "O anúncio mudou desde o início da revisão. Atualize a página e avalie as novas evidências.",
+    assessment_conflict: "Outra revisão foi salva enquanto você editava. Atualize a página antes de publicar.",
+    presentation_migration_required: "A migração da ficha editorial ainda não foi aplicada neste ambiente.",
+    invalid_presentation: "Confira o título (3–500), a ressalva (até 1.000) e, se preparada, a chamada de capa (3–72 caracteres).",
+    presentation_requires_durable_copy: "A ficha duradoura deve explicar uso e limitações. Registre preço, desconto e comparações na justificativa da oferta.",
     product_not_approved: "O produto deixou de estar aprovado no catálogo. Atualize a página.",
     assessment_superseded: "Há uma avaliação mais recente deste produto. Atualize a página e prepare a seleção com a revisão atual.",
     assessment_not_found: "Uma avaliação ou produto desta seleção não está mais disponível. Atualize a página.",
@@ -85,7 +94,7 @@ const levelLabels = { unknown: "Desconhecido", weak: "Fraco", adequate: "Adequad
 function HeroClassificationDetails({ classification }: { classification: HeroClassification }) {
   return <details className="hero-classification-details">
     <summary>{classification.status === "hero" ? "Disputa a hero" : classification.status === "blocked" ? "Indicação bloqueada" : "Seleção geral"} · {heroScoreLabel(classification)} · {classification.basis === "editorial" ? "avaliação editorial" : "sinais do catálogo"}</summary>
-    <p>Política {classification.policyVersion}. Os melhores disponíveis ocupam até {HERO_MAX_PRODUCTS} posições, sem nota mínima. Avaliações editoriais válidas têm prioridade; os sinais do catálogo ordenam produtos ainda não avaliados.</p>
+    <p>Política individual {classification.policyVersion}. A seleção final também exige clareza da compra e variedade entre famílias. Avaliações editoriais válidas têm prioridade; os sinais do catálogo ordenam produtos ainda não avaliados.</p>
     {classification.basis === "catalog" && <p>Este índice mede evidências disponíveis, sem atribuir notas de utilidade ou adequação ao público. Dados ausentes não recebem pontos.</p>}
     {classification.breakdown.length > 0 && <dl>{classification.breakdown.map(({ id, weight, points, contribution }) => <div key={id}><dt>{EDITORIAL_DIMENSIONS.find((dimension) => dimension.id === id)!.label} ({weight}%)</dt><dd>{points === null ? "Desconhecido" : `${points}/100 → ${contribution} pontos`}</dd></div>)}</dl>}
     {classification.catalogSignals.length > 0 && <dl>{classification.catalogSignals.map(({ label, points }) => <div key={label}><dt>{label}</dt><dd>{points} pontos</dd></div>)}</dl>}
@@ -104,6 +113,8 @@ function assessmentFrom(candidate: EditorialCandidate): EditorialAssessmentInput
     heroPolicyVersion: HERO_POLICY_VERSION,
     productId: candidate.id,
     evidenceFingerprint: candidate.evidenceFingerprint,
+    expectedAssessmentId: previous?.id ?? null,
+    presentation: { status: "draft", title: previous?.presentation?.title ?? "", caveat: previous?.presentation?.caveat ?? "", ...(previous?.presentation?.cover ? { cover: { ...previous.presentation.cover, imageApproved: false } } : {}) },
     dimensions: Object.fromEntries(EDITORIAL_DIMENSIONS.map(({ id }) => [id, previous?.dimensions[id] ?? { level: "unknown", reason: "" }])) as EditorialAssessmentInput["dimensions"],
     audience: previous?.audience ?? "",
     benefit: previous?.benefit ?? "",
@@ -129,12 +140,25 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
   const [checkedAtText, setCheckedAtText] = useState(() => candidate.assessment?.comparativeBasis?.checkedAt ? candidate.assessment.comparativeBasis.checkedAt.slice(0, 16) : new Date().toISOString().slice(0, 16));
   const [comparativeRationale, setComparativeRationale] = useState(() => candidate.assessment?.comparativeBasis?.rationale ?? "");
   const [feedback, setFeedback] = useState("");
+  const [previewSignature, setPreviewSignature] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const showComparative = hasSuperiorityClaim(input.publicRationale) || altIdsText.trim().length > 0;
+  const coverDraft = {
+    ...candidate,
+    displayTitle: input.presentation?.title.trim(),
+    titleOrigin: "editorial" as const,
+    editorialRevisionId: "preview",
+    benefit: input.benefit,
+    coverHeadline: input.presentation?.cover?.headline,
+    coverImageApproved: input.presentation?.cover?.imageApproved,
+  };
+  const coverIssues = coverBlockers(coverDraft);
+
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (input.presentation?.status === "published" && previewSignature !== JSON.stringify(input)) { setFeedback("Confira a prévia atual antes de publicar a ficha."); return; }
     const cents = Math.round(Number(maxPrice.replace(",", ".")) * 100);
     if (!Number.isSafeInteger(cents) || cents <= 0) { setFeedback("Informe um preço máximo válido."); return; }
     const hasClaim = hasSuperiorityClaim(input.publicRationale);
@@ -173,6 +197,31 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
   return <form className="editorial-assessment-form" onSubmit={submit}>
     <h4>Avaliação editorial</h4>
     <p>Registre fatos e suas fontes. Informações que o anúncio não permite confirmar continuam desconhecidas.</p>
+    <fieldset>
+      <legend>Ficha do produto · permanece disponível fora da seleção da home</legend>
+      <p><b>Título da fonte:</b> {candidate.title}</p>
+      <p>Preserve modelo, capacidade, compatibilidade e quantidade indispensáveis. A recaptura mantém a revisão; mudança de configuração exige nova conferência.</p>
+      {candidate.assessment?.presentation && <p>Última revisão: {candidate.assessment.presentationInvalidatedAt ? "pendente de nova conferência: a configuração ou identidade mudou" : candidate.assessment.presentation.status === "published" ? "publicada, sujeita à validade das evidências" : candidate.assessment.presentation.status === "withdrawn" ? "retirada" : "rascunho"}.</p>}
+      <label>Título editorial<input maxLength={500} value={input.presentation?.title ?? ""} onChange={event => setInput(current => ({ ...current, presentation: { ...current.presentation!, title: event.target.value } }))} /></label>
+      <label>Ressalva pública · não compre se…<textarea maxLength={1000} value={input.presentation?.caveat ?? ""} onChange={event => setInput(current => ({ ...current, presentation: { ...current.presentation!, caveat: event.target.value } }))} /><small>Opcional. Somente limitações confirmadas; dúvidas internas ficam no campo próprio.</small></label>
+      <label>Destino desta revisão<select value={input.presentation?.status ?? "draft"} onChange={event => setInput(current => ({ ...current, presentation: { ...current.presentation!, status: event.target.value as "draft" | "published" | "withdrawn" } }))}>
+        <option value="draft">Guardar rascunho (mantém a ficha publicada anterior)</option><option value="published">Publicar ficha revisada</option><option value="withdrawn">Retirar ficha pública (mantém o produto no catálogo)</option>
+      </select></label>
+    </fieldset>
+    <fieldset>
+      <legend>Capa da home · opcional</legend>
+      <p>Uma imagem grande, uma chamada curta e um benefício. A capa usa o primeiro produto apto entre os destaques da edição; preparar esta ficha não a coloca na home automaticamente.</p>
+      <label><input type="checkbox" checked={Boolean(input.presentation?.cover)} onChange={event => setInput(current => ({ ...current, presentation: { ...current.presentation!, cover: event.target.checked ? { headline: "", imageApproved: false } : undefined } }))} />Preparar este produto para a capa</label>
+      {input.presentation?.cover && <>
+        <label>Chamada da capa<textarea minLength={3} maxLength={COVER_HEADLINE_MAX_LENGTH} value={input.presentation.cover.headline} onChange={event => setInput(current => ({ ...current, presentation: { ...current.presentation!, cover: { ...current.presentation!.cover!, headline: event.target.value } } }))} placeholder="Ex.: O mesmo filme. Dois fones." /><small>{input.presentation.cover.headline.length}/{COVER_HEADLINE_MAX_LENGTH} · explique o uso sem inventar vantagens ou prometer preço.</small></label>
+        <label><input type="checkbox" checked={input.presentation.cover.imageApproved} onChange={event => setInput(current => ({ ...current, presentation: { ...current.presentation!, cover: { ...current.presentation!.cover!, imageApproved: event.target.checked } } }))} />Conferi a foto: nítida, sem texto promocional e fiel à versão e aos itens incluídos.</label>
+        <p><small>A confirmação da foto precisa ser refeita a cada revisão. Para a capa, o título editorial deve ter até {COVER_TITLE_MAX_LENGTH} caracteres e o benefício até {COVER_DESCRIPTION_MAX_LENGTH}; o preço e a moeda precisam estar confirmados e atuais.</small></p>
+        <details className="editorial-cover-preview"><summary>Ver composição da capa com esta foto</summary>
+          <HomeBanner product={coverDraft} selectionVersion={null} onProductClick={() => {}} preview />
+          {coverIssues.length > 0 ? <><p>Antes de disputar a capa:</p><ul>{coverIssues.map(issue => <li key={issue}>{issue}</li>)}</ul></> : <p>Apresentação pronta. Publique a ficha e inclua o produto na seleção; os critérios da oferta continuam valendo.</p>}
+        </details>
+      </>}
+    </fieldset>
     <p>Esta revisão usa a rubrica {HERO_POLICY_VERSION}. “Excepcional” exige demonstrar por que o produto se destaca; vendas, desconto anunciado e imagem atraente não substituem a justificativa.</p>
     {EDITORIAL_DIMENSIONS.map(({ id, label, prompt }) => <fieldset key={id}>
       <legend>{label}</legend><p>{prompt}</p>
@@ -265,8 +314,20 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
     )}
     <label>Preço máximo aceitável (R$)<input required inputMode="decimal" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} /><small>Acima deste valor, o destaque será bloqueado até nova avaliação.</small></label>
     <label>Dúvidas essenciais em aberto (uma por linha)<textarea maxLength={4000} value={doubts} onChange={(event) => setDoubts(event.target.value)} /><small>Dúvidas essenciais e níveis fracos ou desconhecidos impedem o destaque.</small></label>
+    <fieldset>
+      <legend>Prévia da apresentação</legend>
+      <p>Público, benefício e conteúdo da compra acima compõem a ficha. Use textos que continuem verdadeiros quando o preço mudar.</p>
+      <button type="button" onClick={() => setPreviewSignature(JSON.stringify(input))}>Conferir capa, card, detalhe e compartilhamento</button>
+      {previewSignature === JSON.stringify(input) && <div aria-live="polite">
+        {input.presentation?.cover && <article><h4>Capa</h4><p>{input.presentation.cover.headline}</p><p>Foto {input.presentation.cover.imageApproved ? "aprovada nesta revisão" : "ainda não aprovada"}.</p>{coverIssues.length > 0 && <ul>{coverIssues.map(issue => <li key={issue}>{issue}</li>)}</ul>}</article>}
+        <article><h4>Card</h4><strong>{input.presentation?.title.trim() || candidate.title}</strong><p>{input.benefit || "Benefício ainda não preenchido."}</p><p>{offerPriceLabel(candidate)} · preço da observação atual</p>{offerPriceNote(candidate) && <p>{offerPriceNote(candidate)}</p>}</article>
+        <article><h4>Detalhe</h4><strong>{input.presentation?.title.trim() || candidate.title}</strong><p>Para quem: {input.audience || "Não informado"}</p><p>Conteúdo: {input.purchaseContents || "Não confirmado"}</p>{input.presentation?.caveat && <p>Ressalva: {input.presentation.caveat}</p>}</article>
+        <article><h4>Compartilhamento</h4><strong>{input.presentation?.title.trim() || candidate.title} · BizuMiner</strong><p>{input.benefit}</p></article>
+        <p>Publicar confirma sua revisão humana destes textos e evidências. A justificativa de preço permanece separada.</p>
+      </div>}
+    </fieldset>
     {feedback && <p role="alert">{feedback}</p>}
-    <div className="selecao-card-actions"><button type="submit" disabled={pending || disabled}>{pending ? "Salvando…" : "Salvar avaliação"}</button><button type="button" disabled={pending} onClick={onCancel}>Cancelar</button></div>
+    <div className="selecao-card-actions"><button type="submit" disabled={pending || disabled || (input.presentation?.status === "published" && previewSignature !== JSON.stringify(input))}>{pending ? "Salvando…" : input.presentation?.status === "published" ? "Salvar avaliação e publicar ficha" : input.presentation?.status === "withdrawn" ? "Salvar e retirar ficha pública" : "Salvar avaliação e rascunho"}</button><button type="button" disabled={pending} onClick={onCancel}>Cancelar</button></div>
   </form>;
 }
 
@@ -287,18 +348,17 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
   const ranked = useMemo(() => rankHeroCandidates(candidates), [candidates]);
   const filtered = useMemo(() => ranked.filter(({ candidate }) => (marketplace === "all" || candidate.marketplace === marketplace) && candidate.title.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"))), [ranked, marketplace, search]);
   const heroPreview = useMemo(() => {
-    if (catalogHeroActive && !selection && !dirty) return ranked.filter((entry) => entry.selectedForHero);
+    if (catalogHeroActive && !selection && !dirty) return composeHomepage(candidates).heroes;
     const pool = draft.filter((item) => item.destinations.includes("home") && byId.get(item.productId)?.assessment?.id === item.assessmentId)
       .map((item) => byId.get(item.productId)!);
-    return rankHeroCandidates(pool, new Date(), new Map(draft.map((item, position) => [item.productId, position]))).filter((entry) => entry.selectedForHero);
-  }, [draft, byId, catalogHeroActive, selection, dirty, ranked]);
+    return composeHomepage(pool, new Date(), undefined, new Map(draft.map((item, position) => [item.productId, position]))).heroes;
+  }, [draft, byId, catalogHeroActive, selection, dirty, candidates]);
 
   function prepareBest() {
-    const best = rankHeroCandidates(candidates.filter((candidate) => candidate.assessment))
-      .filter((entry) => entry.classification.status === "hero").slice(0, EDITORIAL_MAX_PRODUCTS);
+    const best = composeHomepage(candidates.filter((candidate) => candidate.assessment)).selected;
     const additions = best.filter(({ candidate }) => !draft.some((item) => item.productId === candidate.id));
     if (draft.length + additions.length > EDITORIAL_MAX_PRODUCTS) { setFeedback("Retire itens da seleção para abrir espaço aos melhores candidatos."); return; }
-    if (!best.length) { setFeedback("Ainda não há avaliações válidas para montar uma edição editorial. Avalie os candidatos; antes da primeira edição, os melhores do catálogo já aparecem automaticamente na home e na pauta."); return; }
+    if (!best.length) { setFeedback("Ainda não há avaliações válidas para montar uma edição editorial. Registre público, utilidade, valor, confiança e clareza; a seleção pode conter menos itens quando faltarem evidências."); return; }
     const bestIds = new Set(best.map(({ candidate }) => candidate.id));
     changeDraft([...best.map(({ candidate }) => ({ productId: candidate.id, assessmentId: candidate.assessment!.id,
       destinations: ["home", "pauta"] as ("home" | "pauta")[], context: draft.find((item) => item.productId === candidate.id)?.context ?? "" })), ...draft.filter((item) => !bestIds.has(item.productId))]);
@@ -332,9 +392,10 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
     {!schemaReady && <p className="editorial-selection-alert" role="alert">A estrutura da seleção ainda não está disponível no banco. Avaliação e ativação permanecem desabilitadas até a migração ser aplicada.</p>}
     {feedback && <p className="editorial-selection-alert" role="status">{feedback}</p>}
     <section className="hero-ranking-board" aria-labelledby="hero-ranking-title">
-      <h3 id="hero-ranking-title">Hero · os melhores disponíveis</h3>
-      <p>Até {HERO_MAX_PRODUCTS} melhores produtos disponíveis, por ordem relativa. A nota ajuda a comparar; não há corte mínimo de qualidade para preencher as posições.</p>
+      <h3 id="hero-ranking-title">Candidatos à capa da home</h3>
+      <p>Até {HERO_MAX_PRODUCTS} candidatos por ordem relativa. A capa mostra apenas o primeiro com ficha publicada, chamada curta, foto aprovada e dados confirmados. Sem candidato apto, entra a arte da marca.</p>
       <p>Público {HERO_WEIGHTS.audience}% · utilidade {HERO_WEIGHTS.utility}% · valor {HERO_WEIGHTS.value}% · confiança {HERO_WEIGHTS.confidence}% · clareza {HERO_WEIGHTS.clarity}%.</p>
+      <p>{selectCoverProduct(heroPreview.map(entry => entry.candidate)) ? "Há um candidato com apresentação pronta para a capa." : "Esta prévia usaria a arte da marca: nenhum candidato reúne todos os requisitos da capa."}</p>
       {heroPreview.length ? (
         <ol style={{ paddingLeft: "20px", margin: "12px 0" }}>
           {heroPreview.map(({ candidate, classification }) => (
@@ -360,6 +421,7 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
               >
                 Ver na Loja ↗
               </a>
+              {coverBlockers(candidate).length > 0 && <details><summary>O que falta para a capa</summary><ul>{coverBlockers(candidate).map(issue => <li key={issue}>{issue}</li>)}</ul></details>}
             </li>
           ))}
         </ol>
@@ -367,7 +429,7 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
         <p>Nenhum item válido nesta prévia. Ofertas desatualizadas ou com impedimentos de compra precisam de revisão.</p>
       )}
       <button type="button" disabled={!schemaReady || pending} onClick={prepareBest}>Preparar seleção com até {EDITORIAL_MAX_PRODUCTS} produtos</button>
-      <p>Home e pauta compartilham até {EDITORIAL_MAX_PRODUCTS} produtos; os {HERO_MAX_PRODUCTS} melhores ocupam a hero. Este botão prepara uma edição com candidatos já avaliados. Ao ativá-la, ela passa a controlar home e pauta; uma edição vazia ou vencida não é preenchida automaticamente pelo catálogo.</p>
+      <p>Home e pauta compartilham até {EDITORIAL_MAX_PRODUCTS} produtos; a capa usa um destaque apto entre os {HERO_MAX_PRODUCTS} candidatos. Este botão prepara uma edição com candidatos já avaliados. Ao ativá-la, ela passa a controlar home e pauta; uma edição vazia ou vencida não é preenchida automaticamente pelo catálogo.</p>
     </section>
     <section className="editorial-selection-board" aria-labelledby="editorial-current-title">
       <h3 id="editorial-current-title">Seleção vigente {selection ? `· versão ${selection.version}` : "· ainda não ativada"}</h3>
@@ -395,8 +457,9 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       <div className="selecao-card-thumb">{candidate.imageUrl ? <Image src={candidate.imageUrl} alt={candidate.title} fill sizes="(max-width: 768px) 100vw, 300px" className="selecao-img" /> : <div className="selecao-card-no-img">Sem foto</div>}<span className={`mp-badge-tag ${candidate.marketplace}`}>{marketplaceDef(candidate.marketplace)?.label ?? candidate.marketplace}</span></div>
       <div className="selecao-card-body"><h3 className="selecao-card-title"><a href={`/bizu/${candidate.slug}`} target="_blank" rel="noopener noreferrer">{candidate.title}</a></h3><div className="selecao-card-price"><strong className="current-price">{brl.format(candidate.priceCents / 100)}</strong></div><div className="selecao-card-meta">{candidate.ratingStar !== null && <span>★ {candidate.ratingStar.toFixed(1)}</span>}{candidate.salesCount !== null && <span>{candidate.salesCount} vendas</span>}{candidate.category && <span>{candidate.category}</span>}</div>
       {candidate.assessment && <p className="editorial-card-rationale">{candidate.assessment.publicRationale}</p>}
-      {heroRank !== null && <p className="hero-rank-label">#{heroRank} entre os candidatos aptos à hero{heroRank > HERO_MAX_PRODUCTS ? " · além das três primeiras posições" : ""}</p>}
+      {heroRank !== null && <p className="hero-rank-label">#{heroRank} no ranking individual · a composição final considera clareza e variedade</p>}
       <HeroClassificationDetails classification={classification} />
+      {homepageClarityBlockers(candidate).length > 0 && <p className="editorial-selection-blockers">Para a seleção automática: {homepageClarityBlockers(candidate).join(" ")}</p>}
       {candidate.selectionBlockers.length > 0 && <div className="editorial-selection-blockers"><p>Para incluir numa edição editorial:</p><ul>{candidate.selectionBlockers.map((blocker, index) => <li key={`${index}-${blocker}`}>{blocker}</li>)}</ul></div>}
       <EvidenceDetails candidate={candidate} />
       <div className="selecao-card-actions"><a className="btn-card-link" href={candidate.productUrl} target="_blank" rel="noopener noreferrer nofollow">↗ Conferir anúncio</a><button type="button" disabled={!schemaReady || pending} onClick={() => setEditingId(editingId === candidate.id ? null : candidate.id)}>{candidate.assessment ? "Reavaliar" : "Avaliar"}</button><button type="button" disabled={!schemaReady || pending || !candidate.assessment || candidate.selectionBlockers.length > 0 || draft.length >= EDITORIAL_MAX_PRODUCTS || draft.some((item) => item.productId === candidate.id)} onClick={() => { if (candidate.assessment) changeDraft([...draft, { productId: candidate.id, assessmentId: candidate.assessment.id, destinations: ["home", "pauta"], context: "" }]); }}>Incluir no destaque</button></div>

@@ -3,9 +3,11 @@ import test from "node:test";
 import { productPreview } from "../lib/product-preview.ts";
 import { serveProductPreview } from "../lib/product-preview-response.ts";
 import { createPreviewWarmer } from "../lib/product-preview-warmup.ts";
+import { publishedEditorialStateKey } from "../lib/editorial-selection.ts";
 
 const now = new Date("2026-10-23T12:00:00Z");
 const product = {
+  currency: "BRL", priceType: "exact",
   id: "product-a", slug: "shp-123", title: "Oferta de teste", marketplace: "shopee",
   priceCents: 15990, originalPriceCents: 19990, imageUrl: "https://cf.shopee.com.br/photo.jpg",
   evidenceObservedAt: "2026-10-23T10:00:00Z", previousMinPriceCents: 17990,
@@ -30,6 +32,22 @@ test("same offer yields one URL; visible changes, evidence and freshness change 
   assert.equal(productPreview(product, boundary).stale, false);
   assert.equal(productPreview(product, new Date(boundary.getTime() + 1)).stale, true);
   assert.notEqual(productPreview(product, new Date(boundary.getTime() + 1)).path, first.path);
+});
+
+test("editorial revision and price semantics version previews and imprecise values cannot carry historical badges", () => {
+  const first = productPreview(product, now);
+  for (const patch of [{ displayTitle: "Título revisado" }, { editorialRevisionId: "revision-2" }, { priceType: "from" }, { currency: "USD" }, { originalPriceKind: "derived_from_claim" }]) {
+    assert.notEqual(productPreview({ ...product, ...patch }, now).path, first.path);
+  }
+  for (const priceType of ["from", "range", "unknown"]) assert.equal(productPreview({ ...product, priceType }, now).badge, null);
+  assert.equal(productPreview({ ...product, currency: "USD" }, now).badge, null);
+});
+
+test("selection polling observes revised public copy without changing the homepage edition", () => {
+  const selection = { mode: "editorial", schemaReady: true, homepageEditionId: "same", id: "selection", version: 1, validUntil: null, heroProductIds: [], heroValidUntil: null, products: [{ ...product, editorialRevisionId: "r1", displayTitle: "Nome revisado" }] };
+  const key = publishedEditorialStateKey(selection);
+  assert.equal(publishedEditorialStateKey(structuredClone(selection)), key);
+  assert.notEqual(publishedEditorialStateKey({ ...selection, products: [{ ...selection.products[0], editorialRevisionId: "r2" }] }), key);
 });
 
 test("legacy URLs and private selection hints resolve to the current public image before rendering", async () => {

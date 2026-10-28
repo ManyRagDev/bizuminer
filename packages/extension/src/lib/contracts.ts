@@ -10,6 +10,8 @@ export interface CaptureProduct {
   imageUrl?: string;
   priceCents: number;
   originalPriceCents?: number;
+  currency?: "BRL";
+  priceType?: "exact" | "from" | "unknown";
 }
 
 export interface CapturePage {

@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { db } from "./db.ts";
 import { categoryForTitle } from "../../persistence/src/category.ts";
 import { familyInfoForTitle } from "../../persistence/src/product-family.ts";
+import { browserOfferEvidence } from "./extension-contract.ts";
 import type { BrowserCapturePayload } from "./browser-capture-contract.ts";
 import type { StoredCaptureBatch } from "./capture-batch-db.ts";
 
@@ -139,6 +140,7 @@ export class BrowserCaptureStore {
         if (payload) {
           const products = payload.products.map((p) => ({
             ...p,
+            offerEvidence: browserOfferEvidence(p, p.productUrl, payload.clientCapturedAt),
             category: categoryForTitle(p.title),
             family: familyInfoForTitle(p.title),
           }));
@@ -159,9 +161,9 @@ export class BrowserCaptureStore {
             { captured: number; new_items: number; price_changes: number }[]
           >`
             with input as (
-              select * from jsonb_to_recordset(${tx.json(products.map((p) => ({ ...p, family: p.family ? { ...p.family } : null })))}::jsonb) as x(
+              select * from jsonb_to_recordset(${tx.json(products.map((p) => ({ ...p, family: p.family ? { ...p.family } : null })) as any)}::jsonb) as x(
                 "externalId" text,title text,"productUrl" text,"imageUrl" text,"priceCents" int,"originalPriceCents" int,
-                "ratingStar" numeric,"salesCount" bigint,"salesLabel" text,category text,family jsonb)
+                "ratingStar" numeric,"salesCount" bigint,"salesLabel" text,category text,family jsonb,"offerEvidence" jsonb)
             ), previous as materialized (
               select p.external_id,p.last_price_cents from garimpa.product p join input i on i."externalId"=p.external_id
               where p.tenant_id=${access.tenantId} and p.marketplace='mercadolivre'
@@ -187,7 +189,7 @@ export class BrowserCaptureStore {
               select gen_random_uuid()::text,${access.tenantId},${run.id},up.id,i."priceCents",i."originalPriceCents",
                 case when i."originalPriceCents">i."priceCents" then 1-i."priceCents"::numeric/i."originalPriceCents" else null end,
                 i."ratingStar",i."salesCount",i."salesLabel",now(),i.title,i."productUrl",i."imageUrl",i.category,
-                ${tx.json({ version: 1, source: { marketplace: "mercadolivre", method: "browser", url: payload.page.url, capturedAt: payload.clientCapturedAt } })},
+                i."offerEvidence",
                 ${access.deviceId ? "extension" : "bookmarklet"},${payload.page.url},${payload.clientCapturedAt}::timestamptz
               from up join input i on i."externalId"=up.external_id returning id
             ) select (select count(*)::int from observations) as captured,
