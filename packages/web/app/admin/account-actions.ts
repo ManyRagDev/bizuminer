@@ -1,6 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 import { getPageAuth, resolveAccountContext } from "../../lib/auth.ts";
+import { invalidateRequestReads } from "../../lib/request-read.ts";
 export async function selectAccountAction(tenantId: string) {
   const user = await getPageAuth();
   if (
@@ -17,5 +18,6 @@ export async function selectAccountAction(tenantId: string) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
   });
+  invalidateRequestReads();
   return { ok: true };
 }

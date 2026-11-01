@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { POST as startBatch } from "../lote/route";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 export async function POST(

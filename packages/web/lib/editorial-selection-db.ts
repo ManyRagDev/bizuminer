@@ -130,7 +130,7 @@ type ComparativeEvidenceEventRow = {
   recorded_at: Date | string;
 };
 
-async function validateSuperiorityClaimsInBatch(
+export async function validateSuperiorityClaimsInBatch(
   tx: QueryClient,
   tenantId: string,
   assessments: EditorialAssessment[],
@@ -335,26 +335,34 @@ export async function editorialSelectionSchemaReady(sql: QueryClient): Promise<b
   return rows[0]?.ready === true;
 }
 
-async function candidateRows(sql: QueryClient, tenantId: string, productIds?: string[]): Promise<CandidateRow[]> {
-  return sql.unsafe<CandidateRow[]>(`select f.*, obs.offer_evidence,
+export async function candidateRows(sql: QueryClient, tenantId: string, productIds?: string[]): Promise<CandidateRow[]> {
+  const rows = await sql.unsafe<CandidateRow[]>(`select f.*, obs.offer_evidence,obs.id as latest_observation_id,obs.id as observation_id,
     (obs.offer_evidence->>'variantKey' is not null and not exists (
       select 1 from garimpa.price_observation historical where historical.tenant_id=f.tenant_id
       and historical.product_id=f.id and not ${sameOfferConfigurationSql("obs", "historical")}
     )) as history_comparable
     from garimpa.curation_queue_facts f
-    join lateral (select offer_evidence from garimpa.price_observation o
+    join lateral (select id,offer_evidence from garimpa.price_observation o
       where o.tenant_id=f.tenant_id and o.product_id=f.id
       order by o.observed_at desc, o.id desc limit 1) obs on true
     where f.tenant_id=$1 and ($2::text[] is null or f.id=any($2))
-      and ($2::text[] is not null or (f.status='approved' and f.last_seen_at >= now()-interval '7 days'))
+      and ($2::text[] is not null or (f.status in ('approved','held') and f.last_seen_at >= now()-interval '7 days'))
     order by f.observed_at desc, f.id`, [tenantId, productIds ?? null]);
+  const { selectedOptionFacts } = await import("./offer-option-db.ts");
+  const options = await selectedOptionFacts(sql,tenantId,rows.map(row => row.id));
+  return rows.map(row => options.has(row.id) ? { ...row, ...options.get(row.id),
+    previous_min_price_cents: null, lowest_verified: false } : row);
 }
 
-function toCandidate(row: CandidateRow, assessment: EditorialAssessment | null, now = new Date()): EditorialCandidate {
+export function toCandidate(row: CandidateRow, assessment: EditorialAssessment | null, now = new Date()): EditorialCandidate {
   const evidence = row.offer_evidence && typeof row.offer_evidence === "object" ? row.offer_evidence as Record<string, unknown> : {};
   const material = { title: row.title, imageUrl: row.image_url, category: row.category, productUrl: row.product_url,
     ratingStar: row.rating_star, offerEvidence: row.offer_evidence };
   const candidate: EditorialCandidate = {
+    tenantId:(row as any).tenant_id,offerMaterialInvalid:(row as any).option_material_invalid===true,
+    latestObservationId: (row as any).latest_observation_id, evidenceObservationId:(row as any).observation_id,
+    offerOptionKey: (row as any).option_key, offerOptionLabel: typeof evidence.variantLabel === "string" ? evidence.variantLabel : undefined,
+    offerConditions: (row as any).conditions_label, offerValidUntil: new Date(new Date(row.observed_at).getTime()+48*3_600_000).toISOString(),
     id: row.id, slug: productSlug(row.marketplace, row.external_id), title: row.title,
     marketplace: row.marketplace, imageUrl: row.image_url, category: row.category,
     priceCents: row.price_cents, originalPriceCents: row.original_price_cents,
@@ -374,6 +382,7 @@ function toCandidate(row: CandidateRow, assessment: EditorialAssessment | null, 
     evidenceFingerprint: editorialEvidenceFingerprint(material), assessment, selectionBlockers: [],
   };
   candidate.selectionBlockers = editorialSelectionBlockers(candidate, assessment, now);
+  if((row as any).option_material_invalid)candidate.selectionBlockers.push("As condições desta opção mudaram; confira a oferta novamente.");
   return candidate;
 }
 
@@ -413,7 +422,7 @@ async function hasEditorialEdition(sql: QueryClient, tenantId: string): Promise<
 
 function publicProduct(candidate: EditorialCandidate) {
   const { productUrl: _url, lastSeenAt: _seen, curationStatus: _status, evidenceFingerprint: _key,
-    offerEvidence: _evidence, assessment: _assessment, selectionBlockers: _blockers, ...product } = candidate;
+    tenantId:_tenant,offerMaterialInvalid:_invalid, latestObservationId:_latest, evidenceObservationId:_observation, offerEvidence: _evidence, assessment: _assessment, selectionBlockers: _blockers, ...product } = candidate;
   return product;
 }
 
@@ -425,19 +434,26 @@ function highlightDeadline(candidates: EditorialCandidate[], editionValidUntil?:
   ]))).toISOString();
 }
 
-export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<{
-  schemaReady: boolean; selection: EditorialSelection | null; candidates: EditorialCandidate[]; catalogHeroActive: boolean;
+export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sqlFactory: typeof db = db, reviewProductId?:string): Promise<{
+  schemaReady: boolean; selection: EditorialSelection | null; candidates: EditorialCandidate[]; catalogHeroActive: boolean; publishedProductIds: string[];
 }> {
-  if (!process.env.DATABASE_URL) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false };
+  if (!process.env.DATABASE_URL) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false, publishedProductIds: [] };
   const sql = sqlFactory();
   try {
-    if (!await editorialSelectionSchemaReady(sql)) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false };
+    if (!await editorialSelectionSchemaReady(sql)) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false, publishedProductIds: [] };
     // One repeatable snapshot for desk state and optimistic version.
     return await sql.begin("isolation level repeatable read read only", async (tx) => {
       await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       const selection = await readSelection(tx, tenantId);
       const assessments = await latestAssessments(tx, tenantId);
       const rows = await candidateRows(tx, tenantId);
+      if(reviewProductId && /^[a-zA-Z0-9_-]{1,120}$/.test(reviewProductId) && !rows.some(r=>r.id===reviewProductId)){
+        const extra=await candidateRows(tx,tenantId,[reviewProductId]);
+        rows.push(...extra.filter(row=>['approved','held'].includes(row.status)));
+      }
+      const publications = await tx<{ product_id: string }[]>`select distinct p.product_id from garimpa.publication p
+        join garimpa.affiliate_account a on a.id=p.affiliate_id and a.tenant_id=p.tenant_id and a.status='active'
+        where p.tenant_id=${tenantId} and p.product_id=any(${rows.map(row => row.id)}) and p.channel='web' and p.status='active'`;
       // The latest assessment may be a draft; cover status comes from the current
       // public revision, using this same snapshot and one bounded batch per 200 IDs.
       const presentationFactory = (() => {
@@ -445,9 +461,12 @@ export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sql
         return Object.assign(local, { end: async () => {} });
       }) as typeof db;
       const presentations = await getProductPresentations(rows.map(row => row.id), tenantId, presentationFactory);
-      return { schemaReady: true, selection, candidates: rows.map((row) => ({
+      return { schemaReady: true, selection, publishedProductIds: publications.map(p => p.product_id), candidates: rows.map((row) => ({
         ...toCandidate(row, assessments.get(row.id) ?? null),
         ...(presentations.get(row.id) ?? sourceProductPresentation(row.title)),
+        ...((row as any).option_key ? {currency:(row.offer_evidence as any)?.currency,priceType:(row.offer_evidence as any)?.priceType,
+          originalPriceKind:(row.offer_evidence as any)?.originalPriceKind,priceMinCents:undefined,priceMaxCents:undefined,
+          displayTitle:`${presentations.get(row.id)?.displayTitle ?? row.title} — ${(row.offer_evidence as any)?.variantLabel ?? "opção confirmada"}`} : {}),
       })),
         catalogHeroActive: !selection && !await hasEditorialEdition(tx, tenantId) };
     });
@@ -456,7 +475,7 @@ export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sql
 
 export async function saveEditorialAssessment(input: EditorialAssessmentInput, reviewerId: string, tenantId = scopedTenantId(), sqlFactory: typeof db = db):
 Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: string }> {
-  if (!reviewerId || !process.env.DATABASE_URL) return { ok: false, error: "forbidden" };
+  if (!reviewerId || !process.env.DATABASE_URL || input.expectedTenantId && input.expectedTenantId!==tenantId) return { ok: false, error: "forbidden" };
   const sql = sqlFactory();
   try {
     if (!await editorialSelectionSchemaReady(sql)) return { ok: false, error: "migration_required" };
@@ -474,7 +493,11 @@ Promise<{ ok: true; assessment: EditorialAssessment } | { ok: false; error: stri
         if (input.expectedAssessmentId === undefined || (current[0]?.id ?? null) !== input.expectedAssessmentId) return { ok: false as const, error: "assessment_conflict" };
       }
       const rows = await candidateRows(tx, tenantId, [input.productId]);
-      if (!rows[0] || rows[0].status !== "approved") return { ok: false as const, error: "product_not_approved" };
+      if (!rows[0] || !["approved", "held"].includes(rows[0].status)) return { ok: false as const, error: "product_not_approved" };
+      if (rows[0].status === "held") {
+        const [hold] = await tx`select reason_code from garimpa.product_curation where tenant_id=${tenantId} and product_id=${input.productId}`;
+        if (!["insufficient_evidence","weak_offer","stale_offer"].includes(hold?.reason_code)) return { ok:false as const,error:"product_not_approved" };
+      }
       const candidate = toCandidate(rows[0], null);
       if (candidate.evidenceFingerprint !== input.evidenceFingerprint) return { ok: false as const, error: "evidence_changed" };
 
@@ -584,6 +607,8 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
   const validated = validateEditorialSelection(input);
   if (!validated.ok) return validated;
   if (!reviewerId || !process.env.DATABASE_URL) return { ok: false, error: "forbidden" };
+  const probe=sqlFactory();
+  try { const {recommendationSchemaReady}=await import("./recommendation-db.ts");if(await recommendationSchemaReady(probe))return {ok:false,error:"channel_selection_required"}; }finally{await probe.end();}
   const sql = sqlFactory();
   try {
     if (!await editorialSelectionSchemaReady(sql)) return { ok: false, error: "migration_required" };
@@ -649,7 +674,7 @@ Promise<{ ok: true; selection: EditorialSelection } | { ok: false; error: string
 }
 
 /** Background computation. Public requests consume the stored edition below. */
-export async function computeEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db, previous?: HomepageContinuity, compose = true): Promise<PublishedEditorialSelection> {
+export async function computeEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db, previous?: HomepageContinuity, compose = true, now = new Date()): Promise<PublishedEditorialSelection> {
   const empty: PublishedEditorialSelection = { mode: "unavailable", schemaReady: false, id: null, version: null, validUntil: null, products: [], heroProductIds: [], heroValidUntil: null };
   if (!process.env.DATABASE_URL) return empty;
   const sql = sqlFactory();
@@ -665,7 +690,6 @@ export async function computeEditorialSelection(destination: EditorialDestinatio
         ...value, products: await hydrateProductPresentations(value.products, tenantId, presentationFactory),
       });
       const selection = await readSelection(tx, tenantId);
-      const now = new Date();
       const published = compose ? await tx<{ product_id: string; slug: string }[]>`select distinct on(pub.product_id) pub.product_id,pub.slug
         from garimpa.publication pub join garimpa.affiliate_account a on a.id=pub.affiliate_id and a.tenant_id=pub.tenant_id and a.status='active'
         where pub.tenant_id=${tenantId} and pub.channel='web' and pub.status='active'
@@ -770,8 +794,13 @@ export async function computeEditorialSelection(destination: EditorialDestinatio
   } finally { await sql.end(); }
 }
 
-export async function getPublishedEditorialSelection(destination: EditorialDestination | "all", tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
+export async function getPublishedEditorialSelection(destination: EditorialDestination | "all" | "stories" | "whatsapp", tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<PublishedEditorialSelection> {
+  const { readRecommendationEdition }=await import("./recommendation-db.ts");
+  const { recommendationChannel }=await import("./recommendation-policy.ts");
+  const prepared=await readRecommendationEdition(recommendationChannel(destination),tenantId,sqlFactory);
+  if (prepared) return prepared;
   const { readHomepageEdition } = await import("./homepage-db.ts");
+  if (destination==='stories' || destination==='whatsapp') return {mode:"unavailable",schemaReady:true,id:null,version:null,validUntil:null,products:[],heroProductIds:[],heroValidUntil:null};
   const stored = await readHomepageEdition(destination, tenantId, sqlFactory);
   // Transition until explicit initialization. An initialized empty edition stays empty.
   return stored ?? await computeEditorialSelection(destination, tenantId, sqlFactory, undefined, false);

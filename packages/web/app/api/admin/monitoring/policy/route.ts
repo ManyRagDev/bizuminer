@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { houseMonitoringPolicies, houseMonitoringPolicyEvents, setHouseMonitoringPolicy } from "../../../../../lib/affiliate-monitoring-db";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useAdminDraftState, useAdminFetch } from "./draft-provider.tsx";
+
+import { useEffect, useState } from "react";
 import { composeMessage, COMPOSER_MAX_SELECTION } from "../../lib/composer";
 import { priceHighlight } from "../../lib/deal-signal";
 import { offerPriceLabel } from "../../lib/offer-price";
@@ -51,49 +53,47 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 export default function Composer({ baseUrl }: { baseUrl: string }) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchProduct[]>([]);
+  const fetch = useAdminFetch();
+  const [query, setQuery] = useAdminDraftState("composer.query", "");
+  const [results, setResults] = useAdminDraftState<SearchProduct[]>("composer.results", []);
   const [searching, setSearching] = useState(false);
-  const [searchedFor, setSearchedFor] = useState("");
-  const [selected, setSelected] = useState<SearchProduct[]>([]);
-  const [destination, setDestination] = useState<Destination>("whatsapp");
+  const [searchedFor, setSearchedFor] = useAdminDraftState("composer.searchedFor", "");
+  const [selected, setSelected] = useAdminDraftState<SearchProduct[]>("composer.selected", []);
+  const [destination, setDestination] = useAdminDraftState<Destination>("composer.destination", "whatsapp");
   const [copied, setCopied] = useState(false);
-  const [copying, setCopying] = useState(false);
+  const [copying, setCopying] = useAdminDraftState("composer.copying", false);
   const [copyError, setCopyError] = useState("");
   const message = composeMessage(selected, destination, baseUrl);
-  const selectedIds = useRef(new Set<string>());
+  const [searchState, setSearchState] = useAdminDraftState<{ pendingTerm: string | null; loaded: boolean }>(
+    "composer.searchState", { pendingTerm: null, loaded: false });
+  const [readError, setReadError] = useState("");
 
   useEffect(() => {
-    selectedIds.current = new Set(selected.map((product) => product.id));
-  }, [selected]);
-
-  useEffect(() => {
+    if (searchState.pendingTerm === null && searchState.loaded) return;
+    const controller = new AbortController();
+    const term = searchState.pendingTerm ?? "";
+    setSearching(true); setReadError("");
     void (async () => {
       try {
-        const response = await fetch("/api/deals?limit=24");
-        const payload = (await response.json()) as { products: SearchProduct[] };
-        setResults(payload.products ?? []);
+        const response = await fetch(`/api/deals?limit=24${term ? `&q=${encodeURIComponent(term)}` : ""}`, { signal: controller.signal });
+        if (!response.ok) throw new Error("catalog_failed");
+        const payload = await response.json() as { products: SearchProduct[] };
+        if (controller.signal.aborted) return;
+        setResults(payload.products ?? []); setSearchedFor(term);
+        setSearchState({ pendingTerm: null, loaded: true });
       } catch {
-        setResults([]);
-      }
+        if (!controller.signal.aborted) {
+          setReadError("Não foi possível carregar a busca. Tente novamente.");
+          setSearchState({ pendingTerm: null, loaded: true });
+        }
+      } finally { if (!controller.signal.aborted) setSearching(false); }
     })();
-  }, []);
+    return () => controller.abort();
+  }, [fetch, searchState.pendingTerm, searchState.loaded, setResults, setSearchedFor, setSearchState]);
 
-  async function search(event: React.FormEvent<HTMLFormElement>) {
+  function search(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const term = query.trim();
-    setSearching(true);
-    setSearchedFor(term);
-    try {
-      const url = `/api/deals?limit=24${term ? `&q=${encodeURIComponent(term)}` : ""}`;
-      const response = await fetch(url);
-      const payload = (await response.json()) as { products: SearchProduct[] };
-      setResults(payload.products ?? []);
-    } catch {
-      setResults([]);
-    } finally {
-      setSearching(false);
-    }
+    setSearchState({ pendingTerm: query.trim(), loaded: true });
   }
 
   function toggle(product: SearchProduct) {
@@ -150,7 +150,8 @@ export default function Composer({ baseUrl }: { baseUrl: string }) {
       </form>
 
       <div className="composer-results" aria-live="polite">
-        {results.length === 0 && !searching && (
+        {readError && <p role="alert">{readError}</p>}
+        {results.length === 0 && !searching && !readError && (
           <p className="composer-note">{searchedFor ? "Nenhum produto encontrado para essa busca." : "O catálogo vem do banco — busque ou selecione abaixo."}</p>
         )}
         <ul>

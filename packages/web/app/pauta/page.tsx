@@ -1,3 +1,4 @@
+import { pageAccount } from "../../lib/page-account.ts";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getPageAuth, isAffiliate } from "../../lib/auth";
@@ -29,13 +30,14 @@ export default async function PautaPage() {
     );
   }
 
+  const account=await pageAccount();
   const headerList = await headers();
   const host = headerList.get("host");
   const qrBundle = await getPautaQrBundle(host);
 
   return (
     <AdminShell>
-      <PautaClient qrBundle={qrBundle} />
+      <PautaClient qrBundle={qrBundle} accountKey={account?.tenantId ?? ""} userKey={user.id}/>
     </AdminShell>
   );
 }

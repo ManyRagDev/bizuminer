@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { captureRunHistory, runningRun } from "../../../../lib/admin-db";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 
+export const preferredRegion = "gru1";
+
 export const dynamic = "force-dynamic";
 
 /**

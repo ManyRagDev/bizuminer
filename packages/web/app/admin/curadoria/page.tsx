@@ -34,6 +34,11 @@ import SpotCheckView from "./spot-check-view.tsx";
 import PublishedSelection from "./published-selection.tsx";
 import HomepageMetrics from "./homepage-metrics.tsx";
 import { homepageEngagementReport } from "../../../lib/homepage-db.ts";
+import {AdminDraftScope} from "../draft-provider.tsx";
+import DiscoveryControl from "./discovery-control.tsx";
+import { discoveryPolicies } from "../../../lib/discovery-policy-db.ts";
+import RecommendationControl from "./recommendation-control.tsx";
+import { recommendationDesk } from "../../../lib/recommendation-db.ts";
 import TriageControl from "./triage-control.tsx";
 import BussolaView from "../direcionamento/bussola-view.tsx";
 import PipelineView from "../direcionamento/pipeline-view.tsx";
@@ -70,11 +75,13 @@ async function CurationPage({
   const secondary = aba === "bussola" || aba === "pipeline" || aba === "radar";
   let content;
   if (aba === "selecao") {
-    const [desk, published, eligible, engagement] = await Promise.all([
-      getEditorialSelectionDesk(),
+    const [desk, published, eligible, engagement, recommendations, discovery] = await Promise.all([
+      getEditorialSelectionDesk(scopedTenantId(),undefined,params.revisar),
       getPublishedEditorialSelection("all"),
       automatedTriageAvailability(),
       homepageEngagementReport(scopedTenantId()),
+      recommendationDesk(),
+      discoveryPolicies(),
     ]);
     const state = selectionWorkflowState({
       schemaReady: published.schemaReady,
@@ -86,11 +93,11 @@ async function CurationPage({
       <>
         <section className="curation-next-action">
           <div>
-            <p className="eyebrow">Seleção disponível agora</p>
+            <p className="eyebrow">Vitrine disponível agora</p>
             <h2>{state.label}</h2>
             <p>
               Produtos aprovados entram no catálogo. A seleção define os
-              destaques compartilhados por home e pauta.
+              destaques de cada canal, com maior exigência para indicação direta.
             </p>
           </div>
           <div className="curation-review-actions">
@@ -103,20 +110,22 @@ async function CurationPage({
           </div>
         </section>
         <TriageControl eligible={eligible} />
+        <RecommendationControl candidates={desk.candidates.map(c=>({id:c.id,title:c.title,displayTitle:c.displayTitle,offerOptionLabel:c.offerOptionLabel}))} tenantId={account?.tenantId ?? ""} desk={recommendations} canManage={account?.membershipRole === "owner"}/>
+        {recommendations.ready && <DiscoveryControl tenantId={account?.tenantId ?? ""} policies={discovery} canManage={account?.membershipRole === "owner"}/>}
         <PublishedSelection selection={published} />
         <HomepageMetrics rows={engagement} />
-        <details className="curation-manual-edition">
-          <summary>Personalizar uma edição editorial (opcional)</summary>
+        <details className="curation-manual-edition" open={Boolean(params.revisar)}>
+          <summary>Avaliar produtos e conferir opções</summary>
           <p>
-            Use para avaliar candidatos em detalhe, escolher a ordem e definir
-            os destinos. Ativar uma edição substitui a seleção automática;
-            depois, sua vigência precisa ser mantida.
+            Confira as opções e registre o mérito dos candidatos. A lista e a ordem de cada destino são definidas nos controles de canal acima.
           </p>
-          <SelecaoView
+          <SelecaoView reviewOnly
+            key={params.revisar ?? "editorial-desk"}
             initialCandidates={desk.candidates}
             initialSelection={desk.selection}
             schemaReady={desk.schemaReady}
             catalogHeroActive={desk.catalogHeroActive}
+            initialEditingId={params.revisar}
           />
         </details>
       </>
@@ -329,5 +338,6 @@ export default async function ScopedPage(props: Parameters<typeof CurationPage>[
  const params=await props.searchParams;
  const account=await pageAccount(params?.conta);
  if(!account) return <section><p>Nenhuma conta autorizada disponível.</p></section>;
- return inAccountScope(account,()=>CurationPage(props));
+ const content=await inAccountScope(account,()=>CurationPage(props));
+ return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId ?? ""}>{content}</AdminDraftScope>;
 }

@@ -69,3 +69,14 @@ test("produtos com favoritos/alertas têm vencimento a cada 24h e precedem vitri
   assert.equal(queue[0]?.productId, "fav-1");
 });
 
+test("edição atual é conferida antes de vencer o preço, sem exceder orçamento ou passar favoritos", () => {
+  const edition = candidate("edition", { curationStatus: "approved", inCurrentEdition: true,
+    lastObservedAt: new Date(+now - 25 * 3600000) });
+  assert.equal(monitoringDecision(edition, now).targetHours, 24);
+  assert.equal(monitoringDecision(edition, now).tier, "edition");
+  const pool = [candidate("approved", { curationStatus: "approved" }), edition, candidate("favorite", { activeWatches: 1 })];
+  assert.deepEqual(monitoringQueue(pool, "shopee", 2, now).map(d => d.productId), ["favorite", "edition"]);
+  assert.equal(monitoringQueue(pool, "shopee", 1, now).length, 1);
+  assert.notEqual(monitoringDecision({ ...edition, curationStatus: "rejected" }, now).tier, "edition");
+});
+

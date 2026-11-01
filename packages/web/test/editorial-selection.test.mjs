@@ -95,6 +95,8 @@ test("alterações materiais invalidam a avaliação do anúncio", () => {
     { ...identity, offerEvidence: { ...identity.offerEvidence, packageQuantity: 3 } },
     { ...identity, offerEvidence: { ...identity.offerEvidence, packageContents: ["Cobertores", "saco"] } },
     { ...identity, offerEvidence: { ...identity.offerEvidence, dimensions: "20 × 30 cm" } },
+    { ...identity, offerEvidence: { ...identity.offerEvidence, shipping: "Frete de R$ 20" } },
+    { ...identity, offerEvidence: { ...identity.offerEvidence, conditions: {shipping:"R$ 20",coupon:"CUPOM10",quantity:1} } },
     { ...identity, offerEvidence: { ...identity.offerEvidence, priceMinCents: 1000, priceMaxCents: 4000 } },
   ];
   for (const changed of variations) {
@@ -107,7 +109,7 @@ test("alterações materiais invalidam a avaliação do anúncio", () => {
 test("origem temporal e contadores não alteram configuração; ordem das chaves é irrelevante", () => {
   const updated = {
     ...identity,
-    offerEvidence: { packageContents: identity.offerEvidence.packageContents, packageQuantity: 1, variantKey: "60l", source: { marketplace: "shopee", method: "affiliate_api", url: identity.productUrl, capturedAt: "2026-10-06T15:00:00Z" }, salesCount: 5000, reviewCount: 300, ratingStar: 4.9 },
+    offerEvidence: { packageContents: identity.offerEvidence.packageContents, packageQuantity: 1, variantKey: "60l", verification: {checkedAt:"2026-10-06T15:00:00Z",note:"Conferência atualizada sem alterar os fatos"}, source: { marketplace: "shopee", method: "affiliate_api", url: identity.productUrl, capturedAt: "2026-10-06T15:00:00Z" }, salesCount: 5000, reviewCount: 300, ratingStar: 4.9 },
   };
   assert.equal(editorialEvidenceFingerprint(updated), fingerprint);
   const before = { ...identity, offerEvidence: { ...identity.offerEvidence, priceMinCents: 2029, priceMaxCents: 2029 } };

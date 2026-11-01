@@ -11,6 +11,8 @@ import {
 import { dispatchCaptureBatchForDeviceMember } from "../../../../lib/capture-dispatch";
 import { captureIpKey, captureRateLimited } from "../../../../lib/rate-limit";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 const cors = (request: NextRequest) => ({
   ...extensionCorsHeaders(request.headers.get("origin")),

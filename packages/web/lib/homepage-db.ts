@@ -4,6 +4,7 @@ import { currentAccount, scopedTenantId } from "./account-scope.ts";
 import { withPublicDb } from "./public-offer-db.ts";
 import { HOMEPAGE_POLICY_VERSION, HOMEPAGE_RENEWAL_MS, type HomepageContinuity } from "./homepage-policy.ts";
 import type { EditorialDestination, PublishedEditorialSelection } from "./editorial-selection.ts";
+import { homepageRenewalSchemaReady, recordHomepageRenewalFailure } from "./homepage-renewal-db.ts";
 
 export async function homepageSchemaReady(sql: Pick<ReturnType<typeof db>, "unsafe">) {
   const [row] = await sql.unsafe<{ ready: boolean }[]>("select to_regprocedure('garimpa.read_homepage_edition(text,text)') is not null as ready");
@@ -21,9 +22,18 @@ export async function readHomepageEdition(destination: EditorialDestination | "a
   }, sqlFactory);
 }
 
-type Edition = { id: string; policy_version: string; source_selection_id: string | null; selection: PublishedEditorialSelection; renew_after: Date | string };
+type Edition = { id: string; policy_version: string; source_selection_id: string | null; selection: PublishedEditorialSelection; renewed_at: Date | string; renew_after: Date | string };
 /** Called after ingestion/review or by the existing monitoring worker, never by a public GET. */
-export async function refreshHomepageEdition(tenantId = scopedTenantId(), sqlFactory: typeof db = db, now = new Date(), dryRun = false, initialize = true): Promise<Awaited<ReturnType<typeof refreshHomepageAttempt>>> {
+export async function refreshHomepageEdition(tenantId = scopedTenantId(), sqlFactory: typeof db = db, now = new Date(), dryRun = false, initialize = true): Promise<{ready:boolean;count:number;changed:boolean;blocked?:string;heroCount?:number;products?:Array<{id:string;title:string;category:string|null;marketplace:string}>}> {
+  const { refreshRecommendationEditions }=await import("./recommendation-db.ts");
+  const result=await refreshRecommendationEditions(tenantId,sqlFactory,dryRun,now);
+  if(!result.ready)return {ready:false,changed:false,count:0,blocked:"migration_required"};
+  if(!result.configured)return {ready:true,changed:false,count:0,blocked:"policy_activation_required"};
+  return {ready:true,changed:result.channels.some(c=>c.changed),count:result.channels.reduce((n,c)=>n+c.count,0)};
+}
+
+/** Compatibility/rollback tooling only. New worker and UI never consume old opt-in. */
+export async function refreshLegacyHomepageEdition(tenantId = scopedTenantId(), sqlFactory: typeof db = db, now = new Date(), dryRun = false, initialize = true): Promise<Awaited<ReturnType<typeof refreshHomepageAttempt>>> {
   for (let attempt = 0; ; attempt++) {
     try { return await refreshHomepageAttempt(tenantId, sqlFactory, now, dryRun, initialize); }
     catch (error) { if (attempt >= 2 || (error as { code?: string }).code !== "40001") throw error; }
@@ -36,15 +46,23 @@ async function refreshHomepageAttempt(tenantId: string, sqlFactory: typeof db, n
     if (!await homepageSchemaReady(sql)) return { ready: false, count: 0, changed: false, blocked: "migration_required" };
     return await sql.begin("isolation level repeatable read", async tx => {
       await tx`select set_config('garimpa.tenant_id',${tenantId},true)`;
+      if (!currentAccount()) await tx`select set_config('garimpa.actor_type','worker',true)`;
       // Keep concurrent marketplaces from publishing competing editions.
       await tx`select pg_advisory_xact_lock(hashtextextended(${`homepage:${tenantId}`},0))`;
       const [previous] = await tx<Edition[]>`select * from garimpa.homepage_edition where tenant_id=${tenantId}`;
-      if (!previous && !initialize && !dryRun) return { ready: true, changed: false, count: 0, blocked: "initialization_required" };
+      const renewalReady = await homepageRenewalSchemaReady(tx);
+      const [renewal] = renewalReady ? await tx<{ enabled: boolean }[]>`select enabled from garimpa.homepage_renewal where tenant_id=${tenantId}` : [];
+      const canInitialize = initialize || renewal?.enabled === true;
+      if (!previous && !canInitialize && !dryRun) return { ready: true, changed: false, count: 0, blocked: "initialization_required" };
+      const outcome = async (value: string) => {
+        if (renewalReady && !dryRun) await tx`update garimpa.homepage_renewal set last_attempt_at=${now},outcome=${value} where tenant_id=${tenantId}`;
+      };
       const [source] = await tx<{ id: string }[]>`select id from garimpa.editorial_selection where tenant_id=${tenantId} and status='active'`;
-      const history = await tx<{ product_id: string }[]>`select product_id from garimpa.homepage_product_history where tenant_id=${tenantId}`;
-      const continuity: HomepageContinuity | undefined = previous?.policy_version === HOMEPAGE_POLICY_VERSION && previous.source_selection_id === (source?.id ?? null) ? {
+      const history = await tx<{ product_id: string; last_featured_at?: Date | string }[]>`select * from garimpa.homepage_product_history where tenant_id=${tenantId}`;
+      const continuity: HomepageContinuity | undefined = previous && [HOMEPAGE_POLICY_VERSION, "home-v1"].includes(previous.policy_version) && previous.source_selection_id === (source?.id ?? null) ? {
         productIds: previous.selection.products.map(p => p.id), heroProductIds: previous.selection.heroProductIds,
         seenProductIds: history.map(p => p.product_id), renewAfter: new Date(previous.renew_after).toISOString(),
+        lastFeaturedAt: Object.fromEntries(history.filter(p => p.last_featured_at).map(p => [p.product_id, new Date(p.last_featured_at!).toISOString()])),
       } : undefined;
       // Reuse this transaction and its snapshot; no nested pool or duplicate computation per destination.
       const localFactory = (() => {
@@ -54,11 +72,12 @@ async function refreshHomepageAttempt(tenantId: string, sqlFactory: typeof db, n
         return proxy;
       }) as typeof db;
       const { computeEditorialSelection } = await import("./editorial-selection-db.ts");
-      const selection = await computeEditorialSelection("all", tenantId, localFactory, continuity);
+      const selection = await computeEditorialSelection("all", tenantId, localFactory, continuity, true, now);
       selection.homepageReady = true;
       const ids = selection.products.map(p => p.id);
-      if (!dryRun && !previous && (!initialize || (selection.mode === "catalog" && !ids.length))) {
-        return { ready: true, changed: false, count: ids.length, blocked: !initialize ? "initialization_required" : "no_qualified_products" };
+      if (!dryRun && !previous && (selection.mode === "catalog" && !ids.length)) {
+        await outcome("awaiting_review");
+        return { ready: true, changed: false, count: ids.length, blocked: "no_qualified_products" };
       }
       const material = ids.length ? await tx<any[]>`select p.id,p.product_url,o.id as observation_id,
         o.observed_at,p.last_seen_at,a.id as assessment_id,a.assessment,
@@ -93,18 +112,26 @@ async function refreshHomepageAttempt(tenantId: string, sqlFactory: typeof db, n
       selection.homepageEditionId = editionId;
       const renewing = !continuity || now >= new Date(continuity.renewAfter);
       const renewAfter = renewing ? new Date(now.getTime() + HOMEPAGE_RENEWAL_MS) : new Date(continuity.renewAfter);
+      selection.renewedAt = renewing ? now.toISOString() : new Date(previous.renewed_at).toISOString();
+      selection.renewAfter = renewAfter.toISOString();
       if (dryRun) return { ready: true, changed, count: ids.length, heroCount: selection.heroProductIds.length,
         products: selection.products.map(p => ({ id: p.id, title: p.title, category: p.category, marketplace: p.marketplace })) };
       await tx`insert into garimpa.homepage_edition(tenant_id,id,policy_version,source_selection_id,renewed_at,renew_after,selection,inputs,dependencies)
-        values(${tenantId},${editionId},${HOMEPAGE_POLICY_VERSION},${selection.id},${now},${renewAfter},${JSON.stringify(selection)}::jsonb,${tx.json(inputs)},${JSON.stringify(dependencies)}::jsonb)
+        values(${tenantId},${editionId},${HOMEPAGE_POLICY_VERSION},${selection.id},${now},${renewAfter},${tx.json(selection as unknown as Parameters<typeof tx.json>[0])},${tx.json(inputs)},${tx.json(dependencies as Parameters<typeof tx.json>[0])})
         on conflict(tenant_id) do update set id=excluded.id,policy_version=excluded.policy_version,source_selection_id=excluded.source_selection_id,
           renewed_at=case when ${renewing} then excluded.renewed_at else homepage_edition.renewed_at end,renew_after=excluded.renew_after,
           refreshed_at=now(),selection=excluded.selection,inputs=excluded.inputs,dependencies=excluded.dependencies`;
       const homeIds = inputs.filter(input => input.destinations.includes("home")).map(input => input.productId);
-      if (homeIds.length) await tx`insert into garimpa.homepage_product_history(tenant_id,product_id)
-        select ${tenantId},unnest(${homeIds}::text[]) on conflict do nothing`;
+      if (homeIds.length) {
+        if (renewalReady) await tx`insert into garimpa.homepage_product_history(tenant_id,product_id,first_featured_at,last_featured_at)
+          select ${tenantId},unnest(${homeIds}::text[]),${now},${now} on conflict(tenant_id,product_id) do update set last_featured_at=excluded.last_featured_at`;
+        else await tx`insert into garimpa.homepage_product_history(tenant_id,product_id)
+          select ${tenantId},unnest(${homeIds}::text[]) on conflict do nothing`;
+      }
+      await outcome(selection.mode === "editorial" ? "manual_edition" : !ids.length ? "awaiting_review" : changed ? "published" : "unchanged");
       await tx`delete from garimpa.homepage_engagement where tenant_id=${tenantId} and created_at<now()-interval '7 days'`;
-      return { ready: true, changed, count: ids.length, heroCount: selection.heroProductIds.length };
+      return { ready: true, changed, count: ids.length, heroCount: selection.heroProductIds.length,
+        ...(selection.mode === "catalog" && !ids.length ? { blocked: "no_qualified_products" } : {}) };
     });
   } finally { await sql.end(); }
 }
@@ -112,7 +139,11 @@ async function refreshHomepageAttempt(tenantId: string, sqlFactory: typeof db, n
 /** Failure to refresh never reopens a withdrawn/expired item: reads fail closed. */
 export async function refreshHomepageAfterChange(tenantId = scopedTenantId(), initialize = false) {
   try { return await refreshHomepageEdition(tenantId, undefined, new Date(), false, initialize); }
-  catch { console.error("homepage_refresh_failed", { tenantId }); return { ready: false, count: 0, changed: false }; }
+  catch {
+    console.error("homepage_refresh_failed", { tenantId });
+    await recordHomepageRenewalFailure(tenantId).catch(() => {});
+    return { ready: false, count: 0, changed: false };
+  }
 }
 
 export async function homepageEngagementReport(tenantId = scopedTenantId(), sqlFactory: typeof db = db) {

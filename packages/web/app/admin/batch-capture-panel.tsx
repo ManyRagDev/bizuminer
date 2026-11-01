@@ -1,5 +1,7 @@
 "use client";
 
+import { useAdminDraftState, useResumeAfterOperation, useAdminFetch } from "./draft-provider.tsx";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CaptureBatch as Batch } from "../../lib/capture-batch-db";
@@ -34,27 +36,33 @@ export default function BatchCapturePanel({
 }: {
   marketplaces?: CaptureMarketplaceOption[];
 }) {
+  const fetch = useAdminFetch();
   const router = useRouter();
-  const [pages, setPages] = useState(1);
-  const [selected, setSelected] = useState<Record<MarketplaceSlug, boolean>>(
-    () => ({
+  const [pages, setPages] = useAdminDraftState("batch-capture-panel.pages", 1);
+  const [selected, setSelected] = useAdminDraftState<Record<MarketplaceSlug, boolean>>("batch-capture-panel.selected", () => ({
       mercadolivre: false,
       shopee:
         marketplaces.find((item) => item.slug === "shopee")?.enabled ?? false,
       aliexpress:
         marketplaces.find((item) => item.slug === "aliexpress")?.enabled ??
         false,
-    }),
-  );
+    }));
   const [batch, setBatch] = useState<Batch | null>(null);
   const [skipped, setSkipped] = useState<
     Array<{ marketplace: string; reason: string }>
   >([]);
-  const [requesting, setRequesting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [browserBlock, setBrowserBlock] = useState("");
-  const [browserBusy, setBrowserBusy] = useState(false);
+  const [requesting, setRequesting] = useAdminDraftState("batch-capture-panel.requesting", false);
+  const [message, setMessage] = useAdminDraftState("batch-capture-panel.message", "");
+  const [browserBlock, setBrowserBlock] = useAdminDraftState("batch-capture-panel.browserBlock", "");
+  const [browserBusy, setBrowserBusy] = useAdminDraftState("batch-capture-panel.browserBusy", false);
   const [copiedBookmarklet, setCopiedBookmarklet] = useState(false);
+  useResumeAfterOperation(requesting || browserBusy, async () => {
+    try {
+      const response = await fetch("/api/admin/rodagem/lote", { cache: "no-store" });
+      const result = await response.json();
+      if (result.ok && result.batch) setBatch(result.batch);
+    } catch { /* The server still owns any accepted operation. */ }
+  });
   useEffect(() => {
     const controller = new AbortController();
     void fetch("/api/admin/rodagem/lote", {
@@ -63,44 +71,51 @@ export default function BatchCapturePanel({
     })
       .then((res) => res.json())
       .then((data: { ok: boolean; batch?: Batch }) => {
-        if (data.ok && data.batch)
+        if (!controller.signal.aborted && data.ok && data.batch)
           setBatch((current) => current ?? data.batch!);
       })
       .catch(() => {
         /* A new capture can still be requested; the server owns the lock. */
       });
     return () => controller.abort();
-  }, []);
+  }, [fetch]);
 
   useEffect(() => {
     if (!batch || batch.status !== "running") return;
-    let cancelled = false;
-    const timer = window.setTimeout(async () => {
+    const controller = new AbortController();
+    let inFlight = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const poll = async () => {
+      if (inFlight || controller.signal.aborted || document.visibilityState === "hidden") return;
+      inFlight = true;
       try {
         const res = await fetch(
           `/api/admin/rodagem/lote?id=${encodeURIComponent(batch.id)}`,
-          { cache: "no-store", signal: AbortSignal.timeout(15_000) },
+          { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]) },
         );
         const data = (await res.json()) as { ok: boolean; batch?: Batch };
-        if (!cancelled && data.ok && data.batch) {
+        if (!controller.signal.aborted && data.ok && data.batch) {
           setBatch(data.batch);
           if (data.batch.status !== "running") router.refresh();
-        } else if (!cancelled)
+        } else if (!controller.signal.aborted)
           setBatch((current) => (current ? { ...current } : null));
       } catch {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setMessage(
             "Sem atualização do servidor. A execução continua sendo acompanhada pelo lote.",
           );
           setBatch((current) => (current ? { ...current } : null));
         }
-      }
-    }, 5000);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
+      } finally { inFlight = false; }
     };
-  }, [batch, router]);
+    if (document.visibilityState !== "hidden") timer = setTimeout(() => void poll(), 5000);
+    const resume = () => { clearTimeout(timer); void poll(); };
+    document.addEventListener("visibilitychange", resume);
+    return () => {
+      controller.abort(); clearTimeout(timer);
+      document.removeEventListener("visibilitychange", resume);
+    };
+  }, [batch, router, fetch]);
 
   const triage = batch?.triage;
   const automatedOptions = marketplaces.filter(

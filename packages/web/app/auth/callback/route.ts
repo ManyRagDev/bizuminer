@@ -3,6 +3,8 @@ import { mergeAnonymousIntoAuth } from "../../../lib/auth-merge";
 import { sanitizeNext } from "../../../lib/auth-contract";
 import { createRouteSupabase } from "../../../lib/supabase";
 
+export const preferredRegion = "gru1";
+
 export const dynamic = "force-dynamic";
 
 /**

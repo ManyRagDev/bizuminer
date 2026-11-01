@@ -9,6 +9,8 @@ import {
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { batchCapturePlan } from "../../../../../lib/batch-capture-plan";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

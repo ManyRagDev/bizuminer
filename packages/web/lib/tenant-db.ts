@@ -1,6 +1,7 @@
 import {
   currentAccount,
   authorizeAccountTransaction,
+  releaseAccountTransaction,
 } from "./account-scope.ts";
 /**
  * Integridade de tenant e contexto de conta (EP-10A / C-01) — helper transacional e validação pura.
@@ -43,8 +44,10 @@ export async function withAccountDb<T>(
   const sql = sqlFactory();
   try {
     return (await sql.begin(async (tx) => {
-      await authorizeAccountTransaction(tx, context);
-      return await fn(tx);
+      try {
+        await authorizeAccountTransaction(tx, context);
+        return await fn(tx);
+      } finally { releaseAccountTransaction(tx); }
     })) as unknown as T;
   } finally {
     await sql.end();

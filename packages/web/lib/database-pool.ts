@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { authorizeAccountTransaction } from "./account-scope.ts";
+import { authorizeAccountTransaction, releaseAccountTransaction } from "./account-scope.ts";
 import type { AccountContext } from "./account-context.ts";
 
 // Each server instance shares the Supabase session pool with every other
@@ -72,8 +72,10 @@ export function databaseHandle(pool: postgres.Sql, context?: AccountContext): po
         assertOpen();
         const callback = args.pop();
         return (target.begin as Function)(...args, async (tx: any) => {
-          if (context) await authorizeAccountTransaction(tx, context);
-          return callback(tx);
+          try {
+            if (context) await authorizeAccountTransaction(tx, context);
+            return await callback(tx);
+          } finally { releaseAccountTransaction(tx); }
         });
       };
       const value = Reflect.get(target, key, target);

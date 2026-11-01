@@ -3,6 +3,8 @@ import { resolveMemberIdentity, sinkJson } from "../../../../lib/api-auth";
 import { parseFavoriteBulkPayload, parseFavoritePayload } from "../../../../lib/member-contract";
 import { bulkFavorites, ensureUser, savedProductIds, setFavorite } from "../../../../lib/member-db";
 
+export const preferredRegion = "gru1";
+
 async function safeJson(request: NextRequest): Promise<unknown> {
   try {
     return await request.json();

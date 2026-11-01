@@ -1,5 +1,7 @@
 "use client";
 
+import { useAdminDraftState, useResumeAfterOperation, useAdminFetch } from "./draft-provider.tsx";
+
 import { useState } from "react";
 
 type Device = {
@@ -20,10 +22,14 @@ const dateTime = (iso: string) =>
  * bruto), último uso e status; permite revogar. Só o dono vê.
  */
 export default function Devices() {
+  const fetch = useAdminFetch();
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [message, setMessage] = useState("");
-  const [pairingCode, setPairingCode] = useState<string | null>(null);
-  const [deviceName, setDeviceName] = useState("");
+  const [pairing, setPairing] = useAdminDraftState<{ code: string; expiresAt: string } | null>("devices.pairing", null,
+    value => value ? Date.parse(value.expiresAt) : null);
+  const pairingCode = pairing?.code ?? null;
+  const [deviceName, setDeviceName] = useAdminDraftState("devices.deviceName", "");
+  const [pending, setPending] = useAdminDraftState("devices.pending", false);
 
   async function load() {
     try {
@@ -35,28 +41,33 @@ export default function Devices() {
       setDevices([]);
     }
   }
+  useResumeAfterOperation(pending, load);
 
   async function generateCode() {
+    if (pending) return;
+    setPending(true);
     setMessage("");
-    setPairingCode(null);
+    setPairing(null);
     try {
       const response = await fetch("/api/extension/pairing-codes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deviceName: deviceName.trim() || "Navegador" }),
       });
-      const payload = (await response.json()) as { ok: boolean; pairingCode?: string; error?: string };
+      const payload = (await response.json()) as { ok: boolean; pairingCode?: string; expiresAt?: string; error?: string };
       if (payload.ok && payload.pairingCode) {
-        setPairingCode(payload.pairingCode);
+        setPairing({ code: payload.pairingCode, expiresAt: payload.expiresAt ?? new Date(Date.now() + 600_000).toISOString() });
       } else {
         setMessage(payload.error === "rate_limited" ? "Limite de códigos por hora atingido." : "Não foi possível gerar o código.");
       }
     } catch {
       setMessage("Falha de rede ao gerar o código.");
-    }
+    } finally { setPending(false); }
   }
 
   async function revoke(deviceId: string) {
+    if (pending) return;
+    setPending(true);
     setMessage("");
     try {
       const response = await fetch("/api/admin/extension/devices", {
@@ -69,7 +80,7 @@ export default function Devices() {
       await load();
     } catch {
       setMessage("Falha de rede ao revogar.");
-    }
+    } finally { setPending(false); }
   }
 
   if (devices === null) {
@@ -92,7 +103,7 @@ export default function Devices() {
           onChange={(event) => setDeviceName(event.target.value)}
           placeholder="nome do dispositivo (ex.: Chrome do notebook)"
         />
-        <button type="button" onClick={() => void generateCode()}>gerar código de pareamento</button>
+        <button type="button" disabled={pending} onClick={() => void generateCode()}>{pending ? "Processando…" : "gerar código de pareamento"}</button>
       </div>
       {pairingCode && (
         <p className="admin-message" role="status">
@@ -124,7 +135,7 @@ export default function Devices() {
                 <td>{device.revokedAt ? "revogado" : "ativo"}</td>
                 <td>
                   {!device.revokedAt && (
-                    <button type="button" onClick={() => void revoke(device.id)}>revogar</button>
+                    <button type="button" disabled={pending} onClick={() => void revoke(device.id)}>revogar</button>
                   )}
                 </td>
               </tr>

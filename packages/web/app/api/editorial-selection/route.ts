@@ -1,6 +1,8 @@
 import { getPublishedEditorialSelection } from "../../../lib/editorial-selection-db";
 import { publishedEditorialStateKey } from "../../../lib/editorial-selection";
 
+export const preferredRegion = "gru1";
+
 export const dynamic = "force-dynamic";
 
 /** Public edition state; no assessments, evidence or internal scores. */

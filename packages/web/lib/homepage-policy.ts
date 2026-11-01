@@ -4,8 +4,9 @@ import { rankHeroCandidates } from "./hero-ranking.ts";
 import type { EditorialCandidate } from "./editorial-selection.ts";
 
 /** Initial editorial parameters. Changes must be evaluated against impressions. */
-export const HOMEPAGE_POLICY_VERSION = "home-v1";
+export const HOMEPAGE_POLICY_VERSION = "home-v2";
 export const HOMEPAGE_RENEWAL_MS = 24 * 3_600_000;
+export const HOMEPAGE_RETURN_INTERVAL_MS = 48 * 3_600_000;
 export const HOMEPAGE_LIMIT = 24;
 export const HOMEPAGE_WINDOW = 12;
 export const HOMEPAGE_FAMILY_LIMIT = 2;
@@ -13,6 +14,7 @@ export interface HomepageContinuity {
   productIds: string[];
   heroProductIds: string[];
   seenProductIds: string[];
+  lastFeaturedAt?: Record<string, string>;
   renewAfter: string;
 }
 
@@ -27,11 +29,13 @@ export function homepageClarityBlockers(candidate: Pick<EditorialCandidate, "off
   const quantity = Number.isSafeInteger(evidence.packageQuantity) && evidence.packageQuantity > 0;
   const exact = evidence.priceType === "exact" || (Number.isSafeInteger(evidence.priceMinCents) && evidence.priceMinCents > 0 && evidence.priceMinCents === evidence.priceMaxCents);
   const clearContents = contents || evidence.fieldStates?.packageContents === "not_applicable";
-  if (!verifiedVariant || !clearContents || (!quantity && evidence.fieldStates?.packageQuantity !== "not_applicable") || !exact
-    || (evidence.version === 2 && evidence.currency !== "BRL")) {
-    return ["Confirme configuração, conteúdo, quantidade e preço exato da compra, ou registre uma avaliação editorial completa."];
-  }
-  return [];
+  return [
+    !verifiedVariant && "Confirme a configuração da compra na fonte.",
+    !clearContents && "Confirme o conteúdo do pacote na fonte.",
+    !quantity && evidence.fieldStates?.packageQuantity !== "not_applicable" && "Confirme a quantidade da compra na fonte.",
+    !exact && "Confirme o preço exato da configuração.",
+    evidence.version === 2 && evidence.currency !== "BRL" && "Confirme que o preço está em reais.",
+  ].filter((issue): issue is string => typeof issue === "string");
 }
 
 export function homepageFamily(candidate: Pick<EditorialCandidate, "id" | "title">): string {
@@ -61,15 +65,27 @@ export function composeHomepage<T extends EditorialCandidate>(candidates: T[], n
   const improves = (entry: typeof ranked[number]) => weakest && (
     (entry.classification.basis === "editorial" && weakest.classification.basis === "catalog")
     || (entry.classification.basis === weakest.classification.basis && (entry.classification.score ?? 0) > (weakest.classification.score ?? 0)));
-  // Previously seen products may return when their evidence genuinely improves.
-  // Recapture alone neither counts as novelty nor displaces an incumbent.
-  const discoveries = renewing ? ranked.filter(entry => !retained.has(entry.candidate.id) && (!seen.has(entry.candidate.id) || improves(entry)))
+  const canReturn = (id: string) => {
+    const last = Date.parse(previous?.lastFeaturedAt?.[id] ?? "");
+    return Number.isFinite(last) && now.getTime() - last >= HOMEPAGE_RETURN_INTERVAL_MS;
+  };
+  // Rotation is among qualified offers of comparable merit, never permission to
+  // substitute weak evidence for novelty. Reviews and catalog scores stay separate.
+  const comparableMerit = (entry: typeof ranked[number]) => !weakest || improves(entry)
+    || (entry.classification.basis === weakest.classification.basis
+      && (entry.classification.score ?? 0) >= (weakest.classification.score ?? 0) * 0.85);
+  const discoveries = renewing ? ranked.filter(entry => !retained.has(entry.candidate.id) && comparableMerit(entry)
+    && (!seen.has(entry.candidate.id) || canReturn(entry.candidate.id) || improves(entry)))
     .sort((a, b) => Number(Boolean(improves(b))) - Number(Boolean(improves(a)))
+      || Number(seen.has(a.candidate.id)) - Number(seen.has(b.candidate.id))
+      || (Date.parse(previous?.lastFeaturedAt?.[a.candidate.id] ?? "") || 0) - (Date.parse(previous?.lastFeaturedAt?.[b.candidate.id] ?? "") || 0)
       || rankIndex.get(a.candidate.id)! - rankIndex.get(b.candidate.id)!)
     .slice(0, Math.ceil(Math.min(HOMEPAGE_LIMIT, ranked.length) / 4)) : [];
   const replacementIds = new Set(discoveries.map(entry => entry.candidate.id));
   const retainCount = renewing ? Math.max(0, Math.min(HOMEPAGE_LIMIT, previousIds.length) - discoveries.length) : previousIds.length;
-  const priorityIds = [...previousIds.slice(0, retainCount), ...replacementIds];
+  const retainIds = new Set(previousIds.map(id => byId.get(id)!).sort((a, b) => rankIndex.get(a.candidate.id)! - rankIndex.get(b.candidate.id)!)
+    .slice(0, retainCount).map(entry => entry.candidate.id));
+  const priorityIds = [...previousIds.filter(id => retainIds.has(id)), ...replacementIds];
   const priority = new Map(priorityIds.map((id, index) => [id, index]));
   const chosen: typeof ranked = [];
   const remaining = previousIds.length >= HOMEPAGE_LIMIT && renewing

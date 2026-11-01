@@ -47,3 +47,16 @@ As três aplicações usaram `lock_timeout=5s` e `statement_timeout=60s`. Foram 
 A aplicação do esquema não publica textos editoriais nem preenche moedas/configurações antigas por suposição. A simulação da primeira edição retornou zero produtos aptos, por isso ela não foi inicializada: o catálogo permanece disponível pelo caminho de transição. Antes de inicializar, publicar uma seleção válida e conferir `refresh-homepage.ts --tenant local --initialize` sem `--execute`.
 
 Em futuras aplicações, conferir nomes e versões deste mapeamento; não reaplicar os arquivos só porque os timestamps locais diferem do histórico remoto.
+
+## Renovação contínua da pauta — 01/11/2026
+
+`20261101125432_renew_editorial_pauta.sql` foi aplicada via MCP no projeto `spbuwcwmxlycchuwhfir` como `20261101130216_renew_editorial_pauta`. Acrescenta histórico de última presença e estado privado de habilitação/tentativa, com RLS por conta e sem privilégios públicos. Conferida antes em PGlite e PostgreSQL 17.6 local. A conta da casa habilitou a rotina pelo painel, mas continua aguardando produtos aptos; isso não equivale a criar uma edição nem a publicar o código web/worker novo. Veja o estado completo no plano de integração da captura, curadoria, vitrine e pauta.
+
+
+## Pauta melhorada — candidata local de 01/11/2026, ainda não aplicada remotamente
+
+`20261101193221_improve_editorial_recommendations.sql` foi gerada com o CLI oficial e validada em PostgreSQL 17.6 descartável. Acrescenta opção de compra, canais/edições/arquivo, confirmação de divulgação e descoberta por conta, com RLS privado e projeções públicas restritas. Não contém backfill de variantes desconhecidas nem ativa políticas por conta.
+
+**Dependência de publicação:** a unicidade antiga de observação por rodada/produto é substituída pela identidade com opção. Integrar os escritores compatíveis, encerrar jobs antigos e reiniciar as instâncias após a migration; código antigo com o alvo de conflito anterior falha depois da troca. Não usar rollback que reintroduza esse escritor sobre o novo esquema nem apagar observações para reverter a funcionalidade. As flags novas exigem configuração explícita. A configuração anterior de renovação não as habilita.
+
+O [registro da integração](./plano-integracao-captura-curadoria-vitrine-pauta.md#integração-externa-ainda-pendente) contém a sequência e os limites reais das fontes. A publicação dessa candidata e a primeira ativação com dados reais permanecem pendentes; o diagnóstico remoto desta execução não alterou o banco.

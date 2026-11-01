@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 import { decodeManualCaptureBlock, persistManualCapture } from "../../../../lib/manual-capture";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 /**

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useAdminDraftState, useAdminDraftTransition, useResumeAfterOperation, useAdminFetch } from "./draft-provider.tsx";
+
+import { useState } from "react";
 import {
   createAccountInvitationAction,
   getAccountOnboardingStatusAction,
@@ -42,18 +44,20 @@ const dateTime = (iso: string) =>
  * ao client.
  */
 export default function Affiliates({ initialAccounts }: { initialAccounts: AccountSummary[] }) {
+  const fetch = useAdminFetch();
   const [accounts, setAccounts] = useState(initialAccounts);
-  const [trackingId, setTrackingId] = useState("");
-  const [toolId, setToolId] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"operator" | "owner">("operator");
-  const [invitationResult, setInvitationResult] = useState<{ rawToken: string; expiresAt: string } | null>(null);
+  const [trackingId, setTrackingId] = useAdminDraftState("affiliates.trackingId", "");
+  const [toolId, setToolId] = useAdminDraftState("affiliates.toolId", "");
+  const [busy, setBusy] = useAdminDraftState("affiliates.busy", false);
+  const [message, setMessage] = useAdminDraftState("affiliates.message", "");
+  const [inviteEmail, setInviteEmail] = useAdminDraftState("affiliates.inviteEmail", "");
+  const [inviteRole, setInviteRole] = useAdminDraftState<"operator" | "owner">("affiliates.inviteRole", "operator");
+  const [invitationResult, setInvitationResult] = useAdminDraftState<{ rawToken: string; expiresAt: string } | null>("affiliates.invitationResult", null,
+    value => value ? Date.parse(value.expiresAt) : null);
   const [onboardingStatus, setOnboardingStatus] = useState<any>(null);
-  const [suspensionReason, setSuspensionReason] = useState("");
-  const [targetTenantToSuspend, setTargetTenantToSuspend] = useState("");
-  const [pending, startTransition] = useTransition();
+  const [suspensionReason, setSuspensionReason] = useAdminDraftState("affiliates.suspensionReason", "");
+  const [targetTenantToSuspend, setTargetTenantToSuspend] = useAdminDraftState("affiliates.targetTenantToSuspend", "");
+  const [pending, startTransition] = useAdminDraftTransition("affiliates.pending");
   const configurableAccount = accounts[0] ?? null;
 
   async function refresh() {
@@ -61,6 +65,8 @@ export default function Affiliates({ initialAccounts }: { initialAccounts: Accou
     const payload = (await response.json()) as AffiliatesResponse;
     if (payload.ok && payload.accounts) setAccounts(payload.accounts);
   }
+
+  useResumeAfterOperation(busy || pending, refresh);
 
   async function saveConfig(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

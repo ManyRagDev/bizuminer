@@ -1,3 +1,4 @@
+import { confirmedOfferDetail } from "../../../lib/confirmed-offer-db.ts";
 import { createHash } from "node:crypto";
 import {
   affiliateLink,
@@ -12,6 +13,8 @@ import { marketplaceDef, parseProductSlug } from "../../../lib/marketplaces";
 import { validateCampaignTokenForSlug, type CampaignTokenValidationResult } from "../../../lib/campaign-attribution";
 import { publicProjectionReady } from "../../../lib/public-offer-db";
 import { publicGo } from "../../../lib/public-go";
+
+export const preferredRegion = "gru1";
 
 /**
  * Telemetria própria de cliques (engenharia-reversa.md §6):
@@ -40,6 +43,8 @@ export async function GET(
   const { slug } = await params;
   const url = new URL(req.url);
   const campaignCode = url.searchParams.get("c");
+  const option=url.searchParams.get("opcao");
+  if (option && !await confirmedOfferDetail(slug,option)) return new Response("Esta opção precisa de nova conferência",{status:404,headers:{"Cache-Control":"no-store"}});
   if (await publicProjectionReady()) return publicGo(req, slug, campaignCode);
 
   let campaignAttribution: CampaignTokenValidationResult | null = null;

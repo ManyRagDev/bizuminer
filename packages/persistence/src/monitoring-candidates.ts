@@ -7,9 +7,11 @@ interface CandidateRow {
   external_id: string;
   title: string;
   last_observed_at: Date;
+  first_seen_at:Date;
   active_watches: number;
   clicks_7d: number;
   curation_status: string | null;
+  reason_code: string | null;
 }
 
 export interface MonitoringProduct extends MonitoringCandidate {
@@ -42,10 +44,10 @@ export async function loadMonitoringCandidates(sql: Sql, tenantId: string, marke
       group by pub.product_id
     )
     select p.id as product_id, p.marketplace, p.external_id, p.title,
-      p.last_seen_at as last_observed_at,
+      p.last_seen_at as last_observed_at,p.first_seen_at,
       coalesce(w.active_watches, 0)::int as active_watches,
       coalesce(c.clicks_7d, 0)::int as clicks_7d,
-      pc.status as curation_status
+      pc.status as curation_status, pc.reason_code
     from garimpa.product p
     left join watches w on w.product_id = p.id
     left join clicks c on c.product_id = p.id
@@ -59,16 +61,37 @@ export async function loadMonitoringCandidates(sql: Sql, tenantId: string, marke
   const [ready]=await sql<{ready:boolean}[]>`select to_regclass('garimpa.opportunity') is not null as ready`;
   const prioritized=ready?.ready ? await sql<{product_id:string;state:"monitored"|"prioritized"}[]>`select distinct o.product_id,o.state from garimpa.opportunity o join garimpa.audience_policy_version v on v.id=o.policy_version_id and v.tenant_id=o.tenant_id join garimpa.audience_policy p on p.id=v.policy_id and p.tenant_id=v.tenant_id and p.status='active' and p.current_version=v.version where o.tenant_id=${tenantId} and o.state in ('monitored','prioritized') and o.valid_until>now()` : [];
   const priorityIds=new Map(prioritized.map(o=>[o.product_id,o.state]));
+  const [homepage] = await sql<{ ready: boolean }[]>`select to_regclass('garimpa.homepage_edition') is not null as ready`;
+  const edition = homepage?.ready ? await sql<{ product_id: string }[]>`select p->>'id' as product_id
+    from garimpa.homepage_edition h cross join lateral jsonb_array_elements(h.selection->'products') p
+    where h.tenant_id=${tenantId}` : [];
+  const editionIds = new Set(edition.map(p => p.product_id));
+  const [assessmentSchema] = await sql<{ready:boolean}[]>`select to_regclass('garimpa.editorial_assessment') is not null as ready`;
+  const assessed = assessmentSchema?.ready ? await sql<{product_id:string;assessment:any}[]>`select distinct on(product_id) product_id,assessment
+    from garimpa.editorial_assessment where tenant_id=${tenantId} and coalesce(assessment->>'schemaVersion','1')<>'2'
+    order by product_id,created_at desc,id desc` : [];
+  const meritIds = new Set(assessed.filter(row => ['audience','utility'].every(key => ['adequate','strong','exceptional'].includes(row.assessment?.dimensions?.[key]?.level))).map(row => row.product_id));
+  const [channels] = await sql<{ready:boolean}[]>`select to_regclass('garimpa.recommendation_edition') is not null as ready`;
+  if (channels?.ready) {
+    const scoped = await sql<{product_id:string}[]>`select value->>'id' as product_id from garimpa.recommendation_edition e
+      cross join lateral jsonb_array_elements(e.selection->'products') where e.tenant_id=${tenantId}`;
+    scoped.forEach(row => editionIds.add(row.product_id));
+  }
   return rows.map((row) => ({
     productId: row.product_id,
     opportunityState:priorityIds.get(row.product_id),
     marketplace: row.marketplace as MonitorMarketplace,
     externalId: row.external_id,
     title: row.title,
-    lastObservedAt: row.last_observed_at,
+    lastObservedAt: row.last_observed_at,firstSeenAt:row.first_seen_at,
     activeWatches: row.active_watches,
     clicks7d: row.clicks_7d,
     curationStatus: row.curation_status,
+    curationReason: row.reason_code,
+    // A recorded useful product, recent interest, or a deliberately monitored
+    // opportunity justifies formation. Missing data alone does not.
+    hasEditorialMerit: meritIds.has(row.product_id) || row.clicks_7d > 0 || priorityIds.has(row.product_id),
+    inCurrentEdition: editionIds.has(row.product_id),
   }));
 }
 

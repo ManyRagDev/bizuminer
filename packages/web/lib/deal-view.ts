@@ -2,6 +2,10 @@ import type { DealRow } from "./db";
 import type { ProductPresentation } from "./product-presentation.ts";
 
 export type VitrineProduct = Partial<ProductPresentation> & {
+  offerOptionKey?: string;
+  offerOptionLabel?: string;
+  offerConditions?: string;
+  offerValidUntil?: string;
   id: string; slug: string; title: string; priceCents: number; originalPriceCents: number | null;
   previousMinPriceCents: number | null; discountPercent: number | null; imageUrl: string | null;
   ratingStar: number | null; salesLabel: string | null; salesCount: number | null;
@@ -11,6 +15,7 @@ export type VitrineProduct = Partial<ProductPresentation> & {
 
 export function toVitrineProduct(deal: DealRow): VitrineProduct {
   return {
+    offerOptionKey:deal.offerOptionKey,offerOptionLabel:deal.offerOptionLabel,offerConditions:deal.offerConditions,offerValidUntil:deal.offerValidUntil,
     id: deal.id, slug: deal.slug, title: deal.displayTitle ?? deal.title, priceCents: deal.price_cents,
     displayTitle: deal.displayTitle, sourceTitle: deal.sourceTitle ?? deal.title, titleOrigin: deal.titleOrigin,
     editorialRevisionId: deal.editorialRevisionId, editorialReviewedAt: deal.editorialReviewedAt,

@@ -1,11 +1,12 @@
 "use client";
 
+import { optionDetailPath } from "../../lib/offer-option.ts";
 import { useEffect, useRef, useState } from "react";
 import { copyToClipboard } from "../../lib/clipboard";
 import { productShareUrl } from "../../lib/product-share";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
 
-export default function CopyProductLink({ slug, title, previewUrl }: { slug: string; title: string; previewUrl?: string }) {
+export default function CopyProductLink({ slug, title, previewUrl,optionKey }: { optionKey?:string;slug: string; title: string; previewUrl?: string }) {
   const [copied, setCopied] = useState(false);
   const previewWarmer = useRef<ReturnType<typeof createPreviewWarmer> | null>(null);
 
@@ -22,7 +23,7 @@ export default function CopyProductLink({ slug, title, previewUrl }: { slug: str
 
   async function copy() {
     if (previewUrl) void previewWarmer.current?.warm(previewUrl, true);
-    const url = productShareUrl(slug);
+    const url = optionKey ? new URL(optionDetailPath(slug,optionKey),productShareUrl(slug)).href : productShareUrl(slug);
     const ok = await copyToClipboard(url);
     if (!ok) {
       window.prompt("Copie o link do produto:", url);

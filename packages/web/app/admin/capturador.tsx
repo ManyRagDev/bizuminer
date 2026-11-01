@@ -1,5 +1,7 @@
 "use client";
 
+import { useAdminDraftState, useAdminFetch } from "./draft-provider.tsx";
+
 import { useState } from "react";
 import { BOOKMARKLET_VERSION } from "../../lib/bookmarklet";
 
@@ -35,9 +37,10 @@ const priceBRL = (cents: number) =>
  * automatizada). O dono opta por usar.
  */
 export default function Capturador({ bookmarkletHref, bookmarkletOk }: { bookmarkletHref: string; bookmarkletOk: boolean }) {
-  const [block, setBlock] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<CaptureResponse | null>(null);
+  const fetch = useAdminFetch();
+  const [block, setBlock] = useAdminDraftState("capturador.block", "");
+  const [busy, setBusy] = useAdminDraftState("capturador.busy", false);
+  const [result, setResult] = useAdminDraftState<CaptureResponse | null>("capturador.result", null);
   const [copiedCode, setCopiedCode] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {

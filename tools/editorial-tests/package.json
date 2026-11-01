@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:recommendations": "node --import tsx recommendation-flow.test.ts",
     "test:homepage": "node --import tsx homepage-flow.test.ts",
+    "test:homepage-native": "node --import tsx homepage-renewal-native.test.ts",
     "test": "node --import tsx integration.test.ts",
     "test:triage-price": "node --import tsx triage-price.test.ts",
     "test:capture-batch": "node --import tsx capture-batch.test.ts",

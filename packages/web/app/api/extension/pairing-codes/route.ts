@@ -4,6 +4,8 @@ import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 import { createPairingCode } from "../../../../lib/extension-db";
 import { captureIpKey } from "../../../../lib/rate-limit";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 /**

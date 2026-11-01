@@ -1,6 +1,8 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { useAdminDraftState, useResumeAfterOperation, useAdminFetch } from "./draft-provider.tsx";
+
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import {
   groupAdminRuns,
   toAdminRun,
@@ -79,15 +81,16 @@ export default function AdminPanel({
   /** Se true, exige checkbox de consentimento antes de acionar. */
   requiresConsent?: boolean;
 }) {
+  const fetch = useAdminFetch();
   const [runs, setRuns] = useState(initialRuns);
   const [runningId, setRunningId] = useState(initialRunningId);
-  const [pages, setPages] = useState(1);
-  const [requesting, setRequesting] = useState(false);
-  const [awaitingSince, setAwaitingSince] = useState<number | null>(null);
-  const [message, setMessage] = useState("");
-  const [consented, setConsented] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set());
-  const knownIds = useRef(new Set(initialRuns.map((run) => run.id)));
+  const [pages, setPages] = useAdminDraftState(`admin-panel.${marketplace}.pages`, 1);
+  const [requesting, setRequesting] = useAdminDraftState(`admin-panel.${marketplace}.requesting`, false);
+  const [awaitingSince, setAwaitingSince] = useAdminDraftState<number | null>(`admin-panel.${marketplace}.awaitingSince`, null);
+  const [message, setMessage] = useAdminDraftState(`admin-panel.${marketplace}.message`, "");
+  const [consented, setConsented] = useAdminDraftState(`admin-panel.${marketplace}.consented`, false);
+  const [expandedGroups, setExpandedGroups] = useAdminDraftState<Set<string>>(`admin-panel.${marketplace}.expandedGroups`, () => new Set());
+  const [knownIds, setKnownIds] = useAdminDraftState<string[]>(`admin-panel.${marketplace}.knownIds`, () => initialRuns.map((run) => run.id));
 
   const busy = runningId !== null || awaitingSince !== null;
   const canTrigger = requiresConsent ? consented : enabled;
@@ -102,39 +105,53 @@ export default function AdminPanel({
     });
   }
 
-  async function refresh() {
+  async function refresh(signal?: AbortSignal) {
     try {
-      const response = await fetch(`/api/admin/rodagens?marketplace=${encodeURIComponent(marketplace)}`);
+      const response = await fetch(`/api/admin/rodagens?marketplace=${encodeURIComponent(marketplace)}`, { signal });
       const payload = (await response.json()) as RunsResponse;
-      if (!payload.ok) return;
+      if (signal?.aborted || !payload.ok) return;
       const next = parseRuns(payload);
       setRuns(next);
       setRunningId(payload.runningId ?? null);
       if (awaitingSince !== null) {
-        const hasNew = next.some((run) => !knownIds.current.has(run.id));
+        const hasNew = next.some((run) => !knownIds.includes(run.id));
         if (hasNew) {
           setAwaitingSince(null);
           setMessage("");
-          knownIds.current = new Set(next.map((run) => run.id));
+          setKnownIds(next.map((run) => run.id));
         } else if (Date.now() - awaitingSince > SPAWN_TIMEOUT_MS) {
           setAwaitingSince(null);
           setMessage("A rodagem foi solicitada, mas nenhuma execução nova apareceu em 30s. Verifique o processo no servidor.");
         }
       } else {
-        knownIds.current = new Set(next.map((run) => run.id));
+        setKnownIds(next.map((run) => run.id));
       }
     } catch {
       // rede local instável: o próximo tick tenta de novo
     }
   }
 
+  useResumeAfterOperation(requesting, () => refresh());
   useEffect(() => {
     if (!busy) return;
-    const timer = window.setInterval(() => void refresh(), POLL_MS);
-    return () => window.clearInterval(timer);
-    // refresh muda a cada render; o intervalo só precisa existir enquanto busy.
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let inFlight = false;
+    const isVisible = () => document.visibilityState !== "hidden";
+    const poll = async () => {
+      if (controller.signal.aborted || !isVisible() || inFlight) return;
+      inFlight = true;
+      await refresh(controller.signal);
+      inFlight = false;
+      if (!controller.signal.aborted && isVisible()) timer = setTimeout(() => void poll(), POLL_MS);
+    };
+    const resume = () => { clearTimeout(timer); void poll(); };
+    void poll();
+    document.addEventListener("visibilitychange", resume);
+    return () => { controller.abort(); clearTimeout(timer); document.removeEventListener("visibilitychange", resume); };
+    // A changed waiting marker restarts with current run IDs; only one read runs at a time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy, awaitingSince]);
+  }, [busy, awaitingSince, marketplace, fetch]);
 
   async function trigger() {
     if (requesting || busy || !canTrigger) return;

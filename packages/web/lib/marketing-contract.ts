@@ -45,6 +45,54 @@ export interface MarketingContent {
   week: number;
   archived: boolean;
   publications: Publication[];
+  assets?: MarketingAsset[];
+}
+export interface MarketingAsset {
+  id: string;
+  name: string;
+}
+export const ROUTINE_STEPS = [
+  "offer",
+  "share",
+  "content",
+  "distribute",
+  "close",
+] as const;
+export type RoutineStep = (typeof ROUTINE_STEPS)[number];
+export interface RoutineOffer {
+  name: string;
+  variant: string;
+  reason: string;
+  price: string;
+  conditions: string;
+  url: string;
+  imageUrl: string;
+  verifiedAt: string;
+  priceLabel?: string;
+  capturedAt?: string;
+}
+export interface RoutineDay {
+  date: string;
+  currentStep: RoutineStep;
+  steps: Record<
+    RoutineStep,
+    { status: "todo" | "done" | "deferred" | "not_planned"; note: string }
+  >;
+  offer: RoutineOffer;
+  contentId: string;
+  whatsappSent: boolean;
+  storyPublished: boolean;
+  distribution: string;
+  summary: string;
+  tomorrow: string;
+}
+export interface MarketingRoutine {
+  activeDate: string;
+  groupUrl: string;
+  days: RoutineDay[];
+}
+export function emptyRoutine(): MarketingRoutine {
+  return { activeDate: "", groupUrl: "", days: [] };
 }
 export interface MarketingIdea {
   id: string;
@@ -60,6 +108,7 @@ export interface MarketingWorkspace {
   contents: MarketingContent[];
   ideas: MarketingIdea[];
   scratchpad: string;
+  routine?: MarketingRoutine;
 }
 export interface MarketingSnapshot {
   revision: number;
@@ -152,6 +201,12 @@ function day(value: unknown): string {
   if (result && !validDay(result)) throw new Error("Data inválida.");
   return result;
 }
+function timestamp(value: unknown): string {
+  const result = text(value, 40);
+  if (result && !Number.isFinite(Date.parse(result)))
+    throw new Error("Data da captura inválida.");
+  return result;
+}
 function url(value: unknown): string {
   const result = text(value, 2000);
   if (result) {
@@ -215,6 +270,14 @@ export function validateWorkspace(value: unknown): MarketingWorkspace {
           url: url(p.url),
         };
       }),
+      ...(item.assets === undefined
+        ? {}
+        : {
+            assets: list(item.assets, 12).map((value): MarketingAsset => {
+              const asset = record(value);
+              return { id: id(asset.id), name: text(asset.name, 250, true) };
+            }),
+          }),
     };
   });
   const ideas = list(data.ideas, 250).map((value): MarketingIdea => {
@@ -237,8 +300,79 @@ export function validateWorkspace(value: unknown): MarketingWorkspace {
     contents,
     ideas,
     scratchpad: text(data.scratchpad, 30000),
+    routine: validateRoutine(data.routine, new Set(contents.map((c) => c.id))),
   };
   if (new TextEncoder().encode(JSON.stringify(result)).byteLength > 900000)
     throw new Error("Seu espaço atingiu o limite de tamanho desta versão.");
   return result;
+}
+
+function validateRoutine(
+  value: unknown,
+  contentIds: Set<string>,
+): MarketingRoutine {
+  if (value === undefined) return emptyRoutine();
+  const input = record(value);
+  const dates = new Set<string>();
+  const days = list(input.days, 90).map((value): RoutineDay => {
+    const item = record(value),
+      date = day(item.date);
+    if (!date || dates.has(date))
+      throw new Error("Dia da rotina inválido ou repetido.");
+    dates.add(date);
+    const rawSteps = record(item.steps);
+    const steps = Object.fromEntries(
+      ROUTINE_STEPS.map((step) => {
+        const entry = record(rawSteps[step]);
+        const status = choice(entry.status, [
+          "todo",
+          "done",
+          "deferred",
+          "not_planned",
+        ] as const);
+        const note = text(entry.note, 2000);
+        if (status === "deferred" && !note.trim())
+          throw new Error("Informe o que falta na etapa adiada.");
+        return [step, { status, note }];
+      }),
+    ) as RoutineDay["steps"];
+    const offer = record(item.offer),
+      verifiedAt = text(offer.verifiedAt, 40);
+    if (verifiedAt && !Number.isFinite(Date.parse(verifiedAt)))
+      throw new Error("Conferência da oferta inválida.");
+    const contentId = text(item.contentId, 90);
+    if (contentId && !contentIds.has(contentId))
+      throw new Error("Material da rotina não encontrado.");
+    return {
+      date,
+      currentStep: choice(item.currentStep, ROUTINE_STEPS),
+      steps,
+      offer: {
+        name: text(offer.name, 250),
+        variant: text(offer.variant, 500),
+        reason: text(offer.reason, 2000),
+        price: text(offer.price, 40),
+        conditions: text(offer.conditions, 2000),
+        url: url(offer.url),
+        imageUrl: url(offer.imageUrl),
+        verifiedAt,
+        ...(offer.priceLabel === undefined
+          ? {}
+          : { priceLabel: text(offer.priceLabel, 250) }),
+        ...(offer.capturedAt === undefined
+          ? {}
+          : { capturedAt: timestamp(offer.capturedAt) }),
+      },
+      contentId,
+      whatsappSent: bool(item.whatsappSent),
+      storyPublished: bool(item.storyPublished),
+      distribution: text(item.distribution, 4000),
+      summary: text(item.summary, 4000),
+      tomorrow: text(item.tomorrow, 2000),
+    };
+  });
+  const activeDate = day(input.activeDate);
+  if (activeDate && !dates.has(activeDate))
+    throw new Error("Dia ativo não encontrado.");
+  return { activeDate, groupUrl: url(input.groupUrl), days };
 }

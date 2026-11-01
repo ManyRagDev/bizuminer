@@ -3,6 +3,8 @@ import { resolveMemberIdentity, sinkJson } from "../../../../lib/api-auth";
 import { parseWatchPayload } from "../../../../lib/member-contract";
 import { ensureUser, startWatch, stopWatch } from "../../../../lib/member-db";
 
+export const preferredRegion = "gru1";
+
 async function safeJson(request: NextRequest): Promise<unknown> {
   try {
     return await request.json();

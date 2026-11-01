@@ -4,6 +4,7 @@ import { mergeAnonymousIntoAuth } from "./auth-merge.ts";
 import { validUserId } from "./member-contract.ts";
 import { attachSink, createCookieSink } from "./supabase.ts";
 import type { AccountContext } from "./tenant-db.ts";
+import { readInRequest } from "./request-read.ts";
 
 /**
  * Identidade e autorização das APIs (AL-3, 22/08/2026).
@@ -46,13 +47,17 @@ export type AffiliateCheck =
   | { kind: "forbidden" };
 
 export async function checkAffiliateUser(request: NextRequest): Promise<AffiliateCheck> {
+  const requestedAccount = request.headers.get("x-bm-account") ?? request.nextUrl.searchParams.get("conta") ?? request.cookies.get("bm_account")?.value;
+  return readInRequest(["affiliateAccess", requestedAccount ?? null], () => readAffiliateUser(request, requestedAccount), request);
+}
+
+async function readAffiliateUser(request: NextRequest, requestedAccount: string | undefined | null): Promise<AffiliateCheck> {
   const sink = createCookieSink();
   const auth = await getRouteAuth(request, sink);
   if (!auth) return { kind: "no_session" };
   const access = await roleAccess(auth.id, "afiliado");
   if (!access) return { kind: "forbidden" };
-  const requestedAccount = request.headers.get("x-bm-account") ?? request.nextUrl.searchParams.get("conta") ?? request.cookies.get("bm_account")?.value;
-  const context = await resolveAccountContext({ authUserId: auth.id, requestedAccount });
+  const context = await resolveAccountContext({ authUserId: auth.id, requestedAccount, request });
   if (!context) return { kind: "forbidden" };
   return { kind: "ok", context, user: auth, appUserId: access.appUserId, sink };
 }
@@ -86,6 +91,7 @@ export async function resolveAuthorizedAccount(
   const context = await resolveAccountContext({
     authUserId: auth.id,
     requestedAccount: targetAccount,
+    request,
   });
 
   if (!context) return { kind: "forbidden" };

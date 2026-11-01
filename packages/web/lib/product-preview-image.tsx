@@ -1,3 +1,4 @@
+import {offerArtworkFacts} from "./offer-artwork.ts";
 import { ImageResponse } from "next/og";
 import type { VitrineProduct } from "./deal-view";
 import { marketplaceDef } from "./marketplaces";
@@ -21,7 +22,10 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
   const [fonts, photo] = await Promise.all([ogFonts(), fetchProductImage(deal.imageUrl)]);
   const { stale, badge, ageLabel } = productPreview(deal, now);
   const marketplace = marketplaceDef(deal.marketplace);
-  const title = deal.displayTitle ?? deal.title;
+  const sourceTitle=deal.displayTitle ?? deal.title;
+  const optionLabel=(deal.offerOptionLabel ?? "");
+  const title=deal.offerOptionKey && sourceTitle.length>220 ? `${(deal.sourceTitle ?? deal.title).slice(0,70)}… — ${optionLabel.length>160 ? `${optionLabel.slice(0,157)}…`:optionLabel}`:sourceTitle;
+  const facts=offerArtworkFacts(deal);
   const titleSize = title.length <= 65 ? 50 : title.length <= 110 ? 40 : title.length <= 180 ? 32 : title.length <= 300 ? 24 : 20;
   const price = offerPriceLabel(deal);
   const stamp = marketplace
@@ -121,6 +125,8 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
             >
               {title}
             </div>
+            {facts.contents && <div style={{display:"flex",marginTop:12,fontSize:20,lineHeight:1.2,color:INK_QUIET}}>{facts.contents}</div>}
+            {facts.conditions && <div style={{display:"flex",marginTop:8,fontSize:20,lineHeight:1.2,color:INK_QUIET}}>{facts.conditions}</div>}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>

@@ -1,8 +1,12 @@
+import { confirmedOfferDetail } from "../../../lib/confirmed-offer-db.ts";
+import { optionDetailPath } from "../../../lib/offer-option.ts";
 import { publicProjectionReady } from "../../../lib/public-offer-db";
 import { publicLinkPage } from "../../../lib/public-link-page";
 import { slugForShortCode } from "../../../lib/short-link-db";
 import { isCampaignLinkCode } from "../../../lib/commerce-contract";
 import { resolveCampaignLinkByCode } from "../../../lib/commerce-db";
+
+export const preferredRegion = "gru1";
 
 /**
  * Link curto de compartilhamento: `/p/<code>` → `/bizu/<slug>` ou campanha.
@@ -24,7 +28,14 @@ import { resolveCampaignLinkByCode } from "../../../lib/commerce-db";
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  if(await publicProjectionReady()) return publicLinkPage(code);
+  if(await publicProjectionReady()) {
+    const response=await publicLinkPage(code);
+    const option=new URL(_req.url).searchParams.get("opcao");
+    if (!option || response.status!==302) return response;
+    const target=new URL(response.headers.get("Location")!,_req.url),slug=decodeURIComponent(target.pathname.slice("/bizu/".length));
+    if(!await confirmedOfferDetail(slug,option)) return new Response("Esta opção precisa de nova conferência",{status:404});
+    return new Response(null,{status:302,headers:{Location:optionDetailPath(slug,option)+target.search,"Cache-Control":"no-store"}});
+  }
 
   // 1. Tentar resolver como link de campanha (12 caracteres base62)
   if (isCampaignLinkCode(code)) {

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import AdminLink from "./admin-link.tsx";
+import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 interface NavItem {
   id: string;
@@ -76,28 +77,8 @@ export default function AdminShell({
   accountHeader?: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [currentSearch, setCurrentSearch] = useState("");
+  const currentSearch = useSearchParams().toString();
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCurrentSearch(window.location.search);
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    const handleUrlChange = () => {
-      if (typeof window !== "undefined") {
-        setCurrentSearch(window.location.search);
-      }
-    };
-    window.addEventListener("popstate", handleUrlChange);
-    window.addEventListener("hashchange", handleUrlChange);
-    return () => {
-      window.removeEventListener("popstate", handleUrlChange);
-      window.removeEventListener("hashchange", handleUrlChange);
-    };
-  }, []);
 
   const activeId = resolveActiveId(pathname, currentSearch);
   const sectionTitle = resolveSectionTitle(activeId);
@@ -214,17 +195,13 @@ export default function AdminShell({
                   {group.items.map((item) => {
                     const isActive = activeId === item.id;
                     return (
-                      <Link
+                      <AdminLink
                         key={item.id}
                         href={item.href}
                         className={"admin-shell-nav-item" + (isActive ? " active" : "")}
                         aria-current={isActive ? "page" : undefined}
                         onClick={() => {
                           setDrawerOpen(false);
-                          if (typeof window !== "undefined") {
-                            const url = new URL(item.href, window.location.origin);
-                            setCurrentSearch(url.search);
-                          }
                         }}
                       >
                         <span className="admin-nav-item-content">
@@ -238,7 +215,7 @@ export default function AdminShell({
                             {item.badge}
                           </span>
                         )}
-                      </Link>
+                      </AdminLink>
                     );
                   })}
                 </div>

@@ -8,6 +8,8 @@ import {
   validateStored,
   preparePublicationExport,
 } from "../../../../../lib/commercial-workflow.ts";
+
+export const preferredRegion = "gru1";
 export const runtime = "nodejs";
 export async function GET(
   request: NextRequest,

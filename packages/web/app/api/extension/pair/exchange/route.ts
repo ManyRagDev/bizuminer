@@ -4,6 +4,8 @@ import { exchangePairingCode } from "../../../../../lib/extension-db";
 import { normalizePairingCode } from "../../../../../lib/extension-token";
 import { captureIpKey } from "../../../../../lib/rate-limit";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 /**

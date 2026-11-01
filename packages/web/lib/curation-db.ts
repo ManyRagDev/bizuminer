@@ -23,7 +23,7 @@ import {
 import { getEditorialGuideline, getGoldenExamples } from "./editorial-compass.ts";
 import { loadAutomatedTriageCandidates, triageInputStillCurrent } from "./triage-candidates-db.ts";
 import { curationSignalsFor, type CurationSignalId } from "./curation-signals.ts";
-import { buildSnapshotMetadata, type CurationSnapshotFacts, type CurationSnapshotProvenance, type OfferEvidenceSourceSnapshot } from "./curation-snapshot.ts";
+import { buildSnapshotMetadata, type CurationSnapshotFacts, type CurationSnapshotProvenance } from "./curation-snapshot.ts";
 import { resolveVariantEvidence } from "./comparison-evidence.ts";
 import {
   editorialGroupIdFor,
@@ -123,6 +123,19 @@ const QUEUE_FACTS_COLUMNS = `
 type TxLike = postgres.TransactionSql | postgres.Sql<{}>;
 
 export async function curationSummary(
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
+  context?: AccountContext,
+): Promise<CurationSummary> {
+  if (!context) throw new Error("account_context_required: private curation summary requires authorized AccountContext");
+  if (context.tenantId !== tenantId) throw new Error("forbidden: tenant inválido para o contexto de conta");
+  const { readInRequest } = await import("./request-read.ts");
+  return readInRequest(["curationSummary", tenantId, context.tenantId, sqlFactory, context?.affiliateId, context?.actor,
+    context?.actorAppUserId, context?.authenticatedAuthUserId, context?.membershipRole, context?.requestId],
+    () => readCurationSummary(tenantId, sqlFactory, context));
+}
+
+async function readCurationSummary(
   tenantId = scopedTenantId(),
   sqlFactory: typeof db = db,
   context?: AccountContext,

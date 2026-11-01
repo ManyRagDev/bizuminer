@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { upsertMarketplaceConfig } from "../../../../../lib/affiliate-db";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 /**

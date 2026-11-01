@@ -3,10 +3,12 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { commercialFixture } from "./commercial-fixture.ts";
 const require = createRequire(import.meta.url);
-const { refreshHomepageEdition, readHomepageEdition, homepageEngagementReport } = require("../../packages/web/lib/homepage-db.ts");
+const { refreshLegacyHomepageEdition: refreshHomepageEdition, readHomepageEdition, homepageEngagementReport } = require("../../packages/web/lib/homepage-db.ts");
 const { getPublishedEditorialSelection, computeEditorialSelection } = require("../../packages/web/lib/editorial-selection-db.ts");
 const { catalogPage } = require("../../packages/web/lib/db.ts");
 const { publishedEditorialStateKey } = require("../../packages/web/lib/editorial-selection.ts");
+const { getHomepageRenewalState } = require("../../packages/web/lib/homepage-renewal-db.ts");
+const { loadMonitoringCandidates } = require("../../packages/persistence/src/monitoring-candidates.ts");
 const fixture = await commercialFixture();
 const { pg, factory } = fixture;
 process.env.DATABASE_URL = "postgresql://isolated-fixture-unused";
@@ -24,6 +26,7 @@ try {
   await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261023041600_optimize_public_link_reads.sql", import.meta.url), "utf8"));
   await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261027030237_compose_homepage_editions.sql", import.meta.url), "utf8"));
   await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261028041629_durable_product_presentation.sql", import.meta.url), "utf8"));
+  await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261101125432_renew_editorial_pauta.sql", import.meta.url), "utf8"));
   await pg.exec(`
     insert into garimpa.affiliate_account(id,tenant_id,public_slug,display_name,status)
       values('aff_a','a','a','A','active'),('aff_b','b','b','B','active');
@@ -62,9 +65,20 @@ try {
     assert.equal((await pg.query("select count(*)::int n from garimpa.homepage_edition")).rows[0].n, 0);
     await pg.query("update garimpa.price_observation set offer_evidence=$1 where tenant_id='a'", [JSON.stringify(evidence)]);
   });
+  await scenario("account opt-in survives an empty pool and records the pending review without publishing", async () => {
+    await pg.exec("update garimpa.price_observation set offer_evidence='{}' where tenant_id='a'; insert into garimpa.homepage_renewal(tenant_id,enabled) values('a',true)");
+    const result = await refreshHomepageEdition("a", factory, new Date(), false, false);
+    assert.equal(result.blocked, "no_qualified_products");
+    const state = await getHomepageRenewalState("a", factory);
+    assert.equal(state.enabled, true); assert.equal(state.outcome, "awaiting_review");
+    assert.ok(state.lastAttemptAt); assert.equal(state.renewedAt, null);
+    assert.equal((await pg.query("select count(*)::int n from garimpa.homepage_edition")).rows[0].n, 0);
+    assert.equal((await getHomepageRenewalState("b", factory)).enabled, false);
+    await pg.query("update garimpa.price_observation set offer_evidence=$1 where tenant_id='a'", [JSON.stringify(evidence)]);
+  });
   let first: any;
   await scenario("persisted edition powers home, pauta and default grid with identical order", async () => {
-    const result = await refreshHomepageEdition("a", factory);
+    const result = await refreshHomepageEdition("a", factory, new Date(), false, false);
     assert.equal(result.ready, true); assert.ok(result.count >= 12);
     first = await getPublishedEditorialSelection("home", "a", factory);
     const pauta = await getPublishedEditorialSelection("pauta", "a", factory);
@@ -74,6 +88,8 @@ try {
     assert.equal(page.page.total, first.products.length);
     assert.equal(page.page.selectionStateKey, publishedEditorialStateKey(first));
     assert.equal(first.heroProductIds.length, 3);
+    assert.equal((await getHomepageRenewalState("a", factory)).outcome, "published");
+    assert.ok(first.renewedAt); assert.ok(first.renewAfter);
     assert.ok(first.products.slice(0, 12).filter((p: any) => p.title.startsWith("Fone")).length <= 2);
     assert.ok(!JSON.stringify(first).match(/observationId|assessmentId|productUrl|criticalDoubts|dimensions/));
   });
@@ -87,6 +103,17 @@ try {
     assert.equal(second.homepageEditionId, first.homepageEditionId);
     assert.deepEqual(second.products, first.products);
     assert.equal(publishedEditorialStateKey(second), publishedEditorialStateKey(first));
+    assert.equal((await getHomepageRenewalState("a", factory)).outcome, "unchanged");
+  });
+  await scenario("monitoring targets only the account's current edition and retains the normal budget policy", async () => {
+    const products = await factory().begin(async (sql: any) => {
+      await sql`select set_config('garimpa.tenant_id','a',true),set_config('garimpa.actor_type','worker',true)`;
+      return loadMonitoringCandidates(sql, "a", "shopee");
+    });
+    const selected = new Set(first.products.map((p: any) => p.id));
+    assert.ok(products.some((p: any) => p.inCurrentEdition));
+    assert.ok(products.every((p: any) => p.inCurrentEdition === selected.has(p.productId)));
+    assert.ok(products.every((p: any) => !["p_29", "p_30"].includes(p.productId)));
   });
   await scenario("unchanged public reads use the stored edition instead of computing the candidate pool", async () => {
     const timings: Record<string, number[]> = { stored: [], computed: [] };
@@ -137,7 +164,13 @@ try {
       await tx.exec("set local role garimpa_app; select set_config('garimpa.tenant_id','b',true)");
       assert.equal((await tx.query("select * from garimpa.homepage_edition")).rows.length, 0);
       assert.equal((await tx.query("select * from garimpa.homepage_product_history")).rows.length, 0);
+      assert.equal((await tx.query("select * from garimpa.homepage_renewal")).rows.length, 0);
     });
+    await assert.rejects(pg.transaction(async tx => {
+      await tx.exec("set local role garimpa_app; select set_config('garimpa.tenant_id','b',true),set_config('garimpa.membership_role','operator',true),set_config('garimpa.actor_type','human',true)");
+      await tx.query("insert into garimpa.homepage_renewal(tenant_id,enabled) values('b',true)");
+    }), /row-level security/);
+    await assert.rejects(publicQuery("select * from garimpa.homepage_renewal"), /permission denied/);
   });
   await scenario("suspended account and stale prices vanish without recomputation", async () => {
     await pg.exec("update garimpa.affiliate_account set status='suspended' where tenant_id='a'");
@@ -145,6 +178,15 @@ try {
     await pg.exec("update garimpa.affiliate_account set status='active' where tenant_id='a'; update garimpa.price_observation set observed_at=now()-interval '49 hours' where tenant_id='a'");
     assert.equal((await readHomepageEdition("home", "a", factory)).products.length, 0);
     await pg.exec("update garimpa.price_observation set observed_at=now() where tenant_id='a'");
+  });
+  await scenario("loss of the qualified pool is visible to workers and never reopens the fallback", async () => {
+    await pg.exec("update garimpa.product_curation set status='held' where tenant_id='a'");
+    const result = await refreshHomepageEdition("a", factory, new Date(), false, false);
+    assert.equal(result.count, 0); assert.equal(result.blocked, "no_qualified_products");
+    assert.equal((await getHomepageRenewalState("a", factory)).outcome, "awaiting_review");
+    assert.equal((await getPublishedEditorialSelection("pauta", "a", factory)).products.length, 0);
+    await pg.exec("update garimpa.product_curation set status='approved' where tenant_id='a'");
+    assert.ok((await refreshHomepageEdition("a", factory, new Date(), false, false)).count > 0);
   });
   await scenario("explicitly empty/expired editorial decisions are never backfilled", async () => {
     await pg.exec("insert into garimpa.editorial_selection(id,tenant_id,version,status,valid_until,actor_app_user_id) values('manual','a',1,'active',now()+interval '1 day','user_a')");

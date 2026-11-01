@@ -7,6 +7,7 @@
  */
 
 import { normalizeSourceTitle } from "../../capture/src/title.ts";
+import { observationOptionIdentity } from "../../capture/src/observation-option.ts";
 import { classifyActivity } from "./activity.ts";
 import type { ActivityCounts } from "./activity.ts";
 import type { ProductFamilyInfo } from "./product-family.ts";
@@ -168,7 +169,8 @@ export class InMemoryStore implements OfferStore {
     let previousPriceCents: number | undefined;
 
     if (existing) {
-      previousPriceCents = existing.lastPriceCents;
+      previousPriceCents = (this.observations.get(existing.id) ?? []).filter(o=>observationOptionIdentity(o.offerEvidence)===observationOptionIdentity(input.offerEvidence))
+        .sort((a,b)=>b.observedAt.getTime()-a.observedAt.getTime())[0]?.priceCents;
       product = {
         ...existing,
         title: input.title,
@@ -217,12 +219,18 @@ export class InMemoryStore implements OfferStore {
         categorySnapshot: input.category,
     };
     const observations = this.observations.get(product.id) ?? [];
-    const duplicate = observations.findIndex((item) => item.captureRunId === input.captureRunId);
+    let duplicate = observations.findIndex((item) => item.captureRunId === input.captureRunId
+      && observationOptionIdentity(item.offerEvidence)===observationOptionIdentity(input.offerEvidence));
+    if(duplicate<0 && input.offerEvidence===undefined){
+      const matches=observations.map((item,index)=>({item,index})).filter(({item})=>item.captureRunId===input.captureRunId
+        && observationMaterialKey({...item,offerEvidence:undefined})===observationMaterialKey({...observation,offerEvidence:undefined}));
+      if(matches.length===1)duplicate=matches[0]!.index;
+    }
     if (duplicate >= 0) {
       const previous = observations[duplicate]!;
       // Uma repetição incompleta da mesma oferta não apaga a evidência.
       // Oferta alterada não herda configuração nem pacote de outra captura.
-      observations[duplicate] = {
+      const updated = {
         ...observation,
         offerEvidence: observation.offerEvidence ?? (
           previous.titleSnapshot === observation.titleSnapshot &&
@@ -239,12 +247,14 @@ export class InMemoryStore implements OfferStore {
             : undefined
         ),
       };
+      observations.splice(duplicate,1);observations.push(updated);
     }
     else {
-      const latest = observations.at(-1);
+      const latest = observations.filter(o=>observationOptionIdentity(o.offerEvidence)===observationOptionIdentity(input.offerEvidence)).sort((a,b)=>b.observedAt.getTime()-a.observedAt.getTime())[0];
       // Stable samples are intentionally limited to one per 20h. Compare only
       // the latest sample: an A → B → A transition is material both times.
-      if (!latest || input.observedAt.getTime() - latest.observedAt.getTime() >= 20 * 60 * 60_000
+      if (observationOptionIdentity(observations.at(-1)?.offerEvidence)!==observationOptionIdentity(input.offerEvidence)
+        || !latest || input.observedAt.getTime() - latest.observedAt.getTime() >= 20 * 60 * 60_000
         || observationMaterialKey(latest) !== observationMaterialKey(observation)) observations.push(observation);
     }
     this.observations.set(product.id, observations);
@@ -305,7 +315,7 @@ export class InMemoryStore implements OfferStore {
 
   async latestObservation(productId: string): Promise<PriceObservationRecord | null> {
     const obs = this.observations.get(productId);
-    return obs && obs.length > 0 ? obs[obs.length - 1]! : null;
+    return obs?.length ? [...obs].reverse().sort((a,b)=>b.observedAt.getTime()-a.observedAt.getTime())[0]! : null;
   }
 
   async productActivity(

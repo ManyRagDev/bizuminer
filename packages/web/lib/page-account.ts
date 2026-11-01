@@ -1,11 +1,12 @@
-import { cache } from "react";
+
 import { cookies } from "next/headers";
 import { getPageAuth, isAffiliate, resolveAccountContext } from "./auth.ts";
 import { inAccountScope } from "./account-scope.ts";
 import type { AccountContext } from "./account-context.ts";
 import { roleAccess, resolveAppUserId } from "./auth.ts";
+import { invalidateRequestReads } from "./request-read.ts";
 
-export const pageAccount = cache(async function pageAccount(
+export async function pageAccount(
   requested?: string,
 ): Promise<AccountContext | null> {
   const user = await getPageAuth();
@@ -15,14 +16,16 @@ export const pageAccount = cache(async function pageAccount(
     authUserId: user.id,
     requestedAccount: selected,
   });
-});
+}
 
 export async function accountOperation<T>(
   work: (context: AccountContext) => Promise<T>,
+  requestedAccount?:string,
 ): Promise<T> {
-  const account = await pageAccount();
+  const account = await pageAccount(requestedAccount);
   if (!account) throw new Error("forbidden");
-  return inAccountScope(account, () => work(account));
+  try { return await inAccountScope(account, () => work(account)); }
+  finally { invalidateRequestReads(); }
 }
 
 export async function platformPageContext(): Promise<AccountContext | null> {

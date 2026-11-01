@@ -1,10 +1,10 @@
 import { pageAccount } from "../../lib/page-account.ts";
-import { inAccountScope, scopedTenantId, currentAccount } from "../../lib/account-scope.ts";
+import { inAccountScope, scopedTenantId } from "../../lib/account-scope.ts";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { adminOverview, captureRunHistory, runningRun, topClicked } from "../../lib/admin-db";
-import { listAffiliateAccounts, type AffiliateAccountSummary } from "../../lib/affiliate-db";
+import { listAffiliateAccounts } from "../../lib/affiliate-db";
 import { shareBaseUrl } from "../../lib/site-url";
 import { bookmarkletCompiles, bookmarkletHref } from "../../lib/bookmarklet";
 import { captureEnabled } from "../../lib/platform-gates";
@@ -29,7 +29,7 @@ import { githubMonitoringRuns } from "../../lib/github-monitoring";
 import MonitoringPolicyPanel from "./monitoring-policy-panel";
 import DispatchPanel from "./dispatch-panel";
 import { houseMonitoringPolicies, houseMonitoringPolicyEvents } from "../../lib/affiliate-monitoring-db";
-import { getPageAuth, roleAccess, resolveAccountContext } from "../../lib/auth";
+import { getPageAuth, roleAccess } from "../../lib/auth";
 import { getWorkbenchPage } from "../../lib/workbench-db.ts";
 
 export const dynamic = "force-dynamic";
@@ -103,111 +103,32 @@ function toAdminRuns(runs: Awaited<ReturnType<typeof captureRunHistory>>): Admin
   return runs.map(toAdminRun);
 }
 
-async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ aba?: string; conta?: string }>;
-}) {
-  const { aba } = await searchParams;
-  const authUser = await getPageAuth();
-  const access = authUser ? await roleAccess(authUser.id, "afiliado") : null;
-  if (!authUser || !access) redirect("/entrar?next=/admin");
-  if (aba === "curadoria") {
-    redirect("/admin/curadoria?aba=excecoes");
-  }
-  const accountContext = currentAccount() ?? null;
-  const curationPromise = accountContext
-    ? curationSummary(accountContext.tenantId, undefined, accountContext)
-    : Promise.resolve({ awaiting: 0, newPending: 0, legacyVisible: 0, held: 0, approved: 0, rejected: 0, deferred: 0 });
-  const workbenchPromise = accountContext
-    ? getWorkbenchPage(accountContext, { limit: 15 }).catch(() => null)
-    : Promise.resolve(null);
-  // Estado por plataforma derivado do REGISTRO, não de uma lista hardcoded:
-  // acrescentar a AliExpress (M5) não exige tocar nesta página (M-R5).
-  const [overview, clicked, productCounts, curation, runsByMarketplace, auditDesk, editorialConfig, publishedSelection, workbenchPage] = await Promise.all([
-    adminOverview(),
-    topClicked(7, 6),
-    marketplaceCounts(),
-    curationPromise,
-    Promise.all(
-      MARKETPLACES.map(async (def) => {
-        const [runs, running] = await Promise.all([
-          captureRunHistory(20, scopedTenantId(), def.slug),
-          runningRun(scopedTenantId(), def.slug),
-        ]);
-        return [def.slug, { runs, running }] as const;
-      }),
-    ).then((entries) => new Map(entries)),
-    getAuditDesk(scopedTenantId()),
-    getEditorialGuideline(scopedTenantId()),
-    getPublishedEditorialSelection("all", scopedTenantId()),
-    workbenchPromise,
-  ]);
+import type { AccountContext } from "../../lib/account-context.ts";
+import { normalizeAdminTab } from "../../lib/admin-navigation.ts";
+import { AdminDraftScope } from "./draft-provider.tsx";
+import SectionRetry from "./section-retry.tsx";
+import AdminLink from "../_components/admin-link.tsx";
 
-  // Afiliados (E1): carregado somente quando a aba de afiliados estiver ativa
-  let accounts: AffiliateAccountSummary[] = [];
-  if (aba === "afiliados") {
-    try {
-      accounts = await listAffiliateAccounts(access.appUserId);
-    } catch {
-      accounts = [];
-    }
-  }
-  const serializedAccounts = accounts.map((a) => ({
-    id: a.id,
-    tenantId: a.tenantId,
-    publicSlug: a.publicSlug,
-    displayName: a.displayName,
-    status: a.status,
-    ownerCount: a.ownerCount,
-    configs: a.configs.map((c) => ({
-      marketplace: c.marketplace,
-      configured: c.configured,
-      status: c.status,
-      validatedAt: c.validatedAt ? new Date(c.validatedAt).toISOString() : null,
-    })),
-  }));
+function SectionLoading({ label }: { label: string }) {
+  return <section className="admin-section route-loading" aria-busy="true" role="status">Carregando {label}…</section>;
+}
+async function SafeSection({ label, load }: { label: string; load: () => Promise<ReactNode> }) {
+  try { return await load(); }
+  catch { return <SectionRetry label={label} />; }
+}
 
-  // Monitoramento e políticas: carregados em paralelo somente quando a aba de rodagens estiver ativa
-  let githubMonitoring = { runs: [] as any[], error: false };
-  let monitoringPolicies = null;
-  let monitoringPolicyEvents: any[] = [];
-  if (aba === "rodagens") {
-    const [gh, pol, evs] = await Promise.all([
-      githubMonitoringRuns()
-        .then((runs) => ({ runs, error: false }))
-        .catch(() => ({ runs: [], error: true })),
-      houseMonitoringPolicies().catch(() => null),
-      houseMonitoringPolicyEvents().catch(() => []),
+async function OverviewTab({ account: accountContext }: { account: AccountContext }) {
+  return inAccountScope(accountContext, async () => {
+    const [overview, curation, auditDesk, editorialConfig, publishedSelection, workbenchPage] = await Promise.all([
+      adminOverview(), curationSummary(accountContext.tenantId, undefined, accountContext),
+      getAuditDesk(accountContext.tenantId), getEditorialGuideline(accountContext.tenantId),
+      getPublishedEditorialSelection("all", accountContext.tenantId),
+      getWorkbenchPage(accountContext, { limit: 15 }).catch(() => null),
     ]);
-    githubMonitoring = gh;
-    monitoringPolicies = pol;
-    monitoringPolicyEvents = evs;
-  }
-
-  // O bookmarklet só extrai e copia o bloco BM1. Nenhuma credencial fica
-  // embutida; a persistência ocorre no endpoint autenticado do painel.
-  const bookmarklet = bookmarkletHref();
-  const bookmarkletOk = bookmarkletCompiles();
-
-  const platformStatusRows: PlatformStatusRow[] = MARKETPLACES.map((def) => {
-    const lastRun = runsByMarketplace.get(def.slug)?.runs[0];
-    return {
-      slug: def.slug,
-      label: def.label,
-      captureMode: def.captureMode,
-      enabled: captureEnabled(def.slug),
-      productCount: productCounts[def.slug] ?? 0,
-      lastRun: lastRun
-        ? { status: lastRun.status, startedAt: iso(lastRun.started_at)!, itemsCaptured: lastRun.items_captured }
-        : null,
-    };
-  });
-
   const selectionState = selectionWorkflowState({ schemaReady: publishedSelection.schemaReady,
     mode: publishedSelection.mode, count: publishedSelection.products.length, validUntil: publishedSelection.validUntil });
 
-  const overviewTab = (
+    return (
     <>
       <TodayCommandCenter
         autoPublish={editorialConfig.autoPublish}
@@ -243,7 +164,9 @@ async function AdminPage({
         </div>
       </section>
 
-      <PlatformStatus rows={platformStatusRows} />
+      <Suspense fallback={<SectionLoading label="as lojas" />}>
+        <SafeSection label="as lojas" load={() => PlatformOverview({ account: accountContext })} />
+      </Suspense>
 
       <section className="admin-section" aria-labelledby="members-title">
         <h2 id="members-title">Área do comprador & Operação</h2>
@@ -272,15 +195,63 @@ async function AdminPage({
       </section>
     </>
   );
+  });
+}
 
-  const rodagensTab = (
+async function PlatformOverview({ account }: { account: AccountContext }) {
+  return inAccountScope(account, async () => {
+    const [productCounts, runsByMarketplace] = await Promise.all([
+      marketplaceCounts(),
+      Promise.all(MARKETPLACES.map(async def => [def.slug, { runs: await captureRunHistory(20, account.tenantId, def.slug) }] as const))
+        .then(entries => new Map(entries)),
+    ]);
+  const platformStatusRows: PlatformStatusRow[] = MARKETPLACES.map((def) => {
+    const lastRun = runsByMarketplace.get(def.slug)?.runs[0];
+    return {
+      slug: def.slug,
+      label: def.label,
+      captureMode: def.captureMode,
+      enabled: captureEnabled(def.slug),
+      productCount: productCounts[def.slug] ?? 0,
+      lastRun: lastRun
+        ? { status: lastRun.status, startedAt: iso(lastRun.started_at)!, itemsCaptured: lastRun.items_captured }
+        : null,
+    };
+  });
+
+    return <PlatformStatus rows={platformStatusRows} />;
+  });
+}
+
+async function GithubSection({ account }: { account: AccountContext }) {
+  return inAccountScope(account, async () => {
+    const githubMonitoring = await githubMonitoringRuns()
+      .then(runs => ({ runs, error: false })).catch(() => ({ runs: [], error: true }));
+    return <GithubMonitoringPanel {...githubMonitoring} dispatchConfigured={Boolean(process.env.GITHUB_ACTIONS_WRITE_TOKEN)} />;
+  });
+}
+
+async function RodagensTab({ account: accountContext }: { account: AccountContext }) {
+  return inAccountScope(accountContext, async () => {
+    const [runsByMarketplace, monitoringPolicies, monitoringPolicyEvents] = await Promise.all([
+      Promise.all(MARKETPLACES.map(async def => {
+        const [runs, running] = await Promise.all([
+          captureRunHistory(20, accountContext.tenantId, def.slug), runningRun(accountContext.tenantId, def.slug),
+        ]);
+        return [def.slug, { runs, running }] as const;
+      })).then(entries => new Map(entries)),
+      houseMonitoringPolicies().catch(() => null), houseMonitoringPolicyEvents().catch(() => []),
+    ]);
+    return (
     <>
       <nav className="section-local-nav" aria-label="Operação">
-        <a className="active" href="/admin?aba=rodagens">Capturas e histórico</a>
-        <a href="/admin?aba=captura-manual">Captura manual</a>
-        <a href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
+        <AdminLink className="active" href="/admin?aba=rodagens">Capturas e histórico</AdminLink>
+        <AdminLink href="/admin?aba=captura-manual">Captura manual</AdminLink>
+        <AdminLink href="/admin/curadoria?aba=pipeline">Execuções da IA</AdminLink>
       </nav>
-      <GithubMonitoringPanel {...githubMonitoring} dispatchConfigured={Boolean(process.env.GITHUB_ACTIONS_WRITE_TOKEN)} />
+      <Suspense fallback={<SectionLoading label="o monitoramento" />}>
+        <SafeSection label="o monitoramento" load={() => GithubSection({ account: accountContext })} />
+      </Suspense>
       <MonitoringPolicyPanel initialPolicies={monitoringPolicies} initialEvents={monitoringPolicyEvents} />
       <DispatchPanel tenantId={accountContext?.tenantId ?? scopedTenantId()} />
       {MARKETPLACES.filter((def) => def.slug in RUN_PANELS).map((def) => {
@@ -302,24 +273,34 @@ async function AdminPage({
       })}
     </>
   );
+  });
+}
 
-  const capturaManualTab = (
+async function ManualTab() {
+  const bookmarklet = bookmarkletHref();
+  const bookmarkletOk = bookmarkletCompiles();
+
+  return (
     <>
       <nav className="section-local-nav" aria-label="Operação">
-        <a href="/admin?aba=rodagens">Capturas e histórico</a>
-        <a className="active" href="/admin?aba=captura-manual">Captura manual</a>
-        <a href="/admin/curadoria?aba=pipeline">Execuções da IA</a>
+        <AdminLink href="/admin?aba=rodagens">Capturas e histórico</AdminLink>
+        <AdminLink className="active" href="/admin?aba=captura-manual">Captura manual</AdminLink>
+        <AdminLink href="/admin/curadoria?aba=pipeline">Execuções da IA</AdminLink>
       </nav>
       <Capturador bookmarkletHref={bookmarklet} bookmarkletOk={bookmarkletOk} />
       <Devices />
     </>
   );
+}
 
-  const publicacaoTab = (
+async function PublicacaoTab({ account }: { account: AccountContext }) {
+  return inAccountScope(account, async () => {
+    const clicked = await topClicked(7, 6);
+    return (
     <>
       <nav className="section-local-nav" aria-label="Publicação">
-        <a href="/pauta">Pauta de links</a>
-        <a className="active" href="/admin?aba=publicacao">Criador de posts</a>
+        <AdminLink href="/pauta">Pauta de links</AdminLink>
+        <AdminLink className="active" href="/admin?aba=publicacao">Criador de posts</AdminLink>
       </nav>
       <section className="admin-section" style={{ background: "var(--surface-elevated, #fafafa)", border: "1px solid var(--line, #e4e4e7)", borderRadius: "10px", padding: "16px 20px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
@@ -328,9 +309,9 @@ async function AdminPage({
             Mesa dedicada para copiar os links curtos (<code>/p/xxxx</code>) de cada oferta do dia. O contador mostra cópias feitas neste aparelho; a postagem continua manual.
           </p>
         </div>
-        <a href="/pauta" className="admin-curation-start" style={{ textDecoration: "none" }}>
+        <AdminLink href="/pauta" className="admin-curation-start" style={{ textDecoration: "none" }}>
           Abrir Mesa de Pauta (/pauta) →
-        </a>
+        </AdminLink>
       </section>
       <Composer baseUrl={shareBaseUrl()} />
       <section className="admin-section" aria-labelledby="clicked-title">
@@ -350,25 +331,54 @@ async function AdminPage({
       </section>
     </>
   );
-
-  return (
-    <AdminTabs
-      initialTab={aba}
-      showNavigation={false}
-      tabs={[
-        { id: "visao-geral", label: "Visão geral", content: overviewTab },
-        { id: "rodagens", label: "Lojas & Rodagens", content: rodagensTab },
-        { id: "captura-manual", label: "Captura manual", content: capturaManualTab },
-        { id: "publicacao", label: "Criador de posts", content: publicacaoTab },
-        { id: "afiliados", label: "Contas de afiliados", content: <Affiliates initialAccounts={serializedAccounts} /> },
-      ]}
-    />
-  );
+  });
 }
 
-export default async function ScopedPage(props: Parameters<typeof AdminPage>[0]) {
- const params=await props.searchParams;
- const account=await pageAccount(params?.conta);
- if(!account) return <section><p>Nenhuma conta autorizada disponível.</p></section>;
- return inAccountScope(account,()=>AdminPage(props));
+async function AfiliadosTab({ appUserId, account }: { appUserId: string; account: AccountContext }) {
+  return inAccountScope(account, async () => {
+  const accounts = await listAffiliateAccounts(appUserId, account.tenantId).catch(() => []);
+  const serializedAccounts = accounts.map((a) => ({
+    id: a.id,
+    tenantId: a.tenantId,
+    publicSlug: a.publicSlug,
+    displayName: a.displayName,
+    status: a.status,
+    ownerCount: a.ownerCount,
+    configs: a.configs.map((c) => ({
+      marketplace: c.marketplace,
+      configured: c.configured,
+      status: c.status,
+      validatedAt: c.validatedAt ? new Date(c.validatedAt).toISOString() : null,
+    })),
+  }));
+
+  return <Affiliates initialAccounts={serializedAccounts} />;
+  });
+}
+
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ aba?: string; conta?: string }> }) {
+  const params = await searchParams;
+  const authUser = await getPageAuth();
+  const access = authUser ? await roleAccess(authUser.id, "afiliado") : null;
+  if (!authUser || !access) redirect("/entrar?next=/admin");
+  if (params.aba === "curadoria") redirect("/admin/curadoria?aba=excecoes");
+  const account = await pageAccount(params.conta);
+  if (!account) return <section><p>Nenhuma conta autorizada disponível.</p></section>;
+  const tab = normalizeAdminTab(params.aba);
+  const load = () => {
+    switch (tab) {
+      case "rodagens": return RodagensTab({ account });
+      case "captura-manual": return ManualTab();
+      case "publicacao": return PublicacaoTab({ account });
+      case "afiliados": return AfiliadosTab({ appUserId: access.appUserId, account });
+      default: return OverviewTab({ account });
+    }
+  };
+  return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId ?? ""}>
+    <AdminTabs activeTab={tab}>
+      <Suspense key={`${account.tenantId}:${tab}`} fallback={<SectionLoading label="a aba" />}>
+        <SafeSection label="a aba" load={load} />
+      </Suspense>
+    </AdminTabs>
+  </AdminDraftScope>;
 }
