@@ -4,11 +4,14 @@ export function selectionWorkflowState(
     mode: "catalog" | "editorial" | "unavailable";
     count: number;
     validUntil: string | null;
+    homepageReady?: boolean;
   },
   now = new Date(),
 ): { ready: boolean; label: string } {
   if (!input.schemaReady || input.mode === "unavailable")
     return { ready: false, label: "Seleção indisponível" };
+  if (input.mode === "catalog" && !input.homepageReady && input.count === 0)
+    return { ready: false, label: "Catálogo disponível · destaques ainda não preparados" };
   if (
     input.mode === "editorial" &&
     (!input.validUntil ||

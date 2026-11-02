@@ -38,6 +38,7 @@ try{
    });
    await fx.admin.begin(async(tx:any)=>tx.unsafe(await readFile(new URL('../../packages/persistence/supabase/migrations/'+file,import.meta.url),'utf8')));
   }
+ await fx.migrate('20261102131234_optimize_price_observation_scope.sql');
  await fx.admin`insert into garimpa.affiliate_account(id,tenant_id,public_slug,display_name,status) values('aff_a','a','a','A','active'),('aff_b','b','b','B','active')`;
  await fx.admin`insert into garimpa.app_user(id,tenant_id,auth_user_id) values('user_a','a','auth_a')`;
  await fx.admin`insert into garimpa.affiliate_membership(affiliate_id,app_user_id,role) values('aff_a','user_a','owner')`;

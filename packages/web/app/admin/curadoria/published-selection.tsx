@@ -19,7 +19,7 @@ export default function PublishedSelection({
         {selection.mode === "catalog"
           ? selection.homepageReady ? "A seleção automática está ativa. Personalizar uma edição é opcional." : "Catálogo de transição: estes produtos ainda não compõem uma edição diária renovável."
           : "Estes são os produtos válidos da edição editorial neste momento."}{" "}
-        Os destaques da página inicial estão identificados abaixo.
+        {selection.products.length > 0 && "Os destaques da página inicial estão identificados abaixo."}
       </p>
       {selection.products.length ? (
         <ol className="curation-published-grid">
@@ -61,7 +61,9 @@ export default function PublishedSelection({
         </ol>
       ) : (
         <p>
-          A seleção está vazia. Consulte as pendências ou capture novas ofertas.
+          {selection.mode === "catalog" && !selection.homepageReady
+            ? <>O catálogo continua acessível na <a href="/" target="_blank" rel="noopener noreferrer">vitrine pública</a>. Os destaques aparecerão após a preparação de uma edição.</>
+            : "A seleção está vazia. Consulte as pendências ou capture novas ofertas."}
         </p>
       )}
     </section>

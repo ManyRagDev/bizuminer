@@ -6,6 +6,8 @@ import type { AccountContext } from "./account-context.ts";
 // concurrent instance. One queued connection per instance prevents a burst of
 // page requests from exhausting the database's small session-mode allowance.
 export const WEB_DATABASE_CONNECTIONS = 1;
+export const WEB_STATEMENT_TIMEOUT_MS = 15_000;
+export const WEB_LOCK_TIMEOUT_MS = 5_000;
 const registryKey = Symbol.for("bizuminer.web-database-pools.v1");
 const registryHost = globalThis as typeof globalThis & { [registryKey]?: Map<string, postgres.Sql> };
 const pools = registryHost[registryKey] ??= new Map<string, postgres.Sql>();
@@ -73,6 +75,11 @@ export function databaseHandle(pool: postgres.Sql, context?: AccountContext): po
         const callback = args.pop();
         return (target.begin as Function)(...args, async (tx: any) => {
           try {
+            // Supavisor may ignore startup parameters. Install the budgets in
+            // the actual transaction, so a slow/abandoned request cannot keep
+            // working for minutes or leak its timeout into the next account.
+            await tx`select set_config('statement_timeout', ${String(WEB_STATEMENT_TIMEOUT_MS)}, true),
+              set_config('lock_timeout', ${String(WEB_LOCK_TIMEOUT_MS)}, true)`;
             if (context) await authorizeAccountTransaction(tx, context);
             return await callback(tx);
           } finally { releaseAccountTransaction(tx); }

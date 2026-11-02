@@ -26,9 +26,9 @@ test('inherited and explicit authorization converge; only context preparation is
  const f=fixture(),context=human();
  const value=await withAccountDb(context,tx=>tx`select business_count`,()=>databaseHandle(f.root,context));
  assert.equal(value[0].count,7);
- assert.equal(f.queries.filter(q=>q.text.includes('set_config')).length,1);
+ assert.equal(f.queries.filter(q=>q.text.includes("set_config('garimpa.tenant_id'")).length,1);
  assert.equal(f.queries.filter(q=>q.text.startsWith('select affiliate_id from garimpa.resolve_actor_accounts')).length,1);
- const settings=f.queries.find(q=>q.text.includes('set_config'));
+ const settings=f.queries.find(q=>q.text.includes("set_config('garimpa.tenant_id'"));
  assert.equal((settings.text.match(/set_config/g)||[]).length,6);
  assert.deepEqual(settings.values,['tenant','human','a','owner','request']);
 });

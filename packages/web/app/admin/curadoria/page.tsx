@@ -65,12 +65,10 @@ async function CurationPage({
   const { aba, sub } = canonical;
   const user = await getPageAuth();
   const account = user ? currentAccount() ?? null : null;
-  const [summary, audit] = await Promise.all([
-    account
+  const summary = await (account
       ? curationSummary(account.tenantId, undefined, account)
-      : Promise.resolve({ awaiting: 0, newPending: 0, legacyVisible: 0, held: 0, approved: 0, rejected: 0, deferred: 0 }),
-    getAuditDesk(account?.tenantId ?? scopedTenantId()),
-  ]);
+      : Promise.resolve({ awaiting: 0, newPending: 0, legacyVisible: 0, held: 0, approved: 0, rejected: 0, deferred: 0 }));
+  const audit = aba === "auditoria" ? await getAuditDesk(account?.tenantId ?? scopedTenantId()) : null;
   const pendingTotal = summary.awaiting + summary.held + summary.deferred;
   const secondary = aba === "bussola" || aba === "pipeline" || aba === "radar";
   let content;
@@ -88,6 +86,7 @@ async function CurationPage({
       mode: published.mode,
       count: published.products.length,
       validUntil: published.validUntil,
+      homepageReady: published.homepageReady,
     });
     content = (
       <>
@@ -217,7 +216,7 @@ async function CurationPage({
         )}
       </>
     );
-  } else if (aba === "auditoria") {
+  } else if (aba === "auditoria" && audit) {
     const rubricMetrics = account
       ? await withAccountDb(account, (tx) => getRubricPromotionMetrics(tx, account.tenantId)).catch(() => null)
       : null;
@@ -276,7 +275,7 @@ async function CurationPage({
     {
       id: "auditoria",
       label: "Qualidade da IA",
-      detail: audit.progress.remaining
+      detail: audit?.progress.remaining
         ? `${audit.progress.remaining} para conferir · opcional`
         : "Amostragem opcional",
     },

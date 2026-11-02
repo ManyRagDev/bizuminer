@@ -802,8 +802,10 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
   const { readHomepageEdition } = await import("./homepage-db.ts");
   if (destination==='stories' || destination==='whatsapp') return {mode:"unavailable",schemaReady:true,id:null,version:null,validUntil:null,products:[],heroProductIds:[],heroValidUntil:null};
   const stored = await readHomepageEdition(destination, tenantId, sqlFactory);
-  // Transition until explicit initialization. An initialized empty edition stays empty.
-  return stored ?? await computeEditorialSelection(destination, tenantId, sqlFactory, undefined, false);
+  // Public reads only consume prepared editions. Until explicit activation the
+  // ordinary paginated catalog stays available, without inventing highlights
+  // or re-running the private editorial desk on every visit.
+  return stored ?? {mode:"catalog",schemaReady:true,id:null,version:null,validUntil:null,products:[],heroProductIds:[],heroValidUntil:null};
 }
 
 export async function getEditorialProductPresentation(productId: string, tenantId = scopedTenantId()) {
