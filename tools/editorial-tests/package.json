@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:affiliate-workspace-native": "node --import tsx affiliate-workspace-native.test.ts",
+    "test:recommendations": "node --import tsx recommendation-flow.test.ts",
     "test:homepage": "node --import tsx homepage-flow.test.ts",
+    "test:homepage-native": "node --import tsx homepage-renewal-native.test.ts",
     "test": "node --import tsx integration.test.ts",
     "test:triage-price": "node --import tsx triage-price.test.ts",
     "test:capture-batch": "node --import tsx capture-batch.test.ts",
@@ -34,7 +37,8 @@
     "test:buyer-retention": "node --import tsx buyer-retention.test.ts",
     "test:price-history": "node --import tsx price-history-flow.test.ts",
     "test:capture-facts": "node --import tsx capture-facts-flow.test.ts",
-    "test:product-presentation": "node --import tsx product-presentation-flow.test.ts"
+    "test:product-presentation": "node --import tsx product-presentation-flow.test.ts",
+    "test:loading-recovery": "node --import tsx loading-recovery-native.test.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

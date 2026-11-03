@@ -28,6 +28,7 @@ export type EditorialDestination = "home" | "pauta";
 export type EditorialDimensions = Record<EditorialDimensionId, { level: EditorialLevel; reason: string }>;
 
 export interface EditorialAssessmentInput {
+  expectedTenantId?:string;
   presentation?: EditorialPresentationInput;
   expectedAssessmentId?: string | null;
   heroPolicyVersion?: string;
@@ -51,6 +52,10 @@ export interface EditorialAssessment extends EditorialAssessmentInput {
   priceCentsAtAssessment?: number;
 }
 export interface EditorialCandidate extends VitrineProduct {
+  tenantId?:string;
+  offerMaterialInvalid?:boolean;
+  latestObservationId?: string;
+  evidenceObservationId?: string;
   productUrl: string;
   lastSeenAt: string;
   curationStatus: string;
@@ -85,9 +90,12 @@ export type EditorialPublishedProduct = VitrineProduct & {
   editorialContext: string;
 };
 export interface PublishedEditorialSelection {
+  destination?:"home"|"whatsapp"|"stories";
   /** Shared materialized edition, separate from a human editorial version. */
   homepageEditionId?: string | null;
   homepageReady?: boolean;
+  renewedAt?: string;
+  renewAfter?: string;
   mode: "catalog" | "editorial" | "unavailable";
   schemaReady: boolean;
   id: string | null;
@@ -101,7 +109,7 @@ export interface PublishedEditorialSelection {
 /** Also changes when an item is invalidated without activating another edition. */
 export function publishedEditorialStateKey(selection: PublishedEditorialSelection): string {
   const state = JSON.stringify([HOMEPAGE_POLICY_VERSION, HERO_POLICY_VERSION, CATALOG_EVIDENCE_POLICY_VERSION, selection.homepageReady, selection.homepageEditionId, selection.mode, selection.version, selection.validUntil, selection.heroProductIds, selection.heroValidUntil,
-    selection.products.map((product) => [product.id, product.priceCents, product.evidenceObservedAt,
+    selection.products.map((product) => [product.id, product.offerOptionKey, product.offerOptionLabel, product.offerConditions,product.offerValidUntil,product.priceCents, product.evidenceObservedAt,
       product.title, product.displayTitle, product.editorialRevisionId, product.benefit, product.audience, product.caveat, product.purchaseContents, product.coverHeadline, product.coverImageApproved,
       product.priceType, product.currency, product.originalPriceKind, product.imageUrl, product.editorialRationale, product.editorialPurchaseContents, product.editorialContext])]);
   // Change detection only, not authorization. Polling sends a version, not the whole selection.
@@ -127,7 +135,7 @@ export function editorialEvidenceFingerprint(product: {
   ratingStar?: number | null;
 }): string {
   const evidence = product.offerEvidence && typeof product.offerEvidence === "object" ? product.offerEvidence as Record<string, unknown> : {};
-  const identityKeys = ["description", "variantKey", "variantLabel", "variantIdentity", "packageContents", "packageQuantity", "dimensions", "positiveReviewRate", "currency", "priceType", "fieldStates", "payment", "coupon", "region", "sellerId", "priceMinCents", "priceMaxCents"];
+  const identityKeys = ["description", "variantKey", "variantLabel", "variantIdentity", "packageContents", "packageQuantity", "dimensions", "positiveReviewRate", "currency", "priceType", "fieldStates", "payment", "coupon", "region", "sellerId", "shipping", "conditions", "priceMinCents", "priceMaxCents"];
   // Price-range *values* may change with ordinary price updates. Only a change
   // between a single price and a range is a material ambiguity signal.
   const facts = Object.fromEntries(identityKeys.filter((key) => !key.startsWith("price") && key in evidence).map((key) => [key, evidence[key]]));

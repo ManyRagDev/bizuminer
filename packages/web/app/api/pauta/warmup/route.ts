@@ -4,6 +4,8 @@ import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 import { getPublishedEditorialSelection } from "../../../../lib/editorial-selection-db";
 import { fetchProductImage, ogFonts } from "../../../../lib/og-assets";
 
+export const preferredRegion = "gru1";
+
 export const dynamic = "force-dynamic";
 
 /**

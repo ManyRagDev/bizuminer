@@ -1,6 +1,6 @@
 import type postgres from "postgres";
 import { db } from "./db.ts";
-import { validTenantId } from "./tenant-db.ts";
+import { readInRequest } from "./request-read.ts";
 
 /**
  * Contrato C-01 (EP-10A): Contexto operacional de conta autenticada.
@@ -34,6 +34,14 @@ export interface UserAccountMembership {
 export async function getUserMemberships(
   authUserId: string,
   sqlFactory: typeof db = db,
+  request?: object,
+): Promise<UserAccountMembership[]> {
+  return readInRequest(["memberships", authUserId, sqlFactory], () => readUserMemberships(authUserId, sqlFactory), request);
+}
+
+async function readUserMemberships(
+  authUserId: string,
+  sqlFactory: typeof db,
 ): Promise<UserAccountMembership[]> {
   const sql = sqlFactory();
   try {
@@ -107,10 +115,17 @@ export async function resolveAccountContext(params: {
   requestedAccount?: string | null;
   requestId?: string;
   sqlFactory?: typeof db;
+  request?: object;
 }): Promise<AccountContext | null> {
+  return readInRequest(["account", params.authUserId, params.requestedAccount ?? null, params.requestId ?? null, params.sqlFactory ?? db],
+    () => readAccountContext(params), params.request);
+}
+
+async function readAccountContext(params: Parameters<typeof resolveAccountContext>[0]): Promise<AccountContext | null> {
   const memberships = await getUserMemberships(
     params.authUserId,
     params.sqlFactory,
+    params.request,
   );
   if (!memberships.length) return null;
 

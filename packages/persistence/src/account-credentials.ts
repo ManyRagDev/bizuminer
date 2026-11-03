@@ -34,10 +34,12 @@ export async function resolveAccountMarketplaceCredentials(tenantId:string, mark
     throw new AccountCredentialsError('marketplace_account_capture_unsupported','unsupported_marketplace');
   }
   const fields:Record<string,string>={};
+  const resolved=new Set<string>();
   const aliases:Record<string,string>={appId:'appId',app_id:'appId',appKey:'appKey',app_key:'appKey',appSecret:'appSecret',app_secret:'appSecret',apiKey:'apiKey',api_key:'apiKey',trackingId:'trackingId',tracking_id:'trackingId'};
   if (tenantId==='local') {
     Object.assign(fields,mkt==='shopee' ? {appId:process.env.SHOPEE_APP_ID??'',appSecret:process.env.SHOPEE_APP_SECRET??''} : {appKey:process.env.ALIEXPRESS_APP_KEY??'',appSecret:process.env.ALIEXPRESS_APP_SECRET??'',trackingId:process.env.ALIEXPRESS_TRACKING_ID??''});
-  } else {
+  }
+  {
     const rows=await sql<{secret_id:string;key_version:string;ciphertext:string;nonce:string;tag:string}[]>`
       select secret_id,key_version,ciphertext,nonce,tag from garimpa.affiliate_secret
       where tenant_id=${tenantId} and marketplace=${mkt} and status='active' order by updated_at desc`;
@@ -49,8 +51,8 @@ export async function resolveAccountMarketplaceCredentials(tenantId:string, mark
         let object:Record<string,unknown>;
         try {object=JSON.parse(plain);if (!object || Array.isArray(object) || typeof object!=='object') throw new Error();}
         catch {throw new AccountCredentialsError('credential_payload_invalid','credential_tampered');}
-        for (const [key,value] of Object.entries(object)) if(aliases[key] && typeof value==='string') fields[aliases[key]!]=value.trim();
-      } else if(aliases[r.secret_id]) fields[aliases[r.secret_id]!]=plain.trim();
+        for (const [key,value] of Object.entries(object)) if(aliases[key] && typeof value==='string' && !resolved.has(aliases[key]!)){fields[aliases[key]!]=value.trim();resolved.add(aliases[key]!);}
+      } else if(aliases[r.secret_id]&&!resolved.has(aliases[r.secret_id]!)){fields[aliases[r.secret_id]!]=plain.trim();resolved.add(aliases[r.secret_id]!);}
     }
   }
   const required=mkt==='shopee'?['appId','appSecret']:['appKey','appSecret','trackingId'];

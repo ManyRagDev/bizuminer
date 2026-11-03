@@ -19,7 +19,7 @@ export default function PriceHistory({ points, context, totalCount }: { points: 
         <svg className={styles.chart} viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label={`Histórico desta versão: de ${money(view.min!)} a ${money(view.max!)}. ${view.explanation}`}>
           <path className={styles.grid} d="M5 86H95 M5 50H95 M5 16H95" />
           {view.series.length > 1 && <path className={styles.line} d={path} />}
-          {view.coordinates.map((p, i) => <circle key={i} className={styles.point} cx={p.x} cy={p.y} r={view.series.length === 1 ? 2 : 1}><title>{date(p.observed_at)}: {money(p.price_cents)}</title></circle>)}
+          {view.coordinates.map((p, i) => <circle key={i} className={styles.point} cx={p.x} cy={p.y} r={view.series.length === 1 ? 2 : 1}><title>{`${date(p.observed_at)}: ${money(p.price_cents)}`}</title></circle>)}
         </svg>
         <div className={styles.dates}><span>{date(view.series[0].observed_at)}</span><span>{date(view.series[view.series.length - 1].observed_at)}</span></div>
         <dl><div><dt>menor nesta comparação</dt><dd>{money(view.min!)}</dd></div><div><dt>maior nesta comparação</dt><dd>{money(view.max!)}</dd></div></dl>

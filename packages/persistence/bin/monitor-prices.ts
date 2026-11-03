@@ -1,4 +1,6 @@
-import { resolveWorkerCredential, withAccountCredential } from "../src/account-credentials.ts";
+import {runEditorialDiscovery} from "../src/editorial-discovery-run.ts";
+import { discoveryBudget,discoveryKeyword,loadDiscoveryPolicy } from "../src/editorial-discovery.ts";
+import { resolveWorkerCredential, withAccountCredential,accountCaptureAdapter } from "../src/account-credentials.ts";
 import { withMonitoringDb } from "../src/monitoring-db.ts";
 /**
  * Retenção por ID exato, separada da descoberta por palavra-chave.
@@ -58,12 +60,16 @@ const {candidates,suppressed} = await withMonitoringDb(sql,tenantId,async tx=>{
  const candidates=await loadMonitoringCandidates(tx,tenantId,marketplace);
  return {candidates,suppressed:await suppressedMonitoringIds(tx,tenantId,marketplace,candidates)};
 });
-const selected = monitoringQueue(candidates.filter((candidate) => !suppressed.has(candidate.productId)), marketplace, limit);
+const available=candidates.filter(candidate=>!suppressed.has(candidate.productId));
+const policy=await withMonitoringDb(sql,tenantId,tx=>loadDiscoveryPolicy(tx as any,tenantId,marketplace));
+const fullQueue=monitoringQueue(available,marketplace,limit);
+const capacity=discoveryBudget(limit,fullQueue.filter(d=>d.tier==='watch').length,policy?.items_per_run ?? 0,policy?.enabled===true);
+const selected=monitoringQueue(available,marketplace,capacity.monitoring);
 const byId = new Map(candidates.map((candidate) => [candidate.productId, candidate]));
 const queue = selected.map((decision) => ({ decision, product: byId.get(decision.productId)! }));
 const runParameters = {
   captureMode: "monitoring", monitoringPolicy: "monitoring-v1", budget: limit,
-  selected: queue.length,
+  selected: queue.length, discoveryBudget:capacity.discovery,discoveryPolicyVersion:policy?.version ?? null,
   githubRunId: process.env.GITHUB_RUN_ID ?? null,
   githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
   githubEvent: process.env.GITHUB_EVENT_NAME ?? null,
@@ -73,8 +79,8 @@ if (!execute) {
   await sql.end();
   console.log(JSON.stringify({ marketplace, mode: "dry-run", tenantId, limit,
     suppressed: suppressed.size,
-    dueSelected: queue.length,
-    tiers: Object.fromEntries(["watch", "approved", "engaged", "candidate"].map((tier) =>
+    dueSelected: queue.length,discoverySlots:capacity.discovery,
+    tiers: Object.fromEntries(["watch", "edition", "approved", "engaged", "candidate"].map((tier) =>
       [tier, queue.filter((entry) => entry.decision.tier === tier).length])),
     previewIds: queue.slice(0, 10).map((entry) => entry.decision.productId) }, null, 2));
   process.exit(0);
@@ -82,7 +88,7 @@ if (!execute) {
 
 const cred = await resolveWorkerCredential(sql,tenantId,marketplace).catch(async error=>{await sql.end();throw error;});
 
-if (queue.length === 0) {
+if (queue.length === 0 && capacity.discovery===0) {
   const store = new PostgresStore({ connectionString, maxConnections: 1 });
   try {
     const runId = await store.startCaptureRun({
@@ -115,6 +121,7 @@ let matched = 0;
 let missing = 0;
 let failed = 0;
 let priceChanges = 0;
+let discovered=0,discoverySeen=0,discoveryFailed=0;
 const missingIds: string[] = [];
 const failedIds: string[] = [];
 const missingReasons = { absent: 0, id_mismatch: 0, invalid_price: 0, currency: 0 };
@@ -149,12 +156,21 @@ try {
         error: error instanceof Error ? error.message : String(error) }));
     }
   }
+  if(capacity.discovery && policy?.keywords.length){
+    try{
+      const adapter=marketplace==='shopee' ? new (await import('../../capture/src/adapters/shopee/index.ts')).ShopeeAdapter()
+        : new (await import('../../capture/src/adapters/aliexpress/index.ts')).AliExpressAdapter();
+      const result=await runEditorialDiscovery(accountCaptureAdapter(sql,tenantId,adapter),cred,store,
+        {tenantId,keyword:discoveryKeyword(policy.keywords),budget:capacity.discovery,policyVersion:policy.version,monitoringRunId:runId},ctx);
+      discovered=result.discovered;discoverySeen=result.seen;
+    }catch{discoveryFailed++;console.error('editorial_discovery_failed');}
+  }
 } finally {
   await store.finishCaptureRun(runId, {
-    finishedAt: new Date(), status: failed > 0 ? "error" : "ok",
+    finishedAt: new Date(), status: failed+discoveryFailed > 0 ? "error" : "ok",
     itemsCaptured: matched, itemsNew: 0, priceChanges,
     error: failed > 0 ? `${failed} reconsultas falharam` : undefined,
-    parameterPatch: { attempted, matched, missing, failed,
+    parameterPatch: { attempted, matched, missing, failed,discovered,discoverySeen,discoveryFailed,
       missingIds: missingIds.join(","), failedIds: failedIds.join(","),
       missingAbsent: missingReasons.absent, missingIdMismatch: missingReasons.id_mismatch,
       missingInvalidPrice: missingReasons.invalid_price, missingCurrency: missingReasons.currency },
@@ -163,5 +179,5 @@ try {
   await sql.end();
 }
 console.log(JSON.stringify({ marketplace, mode: "execute", runId, attempted, matched, missing,
-  missingReasons, failed, priceChanges }));
-if (failed > 0) process.exitCode = 1;
+  missingReasons, failed, priceChanges,discovered,discoverySeen,discoveryFailed }));
+if (failed+discoveryFailed > 0) process.exitCode = 1;

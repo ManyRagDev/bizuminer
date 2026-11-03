@@ -4,6 +4,8 @@ import { siteUrl } from "../lib/site-url";
 import { themeBootScript } from "./theme-toggle";
 import "./globals.css";
 
+export const preferredRegion = "gru1";
+
 // Manrope entra só para o wordmark da marca, que o design system especifica.
 // O corpo do site segue em Arial/Georgia — trocar a tipografia de conteúdo é
 // outra decisão. Assim a palavra "BizuMiner" vira texto vivo e os 255 KB de
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: "BizuMiner — Um bizu bom vale ouro",
   description:
-    "Ofertas selecionadas com preço atual, histórico disponível e evidências do Mercado Livre.",
+    "Achados selecionados com preços observados e histórico quando há registros da mesma opção de compra.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -38,7 +40,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "BizuMiner — Um bizu bom vale ouro",
     description:
-      "Curadoria de ponta a ponta com ofertas selecionadas e histórico de preço.",
+      "Achados selecionados com ofertas claras e histórico comparável quando disponível.",
     url: "/",
     siteName: "BizuMiner",
     locale: "pt_BR",
@@ -56,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BizuMiner — Um bizu bom vale ouro",
     description:
-      "Curadoria em profundidade de ofertas com histórico de preço.",
+      "Ofertas selecionadas e acompanhamento de preços, com histórico comparável quando disponível.",
     images: ["/og-bizuminer.jpg"],
   },
 };

@@ -2,6 +2,8 @@ import { inAccountScope } from "../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 /**

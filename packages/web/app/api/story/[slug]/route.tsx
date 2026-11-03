@@ -1,3 +1,5 @@
+import {offerArtworkFacts} from "../../../../lib/offer-artwork.ts";
+import { confirmedOfferDetail } from "../../../../lib/confirmed-offer-db.ts";
 import { ImageResponse } from "next/og";
 import { dealDetail } from "../../../../lib/db";
 import { priceFreshness, priceHighlight } from "../../../../lib/deal-signal";
@@ -6,6 +8,8 @@ import { fetchProductImage, ogFonts } from "../../../../lib/og-assets";
 import { toVitrineProduct } from "../../../../lib/deal-view";
 import { formatOfferMoney, offerPriceLabel } from "../../../../lib/offer-price";
 import { storyLinkLabel } from "../../../../lib/story-link";
+
+export const preferredRegion = "gru1";
 
 export const runtime = "nodejs";
 
@@ -59,16 +63,22 @@ const LINE = "rgba(21, 21, 21, 0.18)";
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const fonts = await ogFonts();
-  const detail = await dealDetail(slug);
+  const option=new URL(_req.url).searchParams.get("opcao");
+  const confirmed=option ? await confirmedOfferDetail(slug,option):null;
+  if(option && !confirmed)return new Response("Opção expirada ou indisponível",{status:404,headers:{"Cache-Control":"no-store"}});
+  const detail = option ? null:await dealDetail(slug);
 
-  if (!detail) {
+  if (!detail && !confirmed) {
     return new ImageResponse(<Fallback />, { ...SIZE, fonts });
   }
 
-  const { deal } = detail;
-  const product = toVitrineProduct(deal);
+  const product=confirmed?.product ?? toVitrineProduct(detail!.deal);
+  const deal=confirmed ? {price_cents:product.priceCents,previous_min_price_cents:product.previousMinPriceCents,observation_count:product.observationCount,
+    history_days:product.historyDays,lowest_verified:product.lowestVerified,evidence_observed_at:product.evidenceObservedAt,
+    original_price_cents:product.originalPriceCents,image_url:product.imageUrl,marketplace:product.marketplace} : detail!.deal;
   const stale = priceFreshness(deal.evidence_observed_at) === "stale";
   const title = product.displayTitle ?? product.title;
+  const facts=offerArtworkFacts(product);
   const highlight = priceHighlight({
     priceCents: deal.price_cents,
     previousMinPriceCents: deal.previous_min_price_cents,
@@ -195,6 +205,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
           >
             {title}
           </div>
+          {facts.contents && <div style={{display:"flex",marginTop:18,fontSize:28,lineHeight:1.2,color:INK_QUIET}}>{facts.contents}</div>}
+          {facts.conditions && <div style={{display:"flex",marginTop:12,fontSize:26,lineHeight:1.2,color:INK_QUIET}}>{facts.conditions}</div>}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>

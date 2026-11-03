@@ -1,5 +1,7 @@
 import { db } from "../../../lib/db";
 
+export const preferredRegion = "gru1";
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /**

@@ -182,7 +182,7 @@ export async function sweep(
           const family = productFamilyForTitle(offer.title);
           if (family) acceptedByFamily.set(family, (acceptedByFamily.get(family) ?? 0) + 1);
         }
-        else if (result.previousPriceCents !== offer.priceCents) priceChanges++;
+        else if (result.previousPriceCents !== undefined && result.previousPriceCents !== offer.priceCents) priceChanges++;
       }
 
       const dominant = dominantFamily(candidatesByFamily, uniqueNewCandidates);

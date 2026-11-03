@@ -2,6 +2,8 @@ import { withPublicDb } from "../../../lib/public-offer-db.ts";
 import { isKnownAutomation, parseHomepageEngagement } from "../../../lib/homepage-engagement.ts";
 import { verifyHomepageEngagementTicket } from "../../../lib/homepage-engagement-token.ts";
 import { SlidingWindowLimiter, captureIpKey } from "../../../lib/rate-limit.ts";
+
+export const preferredRegion = "gru1";
 const limiter = new SlidingWindowLimiter(20, 60_000);
 export async function POST(request: Request) {
   const headers = { "Cache-Control": "no-store" };

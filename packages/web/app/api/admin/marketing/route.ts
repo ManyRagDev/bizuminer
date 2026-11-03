@@ -9,6 +9,8 @@ import {
 } from "../../../../lib/marketing-storage-core.ts";
 import { marketingStorage } from "../../../../lib/marketing-store.ts";
 
+export const preferredRegion = "gru1";
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store" };

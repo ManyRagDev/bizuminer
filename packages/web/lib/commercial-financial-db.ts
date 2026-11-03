@@ -274,6 +274,8 @@ export async function recordSaaSRevenueEntry(
   return withAccountDb(context, async (sql) => {
     const currency = input.currency!;
     if (context.membershipRole !== 'owner' || context.tenantId !== 'local') throw new Error('platform_owner_required');
+    const [platform]=await sql`select id from garimpa.resolve_actor_identity(${context.authenticatedAuthUserId??''}) where id=${context.actorAppUserId??''} and 'platform_admin'=any(roles)`;
+    if(!platform)throw new Error('platform_admin_required');
     const digest = calculateContentDigest({ ...input, tenantId });
     if (input.predecessorId) {
       const [parent] = await sql<{ currency: string; obligation_key: string }[]>`select currency,obligation_key from garimpa.saas_revenue_entry where id=${input.predecessorId} and tenant_id=${tenantId}`;
@@ -328,12 +330,14 @@ function validateFinancialInput(input: { currency?: string; occurredAt: string; 
   for (const amount of [input.amountCents, input.orderValueCents]) if (amount != null && (!Number.isSafeInteger(amount) || amount < 0)) throw new Error('invalid_amount');
 }
 
-export async function getCommercialResults(context: AccountContext, sqlFactory: typeof db = db) {
+export async function getCommercialResults(context: AccountContext, sqlFactory: typeof db = db,includePlatform=false) {
   return withAccountDb(context, async tx => {
     const conversions = await tx`select id::text,marketplace,occurred_at::text,order_value_cents::text,currency,verification,status from garimpa.conversion where tenant_id=${context.tenantId} order by occurred_at desc,id desc limit 100`;
     const commissions = await tx`select id::text,conversion_id::text,source_key,amount_cents::text,currency,state,occurred_at::text,source_ref,predecessor_id::text,created_at::text from garimpa.commission_entry where tenant_id=${context.tenantId} order by occurred_at,id`;
     const costs = await tx`select id::text,kind,amount_cents::text,currency,duration_seconds::text,source,period_start::text,period_end::text,verification,created_at::text from garimpa.operational_cost where tenant_id=${context.tenantId} order by period_start,id`;
-    const revenues = context.tenantId==='local' && context.membershipRole==='owner'
+    const [platform]=includePlatform?await tx`select id from garimpa.resolve_actor_identity(${context.authenticatedAuthUserId??''}) where id=${context.actorAppUserId??''} and 'platform_admin'=any(roles)`:[];
+    if(includePlatform&&!platform)throw new Error('platform_admin_required');
+    const revenues = includePlatform && context.tenantId==='local' && context.membershipRole==='owner'
       ? await tx`select id::text,obligation_key,event_key,contract_ref,amount_cents::text,currency,state,occurred_at::text,source_ref,predecessor_id::text,created_at::text from garimpa.saas_revenue_entry where tenant_id=${context.tenantId} order by occurred_at,id` : [];
     return { conversions,commissions,costs,revenues };
   }, sqlFactory);

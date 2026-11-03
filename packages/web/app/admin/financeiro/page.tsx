@@ -15,5 +15,5 @@ export default async function FinancialPage({searchParams}:{searchParams:Promise
  finally {await sql.end();}
  if(!ready) return <section><h1>Resultados comerciais</h1><p>Esta área aguarda a conclusão da configuração comercial da conta.</p></section>;
  const data=await getCommercialResults(context);
- return <FinancialWorkspace accounts={accounts} tenantId={context.tenantId} platformOwner={context.tenantId==="local" && context.membershipRole==="owner"} data={JSON.parse(JSON.stringify(data))}/>;
+ return <FinancialWorkspace accounts={accounts} tenantId={context.tenantId} platformOwner={false} data={JSON.parse(JSON.stringify(data))}/>;
 }

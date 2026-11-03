@@ -1,7 +1,9 @@
 "use client";
+import { useAdminDraftState } from "../draft-provider.tsx";
+import OfferConfirmation from "./offer-confirmation.tsx";
 
 import Image from "next/image";
-import { useMemo, useState, useTransition, type FormEvent } from "react";
+import { useEffect,useMemo, useState, useTransition, type FormEvent } from "react";
 import {
   EDITORIAL_DIMENSIONS,
   EDITORIAL_MAX_PRODUCTS,
@@ -111,7 +113,7 @@ function assessmentFrom(candidate: EditorialCandidate): EditorialAssessmentInput
   const previous = candidate.assessment;
   return {
     heroPolicyVersion: HERO_POLICY_VERSION,
-    productId: candidate.id,
+    expectedTenantId:candidate.tenantId,productId: candidate.id,
     evidenceFingerprint: candidate.evidenceFingerprint,
     expectedAssessmentId: previous?.id ?? null,
     presentation: { status: "draft", title: previous?.presentation?.title ?? "", caveat: previous?.presentation?.caveat ?? "", ...(previous?.presentation?.cover ? { cover: { ...previous.presentation.cover, imageApproved: false } } : {}) },
@@ -129,20 +131,22 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
   candidate: EditorialCandidate; disabled: boolean;
   onSaved: (candidate: EditorialCandidate) => void; onCancel: () => void;
 }) {
-  const [input, setInput] = useState(() => assessmentFrom(candidate));
-  const [maxPrice, setMaxPrice] = useState(() => (input.maxPriceCents / 100).toFixed(2));
-  const [doubts, setDoubts] = useState(input.criticalDoubts.join("\n"));
-  const [altIdsText, setAltIdsText] = useState(() => candidate.assessment?.comparativeBasis?.alternativeProductIds?.join("\n") ?? "");
-  const [usageScope, setUsageScope] = useState(() => candidate.assessment?.comparativeBasis?.usageScope ?? "");
-  const [minPriceRange, setMinPriceRange] = useState(() => candidate.assessment?.comparativeBasis?.priceRange?.minCents != null ? (candidate.assessment.comparativeBasis.priceRange.minCents / 100).toFixed(2) : "");
-  const [maxPriceRange, setMaxPriceRange] = useState(() => candidate.assessment?.comparativeBasis?.priceRange?.maxCents != null ? (candidate.assessment.comparativeBasis.priceRange.maxCents / 100).toFixed(2) : "");
-  const [criteriaText, setCriteriaText] = useState(() => candidate.assessment?.comparativeBasis?.criteria?.join("\n") ?? "");
-  const [checkedAtText, setCheckedAtText] = useState(() => candidate.assessment?.comparativeBasis?.checkedAt ? candidate.assessment.comparativeBasis.checkedAt.slice(0, 16) : new Date().toISOString().slice(0, 16));
-  const [comparativeRationale, setComparativeRationale] = useState(() => candidate.assessment?.comparativeBasis?.rationale ?? "");
+  const draftKey=`assessment:${candidate.id}:${candidate.assessment?.id ?? "new"}`;
+  const [input, setInput] = useAdminDraftState(draftKey+":input",() => assessmentFrom(candidate));
+  const [maxPrice, setMaxPrice] = useAdminDraftState(draftKey+":maxPrice",() => (input.maxPriceCents / 100).toFixed(2));
+  const [doubts, setDoubts] = useAdminDraftState(draftKey+":doubts",input.criticalDoubts.join("\n"));
+  const [altIdsText, setAltIdsText] = useAdminDraftState(draftKey+":altIdsText",() => candidate.assessment?.comparativeBasis?.alternativeProductIds?.join("\n") ?? "");
+  const [usageScope, setUsageScope] = useAdminDraftState(draftKey+":usageScope",() => candidate.assessment?.comparativeBasis?.usageScope ?? "");
+  const [minPriceRange, setMinPriceRange] = useAdminDraftState(draftKey+":minPriceRange",() => candidate.assessment?.comparativeBasis?.priceRange?.minCents != null ? (candidate.assessment.comparativeBasis.priceRange.minCents / 100).toFixed(2) : "");
+  const [maxPriceRange, setMaxPriceRange] = useAdminDraftState(draftKey+":maxPriceRange",() => candidate.assessment?.comparativeBasis?.priceRange?.maxCents != null ? (candidate.assessment.comparativeBasis.priceRange.maxCents / 100).toFixed(2) : "");
+  const [criteriaText, setCriteriaText] = useAdminDraftState(draftKey+":criteriaText",() => candidate.assessment?.comparativeBasis?.criteria?.join("\n") ?? "");
+  const [checkedAtText, setCheckedAtText] = useAdminDraftState(draftKey+":checkedAtText",() => candidate.assessment?.comparativeBasis?.checkedAt ? candidate.assessment.comparativeBasis.checkedAt.slice(0, 16) : new Date().toISOString().slice(0, 16));
+  const [comparativeRationale, setComparativeRationale] = useAdminDraftState(draftKey+":comparativeRationale",() => candidate.assessment?.comparativeBasis?.rationale ?? "");
   const [feedback, setFeedback] = useState("");
   const [previewSignature, setPreviewSignature] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const evidenceChanged=input.evidenceFingerprint!==candidate.evidenceFingerprint || (input.expectedAssessmentId ?? null)!==(candidate.assessment?.id ?? null);
   const showComparative = hasSuperiorityClaim(input.publicRationale) || altIdsText.trim().length > 0;
   const coverDraft = {
     ...candidate,
@@ -196,6 +200,9 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
 
   return <form className="editorial-assessment-form" onSubmit={submit}>
     <h4>Avaliação editorial</h4>
+    <p>Ao salvar, canais com seleção automática podem usar esta avaliação. O destino da ficha revisada é definido separadamente abaixo.</p>
+    {evidenceChanged && <div role="alert"><p>Há novos dados ou uma nova revisão. Seu rascunho foi preservado. Confira a oferta atual antes de salvar outra avaliação.</p>
+      <button type="button" onClick={()=>{setInput({...input,evidenceFingerprint:candidate.evidenceFingerprint,expectedAssessmentId:candidate.assessment?.id ?? null});setPreviewSignature(null);}}>Conferi os novos dados e quero revisar este rascunho</button></div>}
     <p>Registre fatos e suas fontes. Informações que o anúncio não permite confirmar continuam desconhecidas.</p>
     <fieldset>
       <legend>Ficha do produto · permanece disponível fora da seleção da home</legend>
@@ -327,20 +334,21 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
       </div>}
     </fieldset>
     {feedback && <p role="alert">{feedback}</p>}
-    <div className="selecao-card-actions"><button type="submit" disabled={pending || disabled || (input.presentation?.status === "published" && previewSignature !== JSON.stringify(input))}>{pending ? "Salvando…" : input.presentation?.status === "published" ? "Salvar avaliação e publicar ficha" : input.presentation?.status === "withdrawn" ? "Salvar e retirar ficha pública" : "Salvar avaliação e rascunho"}</button><button type="button" disabled={pending} onClick={onCancel}>Cancelar</button></div>
+    <div className="selecao-card-actions"><button type="submit" disabled={pending || disabled || evidenceChanged || (input.presentation?.status === "published" && previewSignature !== JSON.stringify(input))}>{pending ? "Salvando…" : input.presentation?.status === "published" ? "Salvar avaliação e publicar ficha" : input.presentation?.status === "withdrawn" ? "Salvar e retirar ficha pública" : "Salvar avaliação e rascunho"}</button><button type="button" disabled={pending} onClick={onCancel}>Cancelar</button></div>
   </form>;
 }
 
-export default function SelecaoView({ initialCandidates, initialSelection, schemaReady, catalogHeroActive }: {
-  initialCandidates: EditorialCandidate[]; initialSelection: EditorialSelection | null; schemaReady: boolean; catalogHeroActive: boolean;
+export default function SelecaoView({ initialCandidates, initialSelection, schemaReady, catalogHeroActive, initialEditingId,reviewOnly=false }: {
+  initialCandidates: EditorialCandidate[]; initialSelection: EditorialSelection | null; schemaReady: boolean; catalogHeroActive: boolean; initialEditingId?: string;reviewOnly?:boolean;
 }) {
   const [candidates, setCandidates] = useState(initialCandidates);
+  useEffect(()=>setCandidates(initialCandidates),[initialCandidates]);
   const [selection, setSelection] = useState(initialSelection);
   const [draft, setDraft] = useState(() => draftFrom(initialSelection));
   const [validHours, setValidHours] = useState("24");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => initialCandidates.find(candidate => candidate.id === initialEditingId)?.title ?? "");
   const [marketplace, setMarketplace] = useState("all");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(() => initialCandidates.some(candidate => candidate.id === initialEditingId) ? initialEditingId! : null);
   const [feedback, setFeedback] = useState("");
   const [dirty, setDirty] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -348,11 +356,12 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
   const ranked = useMemo(() => rankHeroCandidates(candidates), [candidates]);
   const filtered = useMemo(() => ranked.filter(({ candidate }) => (marketplace === "all" || candidate.marketplace === marketplace) && candidate.title.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"))), [ranked, marketplace, search]);
   const heroPreview = useMemo(() => {
+    if(reviewOnly)return [];
     if (catalogHeroActive && !selection && !dirty) return composeHomepage(candidates).heroes;
     const pool = draft.filter((item) => item.destinations.includes("home") && byId.get(item.productId)?.assessment?.id === item.assessmentId)
       .map((item) => byId.get(item.productId)!);
     return composeHomepage(pool, new Date(), undefined, new Map(draft.map((item, position) => [item.productId, position]))).heroes;
-  }, [draft, byId, catalogHeroActive, selection, dirty, candidates]);
+  }, [draft, byId, catalogHeroActive, selection, dirty, candidates,reviewOnly]);
 
   function prepareBest() {
     const best = composeHomepage(candidates.filter((candidate) => candidate.assessment)).selected;
@@ -388,9 +397,10 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
   }
 
   return <section className="selecao-dia-view" aria-labelledby="selecao-dia-title">
-    <div className="selecao-dia-header"><div><h2 id="selecao-dia-title" className="selecao-dia-heading">Seleção editorial</h2><p className="selecao-dia-sub">Avalie o catálogo aprovado e escolha os destaques compartilhados pela home e pela pauta.</p></div></div>
+    <div className="selecao-dia-header"><div><h2 id="selecao-dia-title" className="selecao-dia-heading">Seleção editorial</h2><p className="selecao-dia-sub">Confira os fatos da oferta e avalie público, utilidade, valor, confiança e clareza. A escolha de produtos e a ordem ficam nos controles de cada canal.</p></div></div>
     {!schemaReady && <p className="editorial-selection-alert" role="alert">A estrutura da seleção ainda não está disponível no banco. Avaliação e ativação permanecem desabilitadas até a migração ser aplicada.</p>}
     {feedback && <p className="editorial-selection-alert" role="status">{feedback}</p>}
+    {!reviewOnly && <>
     <section className="hero-ranking-board" aria-labelledby="hero-ranking-title">
       <h3 id="hero-ranking-title">Candidatos à capa da home</h3>
       <p>Até {HERO_MAX_PRODUCTS} candidatos por ordem relativa. A capa mostra apenas o primeiro com ficha publicada, chamada curta, foto aprovada e dados confirmados. Sem candidato apto, entra a arte da marca.</p>
@@ -451,18 +461,20 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       })}</ol>
       <div className="editorial-selection-activate"><label>Vigência da nova versão<select value={validHours} disabled={pending} onChange={(event) => { setValidHours(event.target.value); setDirty(true); }}><option value="6">6 horas</option><option value="12">12 horas</option><option value="24">24 horas</option><option value="48">48 horas</option></select></label><button type="button" disabled={pending || !schemaReady} onClick={activate}>{pending ? "Ativando…" : "Ativar seleção na home e pauta"}</button>{dirty && <span>Há alterações ainda não ativadas.</span>}</div>
     </section>
-    <div className="selecao-dia-header"><div><h3>Catálogo aprovado ({candidates.length})</h3><p className="selecao-dia-sub">Aprovação no catálogo não equivale a destaque editorial.</p></div><div className="selecao-dia-controls"><input aria-label="Buscar produto no catálogo aprovado" type="search" placeholder="Buscar por título…" className="selecao-search-input" value={search} onChange={(event) => setSearch(event.target.value)} /><div className="selecao-filter-pills">{["all", "mercadolivre", "shopee", "aliexpress"].map((slug) => <button type="button" key={slug} className={`filter-pill ${marketplace === slug ? "active" : ""}`} aria-pressed={marketplace === slug} onClick={() => setMarketplace(slug)}>{slug === "all" ? "Todos" : marketplaceDef(slug)?.label ?? slug}</button>)}</div></div></div>
+    </>}
+    <div className="selecao-dia-header"><div><h3>Produtos para avaliação ({candidates.length})</h3><p className="selecao-dia-sub">Aprovação no catálogo não equivale a destaque editorial.</p></div><div className="selecao-dia-controls"><input aria-label="Buscar produto no catálogo aprovado" type="search" placeholder="Buscar por título…" className="selecao-search-input" value={search} onChange={(event) => setSearch(event.target.value)} /><div className="selecao-filter-pills">{["all", "mercadolivre", "shopee", "aliexpress"].map((slug) => <button type="button" key={slug} className={`filter-pill ${marketplace === slug ? "active" : ""}`} aria-pressed={marketplace === slug} onClick={() => setMarketplace(slug)}>{slug === "all" ? "Todos" : marketplaceDef(slug)?.label ?? slug}</button>)}</div></div></div>
     {!filtered.length && <div className="empty-selecao-box">Nenhum produto encontrado.</div>}
-    <div className="selecao-grid">{filtered.map(({ candidate, classification, heroRank }) => <article key={candidate.id} className={`selecao-card${editingId === candidate.id ? " editorial-card-editing" : ""}`}>
+    <div className="selecao-grid">{filtered.map(({ candidate, classification, heroRank }) => <article key={candidate.id} id={`editorial-product-${candidate.id}`} className={`selecao-card${editingId === candidate.id ? " editorial-card-editing" : ""}`}>
       <div className="selecao-card-thumb">{candidate.imageUrl ? <Image src={candidate.imageUrl} alt={candidate.title} fill sizes="(max-width: 768px) 100vw, 300px" className="selecao-img" /> : <div className="selecao-card-no-img">Sem foto</div>}<span className={`mp-badge-tag ${candidate.marketplace}`}>{marketplaceDef(candidate.marketplace)?.label ?? candidate.marketplace}</span></div>
-      <div className="selecao-card-body"><h3 className="selecao-card-title"><a href={`/bizu/${candidate.slug}`} target="_blank" rel="noopener noreferrer">{candidate.title}</a></h3><div className="selecao-card-price"><strong className="current-price">{brl.format(candidate.priceCents / 100)}</strong></div><div className="selecao-card-meta">{candidate.ratingStar !== null && <span>★ {candidate.ratingStar.toFixed(1)}</span>}{candidate.salesCount !== null && <span>{candidate.salesCount} vendas</span>}{candidate.category && <span>{candidate.category}</span>}</div>
+      <div className="selecao-card-body"><h3 className="selecao-card-title"><a href={`/bizu/${candidate.slug}`} target="_blank" rel="noopener noreferrer">{candidate.title}</a></h3><div className="selecao-card-price"><strong className="current-price">{offerPriceLabel(candidate)}</strong>{offerPriceNote(candidate) && <p>{offerPriceNote(candidate)}</p>}</div><div className="selecao-card-meta">{candidate.ratingStar !== null && <span>★ {candidate.ratingStar.toFixed(1)}</span>}{candidate.salesCount !== null && <span>{candidate.salesCount} vendas</span>}{candidate.category && <span>{candidate.category}</span>}</div>
       {candidate.assessment && <p className="editorial-card-rationale">{candidate.assessment.publicRationale}</p>}
       {heroRank !== null && <p className="hero-rank-label">#{heroRank} no ranking individual · a composição final considera clareza e variedade</p>}
       <HeroClassificationDetails classification={classification} />
       {homepageClarityBlockers(candidate).length > 0 && <p className="editorial-selection-blockers">Para a seleção automática: {homepageClarityBlockers(candidate).join(" ")}</p>}
       {candidate.selectionBlockers.length > 0 && <div className="editorial-selection-blockers"><p>Para incluir numa edição editorial:</p><ul>{candidate.selectionBlockers.map((blocker, index) => <li key={`${index}-${blocker}`}>{blocker}</li>)}</ul></div>}
       <EvidenceDetails candidate={candidate} />
-      <div className="selecao-card-actions"><a className="btn-card-link" href={candidate.productUrl} target="_blank" rel="noopener noreferrer nofollow">↗ Conferir anúncio</a><button type="button" disabled={!schemaReady || pending} onClick={() => setEditingId(editingId === candidate.id ? null : candidate.id)}>{candidate.assessment ? "Reavaliar" : "Avaliar"}</button><button type="button" disabled={!schemaReady || pending || !candidate.assessment || candidate.selectionBlockers.length > 0 || draft.length >= EDITORIAL_MAX_PRODUCTS || draft.some((item) => item.productId === candidate.id)} onClick={() => { if (candidate.assessment) changeDraft([...draft, { productId: candidate.id, assessmentId: candidate.assessment.id, destinations: ["home", "pauta"], context: "" }]); }}>Incluir no destaque</button></div>
+      <div className="selecao-card-actions"><a className="btn-card-link" href={candidate.productUrl} target="_blank" rel="noopener noreferrer nofollow">↗ Conferir anúncio</a><button type="button" disabled={!schemaReady || pending} onClick={() => setEditingId(editingId === candidate.id ? null : candidate.id)}>{candidate.assessment ? "Reavaliar" : "Avaliar"}</button>{!reviewOnly && <button type="button" disabled={!schemaReady || pending || !candidate.assessment || candidate.selectionBlockers.length > 0 || draft.length >= EDITORIAL_MAX_PRODUCTS || draft.some((item) => item.productId === candidate.id)} onClick={() => { if (candidate.assessment) changeDraft([...draft, { productId: candidate.id, assessmentId: candidate.assessment.id, destinations: ["home", "pauta"], context: "" }]); }}>Incluir no destaque</button>}</div>
+      <OfferConfirmation candidate={candidate} onOpen={()=>setEditingId(null)}/>
       {editingId === candidate.id && <AssessmentForm key={`${candidate.id}-${candidate.assessment?.id ?? "new"}`} candidate={candidate} disabled={!schemaReady} onCancel={() => setEditingId(null)} onSaved={(updated) => { setCandidates((current) => current.map((item) => item.id === updated.id ? updated : item)); setEditingId(null); setFeedback("Avaliação salva. Confira os impedimentos antes de incluir no destaque."); if (draft.some((item) => item.productId === updated.id) && updated.assessment) changeDraft(draft.map((item) => item.productId === updated.id ? { ...item, assessmentId: updated.assessment!.id } : item)); }} />}
       </div>
     </article>)}</div>

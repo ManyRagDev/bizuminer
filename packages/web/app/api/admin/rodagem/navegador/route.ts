@@ -8,6 +8,8 @@ import {
 } from "../../../../../lib/browser-capture-contract";
 import { dispatchCaptureBatch } from "../../../../../lib/capture-dispatch";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   const check = await checkAffiliateUser(request);

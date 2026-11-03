@@ -8,7 +8,7 @@ test('database handles keep per-transaction accounts and end never closes anothe
  let rootEnds=0;
  const root=async()=>[{ok:true}];root.end=async()=>{rootEnds++;};root.unsafe=async()=>[{ok:true}];root.json=x=>JSON.stringify(x);
  root.begin=async(...args)=>{
-  const settings={};const tx=async(parts,...values)=>{const text=parts.join('?');const key=text.match(/set_config\('([^']+)'/)?.[1];if(key)settings[key]=values[0];return [];};
+  const settings={};const tx=async(parts,...values)=>{const text=parts.join('?');const keys=[...text.matchAll(/set_config\('([^']+)'/g)].map(m=>m[1]);let i=0;for(const key of keys)settings[key]=key==='garimpa.platform_role'?'':values[i++];return [];};
   return args.at(-1)(Object.assign(tx,{settings}));
  };
  const originalBegin=root.begin;const a=databaseHandle(root,context('a')),b=databaseHandle(root,context('b'));

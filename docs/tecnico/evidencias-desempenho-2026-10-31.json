@@ -1,0 +1,1473 @@
+{
+  "date": "2026-10-31",
+  "timezone": "America/Sao_Paulo",
+  "purpose": "Baseline de leitura e evidências da implementação; amostras e limites separados por ambiente.",
+  "local": {
+    "head": "ca3a9516f14cf9b8f7fe9f501660b1049d59d8a0",
+    "mode": "next dev existente, porta 3100; alterações locais preservadas",
+    "database_host": "aws-1-sa-east-1.pooler.supabase.com",
+    "database_port": 5432
+  },
+  "production": {
+    "domain": "www.bizuminer.com.br",
+    "deployment_id": "dpl_BRHx7ejh75JfYZyutCux9d67bJZm",
+    "deployment_url": "web-2tsef6356-emanuels-projects-aa92a126.vercel.app",
+    "source": "cli",
+    "git_sha_reported": null,
+    "next_version": "15.5.23",
+    "effective_regions": [
+      "iad1"
+    ],
+    "source_vercel_json_regions": [
+      "gru1"
+    ],
+    "source_file_sha1_verified": {
+      "database-pool.ts": "0683e09c42973be18750a507b52d8bc630e1b662",
+      "account-scope.ts": "54bf5c88e4c586db7833da0860001895d748ae8a",
+      "tenant-db.ts": "ce5b1ea80476716229cb8b5582f4f7aa197c163f",
+      "homepage-db.ts": "ef78cd90e2c78826b35fa50f91fcd2176c0fc2a7",
+      "editorial-selection-db.ts": "6d3e523153c5eb1ca4f78f5ed6c5e57a744b9fd2",
+      "vercel.json": "a5c5315b0b56eb201fcc7bb6cfe64ee09032a5b8"
+    }
+  },
+  "dataset": {
+    "tenant": "local",
+    "product_rows_admin_read": 1657,
+    "homepage_edition_rows": 0,
+    "public_catalog_2d_total": 203,
+    "public_stats_7d_marketplaces": {
+      "shopee": 118,
+      "aliexpress": 127
+    }
+  },
+  "http_method": "curl sem sessão, documento/API completos sem assets; rotas dinâmicas n=3; produção e dev não são runtimes equivalentes; sem p95",
+  "http_summary": [
+    {
+      "environment": "local",
+      "path": "/",
+      "samples": 3,
+      "median_ttfb_s": 1.015422,
+      "median_total_s": 1.019356
+    },
+    {
+      "environment": "local",
+      "path": "/api/deals?limit=24",
+      "samples": 3,
+      "median_ttfb_s": 0.934079,
+      "median_total_s": 0.934279
+    },
+    {
+      "environment": "local",
+      "path": "/bizu/ali-1005009830682959",
+      "samples": 3,
+      "median_ttfb_s": 0.061951,
+      "median_total_s": 1.009962
+    },
+    {
+      "environment": "local",
+      "path": "/entrar",
+      "samples": 2,
+      "median_ttfb_s": 0.414678,
+      "median_total_s": 0.4187185
+    },
+    {
+      "environment": "local",
+      "path": "/favicon-32x32.png",
+      "samples": 1,
+      "median_ttfb_s": 0.001193,
+      "median_total_s": 0.001222
+    },
+    {
+      "environment": "production",
+      "path": "/",
+      "samples": 3,
+      "median_ttfb_s": 5.136668,
+      "median_total_s": 5.357561
+    },
+    {
+      "environment": "production",
+      "path": "/api/deals?limit=24",
+      "samples": 3,
+      "median_ttfb_s": 4.618087,
+      "median_total_s": 4.622253
+    },
+    {
+      "environment": "production",
+      "path": "/bizu/ali-1005009830682959",
+      "samples": 3,
+      "median_ttfb_s": 0.203076,
+      "median_total_s": 4.980553
+    },
+    {
+      "environment": "production",
+      "path": "/entrar",
+      "samples": 2,
+      "median_ttfb_s": 0.224773,
+      "median_total_s": 0.2248495
+    },
+    {
+      "environment": "production",
+      "path": "/favicon-32x32.png",
+      "samples": 1,
+      "median_ttfb_s": 0.23314,
+      "median_total_s": 0.233188
+    }
+  ],
+  "http_samples": [
+    {
+      "environment": "production",
+      "path": "/",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 0.006474,
+      "time_connect": 0.010923,
+      "time_appconnect": 0.026193,
+      "time_starttransfer": 8.841883,
+      "time_total": 9.082013,
+      "size_download": 258811
+    },
+    {
+      "environment": "production",
+      "path": "/",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 0.010597,
+      "time_connect": 0.014419,
+      "time_appconnect": 0.031222,
+      "time_starttransfer": 5.136668,
+      "time_total": 5.357561,
+      "size_download": 258811
+    },
+    {
+      "environment": "production",
+      "path": "/",
+      "sample": 3,
+      "http_code": 200,
+      "time_namelookup": 0.0069,
+      "time_connect": 0.010592,
+      "time_appconnect": 0.025431,
+      "time_starttransfer": 4.621704,
+      "time_total": 4.848995,
+      "size_download": 258811
+    },
+    {
+      "environment": "production",
+      "path": "/api/deals?limit=24",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 0.008584,
+      "time_connect": 0.01415,
+      "time_appconnect": 0.026119,
+      "time_starttransfer": 7.630189,
+      "time_total": 7.632843,
+      "size_download": 24097
+    },
+    {
+      "environment": "production",
+      "path": "/api/deals?limit=24",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 0.008832,
+      "time_connect": 0.012012,
+      "time_appconnect": 0.027422,
+      "time_starttransfer": 4.618087,
+      "time_total": 4.622253,
+      "size_download": 24097
+    },
+    {
+      "environment": "production",
+      "path": "/api/deals?limit=24",
+      "sample": 3,
+      "http_code": 200,
+      "time_namelookup": 0.008307,
+      "time_connect": 0.012177,
+      "time_appconnect": 0.024693,
+      "time_starttransfer": 4.351457,
+      "time_total": 4.356078,
+      "size_download": 24097
+    },
+    {
+      "environment": "production",
+      "path": "/bizu/ali-1005009830682959",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 0.006414,
+      "time_connect": 0.011274,
+      "time_appconnect": 0.026567,
+      "time_starttransfer": 0.232259,
+      "time_total": 6.158554,
+      "size_download": 43775
+    },
+    {
+      "environment": "production",
+      "path": "/bizu/ali-1005009830682959",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 0.008203,
+      "time_connect": 0.011711,
+      "time_appconnect": 0.024466,
+      "time_starttransfer": 0.20246,
+      "time_total": 4.980553,
+      "size_download": 43775
+    },
+    {
+      "environment": "production",
+      "path": "/bizu/ali-1005009830682959",
+      "sample": 3,
+      "http_code": 200,
+      "time_namelookup": 0.003983,
+      "time_connect": 0.007656,
+      "time_appconnect": 0.021122,
+      "time_starttransfer": 0.203076,
+      "time_total": 4.858501,
+      "size_download": 43775
+    },
+    {
+      "environment": "production",
+      "path": "/entrar",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 0.010926,
+      "time_connect": 0.014345,
+      "time_appconnect": 0.026612,
+      "time_starttransfer": 0.256251,
+      "time_total": 0.25633,
+      "size_download": 16939
+    },
+    {
+      "environment": "production",
+      "path": "/entrar",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 0.005246,
+      "time_connect": 0.010092,
+      "time_appconnect": 0.021933,
+      "time_starttransfer": 0.193295,
+      "time_total": 0.193369,
+      "size_download": 16939
+    },
+    {
+      "environment": "production",
+      "path": "/favicon-32x32.png",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 0.004053,
+      "time_connect": 0.006591,
+      "time_appconnect": 0.022408,
+      "time_starttransfer": 0.23314,
+      "time_total": 0.233188,
+      "size_download": 479
+    },
+    {
+      "environment": "local",
+      "path": "/",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 1.6e-05,
+      "time_connect": 9.1e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 1.194866,
+      "time_total": 1.198305,
+      "size_download": 268133
+    },
+    {
+      "environment": "local",
+      "path": "/",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 2.1e-05,
+      "time_connect": 0.000117,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 1.015422,
+      "time_total": 1.019356,
+      "size_download": 268131
+    },
+    {
+      "environment": "local",
+      "path": "/",
+      "sample": 3,
+      "http_code": 200,
+      "time_namelookup": 1.3e-05,
+      "time_connect": 6.9e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 1.008304,
+      "time_total": 1.011679,
+      "size_download": 268131
+    },
+    {
+      "environment": "local",
+      "path": "/api/deals?limit=24",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 1.6e-05,
+      "time_connect": 9.7e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 1.181256,
+      "time_total": 1.181464,
+      "size_download": 24097
+    },
+    {
+      "environment": "local",
+      "path": "/api/deals?limit=24",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 1.8e-05,
+      "time_connect": 0.00011,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.852818,
+      "time_total": 0.853063,
+      "size_download": 24097
+    },
+    {
+      "environment": "local",
+      "path": "/api/deals?limit=24",
+      "sample": 3,
+      "http_code": 200,
+      "time_namelookup": 1.7e-05,
+      "time_connect": 9.5e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.934079,
+      "time_total": 0.934279,
+      "size_download": 24097
+    },
+    {
+      "environment": "local",
+      "path": "/bizu/ali-1005009830682959",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 1.6e-05,
+      "time_connect": 0.000109,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.17446,
+      "time_total": 1.312182,
+      "size_download": 74956
+    },
+    {
+      "environment": "local",
+      "path": "/bizu/ali-1005009830682959",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 1.6e-05,
+      "time_connect": 8.7e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.061951,
+      "time_total": 1.009962,
+      "size_download": 74952
+    },
+    {
+      "environment": "local",
+      "path": "/bizu/ali-1005009830682959",
+      "sample": 3,
+      "http_code": 200,
+      "time_namelookup": 1.7e-05,
+      "time_connect": 8.8e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.054134,
+      "time_total": 0.992536,
+      "size_download": 74955
+    },
+    {
+      "environment": "local",
+      "path": "/entrar",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 1.3e-05,
+      "time_connect": 9.3e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.796068,
+      "time_total": 0.800151,
+      "size_download": 27294
+    },
+    {
+      "environment": "local",
+      "path": "/entrar",
+      "sample": 2,
+      "http_code": 200,
+      "time_namelookup": 1.8e-05,
+      "time_connect": 9.3e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.033288,
+      "time_total": 0.037286,
+      "size_download": 27296
+    },
+    {
+      "environment": "local",
+      "path": "/favicon-32x32.png",
+      "sample": 1,
+      "http_code": 200,
+      "time_namelookup": 1.9e-05,
+      "time_connect": 9.8e-05,
+      "time_appconnect": 0.0,
+      "time_starttransfer": 0.001193,
+      "time_total": 0.001222,
+      "size_download": 479
+    }
+  ],
+  "service_method": "Transpile TypeScript em memória; mesmo Postgres.js e funções locais; max=1, prepare=false, default_transaction_read_only=on, statement_timeout=15000; identidade de conta existente resolvida para leituras privadas; sem sessão de navegador criada.",
+  "service_samples": [
+    {
+      "label": "connection-first-select",
+      "ms": 184,
+      "queries": 2
+    },
+    {
+      "label": "connection-warm-select-0",
+      "ms": 8,
+      "queries": 1
+    },
+    {
+      "label": "connection-warm-select-1",
+      "ms": 9,
+      "queries": 1
+    },
+    {
+      "label": "connection-warm-select-2",
+      "ms": 10,
+      "queries": 1
+    },
+    {
+      "label": "homepage-edition",
+      "ms": 1108,
+      "queries": 15
+    },
+    {
+      "label": "public-projection-ready",
+      "ms": 13,
+      "queries": 1
+    },
+    {
+      "label": "catalog-page",
+      "ms": 110,
+      "queries": 4
+    },
+    {
+      "label": "catalog-stats",
+      "ms": 59,
+      "queries": 4
+    },
+    {
+      "label": "product-detail",
+      "ms": 49,
+      "queries": 4
+    },
+    {
+      "label": "connection-first-select",
+      "ms": 252,
+      "queries": 2
+    },
+    {
+      "label": "connection-warm-select-0",
+      "ms": 5,
+      "queries": 1
+    },
+    {
+      "label": "connection-warm-select-1",
+      "ms": 6,
+      "queries": 1
+    },
+    {
+      "label": "connection-warm-select-2",
+      "ms": 6,
+      "queries": 1
+    },
+    {
+      "label": "homepage-edition",
+      "ms": 1675,
+      "queries": 15
+    },
+    {
+      "label": "public-projection-ready",
+      "ms": 62,
+      "queries": 1
+    },
+    {
+      "label": "catalog-page",
+      "ms": 99,
+      "queries": 4
+    },
+    {
+      "label": "catalog-stats",
+      "ms": 46,
+      "queries": 4
+    },
+    {
+      "label": "product-detail",
+      "ms": 44,
+      "queries": 4
+    },
+    {
+      "label": "resolve-account",
+      "ms": 80,
+      "queries": 1
+    },
+    {
+      "label": "curation-summary",
+      "ms": 289,
+      "queries": 19
+    },
+    {
+      "label": "admin-overview",
+      "ms": 739,
+      "queries": 21
+    },
+    {
+      "label": "admin-top-clicked",
+      "ms": 214,
+      "queries": 19
+    },
+    {
+      "label": "admin-marketplace-counts",
+      "ms": 131,
+      "queries": 12
+    },
+    {
+      "label": "admin-capture-history",
+      "ms": 236,
+      "queries": 19
+    },
+    {
+      "label": "admin-running-run",
+      "ms": 200,
+      "queries": 19
+    },
+    {
+      "label": "admin-audit-desk",
+      "ms": 553,
+      "queries": 38
+    },
+    {
+      "label": "admin-guideline",
+      "ms": 208,
+      "queries": 19
+    },
+    {
+      "label": "admin-selection",
+      "ms": 976,
+      "queries": 31
+    },
+    {
+      "label": "admin-workbench",
+      "ms": 314,
+      "queries": 21
+    },
+    {
+      "label": "connection-first-select",
+      "ms": 149,
+      "queries": 2
+    },
+    {
+      "label": "connection-warm-select-0",
+      "ms": 9,
+      "queries": 1
+    },
+    {
+      "label": "connection-warm-select-1",
+      "ms": 10,
+      "queries": 1
+    },
+    {
+      "label": "connection-warm-select-2",
+      "ms": 9,
+      "queries": 1
+    },
+    {
+      "label": "homepage-edition",
+      "ms": 1286,
+      "queries": 15
+    },
+    {
+      "label": "public-projection-ready",
+      "ms": 53,
+      "queries": 1
+    },
+    {
+      "label": "catalog-page",
+      "ms": 113,
+      "queries": 4
+    },
+    {
+      "label": "catalog-stats",
+      "ms": 52,
+      "queries": 4
+    },
+    {
+      "label": "product-detail",
+      "ms": 55,
+      "queries": 4
+    },
+    {
+      "label": "resolve-account",
+      "ms": 27,
+      "queries": 1
+    },
+    {
+      "label": "curation-summary",
+      "ms": 351,
+      "queries": 19
+    },
+    {
+      "label": "admin-overview",
+      "ms": 721,
+      "queries": 21
+    },
+    {
+      "label": "admin-top-clicked",
+      "ms": 304,
+      "queries": 19
+    },
+    {
+      "label": "admin-marketplace-counts",
+      "ms": 177,
+      "queries": 12
+    },
+    {
+      "label": "admin-capture-history",
+      "ms": 308,
+      "queries": 19
+    },
+    {
+      "label": "admin-running-run",
+      "ms": 282,
+      "queries": 19
+    },
+    {
+      "label": "admin-audit-desk",
+      "ms": 666,
+      "queries": 38
+    },
+    {
+      "label": "admin-guideline",
+      "ms": 283,
+      "queries": 19
+    },
+    {
+      "label": "admin-selection",
+      "ms": 1090,
+      "queries": 31
+    },
+    {
+      "label": "admin-workbench",
+      "ms": 382,
+      "queries": 21
+    },
+    {
+      "label": "admin-page-data-batch",
+      "ms": 5444,
+      "queries": 294
+    },
+    {
+      "label": "summary-scoped-double",
+      "ms": 262,
+      "queries": 19
+    },
+    {
+      "label": "summary-explicit-single",
+      "ms": 173,
+      "queries": 11
+    },
+    {
+      "label": "homepage-compute-current",
+      "ms": 821,
+      "queries": 15
+    }
+  ],
+  "admin_batch": {
+    "ms": 5444,
+    "commands": 294,
+    "commands_with_set_config": 175,
+    "membership_revalidations": 29,
+    "includes": "Bloco Promise.all da página admin com três marketplaces",
+    "excludes": [
+      "Supabase Auth",
+      "layout",
+      "HTML",
+      "hidratação",
+      "Storage"
+    ]
+  },
+  "authorization_experiment": {
+    "method": "Mesma curationSummary com contexto explícito válido fora e dentro de inAccountScope, sem alteração de fonte. A chamada fora do scope autoriza em withAccountDb; dentro também autoriza no wrapper de pool.",
+    "scoped_double": {
+      "ms": 262,
+      "commands": 19
+    },
+    "explicit_single": {
+      "ms": 173,
+      "commands": 11
+    },
+    "equal_results": true,
+    "scoped_query_counts": {
+      "begin ": 1,
+      "select set_config('garimpa.tenant_id', $1, true)": 2,
+      "select set_config('garimpa.actor_type', $1, true)": 2,
+      "select set_config('garimpa.actor_app_user_id', $1, true)": 2,
+      "select set_config('garimpa.membership_role', $1, true)": 2,
+      "select set_config('garimpa.platform_role', '', true)": 2,
+      "select set_config('garimpa.request_id', $1, true)": 2,
+      "select to_regprocedure('garimpa.resolve_actor_accounts(text)') is not null as ready": 2,
+      "select affiliate_id from garimpa.resolve_actor_accounts($1) where affiliate_id=$2 and tenant_id=$3 and app_user_id=$4 and membership_role=$5 and app_role='afiliado'": 2,
+      " select count(*) filter (where status in ('legacy_visible', 'pending') and p.last_seen_at >= now() - ($1 * interval '1 day') and (deferred_until is null or deferred_until <= now()))::int as ": 1,
+      "commit": 1
+    }
+  },
+  "candidate_explain": {
+    "executionMs": 561.899,
+    "planningMs": 4.27,
+    "sharedHitBlocks": 69547,
+    "sharedReadBlocks": 0,
+    "nodes": [
+      {
+        "node": "Sort",
+        "rows": 245,
+        "loops": 1,
+        "ms": 560.811
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 245,
+        "loops": 1,
+        "ms": 560.073
+      },
+      {
+        "node": "Result",
+        "rows": 245,
+        "loops": 1,
+        "ms": 547.683
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 245,
+        "loops": 1,
+        "ms": 547.242
+      },
+      {
+        "node": "Merge Join",
+        "rows": 245,
+        "loops": 1,
+        "ms": 539.973
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 245,
+        "loops": 1,
+        "ms": 332.434
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 245,
+        "loops": 1,
+        "ms": 329.012
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 245,
+        "loops": 1,
+        "ms": 326.597
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 245,
+        "loops": 1,
+        "ms": 326.079
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 260,
+        "loops": 1,
+        "ms": 229.83
+      },
+      {
+        "node": "Subquery Scan",
+        "rows": 1344,
+        "loops": 1,
+        "ms": 216.416,
+        "removed": 0,
+        "filter": "(l.tenant_id = 'local'::text)"
+      },
+      {
+        "node": "Unique",
+        "rows": 1344,
+        "loops": 1,
+        "ms": 216.105
+      },
+      {
+        "node": "Sort",
+        "rows": 10944,
+        "loops": 1,
+        "ms": 214.362
+      },
+      {
+        "node": "Seq Scan",
+        "relation": "price_observation",
+        "rows": 10944,
+        "loops": 1,
+        "ms": 181.055,
+        "removed": 0,
+        "filter": "((tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND (garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, tr"
+      },
+      {
+        "node": "Memoize",
+        "rows": 0,
+        "loops": 1344,
+        "ms": 0.01
+      },
+      {
+        "node": "Index Scan",
+        "relation": "product",
+        "rows": 0,
+        "loops": 1344,
+        "ms": 0.008,
+        "removed": 1,
+        "filter": "((last_seen_at >= (now() - '7 days'::interval)) AND (garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_a"
+      },
+      {
+        "node": "Nested Loop",
+        "rows": 1,
+        "loops": 260,
+        "ms": 0.369
+      },
+      {
+        "node": "Index Scan",
+        "relation": "product_curation",
+        "rows": 1,
+        "loops": 260,
+        "ms": 0.023,
+        "removed": 0,
+        "filter": "((tenant_id = 'local'::text) AND (status = 'approved'::text) AND (garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY "
+      },
+      {
+        "node": "Aggregate",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.366
+      },
+      {
+        "node": "Result",
+        "rows": 21,
+        "loops": 245,
+        "ms": 0.359
+      },
+      {
+        "node": "Index Only Scan",
+        "relation": "price_observation",
+        "rows": 21,
+        "loops": 245,
+        "ms": 0.355,
+        "removed": 0,
+        "filter": "((garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_admin,service_role}'::text[]))) AND garimpa.active_t"
+      },
+      {
+        "node": "Result",
+        "rows": 0,
+        "loops": 245,
+        "ms": 0.001
+      },
+      {
+        "node": "Limit",
+        "rows": 0,
+        "loops": 245,
+        "ms": 0
+      },
+      {
+        "node": "Sort",
+        "rows": 0,
+        "loops": 245,
+        "ms": 0
+      },
+      {
+        "node": "Result",
+        "rows": 0,
+        "loops": 1,
+        "ms": 0.009
+      },
+      {
+        "node": "Index Scan",
+        "relation": "price_evidence_policy_version",
+        "rows": 0,
+        "loops": 1,
+        "ms": 0.007,
+        "removed": 0,
+        "filter": "((garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_admin,service_role}'::text[]))) AND garimpa.commerci"
+      },
+      {
+        "node": "Result",
+        "rows": 0,
+        "loops": 0,
+        "ms": 0
+      },
+      {
+        "node": "Index Scan",
+        "relation": "price_calibration_run",
+        "rows": 0,
+        "loops": 0,
+        "ms": 0,
+        "removed": 0,
+        "filter": "((NOT synthetic) AND (policy_version = p_1.version) AND garimpa.active_tenant(tenant_id) AND garimpa.commercial_rollout_ready() AND (policy_snapshot = p_1.config) AND ((results ->>"
+      },
+      {
+        "node": "Aggregate",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.009
+      },
+      {
+        "node": "Sort",
+        "rows": 0,
+        "loops": 245,
+        "ms": 0.006
+      },
+      {
+        "node": "Result",
+        "rows": 0,
+        "loops": 245,
+        "ms": 0.004
+      },
+      {
+        "node": "Index Scan",
+        "relation": "price_observation",
+        "rows": 0,
+        "loops": 0,
+        "ms": 0,
+        "removed": 0,
+        "filter": "((id <> l.id) AND (price_cents > 0) AND (garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_admin,service"
+      },
+      {
+        "node": "Aggregate",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.013
+      },
+      {
+        "node": "WindowAgg",
+        "rows": 2,
+        "loops": 245,
+        "ms": 0.011
+      },
+      {
+        "node": "Sort",
+        "rows": 2,
+        "loops": 245,
+        "ms": 0.007
+      },
+      {
+        "node": "Append",
+        "rows": 2,
+        "loops": 245,
+        "ms": 0.006
+      },
+      {
+        "node": "Result",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.002
+      },
+      {
+        "node": "Result",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0
+      },
+      {
+        "node": "Result",
+        "rows": 0,
+        "loops": 245,
+        "ms": 0.002
+      },
+      {
+        "node": "Index Scan",
+        "relation": "price_observation",
+        "rows": 0,
+        "loops": 0,
+        "ms": 0,
+        "removed": 0,
+        "filter": "((id <> l.id) AND (price_cents > 0) AND (garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_admin,service"
+      },
+      {
+        "node": "Unique",
+        "rows": 1339,
+        "loops": 1,
+        "ms": 206.814
+      },
+      {
+        "node": "Sort",
+        "rows": 10863,
+        "loops": 1,
+        "ms": 205.081
+      },
+      {
+        "node": "Seq Scan",
+        "relation": "price_observation",
+        "rows": 10890,
+        "loops": 1,
+        "ms": 180.329,
+        "removed": 54,
+        "filter": "((capture_run_id IS NOT NULL) AND (tenant_id = NULLIF(current_setting('garimpa.tenant_id'::text, true), ''::text)) AND (garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting("
+      },
+      {
+        "node": "Result",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.029
+      },
+      {
+        "node": "Index Scan",
+        "relation": "capture_run",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.027,
+        "removed": 0,
+        "filter": "((tenant_id = 'local'::text) AND (garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_admin,service_role}'"
+      },
+      {
+        "node": "Limit",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.049
+      },
+      {
+        "node": "Incremental Sort",
+        "rows": 1,
+        "loops": 245,
+        "ms": 0.049
+      },
+      {
+        "node": "Result",
+        "rows": 2,
+        "loops": 245,
+        "ms": 0.047
+      },
+      {
+        "node": "Index Scan",
+        "relation": "price_observation",
+        "rows": 2,
+        "loops": 245,
+        "ms": 0.045,
+        "removed": 0,
+        "filter": "((garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_admin,service_role}'::text[]))) AND garimpa.active_t"
+      },
+      {
+        "node": "Result",
+        "rows": 0,
+        "loops": 0,
+        "ms": 0
+      },
+      {
+        "node": "Index Scan",
+        "relation": "price_observation",
+        "rows": 0,
+        "loops": 0,
+        "ms": 0,
+        "removed": 0,
+        "filter": "((garimpa.active_tenant(tenant_id) OR (NULLIF(current_setting('garimpa.platform_role'::text, true), ''::text) = ANY ('{platform_admin,service_role}'::text[]))) AND garimpa.active_t"
+      }
+    ]
+  },
+  "other_current_explain_admin": {
+    "public_catalog_stats_ms": 73.455,
+    "public_catalog_ms": 364.763
+  },
+  "observability_limits": {
+    "runtime_logs_30m": "nenhuma linha retornada; não prova ausência de falhas",
+    "runtime_logs_24h": "fora da retenção Hobby",
+    "observability_schema": "404",
+    "pg_stat_statements_since": "2026-09-17T16:40:30.126781Z",
+    "historical_query_stats": "Misturam versões antigas, sem atribuição direta à latência atual."
+  },
+  "not_measured": [
+    "p95",
+    "carga",
+    "LCP/INP",
+    "navegação autenticada de ponta a ponta",
+    "ações de escrita",
+    "latência do Storage marketing",
+    "latência isolada de Supabase Auth",
+    "ganho de região corrigida"
+  ],
+  "implementation": {
+    "status": "implemented_reviewed_and_deployed",
+    "business_sql_rewrites": false,
+    "remote_database_writes": 0,
+    "new_services": 0,
+    "review": {
+      "independent_agent": true,
+      "open_findings": 0,
+      "business_sql_templates_unchanged": 40,
+      "entire_business_service_files_unchanged": 7,
+      "real_postgres_version": "17.6",
+      "react_dom_components_tested": [
+        "admin_page_tabs",
+        "draft_provider",
+        "draft_lifecycle_strict_mode",
+        "composer",
+        "devices",
+        "polling",
+        "vitrine_fetchDeals",
+        "dispatch_forms"
+      ],
+      "corrected_findings": [
+        "failed authorization must retain transaction identity",
+        "curation cache validates context tenant",
+        "pending pairing and invitation result survives pane unmount with expiration",
+        "draft timers disposed after actual layout unmount",
+        "cancelled search resumes after pane remount",
+        "marketplace draft keys and known run IDs remain independent",
+        "native form reset cannot change retry status",
+        "mobile admin header controls remain reachable"
+      ]
+    },
+    "checks": {
+      "web_tests_passed": 513,
+      "web_tests_failed": 0,
+      "homepage_pglite_scenarios": 14,
+      "product_presentation_pglite_scenarios": 15,
+      "native_pool_and_concurrency": "passed",
+      "typecheck": "passed",
+      "build": "passed",
+      "build_functions_with_gru1": 51,
+      "build_functions_missing_gru1": 0,
+      "git_diff_check": "passed",
+      "authenticated_browser": "local next dev3100 and production build3101; one active panel, draft return, navigation pending indicator, back/forward",
+      "mobile_browser": {
+        "configured_width": 390,
+        "client_width": 375,
+        "scroll_width_after": 375,
+        "menu_open_close": "passed"
+      }
+    },
+    "native_fixture": {
+      "before": {
+        "label": "before",
+        "version": "postgres (PostgreSQL) 17.6",
+        "explicitSummary": {
+          "ms": 6.568,
+          "commands": 11,
+          "contextCommands": 6,
+          "membershipChecks": 1
+        },
+        "inheritedSummary": {
+          "ms": 5.463,
+          "commands": 19,
+          "contextCommands": 12,
+          "membershipChecks": 2
+        },
+        "equalSummary": true,
+        "sameTenantActorMismatch": {
+          "rejected": false,
+          "actorReturned": "u_a2"
+        },
+        "rollbackClearsContext": true,
+        "revokedMembershipRejected": true,
+        "nextTransactionRevalidates": true,
+        "serial100": {
+          "count": 100,
+          "p50Ms": 3.564,
+          "p95Ms": 4.792
+        },
+        "concurrent5x100": {
+          "count": 100,
+          "p50Ms": 14.294,
+          "p95Ms": 19.562
+        },
+        "maxConnections": 1,
+        "unscopedReadEmpty": true
+      },
+      "after": {
+        "label": "after",
+        "version": "postgres (PostgreSQL) 17.6",
+        "explicitSummary": {
+          "ms": 11.795,
+          "commands": 6,
+          "contextCommands": 1,
+          "membershipChecks": 1
+        },
+        "inheritedSummary": {
+          "ms": 3.902,
+          "commands": 6,
+          "contextCommands": 1,
+          "membershipChecks": 1
+        },
+        "equalSummary": true,
+        "sameTenantActorMismatch": {
+          "rejected": true
+        },
+        "rollbackClearsContext": true,
+        "revokedMembershipRejected": true,
+        "nextTransactionRevalidates": true,
+        "serial100": {
+          "count": 100,
+          "p50Ms": 2.625,
+          "p95Ms": 3.597
+        },
+        "concurrent5x100": {
+          "count": 100,
+          "p50Ms": 9.619,
+          "p95Ms": 11.823
+        },
+        "maxConnections": 1,
+        "unscopedReadEmpty": true
+      },
+      "limitations": "Fixture PostgreSQL17 local, 100serial reads and 100reads across5logical sessions; shared physical pool max1. Host load differs between samples. This is not Supavisor, full admin rendering or production p95."
+    },
+    "production_build_local_http": {
+      "origin": "http://localhost:3101",
+      "mode": "next build + next start in isolated copy; same remote database as dev",
+      "samples": [
+        {
+          "path": "/",
+          "sample": 1,
+          "status": 200,
+          "ttfb": 2.325513,
+          "total": 2.328256
+        },
+        {
+          "path": "/",
+          "sample": 2,
+          "status": 200,
+          "ttfb": 0.826954,
+          "total": 0.828508
+        },
+        {
+          "path": "/",
+          "sample": 3,
+          "status": 200,
+          "ttfb": 0.811018,
+          "total": 0.813003
+        },
+        {
+          "path": "/api/deals?limit=24",
+          "sample": 1,
+          "status": 200,
+          "ttfb": 0.806801,
+          "total": 0.807117
+        },
+        {
+          "path": "/api/deals?limit=24",
+          "sample": 2,
+          "status": 200,
+          "ttfb": 0.797737,
+          "total": 0.797905
+        },
+        {
+          "path": "/api/deals?limit=24",
+          "sample": 3,
+          "status": 200,
+          "ttfb": 0.836508,
+          "total": 0.836721
+        },
+        {
+          "path": "/bizu/ali-1005009830682959",
+          "sample": 1,
+          "status": 200,
+          "ttfb": 0.009164,
+          "total": 0.900414
+        },
+        {
+          "path": "/bizu/ali-1005009830682959",
+          "sample": 2,
+          "status": 200,
+          "ttfb": 0.007844,
+          "total": 0.84131
+        },
+        {
+          "path": "/bizu/ali-1005009830682959",
+          "sample": 3,
+          "status": 200,
+          "ttfb": 0.007417,
+          "total": 0.845826
+        }
+      ],
+      "limitations": "Three anonymous HTTP samples per route; no image/hydration measurement; no equivalence claim against the dev baseline or new production deployment."
+    },
+    "runtime_read_reuse": {
+      "first_authenticated_render_operations_logged": {
+        "memberships": 1,
+        "account": 1,
+        "curationSummary": 1
+      },
+      "diagnostic_flag": "BIZUMINER_PERF_DIAGNOSTICS=1",
+      "logged_data": "operation label, elapsedms, ok; no keys, cookies, tokens or private parameters"
+    },
+    "publication": {
+      "status": "READY",
+      "authorized_by_user": "Pode fazer o deploy",
+      "deployment_created": true,
+      "deployment_id": "dpl_6oC3wkMgRWoinNcv6h2zWLm6PLsa",
+      "deployment_url": "web-osfn6qmyq-emanuels-projects-aa92a126.vercel.app",
+      "current_domain": "www.bizuminer.com.br",
+      "current_domain_deployment": "dpl_6oC3wkMgRWoinNcv6h2zWLm6PLsa",
+      "current_domain_regions": [
+        "gru1"
+      ],
+      "baseline_and_rollback_deployment": "dpl_BRHx7ejh75JfYZyutCux9d67bJZm",
+      "target_project": "prj_fhslrWGdYJG5rdKnE8vkGmFSh3Ym",
+      "target_team": "team_CdqNeIvhoe03YClNYUpP6C1w",
+      "target": "production",
+      "created_at_utc": "2026-10-31T19:02:25.482Z",
+      "ready_at_utc": "2026-10-31T19:03:51.875Z",
+      "promotion_at_utc": "2026-10-31T19:05:18.091Z",
+      "build_duration_seconds": 85.312,
+      "source_head": "ca3a9516f14cf9b8f7fe9f501660b1049d59d8a0",
+      "source_dirty": true,
+      "source_file_count": 545,
+      "source_manifest_sha256": "13a166cd76eefcd2e050ca38655a94b80c82668921787ea5a9c788015de2e438",
+      "source_scope": "Reviewed performance changes over HEAD, preserving the existing published marketing source; no commit or push performed.",
+      "auto_assign_custom_domains": true,
+      "auto_assign_verified": "API accepted true; Vercel Production environment UI displayed Enabled and checked=true.",
+      "promoted_aliases": {
+        "bizuminer.com.br": "completed",
+        "www.bizuminer.com.br": "completed",
+        "web-khaki-beta-l29v7h3o33.vercel.app": "completed"
+      },
+      "initial_approval_blocks_resolved": true,
+      "blocked_actions": [],
+      "candidate_checks": {
+        "home": "passed",
+        "product": "passed",
+        "api_deals_products": 24,
+        "api_deals_total": 203,
+        "anonymous_admin_gate": "redirected to entrar",
+        "protected_access": "MCP share-link fetch was rejected by deployment authentication; existing authenticated Vercel browser session succeeded, protections preserved."
+      },
+      "production_checks": {
+        "google_signin_existing_user": "passed",
+        "overview": "passed",
+        "rodagens": "passed",
+        "manual_tab": "passed",
+        "only_active_panel": true,
+        "draft_preserved_after_leave_return": true,
+        "mobile_width_configured": 390,
+        "mobile_client_width": 375,
+        "mobile_scroll_width": 375,
+        "mobile_menu_open_close": "passed",
+        "test_draft_cleared": true,
+        "business_forms_submitted": false
+      },
+      "effective_region_headers": {
+        "/": {
+          "x-vercel-id-region-prefix": "gru1::gru1",
+          "status": 200,
+          "cache": "MISS"
+        },
+        "/api/deals?limit=24": {
+          "x-vercel-id-region-prefix": "gru1::gru1",
+          "status": 200,
+          "cache": "MISS"
+        },
+        "/bizu/ali-1005009830682959": {
+          "x-vercel-id-region-prefix": "gru1::gru1",
+          "status": 200,
+          "cache": "MISS"
+        }
+      },
+      "post_deploy_observability": {
+        "since_utc": "2026-10-31T19:05:18.091Z",
+        "runtime_errors_api": "No runtime errors found",
+        "deployment_error_fatal_logs": "No logs found",
+        "browser_console_errors_after_production_rechecks": 0,
+        "rechecked_flows": [
+          "admin full reload",
+          "home",
+          "product",
+          "manual navigation",
+          "mobile menu"
+        ],
+        "drains_inventory": "MCP GET /v1/drains returned404; configuration not established by this check."
+      },
+      "isolated_candidate_frontend_observation": {
+        "react_error": 418,
+        "timestamp_utc": "2026-10-31T19:04:58.973Z",
+        "origin": "protected candidate before promotion",
+        "reproduced_on_production": false,
+        "static_review": "entrar/GoogleButton/ThemeToggle/DetailHeader unchanged vsHEAD; root layout changed only region; no concrete evidence of introduced hydration regression; cause undetermined",
+        "action": "No speculative patch; production reload/home/product rechecked without new error."
+      }
+    },
+    "remaining_measurements": [
+      "Dedicated full-journey p75/p95, LCP/INP and cold-start/idle measurements; three HTTP samples do not prove all UX targets."
+    ],
+    "production_http_after": {
+      "samples": [
+        {
+          "path": "/",
+          "sample": 1,
+          "status": 200,
+          "ttfb": 1.532845,
+          "total": 1.542697
+        },
+        {
+          "path": "/",
+          "sample": 2,
+          "status": 200,
+          "ttfb": 1.000025,
+          "total": 1.018969
+        },
+        {
+          "path": "/",
+          "sample": 3,
+          "status": 200,
+          "ttfb": 0.959583,
+          "total": 0.985516
+        },
+        {
+          "path": "/api/deals?limit=24",
+          "sample": 1,
+          "status": 200,
+          "ttfb": 1.124396,
+          "total": 1.1245
+        },
+        {
+          "path": "/api/deals?limit=24",
+          "sample": 2,
+          "status": 200,
+          "ttfb": 0.911781,
+          "total": 0.911859
+        },
+        {
+          "path": "/api/deals?limit=24",
+          "sample": 3,
+          "status": 200,
+          "ttfb": 0.841945,
+          "total": 0.842015
+        },
+        {
+          "path": "/bizu/ali-1005009830682959",
+          "sample": 1,
+          "status": 200,
+          "ttfb": 0.1075,
+          "total": 0.872944
+        },
+        {
+          "path": "/bizu/ali-1005009830682959",
+          "sample": 2,
+          "status": 200,
+          "ttfb": 0.087663,
+          "total": 0.825607
+        },
+        {
+          "path": "/bizu/ali-1005009830682959",
+          "sample": 3,
+          "status": 200,
+          "ttfb": 0.087495,
+          "total": 0.878825
+        }
+      ],
+      "sample_count_per_route": 3,
+      "all_http_200": true,
+      "medians": {
+        "/": {
+          "ttfb_seconds": 1.000025,
+          "document_seconds": 1.018969
+        },
+        "/api/deals?limit=24": {
+          "ttfb_seconds": 0.911781,
+          "document_seconds": 0.911859
+        },
+        "/bizu/ali-1005009830682959": {
+          "ttfb_seconds": 0.087663,
+          "document_seconds": 0.872944
+        }
+      },
+      "limitations": "Anonymous HTTP requests after promotion; no image/hydration/LCP/INP measurement or p95 claim. Baseline and post-deploy were collected at different times against live data."
+    }
+  }
+}

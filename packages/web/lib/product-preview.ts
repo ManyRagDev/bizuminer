@@ -1,3 +1,4 @@
+import { optionDetailPath } from "./offer-option.ts";
 import { createHash } from "node:crypto";
 import type { VitrineProduct } from "./deal-view.ts";
 import { PRICE_CURRENT_WINDOW_HOURS, priceFreshness, priceHighlight, seenAgo } from "./deal-signal.ts";
@@ -10,11 +11,14 @@ export function productPreview(product: VitrineProduct, now = new Date()) {
   const stale = priceFreshness(product.evidenceObservedAt, now) === "stale";
   const highlight = priceHighlight(product);
   const imprecise = product.priceType !== "exact";
-  const badge = stale || imprecise || product.currency !== "BRL" || highlight?.tone === "unproven" ? null : highlight;
+  const badge = product.offerOptionKey || stale || imprecise || product.currency !== "BRL" || highlight?.tone === "unproven" ? null : highlight;
   const observedAt = product.evidenceObservedAt ? new Date(product.evidenceObservedAt).toISOString() : null;
   const ageLabel = stale ? seenAgo(product.evidenceObservedAt, now) : null;
-  const version = createHash("sha256").update(JSON.stringify([
-    "product-preview-v2", product.slug, product.displayTitle ?? product.title, product.marketplace, product.imageUrl,
+  const optionRevision=product.offerOptionKey ? ["confirmed-offer-preview-v2",product.slug,product.offerOptionKey,
+    product.sourceTitle ?? product.title,product.offerOptionLabel,product.marketplace,product.imageUrl,
+    product.priceCents,product.currency,observedAt,stale,ageLabel] : null;
+  const version = createHash("sha256").update(JSON.stringify(optionRevision ?? [
+    "product-preview-v3", product.slug,product.offerOptionKey,product.offerOptionLabel,product.offerConditions, product.displayTitle ?? product.title, product.marketplace, product.imageUrl,
     product.editorialRevisionId, product.benefit, product.caveat, product.purchaseContents,
     product.priceCents, product.priceType, product.currency, product.priceMinCents, product.priceMaxCents,
     product.originalPriceCents, product.originalPriceKind, observedAt, stale, ageLabel, badge,
@@ -25,6 +29,6 @@ export function productPreview(product: VitrineProduct, now = new Date()) {
     Math.floor((currentUntil - now.getTime()) / 1000)));
   return {
     version, stale, badge, ageLabel, cacheSeconds,
-    path: `/bizu/${encodeURIComponent(product.slug)}/opengraph-image?v=${version}`,
+    path: `${optionDetailPath(product.slug,product.offerOptionKey)}/opengraph-image?v=${version}`,
   };
 }

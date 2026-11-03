@@ -5,6 +5,10 @@ Escopo: `packages/web` (rotas `/p`, `/pauta`, `/api/story`, `lib/desirability.ts
 
 Documentos relacionados: [`plano-distribuicao.md`](./plano-distribuicao.md) (composer para grupos/conversas), [`plano-motor-curadoria.md`](./plano-motor-curadoria.md) (sinal de preço), [`plano-ux-vitrine.md`](./plano-ux-vitrine.md) (hero e identidade visual).
 
+**Implementação retomada — 01/11/2026:** a pauta por canal está integrada localmente, com critérios mais exigentes para WhatsApp/Stories, opção/preço específicos, links clicáveis e composição/condições nas artes. Copiar não confirma divulgação. Publicação e nova migration remota pendentes. O [registro vigente](./plano-integracao-captura-curadoria-vitrine-pauta.md#implementação-autorizada-e-verificação--01112026) prevalece sobre o estado de pausa registrado abaixo. A restrição histórica de não alterar captura foi sucedida pela autorização explícita da pauta melhorada: a extensão foi preservada, e captura/persistência foram ajustadas apenas para a identidade da opção e o acompanhamento autorizado.
+
+**Atualização de direção — 01/11/2026:** o plano intermediário da pauta melhorada está consolidado na [seção do plano de integração](./plano-integracao-captura-curadoria-vitrine-pauta.md#plano-intermediário-da-pauta-melhorada--01112026). Ela registra a seleção mais exigente para WhatsApp/Stories, a oferta específica por opção de compra, as faixas de preço e as questões ainda abertas. A implementação e a publicação da candidata de renovação estão pausadas. As fases, estimativas e decisões abaixo preservam o histórico deste documento; não devem ser tomadas isoladamente como especificação vigente ou autorização de retomada.
+
 Status: ✅ feito e conferido · 🟡 parcial · ⬜ não iniciado
 
 ---

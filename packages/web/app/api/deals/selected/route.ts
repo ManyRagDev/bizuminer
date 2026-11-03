@@ -1,5 +1,7 @@
 import { selectedPublicProducts } from "../../../../lib/product-presentation-db";
 
+export const preferredRegion = "gru1";
+
 export const dynamic = "force-dynamic";
 
 /** Revalidate a bounded selection, without accepting client-supplied titles, prices or tenant IDs. */

@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-02",
+  "commit": "0b3271a400c333b50a40488b9a60c771bc5e472b",
+  "deployment": "dpl_3qhTb2WW3XDjW1o14XXLWcBDxDJm",
+  "migration": {
+    "local": "20261102131234_optimize_price_observation_scope",
+    "remote": "20261102135113_optimize_price_observation_scope",
+    "sha256": "c974ec391b76e51203d1ad58d9901e5abf31667f660e20faaba8f0f6796d26df"
+  },
+  "samples": [
+    {
+      "path": "/",
+      "status": 200,
+      "firstMs": 191.1,
+      "totalMs": 808.4,
+      "bytes": 229860,
+      "exit": 0,
+      "hasCatalog": true,
+      "hasProduct": true,
+      "errorBoundary": false
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "firstMs": 110.5,
+      "totalMs": 346.2,
+      "bytes": 229860,
+      "exit": 0,
+      "hasCatalog": true,
+      "hasProduct": true,
+      "errorBoundary": false
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "firstMs": 85.6,
+      "totalMs": 298.9,
+      "bytes": 229860,
+      "exit": 0,
+      "hasCatalog": true,
+      "hasProduct": true,
+      "errorBoundary": false
+    },
+    {
+      "path": "/api/deals?limit=24",
+      "status": 200,
+      "firstMs": 767.7,
+      "totalMs": 771.9,
+      "bytes": 23819,
+      "exit": 0,
+      "fields": [
+        "products",
+        "total",
+        "selectionVersion",
+        "selectionStateKey",
+        "categories",
+        "marketplaceCounts",
+        "limit",
+        "offset"
+      ],
+      "previewCount": 24
+    },
+    {
+      "path": "/bizu/shp-21197759933",
+      "status": 200,
+      "firstMs": 96.1,
+      "totalMs": 143.8,
+      "bytes": 28910,
+      "exit": 0,
+      "hasHistory": true
+    },
+    {
+      "path": "/api/pauta",
+      "status": 401,
+      "firstMs": 70.3,
+      "totalMs": 73.0,
+      "bytes": 33,
+      "exit": 0
+    },
+    {
+      "path": "/api/admin/rodagens",
+      "status": 401,
+      "firstMs": 57.6,
+      "totalMs": 57.7,
+      "bytes": 33,
+      "exit": 0
+    }
+  ],
+  "tests": {
+    "web": 527,
+    "editorialNative": 21,
+    "legacyHomepageNative": 5,
+    "homepagePGlite": 17,
+    "loadingRecoveryNative": 5,
+    "authorizationMatrixPerVersion": 192
+  },
+  "build": "passed",
+  "scope": "Code and tests published; operational record retained locally",
+  "authenticatedBrowser": {
+    "overview": "passed",
+    "curationSelection": "passed",
+    "curationSelectionNavigationMs": 1760,
+    "auditTab": "passed",
+    "consoleErrors": 0,
+    "mutationsPerformed": false
+  },
+  "databaseObservationCountAfter": 11155,
+  "productionCatalogTotal": 203,
+  "productionScreenshot": "/tmp/garimpa-corrected-production-home.jpg"
+}

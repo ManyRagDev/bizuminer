@@ -1668,9 +1668,9 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
    Tela de copy/paste para postagem no WhatsApp Status.
    Âncora: "Sei exatamente onde parei, mesmo tendo saído do app cinco vezes."
    Base 4px, toque mínimo 48px. Ritmo acelera conforme desce. */
-.pauta-page { max-width: 480px; margin: 0 auto; padding: 0 16px 120px; }
+.pauta-page { width: 100%; min-width: 0; max-width: 480px; margin: 0 auto; padding: 0 16px 120px; }
 .pauta-header { position: sticky; top: 0; z-index: 10; padding: 16px 0 12px; background: var(--paper); }
-.pauta-header-top { display: flex; justify-content: space-between; align-items: baseline; }
+.pauta-header-top { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: baseline; }
 .pauta-header h1 { margin: 0; font: 900 18px/1 Arial, sans-serif; letter-spacing: .15em; }
 .pauta-count { font: 800 14px/1 Arial, sans-serif; color: var(--ink-secondary); }
 .pauta-progress { height: 4px; margin-top: 10px; background: var(--line); border-radius: 2px; overflow: hidden; }
@@ -6027,6 +6027,11 @@ kbd { min-width: 21px; padding: 2px 5px; display: inline-block; border: 1px soli
   .curation-review-actions button { flex: 1 1 45%; }
 }
 .curation-published-selection { padding: 12px 3.5vw 28px; }
+.curation-renewal { margin: 16px 3.5vw 24px; padding: 20px; border: 1px solid var(--line); background: var(--surface); overflow-wrap: anywhere; }
+.curation-renewal p, .curation-renewal li { line-height: 1.6; }
+.curation-renewal details { margin-top: 16px; }
+.curation-renewal summary { cursor: pointer; font-weight: 700; }
+.curation-renewal button:disabled { opacity: .5; cursor: default; }
 .curation-published-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; list-style: none; padding: 0; }
 .curation-published-grid > li { border: 1px solid var(--line); background: var(--surface); overflow: hidden; }
 .curation-published-grid > li > div:last-child { padding: 16px; }
@@ -6349,3 +6354,24 @@ kbd { min-width: 21px; padding: 2px 5px; display: inline-block; border: 1px soli
 }
 .editorial-cover-preview > .home-banner { max-width: 100%; margin: 16px 0; }
 .editorial-cover-preview .home-banner-copy { padding: 24px; }
+/* Navigation feedback does not replace the current pane while it is loading. */
+.admin-link-pending { font-size: .75rem; font-weight: 600; opacity: .8; margin-inline-start: .5rem; }
+
+/* Keep admin controls reachable on narrow screens. */
+@media (max-width: 820px) {
+  .admin-shell-header { flex-wrap: wrap; gap: 4px 12px; padding-block: 8px; }
+  .admin-shell-header .detail-header-actions { min-width: 0; flex-wrap: wrap; margin-left: auto; }
+}
+
+.recommendation-control{margin:1.5rem 0;padding:1.25rem;border:1px solid var(--line,#ddd);border-radius:14px;overflow-wrap:anywhere}.recommendation-channels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}.recommendation-channel{padding:1rem;background:var(--paper-deep,#f4f4f5);border-radius:12px;min-width:0}.recommendation-channel fieldset{border:0;padding:0;margin:0}.recommendation-channel label,.offer-confirmation label{display:block;margin:.8rem 0;font-size:14px}.recommendation-channel input:not([type=checkbox]),.recommendation-channel textarea,.offer-confirmation input:not([type=checkbox]),.offer-confirmation textarea{display:block;width:100%;max-width:100%;padding:.6rem;border:1px solid #b9b9b9;border-radius:6px;box-sizing:border-box}.offer-confirmation{margin-top:12px}.offer-confirmation form{padding:12px;background:var(--paper-deep,#f4f4f5);border-radius:8px}.pauta-card-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0}.pauta-card a{color:inherit}.confirmed-offer{max-width:900px;margin:auto;padding:24px}.confirmed-offer-image{width:100%;max-width:420px;height:auto;object-fit:contain}.confirmed-offer .deal-cta{display:inline-flex;padding:14px;margin:12px 0}.recommendation-control button,.offer-confirmation button{padding:8px 12px;cursor:pointer}
+
+.recommendation-order{padding-left:20px}.recommendation-order li{margin:12px 0}.recommendation-order li>div{display:flex;gap:6px;flex-wrap:wrap}.recommendation-channel select{max-width:100%;width:100%;padding:8px}.recommendation-channel details{margin:14px 0}
+
+.admin-shell { width: 100%; min-width: 0; }
+.pauta-header h1 { flex: 1 1 210px; }
+.pauta-count { flex: 0 1 150px; line-height: 1.4; }
+.pauta-card-actions > a, .pauta-card-actions > button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; text-decoration: none; cursor: pointer; }
+.pauta-card-actions > button[aria-pressed="true"] { background: var(--blue); color: white; }
+.pauta-card > .pauta-card-actions { padding-inline: 12px; }
+.pauta-card-preview { overflow-wrap: anywhere; line-height: 1.4; }
+.recommendation-control button, .offer-confirmation button { min-height: 44px; }

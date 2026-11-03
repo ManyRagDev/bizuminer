@@ -88,6 +88,7 @@ export interface OfferEvidenceV1 {
  */
 export interface OfferEvidenceV2 {
   readonly version: 2;
+  readonly verification?: { readonly method: "editorial_confirmation"; readonly checkedAt: string; readonly note: string };
   readonly source: {
     readonly marketplace: MarketplaceSlug;
     readonly method: CaptureSource;

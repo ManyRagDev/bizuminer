@@ -489,6 +489,9 @@ console.log("✔ Isolamento RLS e proteção contra preview adulterado validados
 console.log("7. Testando invisibilidade da receita SaaS para contas de clientes...");
 
 // Gravar receita SaaS na conta da plataforma (local)
+await assert.rejects(()=>getCommercialResults(contextLocal,factory,true),/platform_admin_required/);
+await assert.rejects(()=>recordSaaSRevenueEntry(contextLocal,{obligationKey:'forbidden',eventKey:'forbidden',contractRef:'fixture',amountCents:100,currency:'BRL',state:'billed',occurredAt:'2026-10-01T00:00:00Z',sourceRef:'fixture'},factory),/platform_admin_required/);
+await pg.exec("insert into garimpa.app_user_role(app_user_id,role) values('user_local','platform_admin')");
 const saasRes = await recordSaaSRevenueEntry(contextLocal, {
   obligationKey: "sub-pilot-2026-10",
   eventKey: "sub-pilot-billed-01",
@@ -524,7 +527,8 @@ const resultsClient = await getCommercialResults(contextA, factory);
 assert.deepEqual(resultsClient.revenues, [], "Receitas SaaS da plataforma devem ser invisíveis ao cliente");
 
 // Conta da plataforma consulta resultados: enxerga a receita
-const resultsPlatform = await getCommercialResults(contextLocal, factory);
+assert.deepEqual((await getCommercialResults(contextLocal,factory)).revenues,[],'A superfície do afiliado continua sem receita SaaS mesmo para o administrador');
+const resultsPlatform = await getCommercialResults(contextLocal, factory,true);
 assert.ok(resultsPlatform.revenues.length >= 1, "Owner da plataforma deve enxergar receita SaaS");
 
 console.log("✔ Invisibilidade de receita SaaS para clientes validada.");

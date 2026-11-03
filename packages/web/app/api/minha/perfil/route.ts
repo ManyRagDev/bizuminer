@@ -4,6 +4,8 @@ import { catalogCategories } from "../../../../lib/db";
 import { allowedProfileCategories, parseProfilePayload } from "../../../../lib/member-contract";
 import { ensureUser, getProfile, saveProfile } from "../../../../lib/member-db";
 
+export const preferredRegion = "gru1";
+
 async function safeJson(request: NextRequest): Promise<unknown> {
   try {
     return await request.json();

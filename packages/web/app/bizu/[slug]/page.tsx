@@ -2,7 +2,8 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound,redirect } from "next/navigation";
+import {publicWorkspaceLink} from '../../../lib/public-offer-db.ts';
 import { cache } from "react";
 import { getPageSession, isAffiliate } from "../../../lib/auth";
 import { dealDetail, topDeals } from "../../../lib/db";
@@ -53,6 +54,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function DealPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const { direto, c } = await searchParams;
+  if(c){const stored=await publicWorkspaceLink(c,slug);if(stored?.workspace){if(!stored.available)notFound();redirect(`/oferta/${encodeURIComponent(slug)}/${stored.option_key}?c=${encodeURIComponent(c)}`);}}
   const detail = await getDealDetail(slug);
   if (!detail) notFound();
 

@@ -5,6 +5,7 @@ import { scopedTenantId } from "../../../lib/account-scope.ts";
 
 import { revalidatePath } from "next/cache";
 import { refreshHomepageAfterChange } from "../../../lib/homepage-db.ts";
+import { enableHomepageRenewal } from "../../../lib/homepage-renewal-db.ts";
 import {
   getEditorialSelectionDesk,
   replaceEditorialSelection,
@@ -74,6 +75,30 @@ async function reviewerId(): Promise<string | null> {
   const user = await getPageAuth();
   if (!user || !(await isAffiliate(user))) return null;
   return resolveAppUserId(user.id);
+}
+
+export async function startHomepageRenewalAction() {
+  return accountOperation(async account => {
+    if (account.membershipRole !== "owner") return { ok: false as const, error: "forbidden" };
+    const enabled = await enableHomepageRenewal();
+    if (!enabled.ok) return enabled;
+    // Keep an explicit opt-in even when the pool needs evidence. Later reviews
+    // and scheduled workers will initialize as soon as there is a qualified item.
+    const result = await refreshHomepageAfterChange(account.tenantId);
+    revalidatePath("/admin/curadoria"); revalidatePath("/pauta"); revalidatePath("/");
+    return { ok: true as const, result };
+  });
+}
+
+export async function refreshHomepageRenewalAction() {
+  return accountOperation(async account => {
+    if (account.membershipRole !== "owner") return { ok: false as const, error: "forbidden" };
+    try {
+      const result = await refreshHomepageAfterChange(account.tenantId);
+      revalidatePath("/admin/curadoria"); revalidatePath("/pauta"); revalidatePath("/");
+      return { ok: true as const, result };
+    } catch { return { ok: false as const, error: "refresh_failed" }; }
+  });
 }
 
 export async function reopenHumanReviewAction(productId: string) {
@@ -307,7 +332,7 @@ export async function saveEditorialAssessmentAction(
         scopedTenantId(),
       );
       if (!result.ok) return result;
-      const desk = await getEditorialSelectionDesk(scopedTenantId());
+      const desk = await getEditorialSelectionDesk(scopedTenantId(),undefined,input.productId);
       revalidatePath("/bizu/[slug]", "page");
       revalidatePath("/api/deals");
       revalidatePath("/api/pauta");
@@ -328,7 +353,7 @@ export async function saveEditorialAssessmentAction(
         error: "Não foi possível salvar a avaliação. Tente novamente.",
       };
     }
-  });
+  },input.expectedTenantId);
 }
 
 export async function replaceEditorialSelectionAction(

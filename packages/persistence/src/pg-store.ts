@@ -37,6 +37,7 @@ interface UpsertRow {
 export class PostgresStore implements OfferStore {
   private readonly sql: Sql;
   private readonly s: string;
+  private optionsReady: boolean | undefined;
 
   constructor(opts: PostgresStoreOptions) {
     this.s = opts.schema ?? "garimpa";
@@ -90,10 +91,34 @@ export class PostgresStore implements OfferStore {
   }): Promise<UpsertResult> {
     input = { ...input, title: normalizeSourceTitle(input.title) };
     return await this.withTenant(input.tenantId, async (sql) => {
+      if (this.optionsReady===undefined) {
+        const [schema]=await sql<{ready:boolean}[]>`select exists(select 1 from information_schema.columns where table_schema=${this.s} and table_name='price_observation' and column_name='option_key') as ready`;
+        this.optionsReady=schema?.ready===true;
+      }
+      if(this.optionsReady && input.offerEvidence===undefined){
+        const repeated=await sql<{offer_evidence:OfferEvidence|null}[]>`select o.offer_evidence from ${sql(this.s)}.price_observation o
+          join ${sql(this.s)}.product p on p.id=o.product_id and p.tenant_id=o.tenant_id
+          where p.tenant_id=${input.tenantId} and p.marketplace=${input.marketplace} and p.external_id=${input.externalId}
+            and o.capture_run_id=${input.captureRunId} and o.title_snapshot=${input.title} and o.product_url_snapshot=${input.productUrl}
+            and o.image_url_snapshot is not distinct from ${input.imageUrl ?? null} and o.category_snapshot is not distinct from ${input.category ?? null}
+            and o.price_cents=${input.priceCents} and o.original_price_cents is not distinct from ${input.originalPriceCents ?? null}
+            and o.claimed_discount_rate is not distinct from ${input.claimedDiscountRate ?? null}::numeric
+            and o.rating_star is not distinct from ${input.ratingStar ?? null}::numeric and o.sales_label is not distinct from ${input.salesLabel ?? null}
+            and o.sales_count is not distinct from ${input.salesCount ?? null}::bigint limit 2`;
+        if(repeated.length===1 && repeated[0]?.offer_evidence)input={...input,offerEvidence:repeated[0].offer_evidence};
+      }
+      const optionTransition=this.optionsReady ? sql`or (select option_key from ${sql(this.s)}.price_observation o
+        where o.tenant_id=${input.tenantId} and o.product_id=up.id order by o.observed_at desc,o.id desc limit 1)
+        is distinct from garimpa.observation_option_key(${input.offerEvidence ? sql.json({...input.offerEvidence} as any):null}::jsonb)` : sql``;
+      const optionPredicate=this.optionsReady ? sql`and same_request.option_key=garimpa.observation_option_key(${input.offerEvidence ? sql.json({...input.offerEvidence} as any):null}::jsonb)` : sql``;
+      const latestOptionPredicate=this.optionsReady ? sql`and o.option_key=garimpa.observation_option_key(${input.offerEvidence ? sql.json({...input.offerEvidence} as any):null}::jsonb)` : sql``;
       const rows = await sql<UpsertRow[]>`
         with prev as (
-          select id, last_price_cents
-          from ${sql(this.s)}.product
+          select p.id, ${this.optionsReady ? sql`(select prior.price_cents from ${sql(this.s)}.price_observation prior
+            where prior.tenant_id=p.tenant_id and prior.product_id=p.id
+              and prior.option_key=garimpa.observation_option_key(${input.offerEvidence ? sql.json({...input.offerEvidence} as any):null}::jsonb)
+            order by prior.observed_at desc,prior.id desc limit 1)` : sql`p.last_price_cents`} as last_price_cents
+          from ${sql(this.s)}.product p
           where tenant_id = ${input.tenantId}
             and marketplace = ${input.marketplace}
             and external_id = ${input.externalId}
@@ -133,13 +158,15 @@ export class PostgresStore implements OfferStore {
                  ${input.offerEvidence ? sql.json({ ...input.offerEvidence } as any) : null}
           from up
           left join prev on true
-          where exists (select 1 from ${sql(this.s)}.price_observation same_request where same_request.capture_run_id = ${input.captureRunId} and same_request.product_id = up.id)
+          where exists (select 1 from ${sql(this.s)}.price_observation same_request where same_request.capture_run_id = ${input.captureRunId} and same_request.product_id = up.id ${optionPredicate})
              or up.is_new
+             ${optionTransition}
              or prev.last_price_cents is distinct from ${input.priceCents}
              or not exists (
                select 1 from (
                  select o.* from ${sql(this.s)}.price_observation o
                  where o.product_id = up.id and o.tenant_id = ${input.tenantId}
+                   ${latestOptionPredicate}
                  order by o.observed_at desc, o.id desc limit 1
                ) latest
                where latest.observed_at > (${input.observedAt}::timestamptz - interval '20 hours')
@@ -156,7 +183,7 @@ export class PostgresStore implements OfferStore {
                  and (latest.offer_evidence #- '{source,capturedAt}') is not distinct from
                    (${input.offerEvidence ? sql.json({ ...input.offerEvidence } as any) : null}::jsonb #- '{source,capturedAt}')
              )
-          on conflict (capture_run_id, product_id) do update set
+          on conflict ${sql.unsafe(this.optionsReady ? "(capture_run_id, product_id, option_key)" : "(capture_run_id, product_id)")} do update set
             price_cents = excluded.price_cents,
             original_price_cents = excluded.original_price_cents,
             claimed_discount_rate = excluded.claimed_discount_rate,

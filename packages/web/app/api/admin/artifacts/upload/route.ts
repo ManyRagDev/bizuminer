@@ -6,6 +6,8 @@ import {
 } from "../../../../../lib/api-auth.ts";
 import { savePrivateArtifact } from "../../../../../lib/private-artifact-db.ts";
 import sharp from "sharp";
+
+export const preferredRegion = "gru1";
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   const session = await checkAffiliateUser(request);

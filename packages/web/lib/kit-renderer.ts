@@ -29,7 +29,7 @@ function lines(s: string, width: number, max: number) {
       escape(i === max - 1 && out.length > max ? s.slice(0, -1) + "…" : s),
     );
 }
-export const KIT_TEMPLATE_VERSION = "story-v1";
+export const KIT_TEMPLATE_VERSION = "story-v2";
 /** Receives immutable revision facts only; never reads live product/price data. */
 async function renderStoryPng(
   snapshot: KitSnapshot,
@@ -38,7 +38,8 @@ async function renderStoryPng(
   asset?: Uint8Array,
 ): Promise<Uint8Array> {
   const title = lines(snapshot.title, 32, 4),
-    copy = lines(material.shortCopy, 43, asset ? 4 : 6);
+    copy = lines([snapshot.optionLabel,snapshot.purchaseContents,material.shortCopy].filter(Boolean).join(' · '), 43, asset ? 4 : 6);
+  const conditions=lines(snapshot.conditions??'',62,3);
   const price =
     typeof snapshot.priceCents === "number"
       ? new Intl.NumberFormat("pt-BR", {
@@ -54,6 +55,7 @@ async function renderStoryPng(
     .png()
     .toBuffer();
   const layers: sharp.OverlayOptions[] = [
+    {input:Buffer.from(`<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">${conditions.map((s,i)=>`<text x="72" y="${1460+i*28}" font-family="DejaVu Sans" font-size="20" fill="#d8e0e5">${s}</text>`).join('')}</svg>`),top:0,left:0},
     {
       input: await QRCode.toBuffer(trackedLink, {
         width: 160,

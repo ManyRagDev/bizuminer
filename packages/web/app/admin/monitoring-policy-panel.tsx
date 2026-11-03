@@ -1,5 +1,7 @@
 "use client";
 
+import { useAdminDraftState, useResumeAfterOperation, useAdminFetch } from "./draft-provider.tsx";
+
 import { useState } from "react";
 import type { MonitoringPolicyEventView, MonitoringPolicyView } from "../../lib/affiliate-monitoring-db";
 
@@ -12,10 +14,21 @@ export default function MonitoringPolicyPanel({ initialPolicies, initialEvents }
   initialPolicies: MonitoringPolicyView[] | null;
   initialEvents: MonitoringPolicyEventView[];
 }) {
+  const fetch = useAdminFetch();
   const [policies, setPolicies] = useState(initialPolicies);
   const [events, setEvents] = useState(initialEvents);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useAdminDraftState<string | null>("monitoring-policy-panel.busy", null);
+  const [message, setMessage] = useAdminDraftState("monitoring-policy-panel.message", "");
+  useResumeAfterOperation(busy !== null, async () => {
+    try {
+      const response = await fetch("/api/admin/monitoring/policy");
+      if (response.ok) {
+        const result = await response.json();
+        if (result.policies) setPolicies(result.policies);
+        if (result.events) setEvents(result.events);
+      }
+    } catch { /* A later visit reloads the authoritative state. */ }
+  });
 
   async function change(marketplace: "shopee" | "aliexpress", enabled: boolean) {
     if (busy || !policies) return;

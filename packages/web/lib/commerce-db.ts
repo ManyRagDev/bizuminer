@@ -78,13 +78,15 @@ export async function createCommercialKitDraft(
   sql: Sql,
   input: {
     tenantId: string;
-    campaignId: string;
+    campaignId: string | null;
     opportunityId: string;
     snapshot: KitSnapshot;
     claims: unknown[];
     materials: KitMaterial[];
     createdBy: string;
     contentDigest: string;
+    audiencePolicyVersionId?: string;
+    workspaceAuthorId?: string;
   },
 ): Promise<{ kitId: string; revisionId: string }> {
   // 1. Cria o kit
@@ -96,6 +98,11 @@ export async function createCommercialKitDraft(
     returning id
   `;
   const kitId = kitRows[0]!.id;
+  if (input.workspaceAuthorId) {
+    await sql`update garimpa.commercial_kit set audience_policy_version_id=${input.audiencePolicyVersionId!},
+      workspace_author_id=${input.workspaceAuthorId},workspace_visibility='review'
+      where id=${kitId} and tenant_id=${input.tenantId}`;
+  }
 
   // 2. Cria a revisão 1
   const revRows = await sql<{ id: string }[]>`

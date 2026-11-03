@@ -21,6 +21,7 @@ jobs:
       group: monitor-${{ matrix.marketplace }}
       cancel-in-progress: false
     env:
+      AFFILIATE_SECRETS_MASTER_KEY: ${{ secrets.AFFILIATE_SECRETS_MASTER_KEY }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SHOPEE_CAPTURE_ENABLED: ${{ vars.SHOPEE_CAPTURE_ENABLED }}
       SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
@@ -45,6 +46,6 @@ jobs:
       - name: Preparar atualização da vitrine
         if: ${{ always() && !cancelled() }}
         run: npm ci --prefix packages/web --omit=dev
-      - name: Atualizar edição compartilhada
+      - name: Reavaliar seleções por canal
         if: ${{ always() && !cancelled() }}
-        run: node --experimental-strip-types packages/web/bin/refresh-homepage.ts --execute
+        run: node --experimental-strip-types packages/web/bin/refresh-homepage.ts --execute --require-renewal

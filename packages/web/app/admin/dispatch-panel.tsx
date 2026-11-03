@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useAdminDraftState, useAdminDraftTransition } from "./draft-provider.tsx";
+import type { ChangeEvent } from "react";
 import {
   executeDispatchCycleAction,
   cancelDispatchJobAction,
@@ -11,12 +12,23 @@ import {
 } from "./dispatch-actions.ts";
 
 export default function DispatchPanel({ tenantId }: { tenantId: string }) {
-  const [killSwitch, setKillSwitch] = useState<boolean>(true);
-  const [lastResult, setLastResult] = useState<any>(null);
-  const [message, setMessage] = useState<string>("");
-  const [cancelJobId, setCancelJobId] = useState<string>("");
-  const [cancelReason, setCancelReason] = useState<string>("");
-  const [pending, startTransition] = useTransition();
+  const [killSwitch, setKillSwitch] = useAdminDraftState<boolean>("dispatch-panel.killSwitch", true);
+  const [lastResult, setLastResult] = useAdminDraftState<any>("dispatch-panel.lastResult", null);
+  const [message, setMessage] = useAdminDraftState<string>("dispatch-panel.message", "");
+  const [cancelJobId, setCancelJobId] = useAdminDraftState<string>("dispatch-panel.cancelJobId", "");
+  const [cancelReason, setCancelReason] = useAdminDraftState<string>("dispatch-panel.cancelReason", "");
+  const [pending, startTransition] = useAdminDraftTransition("dispatch-panel.pending");
+  const [fields, setFields] = useAdminDraftState<Record<string, string>>("dispatch-panel.fields", { status: "failed" });
+  const field = (name: string) => ({
+    value: fields[name] ?? "", disabled: pending,
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const value = event.target.value;
+      setFields(current => ({ ...current, [name]: value }));
+    },
+  });
+  const clearFields = (names: string[]) => setFields(current => Object.fromEntries(
+    Object.entries(current).filter(([name]) => !names.includes(name)),
+  ));
 
   const handleRunCycle = () => {
     startTransition(async () => {
@@ -115,6 +127,7 @@ export default function DispatchPanel({ tenantId }: { tenantId: string }) {
           >
             <input
               type="checkbox"
+              disabled={pending}
               checked={killSwitch}
               onChange={(e) => {
                 const value = e.target.checked;
@@ -138,6 +151,7 @@ export default function DispatchPanel({ tenantId }: { tenantId: string }) {
       </div>
 
       <button
+        disabled={pending}
         onClick={() =>
           startTransition(async () => {
             const r = await getDispatchDeskAction(tenantId);
@@ -151,7 +165,9 @@ export default function DispatchPanel({ tenantId }: { tenantId: string }) {
         Atualizar agenda e controle
       </button>
       <form
-        action={(f) =>
+        onSubmit={(event) => {
+          event.preventDefault();
+          const f = new FormData(event.currentTarget);
           startTransition(async () => {
             const r = await setDispatchControlAction({
               tenantId,
@@ -163,35 +179,38 @@ export default function DispatchPanel({ tenantId }: { tenantId: string }) {
                 windowAnchor: new Date(String(f.get("anchor"))).toISOString(),
               },
             });
+            if (r.ok) clearFields(["quota", "window", "cooldown", "anchor"]);
             setMessage(
               r.ok
                 ? "Política salva; novos envios continuam bloqueados."
                 : r.error,
             );
-          })
-        }
+          });
+        }}
       >
         <h3>Política de envio aprovada</h3>
         <label>
           Limite por janela{" "}
-          <input name="quota" type="number" min="1" required />
+          <input name="quota" {...field("quota")} type="number" min="1" required />
         </label>
         <label>
           Janela em segundos{" "}
-          <input name="window" type="number" min="1" required />
+          <input name="window" {...field("window")} type="number" min="1" required />
         </label>
         <label>
           Cooldown por público/canal em segundos{" "}
-          <input name="cooldown" type="number" min="0" required />
+          <input name="cooldown" {...field("cooldown")} type="number" min="0" required />
         </label>
         <label>
           Âncora da janela{" "}
-          <input name="anchor" type="datetime-local" required />
+          <input name="anchor" {...field("anchor")} type="datetime-local" required />
         </label>
         <button disabled={pending}>Salvar política com bloqueio ativo</button>
       </form>
       <form
-        action={(f) =>
+        onSubmit={(event) => {
+          event.preventDefault();
+          const f = new FormData(event.currentTarget);
           startTransition(async () => {
             try {
               const r = await scheduleDispatchAction({
@@ -202,30 +221,33 @@ export default function DispatchPanel({ tenantId }: { tenantId: string }) {
                 scheduledAt: new Date(String(f.get("when"))).toISOString(),
                 idempotencyKey: crypto.randomUUID(),
               });
+              if (r.ok) clearFields(["publication", "revision", "destination", "when"]);
               setMessage(r.ok ? "Agendamento registrado." : r.error);
             } catch (e) {
               setMessage(String(e));
             }
-          })
-        }
+          });
+        }}
       >
         <h3>Agendar revisão aprovada</h3>
         <label>
-          Publicação <input name="publication" required />
+          Publicação <input name="publication" {...field("publication")} required />
         </label>
         <label>
-          Revisão <input name="revision" required />
+          Revisão <input name="revision" {...field("revision")} required />
         </label>
         <label>
-          Destino autorizado <input name="destination" required />
+          Destino autorizado <input name="destination" {...field("destination")} required />
         </label>
         <label>
-          Horário <input name="when" type="datetime-local" required />
+          Horário <input name="when" {...field("when")} type="datetime-local" required />
         </label>
         <button disabled={pending}>Agendar</button>
       </form>
       <form
-        action={(f) =>
+        onSubmit={(event) => {
+          event.preventDefault();
+          const f = new FormData(event.currentTarget);
           startTransition(async () => {
             const r = await reconcileDispatchAction({
               tenantId,
@@ -237,25 +259,26 @@ export default function DispatchPanel({ tenantId }: { tenantId: string }) {
                 ? new Date(String(f.get("confirmedAt"))).toISOString()
                 : undefined,
             });
+            if (r.ok) clearFields(["job", "proof", "note", "confirmedAt"]);
             setMessage(r.ok ? "Reconciliação registrada." : r.error);
-          })
-        }
+          });
+        }}
       >
         <h3>Reconciliar envio incerto</h3>
-        <input name="job" aria-label="Job" required />
-        <select name="status">
+        <input name="job" {...field("job")} aria-label="Job" required />
+        <select name="status" {...field("status")}>
           <option value="failed">Não enviado, comprovado</option>
           <option value="succeeded">Enviado, comprovado</option>
         </select>
-        <input name="proof" aria-label="Identificador do provedor" />
+        <input name="proof" {...field("proof")} aria-label="Identificador do provedor" />
         <textarea
-          name="note"
+          name="note" {...field("note")}
           aria-label="Evidência da reconciliação"
           required
         />
         <label>
           Data observada da confirmação{" "}
-          <input name="confirmedAt" type="datetime-local" />
+          <input name="confirmedAt" {...field("confirmedAt")} type="datetime-local" />
         </label>
         <button disabled={pending}>Registrar reconciliação</button>
       </form>

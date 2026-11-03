@@ -1,4 +1,5 @@
 "use client";
+import { optionDetailPath } from "../../lib/offer-option.ts";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -27,7 +28,7 @@ export default function HomeBanner({ product, selectionVersion, onProductClick, 
       <Heading className="home-banner-title" id={headingId}>{featured ? featured.coverHeadline : <>Menos procura.<br /><em>Mais descobertas.</em></>}</Heading>
       <p className="home-banner-description">{featured ? featured.benefit : "Ideias úteis para a sua rotina. Preços e detalhes para escolher bem."}</p>
       {featured && <p className="home-banner-product-name">{featured.displayTitle}</p>}
-      {preview ? <span className="home-banner-cta">Conhecer o achado <span aria-hidden="true">↗</span></span> : featured ? <Link className="home-banner-cta" href={"/bizu/" + featured.slug} prefetch={false} onClick={() => onProductClick(featured.id)}>
+      {preview ? <span className="home-banner-cta">Conhecer o achado <span aria-hidden="true">↗</span></span> : featured ? <Link className="home-banner-cta" href={optionDetailPath(featured.slug,featured.offerOptionKey)} prefetch={false} onClick={() => onProductClick(featured.id)}>
         Conhecer o achado <span aria-hidden="true">↗</span>
       </Link> : <a className="home-banner-cta" href="#explorar">Encontrar meu próximo bizu <span aria-hidden="true">↓</span></a>}
     </div>

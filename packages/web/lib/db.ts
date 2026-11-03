@@ -21,6 +21,7 @@ import type { HistoryContext } from "./price-history.ts";
 import { buildConfigurationKey, type OfferEvidence } from "./price-evidence.ts";
 
 export interface DealRow extends Partial<ProductPresentation> {
+  offerOptionKey?:string;offerOptionLabel?:string;offerConditions?:string;offerValidUntil?:string;
   id: string;
   title: string;
   slug: string;
@@ -90,7 +91,7 @@ function publicCatalogQuery(query: DealQuery): Record<string, unknown> {
 export async function topDeals(query: DealQuery = {}, tenantId = "local", publishedSelection?: PublishedEditorialSelection, sqlFactory: typeof db = db): Promise<DealsPage> {
   const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId, sqlFactory);
   if (isHomepageSelectionQuery(query) && selection.homepageReady) {
-    const deals: DealRow[] = selection.products.map(p => ({ coverHeadline:p.coverHeadline,coverImageApproved:p.coverImageApproved,displayTitle:p.displayTitle,sourceTitle:p.sourceTitle,titleOrigin:p.titleOrigin,
+    const deals: DealRow[] = selection.products.map(p => ({ offerOptionKey:p.offerOptionKey,offerOptionLabel:p.offerOptionLabel,offerConditions:p.offerConditions,offerValidUntil:p.offerValidUntil,coverHeadline:p.coverHeadline,coverImageApproved:p.coverImageApproved,displayTitle:p.displayTitle,sourceTitle:p.sourceTitle,titleOrigin:p.titleOrigin,
       editorialRevisionId:p.editorialRevisionId,editorialReviewedAt:p.editorialReviewedAt,benefit:p.benefit,audience:p.audience,caveat:p.caveat,purchaseContents:p.purchaseContents,
       priceType:p.priceType,priceMinCents:p.priceMinCents,priceMaxCents:p.priceMaxCents,currency:p.currency,originalPriceKind:p.originalPriceKind, id: p.id, slug: p.slug, title: p.title, marketplace: p.marketplace,
       price_cents: p.priceCents, original_price_cents: p.originalPriceCents, claimed_discount_rate: p.discountPercent === null ? null : p.discountPercent / 100,

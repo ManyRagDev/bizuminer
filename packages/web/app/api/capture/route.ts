@@ -1,4 +1,6 @@
-/**
+
+
+export const preferredRegion = "gru1";/**
  * Endpoint legado encerrado: o antigo CAPTURE_TOKEN era uma credencial global
  * embutida no bookmarklet e não representava a role do usuário. Capturas
  * manuais passam por `/api/admin/captura`; a extensão usa dispositivo emitido

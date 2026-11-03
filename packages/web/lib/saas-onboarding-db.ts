@@ -204,7 +204,8 @@ export async function recordOnboardingProgress(
         and tenant_id = ${context.tenantId}
         and status = 'completed'
     `;
-      const completedSteps = completedRows.map((r) => r.step as OnboardingStep);
+      const actualFacts=await onboardingFacts(sql,context);
+      const completedSteps = [...new Set([...completedRows.filter(r=>actualFacts[r.step as OnboardingStep]).map(r=>r.step as OnboardingStep),...Object.keys(actualFacts).filter(k=>actualFacts[k as OnboardingStep]) as OnboardingStep[]])];
 
       // 2. Validar ordem sequencial
       const check = canCompleteOnboardingStep(completedSteps, input.step);
@@ -279,11 +280,7 @@ export async function getOnboardingProgress(
     `;
 
       const facts = await onboardingFacts(sql, context);
-      const completed = rows
-        .filter(
-          (r) => r.status === "completed" && facts[r.step as OnboardingStep],
-        )
-        .map((r) => r.step as OnboardingStep);
+      const completed = Object.keys(facts).filter(k=>facts[k as OnboardingStep]) as OnboardingStep[];
 
       // Encontrar próxima etapa pendente
       const allExpected = [
@@ -291,7 +288,6 @@ export async function getOnboardingProgress(
         "marketplace_credentials_configured",
         "test_link_verified",
         "audience_policy_configured",
-        "first_campaign_created",
         "first_kit_approved",
         "first_publication_confirmed",
       ] as const;
@@ -776,12 +772,16 @@ export async function onboardingFacts(
     a = context.affiliateId;
   const [r] = await sql`select
  exists(select 1 from garimpa.affiliate_account where id=${a} and tenant_id=${t} and status='active') as account_created,
- exists(select 1 from garimpa.affiliate_marketplace_config where affiliate_id=${a} and status='active' and length(tracking_id)>0 and length(tool_id)>0) as marketplace_credentials_configured,
+ exists(select 1 from garimpa.affiliate_marketplace_config c where affiliate_id=${a} and status='active' and ((marketplace='mercadolivre' and length(tracking_id)>0 and length(tool_id)>0) or (marketplace in ('shopee','aliexpress') and exists(select 1 from garimpa.affiliate_secret s where s.tenant_id=${t} and s.marketplace=c.marketplace and s.status='active')))) as marketplace_credentials_configured,
  exists(select 1 from garimpa.account_lifecycle_event e join garimpa.affiliate_marketplace_config c on c.affiliate_id=e.affiliate_id and c.id::text=e.payload->>'configId' join garimpa.private_artifact artifact on artifact.id::text=e.payload->>'evidenceId' and artifact.tenant_id=e.tenant_id and artifact.status='ready' where e.tenant_id=${t} and e.affiliate_id=${a} and e.event_type='AffiliateLinkTestVerified' and c.status='active' and c.updated_at::text=e.payload->>'configVersion') as test_link_verified,
  exists(select 1 from garimpa.audience_policy p join garimpa.audience_policy_version v on v.policy_id=p.id and v.tenant_id=p.tenant_id and v.version=p.current_version where p.tenant_id=${t} and p.status='active') as audience_policy_configured,
  exists(select 1 from garimpa.campaign where tenant_id=${t} and status<>'archived') as first_campaign_created,
  exists(select 1 from garimpa.commercial_kit k join garimpa.commercial_kit_revision r on r.kit_id=k.id and r.tenant_id=k.tenant_id and r.revision=k.current_revision where k.tenant_id=${t} and k.status='approved') as first_kit_approved,
  exists(select 1 from garimpa.campaign_publication where tenant_id=${t} and status='published_confirmed' and published_at is not null) as first_publication_confirmed`;
+  const [connections]=await sql`select exists(select 1 from garimpa.affiliate_marketplace_config c where affiliate_id=${a} and status='active' and marketplace in ('shopee','aliexpress') and to_jsonb(c)->>'connection_status'='verified' and exists(select 1 from garimpa.affiliate_secret s where s.tenant_id=${t} and s.marketplace=c.marketplace and s.status='active')) as verified`;
+  r.test_link_verified=r.test_link_verified||connections?.verified===true;
+  const [workspace]=await sql`select to_regclass('garimpa.workspace_settings') is not null as ready`;
+  if(workspace?.ready){const [audience]=await sql`select exists(select 1 from garimpa.workspace_settings where tenant_id=${t}) as configured`;r.audience_policy_configured=r.audience_policy_configured||audience?.configured===true;}
   return r;
 }
 
@@ -835,7 +835,7 @@ export async function verifyAccountLinkTest(
     async (tx) => {
       const [config] = await tx<
         any[]
-      >`select *,updated_at::text as config_version from garimpa.affiliate_marketplace_config where id::text=${input.configId} and affiliate_id=${c.affiliateId} and status='active'`;
+      >`select *,updated_at::text as config_version from garimpa.affiliate_marketplace_config where id::text=${input.configId} and affiliate_id=${c.affiliateId} and status='active' for update`;
       const [evidence] =
         await tx`select id from garimpa.private_artifact where id::text=${input.evidenceId} and tenant_id=${c.tenantId} and kind='account_evidence' and status='ready'`;
       const url = new URL(input.affiliateUrl);
@@ -848,6 +848,8 @@ export async function verifyAccountLinkTest(
         ![...url.searchParams.values()].includes(config.tracking_id)
       )
         throw new Error("verified_link_evidence_required");
+      const [schema]=await tx`select exists(select 1 from information_schema.columns where table_schema='garimpa' and table_name='affiliate_marketplace_config' and column_name='connection_status') as ready`;
+      if(schema?.ready){const [saved]=await tx<any[]>`update garimpa.affiliate_marketplace_config set connection_status='verified',connection_checked_at=now() where id=${config.id} and affiliate_id=${c.affiliateId} returning updated_at::text as version`;config.config_version=saved.version;}
       await tx`insert into garimpa.account_lifecycle_event(tenant_id,affiliate_id,event_type,actor_app_user_id,payload) values(${c.tenantId},${c.affiliateId},'AffiliateLinkTestVerified',${c.actorAppUserId!},${tx.json({ configId: config.id, configVersion: config.config_version, evidenceId: input.evidenceId, targetDigest: hashToken(input.affiliateUrl), notes: input.notes, verification: "human_documented" })})`;
       return { verified: true };
     },

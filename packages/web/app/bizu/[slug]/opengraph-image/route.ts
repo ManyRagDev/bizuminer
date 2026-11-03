@@ -3,6 +3,8 @@ import { toVitrineProduct } from "../../../../lib/deal-view";
 import { renderProductPreview } from "../../../../lib/product-preview-image";
 import { serveProductPreview } from "../../../../lib/product-preview-response";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

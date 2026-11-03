@@ -3,6 +3,8 @@ import { dealQueryFromSearchParams } from "../../../lib/deal-query";
 import { toVitrineProduct } from "../../../lib/deal-view";
 import { catalogPage } from "../../../lib/db";
 
+export const preferredRegion = "gru1";
+
 export const dynamic = "force-dynamic";
 
 /** Catálogo paginado: dados públicos passam pelo servidor, nunca pelo cliente inteiro. */

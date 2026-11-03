@@ -14,11 +14,18 @@ test("resolveAccountMarketplaceCredentials returns house credentials for 'local'
   process.env.SHOPEE_APP_ID = "house-shopee-app";
   process.env.SHOPEE_APP_SECRET = "house-shopee-secret";
 
-  const creds = await resolveAccountMarketplaceCredentials("local", "shopee", async () => [{status:"active"}]);
+  const creds = await resolveAccountMarketplaceCredentials("local", "shopee", async strings => strings.join(' ').includes('affiliate_account')?[{status:'active'}]:[]);
   assert.equal(creds.tenantId, "local");
   assert.equal(creds.marketplace, "shopee");
   assert.equal(creds.appId, "house-shopee-app");
   assert.equal(creds.appSecret, "house-shopee-secret");
+});
+
+test('saved house connection takes precedence over environment without changing another account fallback',async()=>{
+ const encrypted=encryptSecret(JSON.stringify({appId:'saved-house-app',appSecret:'saved-house-secret'}),'local','shopee','credentials_json');
+ const sql=async strings=>strings.join(' ').includes('affiliate_account')?[{status:'active'}]:[{secret_id:'credentials_json',key_version:encrypted.keyVersion,...encrypted}];
+ const credentials=await resolveAccountMarketplaceCredentials('local','shopee',sql);
+ assert.equal(credentials.appId,'saved-house-app');assert.equal(credentials.appSecret,'saved-house-secret');
 });
 
 test("resolveAccountMarketplaceCredentials throws account_credentials_missing when tenant has no stored secrets", async () => {

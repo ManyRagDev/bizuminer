@@ -1,4 +1,5 @@
 "use client";
+import { optionDetailPath } from "../lib/offer-option.ts";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -152,6 +153,7 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
   const [loadError, setLoadError] = useState("");
   const [navOpen, setNavOpen] = useState(false);
   const requestVersion = useRef(0);
+  const catalogRead = useRef<AbortController | null>(null);
   const firstMobilePage = useRef(initialState.page);
   const editorialById = new Map(editorialProducts.map((product) => [product.id, product]));
   const heroProducts = heroCurrent ? editorialHeroIds.slice(0, HERO_MAX_PRODUCTS).flatMap((id) => editorialById.has(id) ? [editorialById.get(id)!] : []) : [];
@@ -215,8 +217,8 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
             if (cancelled) return;
             try { sessionStorage.removeItem(CATALOG_RETURN_KEY); } catch {}
             window.scrollTo(0, snapshot.scrollY);
-            const links = document.querySelectorAll<HTMLAnchorElement>('a[href^="/bizu/"]');
-            const link = Array.from(links).filter((item) => item.getAttribute("href") === `/bizu/${snapshot.productSlug}` && item.getClientRects().length > 0).sort((a, b) => Math.abs(a.getBoundingClientRect().top) - Math.abs(b.getBoundingClientRect().top))[0];
+            const links = document.querySelectorAll<HTMLAnchorElement>('a[href^="/bizu/"],a[href^="/oferta/"]');
+            const link = Array.from(links).filter((item) => (item.getAttribute("href") === `/bizu/${snapshot.productSlug}` || item.getAttribute("href")?.startsWith(`/oferta/${snapshot.productSlug}/`)) && item.getClientRects().length > 0).sort((a, b) => Math.abs(a.getBoundingClientRect().top) - Math.abs(b.getBoundingClientRect().top))[0];
             link?.focus({ preventScroll: true });
           }));
         };
@@ -234,7 +236,7 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
       void fetchDeals(next, true, "replace");
     };
     window.addEventListener("popstate", handlePopState);
-    return () => { cancelled = true; window.removeEventListener("popstate", handlePopState); };
+    return () => { cancelled = true; catalogRead.current?.abort(); ++requestVersion.current; window.removeEventListener("popstate", handlePopState); };
     // O estado inicial pertence à navegação que produziu este Server Component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -281,6 +283,9 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
   }
 
   async function fetchDeals(next: CatalogState, scrollToCatalog: boolean, mode: "replace" | "append" = "replace"): Promise<boolean> {
+    catalogRead.current?.abort();
+    const controller = new AbortController();
+    catalogRead.current = controller;
     const version = ++requestVersion.current;
     setIsLoading(true);
     setLoadError("");
@@ -295,10 +300,10 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
     if (dealQuery.lowestOnly) params.set("lowestOnly", "true");
     if (dealQuery.hasHistory) params.set("hasHistory", "true");
     try {
-      const response = await fetch(`/api/deals?${params}`);
+      const response = await fetch(`/api/deals?${params}`, { signal: controller.signal });
       if (!response.ok) throw new Error("catalog_failed");
       const page = await response.json() as ApiPage;
-      if (version !== requestVersion.current) return false;
+      if (controller.signal.aborted || version !== requestVersion.current) return false;
       if ((page.selectionStateKey !== undefined && editorialStateKey !== null && page.selectionStateKey !== editorialStateKey)
         || (page.selectionVersion !== undefined && page.selectionVersion !== editorialVersion)) {
         // A nova navegação deve usar a mesma edição no catálogo e no carrossel.
@@ -316,10 +321,10 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
       if (scrollToCatalog) document.querySelector("#achados")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return true;
     } catch {
-      if (version === requestVersion.current) setLoadError("Não foi possível atualizar as ofertas agora. Tente de novo.");
+      if (!controller.signal.aborted && version === requestVersion.current) setLoadError("Não foi possível atualizar as ofertas agora. Tente de novo.");
       return false;
     } finally {
-      if (version === requestVersion.current) setIsLoading(false);
+      if (!controller.signal.aborted && version === requestVersion.current) setIsLoading(false);
     }
   }
 
@@ -385,9 +390,9 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
   }
   return <main className="vitrine-page" onClickCapture={(event) => {
     const target = event.target as Element;
-    const link = target.closest<HTMLAnchorElement>('a[href^="/bizu/"]');
+    const link = target.closest<HTMLAnchorElement>('a[href^="/bizu/"],a[href^="/oferta/"]');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const slug = link.getAttribute("href")?.slice("/bizu/".length);
+    const slug = link.getAttribute("href")?.split("/")[2];
     if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) return;
     try { sessionStorage.setItem(CATALOG_RETURN_KEY, JSON.stringify({ url: `${location.pathname}${location.search}`, firstPage: firstMobilePage.current, lastPage: mobileLoadedPage, scrollY: window.scrollY, productSlug: slug, savedAt: Date.now() })); } catch { /* The detail keeps a safe fallback. */ }
   }}>
@@ -511,5 +516,5 @@ function ProductCard({ product, favorite, onFavorite, editorialRationale, editor
   const marketplaceLabel = marketplaceDefinition?.label ?? product.marketplace;
   const ctaLabel = marketplaceDefinition?.ctaLabel ?? `ver na ${marketplaceLabel}`;
   const marketplaceLogo = marketplaceDefinition?.logo;
-  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`} data-home-product={product.id} data-home-surface="grid"><div className="product-image"><Link href={`/bizu/${product.slug}`} prefetch={false} aria-label={`Abrir detalhes de ${(product.displayTitle || product.title)}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={(product.displayTitle || product.title)} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></Link>{discountPct !== null && <span className="discount"><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${(product.displayTitle || product.title)}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><Link href={`/bizu/${product.slug}`} prefetch={false}>{(product.displayTitle || product.title)}</Link></h3><MarketplaceEvidence product={product} />{editorialRationale && <p className="product-editorial-rationale">{editorialRationale}</p>}{editorialPurchaseContents && <p className="product-editorial-contents"><b>O que vem:</b> {editorialPurchaseContents}</p>}<p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div>{fresh === "current" ? <><small>{product.originalPriceKind === "source_claimed" && product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em>{offerPriceNote(product)}</em>}{freshness && <em>{freshness}</em>}</> : <span className="stale-price"><strong>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em>{offerPriceNote(product)}</em>}<em>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a href={`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></div><CopyProductLink slug={product.slug} title={(product.displayTitle || product.title)} /></article>;
+  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`} data-home-product={product.id} data-home-surface="grid"><div className="product-image"><Link href={optionDetailPath(product.slug,product.offerOptionKey)} prefetch={false} aria-label={`Abrir detalhes de ${(product.displayTitle || product.title)}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={(product.displayTitle || product.title)} fill sizes={featured ? "(max-width: 820px) calc(100vw - 32px), 25vw" : "(max-width: 560px) calc((100vw - 44px) / 2), (max-width: 1100px) 33vw, 25vw"} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></Link>{discountPct !== null && <span className="discount"><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${(product.displayTitle || product.title)}`} aria-pressed={favorite} onClick={() => onFavorite(product)}>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"}>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><Link href={optionDetailPath(product.slug,product.offerOptionKey)} prefetch={false}>{(product.displayTitle || product.title)}</Link></h3><MarketplaceEvidence product={product} />{editorialRationale && <p className="product-editorial-rationale">{editorialRationale}</p>}{editorialPurchaseContents && <p className="product-editorial-contents"><b>O que vem:</b> {editorialPurchaseContents}</p>}<p className="product-blurb"><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div>{fresh === "current" ? <><small>{product.originalPriceKind === "source_claimed" && product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em>{offerPriceNote(product)}</em>}{freshness && <em>{freshness}</em>}</> : <span className="stale-price"><strong>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em>{offerPriceNote(product)}</em>}<em>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a href={product.offerOptionKey ? optionDetailPath(product.slug,product.offerOptionKey):`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></div><CopyProductLink optionKey={product.offerOptionKey} slug={product.slug} title={(product.displayTitle || product.title)} /></article>;
 }

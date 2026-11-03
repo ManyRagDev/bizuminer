@@ -7,6 +7,8 @@ import { hashToken } from "../../../../lib/extension-token";
 import { extensionCaptureEnabled } from "../../../../lib/flags";
 import { captureIpKey, captureRateLimited } from "../../../../lib/rate-limit";
 
+export const preferredRegion = "gru1";
+
 export const runtime = "nodejs";
 
 /**

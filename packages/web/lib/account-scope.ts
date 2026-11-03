@@ -11,16 +11,40 @@ export function inAccountScope<T>(context: AccountContext, work: () => T): T {
   return accounts.run(context, work);
 }
 
+// Only the transaction object owns this proof. Neither the connection nor the
+// request may reuse it for a later transaction (membership can be revoked).
+const authorizedTransactions = new WeakMap<object, { identity: string; ready: Promise<void> }>();
+
+export function releaseAccountTransaction(tx: object) {
+  authorizedTransactions.delete(tx);
+}
+
 export async function authorizeAccountTransaction(
   tx: any,
   context: AccountContext,
 ) {
-  await tx`select set_config('garimpa.tenant_id', ${context.tenantId}, true)`;
-  await tx`select set_config('garimpa.actor_type', ${context.actor}, true)`;
-  await tx`select set_config('garimpa.actor_app_user_id', ${context.actorAppUserId ?? ""}, true)`;
-  await tx`select set_config('garimpa.membership_role', ${context.membershipRole ?? ""}, true)`;
-  await tx`select set_config('garimpa.platform_role', '', true)`;
-  await tx`select set_config('garimpa.request_id', ${context.requestId}, true)`;
+  const identity = JSON.stringify([context.tenantId, context.affiliateId, context.actor,
+    context.authenticatedAuthUserId, context.actorAppUserId, context.membershipRole, context.requestId]);
+  const previous = authorizedTransactions.get(tx);
+  if (previous) {
+    if (previous.identity !== identity) throw new Error("forbidden_account_scope");
+    return previous.ready;
+  }
+  const ready = initializeAccountTransaction(tx, context);
+  authorizedTransactions.set(tx, { identity, ready });
+  // A failed proof also fixes the attempted identity until rollback/end. A
+  // caller catching the rejection must not switch actors in this transaction.
+  await ready;
+}
+
+async function initializeAccountTransaction(tx: any, context: AccountContext) {
+  await tx`select
+    set_config('garimpa.tenant_id', ${context.tenantId}, true),
+    set_config('garimpa.actor_type', ${context.actor}, true),
+    set_config('garimpa.actor_app_user_id', ${context.actorAppUserId ?? ""}, true),
+    set_config('garimpa.membership_role', ${context.membershipRole ?? ""}, true),
+    set_config('garimpa.platform_role', '', true),
+    set_config('garimpa.request_id', ${context.requestId}, true)`;
   if (context.actor === "human") {
     if (!context.authenticatedAuthUserId || !context.actorAppUserId)
       throw new Error("forbidden");

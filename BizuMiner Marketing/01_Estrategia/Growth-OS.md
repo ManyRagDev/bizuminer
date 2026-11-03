@@ -1,108 +1,60 @@
-# Growth OS — BizuMiner
+# Estratégia de vendas do BizuMiner
 
-Atualizado em 18/09/2026. Este documento orienta a operação atual e só deve mudar com aprendizado real.
+Atualizado em 28/10/2026. Direção do primeiro ciclo comercial, aceita na conversa com o dono. Público, formato e canal abaixo são hipóteses a testar; resultados entram em Aprendizados.md somente quando houver evidência.
 
-## Norte
+## Objetivo
 
-Fazer a próxima pessoa que nunca ouviu falar do BizuMiner entender por que ele é útil.
+Gerar pedidos atribuídos e comissão validada por recomendações úteis, acompanhar custos e descobrir uma operação que possa ser repetida. Alcance e notoriedade contribuem para esse resultado.
 
-O produto encontra ofertas e verifica o contexto antes de chamá-las de boas oportunidades. A promessa é: **menos tempo procurando, mais clareza para decidir**.
+O [plano diário de vendas](../../social/calendario-mes-1.md) define tarefas, datas, metas e placar do ciclo de 28/10 a 26/11/2026. Ele é a agenda vigente; calendários e preços antigos do pipeline são referências que exigem nova conferência.
 
-## Posicionamento
+A [rotina de trabalho](../02_Pipeline/rotina-operacional.md) organiza o dia: seleção de uma oferta, envio manual no WhatsApp, Stories nos dias previstos, conteúdo, divulgação e atendimento. A implantação do grupo ocupa um bloco de produção; as pautas se ajustam à capacidade real.
 
-O BizuMiner não é um perfil genérico de descontos. Seu território é **promoção com contexto**: preço atual, histórico próprio, quantidade de registros, período observado e limites da evidência.
+## Promessa e público inicial
 
-Pergunta editorial central: **“É desconto mesmo?”**
+Ajudar a pessoa a escolher um produto para uma necessidade concreta, com contexto para comprar: utilidade, versão, limitações, preço e condições verificadas.
 
-## Público inicial
+O recorte inicial é organização e iluminação para casa. A escolha aproveita produtos observados na vitrine e precisa provar procura e retorno. O histórico de preço sustenta a recomendação quando existem registros comparáveis.
 
-Pessoas que compram online, querem decidir com rapidez e desconfiam de percentuais promocionais sem contexto. Não precisam dominar dados; precisam compreender a conclusão em segundos.
+## Operação do ciclo
 
-## Hipótese principal
+- Selecionar seis candidatos, três de cada situação de compra, e conferir condições e comissão.
+- Publicar três peças principais e quatro sequências de Stories por semana.
+- Fazer cinco ações semanais de distribuição pertinente e atender pedidos reais de ajuda.
+- Manter Instagram como canal principal e um único canal voluntário de retorno.
+- Começar a operação do grupo no WhatsApp com uma oferta conferida por dia útil, quando houver boa candidata; uma segunda mensagem é opcional.
+- Testar dois reaproveitamentos autorais na Shopee Video se a conta permitir e a remuneração fizer sentido.
+- Revisar semanalmente pedidos, comissões, custos e horas; mudar uma variável principal de cada vez quando houver dados suficientes.
 
-A ideia de verificar se uma promoção realmente é boa é interessante o suficiente para fazer desconhecidos parar, consumir o conteúdo e conhecer o BizuMiner.
+A rotina presume 60 minutos por dia útil e 20 minutos por dia no fim de semana. A cadência deve caber na capacidade real. A primeira publicação não depende de três posts fixados, novo design ou novas funcionalidades.
 
-## Canais e papel de cada um
+## Conteúdo e compra
 
-- Instagram: canal principal de marca e descoberta.
-- TikTok e YouTube Shorts: redistribuição do mesmo vídeo vertical, sem marca d'água.
-- Site: evidência, aprofundamento e saída rastreada para o marketplace.
-- Telegram: retenção e melhores achados; publicação manual é aceitável.
-- WhatsApp: publicação exclusivamente manual. Nenhuma automação não oficial.
-- Newsletter: posterior, não prioritária neste ciclo.
+Começar pela situação de uso e mostrar produto, critério de escolha, evidência necessária e uma ação clara. Comparações de versões, medidas e limitações ajudam a decidir. Condições temporárias ficam nos Stories e canais de ofertas; o feed prioriza conteúdo que continua útil para escolher.
 
-## Formatos em teste
+O formato pode ser carrossel curto ou vídeo autoral. Use o que permita explicar e publicar no tempo disponível. Cada peça conduz ao produto específico ou a uma conversa sobre necessidade de compra; salvar é adequado quando o conteúdo funciona como referência.
 
-Principal: vídeo vertical de 12–18 segundos, **“É desconto mesmo?”**.
+Mantenha a voz humana e precisa. Identifique dados do anúncio e dados próprios. Não invente preço, teste de uso, escassez, disponibilidade, depoimento ou certeza de menor preço. Sem moeda e versão confirmadas, confira a oferta na loja antes de divulgar.
 
-Secundários, introduzidos progressivamente:
+## Medição
 
-- Compro agora ou espero?
-- O anúncio diz X%. O histórico diz…
-- Parece promoção, mas…
-- Três ofertas que passaram pelo garimpo hoje.
-- Achado do dia.
-- Carrosséis educativos curtos.
+As metas de execução e os alvos comerciais estão no calendário. Pedido atribuído, comissão estimada, comissão validada e recebimento são acompanhamentos distintos. Cliques do site não comprovam vendas no marketplace.
 
-## Estrutura do vídeo principal
+Compare comissão validada, gastos diretos e horas de trabalho. Analise cada origem e período com seus próprios cliques e pedidos, respeitando o prazo de validação; um pedido sem vínculo verificável com uma peça não recebe atribuição inventada. Curtidas e seguidores ajudam no diagnóstico, mas não encerram a avaliação comercial.
 
-1. 0–2s: produto, preço e tensão clara.
-2. 2–10s: somente as evidências necessárias.
-3. 10–16s: conclusão proporcional aos dados.
-4. Final curto: BizuMiner + domínio ou CTA.
+O ciclo busca a primeira venda atribuída até 10/11 e cinco pedidos até 26/11 como alvos iniciais, sujeitos a revisão conforme o tráfego. Não são previsão de renda. Os pedidos continuam em acompanhamento após o calendário.
 
-Meta de produção: 20–30 minutos por vídeo depois que o fluxo estiver organizado.
+## Plataforma e expansão
 
-## Tom
+A operação própria pode gerar evidência para vender a plataforma. Compradores de produtos e compradores de software têm necessidades distintas. Conversas pontuais com afiliados e criadores podem identificar problemas pelos quais pagariam, sem competir com a execução principal. Um eventual piloto pago exige capacidades comprovadas e escopo concreto.
 
-Claro, direto, curioso e confiável. Pode haver entusiasmo, nunca urgência fabricada. O texto distingue o que o anúncio declara do que o BizuMiner observou.
+Mídia paga, mais redes e expansão de categorias entram depois de avaliar resultado e capacidade. Não ampliar gastos apenas porque uma peça teve muitas visualizações.
 
-## Princípios editoriais
+## Decisões preservadas
 
-- Nenhuma afirmação forte sem evidência correspondente.
-- Percentual do marketplace é sempre qualificado como “no anúncio”.
-- Menor preço é sempre “menor preço que registramos no período”.
-- Pouco histórico deve ser dito de forma explícita.
-- Não fabricar dado, urgência, disponibilidade ou certeza.
-- Não transformar uma oferta em boa apenas porque o percentual declarado é alto.
-- Transparência é parte do produto, não uma ressalva escondida.
-
-## Estratégia atual: primeiro ciclo de 30 dias
-
-Objetivo: descobrir qual conteúdo faz desconhecidos prestar atenção.
-
-- Preparar perfil com três posts fixados.
-- Publicar 3 vídeos por semana, totalizando 12–15.
-- Reaproveitar cada vídeo nos três canais de descoberta.
-- Publicar 1–2 conteúdos complementares por semana apenas se o ritmo for confortável.
-- Distribuir as melhores ofertas no Telegram e no WhatsApp; não tudo que entra na vitrine.
-- Registrar métricas semanalmente e escrever: funcionou, não funcionou, próximo teste.
-
-## Métricas
-
-Aquisição: alcance/views, visitas ao perfil, cliques no link e sessões no site.
-
-Ativação: abertura de produto, pesquisa, salvar, acompanhar preço, interação com histórico e clique no marketplace.
-
-Retenção: retorno em 7 e 30 dias e adesão ao Telegram.
-
-Receita: clique afiliado, conversão quando disponível e comissão.
-
-Métrica prioritária de produto: **CTR de saída para o marketplace por oferta e categoria**.
-
-## Hipóteses do primeiro laboratório
-
-1. Confrontar o percentual do anúncio com o histórico interrompe o scroll.
-2. Produtos reconhecíveis geram mais atenção que itens genéricos.
-3. A surpresa “parece promoção, mas eu esperaria” gera retenção.
-4. Mostrar quantidade de registros e dias aumenta credibilidade sem tornar o vídeo lento.
-5. Uma conclusão binária e honesta — comprar, esperar ou evidência insuficiente — melhora cliques qualificados.
-
-## Decisões vigentes
-
-- Priorizar publicação e aprendizado, não novas features.
-- Produzir uma vez e distribuir três vezes.
-- Não investir significativamente em mídia paga antes de uma mensagem funcionar organicamente.
-- SEO é fundação de médio prazo, sem spam e sempre fiel aos dados.
-- WhatsApp permanece manual; WAHA, Puppeteer, sessão automatizada e anti-ban estão fora.
-- Nenhum aprendizado entra neste documento a partir de um único post.
+- WhatsApp permanece manual; automação não oficial está fora.
+- Telegram pode receber publicação pela integração oficial quando disponível e útil à audiência.
+- Transparência sobre links de afiliado e limites da evidência faz parte da recomendação.
+- Preços e condições são revalidados antes da divulgação.
+- A seleção editorial precisa servir a uma necessidade de compra.
+- Nenhum aprendizado é consolidado a partir de uma única publicação.

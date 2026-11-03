@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { db } from "./db.ts";
-import { publicCampaignLink, publicMonetizedTarget, recordPublicClick } from "./public-offer-db.ts";
+import { publicCampaignLink, publicMonetizedTarget, recordPublicClick,publicWorkspaceLink } from "./public-offer-db.ts";
 import { isCampaignLinkCode } from "./commerce-contract.ts";
 
 export async function publicGo(request: Request, slug: string, code: string | null, sqlFactory: typeof db = db): Promise<Response> {
@@ -8,6 +8,8 @@ export async function publicGo(request: Request, slug: string, code: string | nu
     if (code && (!isCampaignLinkCode(code) || !await publicCampaignLink(code, slug, sqlFactory))) {
       return new Response("Link de campanha inválido", { status: 404 });
     }
+    const stored=code?await publicWorkspaceLink(code,slug,sqlFactory):null;
+    if(stored?.workspace&&!stored.available)return new Response('Esta opção precisa de nova conferência',{status:404});
     const target = await publicMonetizedTarget(slug, sqlFactory);
     if (!target) return new Response("Oferta ou monetização indisponível", { status: 404 });
     const agent = request.headers.get("user-agent");

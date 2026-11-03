@@ -55,6 +55,11 @@ export interface KitSnapshot {
   readonly productUrl: string;
   readonly imageUrl?: string;
   readonly reasons: readonly string[];
+  readonly optionKey?: string;
+  readonly optionLabel?: string;
+  readonly purchaseContents?: string;
+  readonly conditions?: string;
+  readonly audiencePolicyVersionId?: string;
 }
 
 export interface Campaign {
@@ -74,7 +79,7 @@ export interface Campaign {
 export interface CommercialKit {
   readonly id: string;
   readonly tenantId: string;
-  readonly campaignId: string;
+  readonly campaignId: string | null;
   readonly opportunityId: string;
   readonly currentRevision: number;
   readonly version: number;
@@ -100,7 +105,7 @@ export interface CommercialKitRevision {
 export interface CampaignPublication {
   readonly id: string;
   readonly tenantId: string;
-  readonly campaignId: string;
+  readonly campaignId: string | null;
   readonly kitId: string;
   readonly kitRevisionId: string;
   readonly destinationId: string;

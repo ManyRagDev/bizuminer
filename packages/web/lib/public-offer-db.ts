@@ -95,6 +95,14 @@ export async function publicCampaignLink(code: string, slug?: string | null, sql
   }, sqlFactory);
 }
 
+export async function publicWorkspaceLink(code:string,slug?:string|null,sqlFactory:typeof db=db){
+ return withPublicDb(async tx=>{
+  const [schema]=await tx`select to_regprocedure('garimpa.public_workspace_link(text,text)') is not null as ready`;
+  if(!schema?.ready)return null;
+  const [r]=await tx<{slug:string;option_key:string|null;workspace:boolean;available:boolean}[]>`select * from garimpa.public_workspace_link(${code},${slug??null})`;return r??null;
+ },sqlFactory);
+}
+
 export async function publicMonetizedTarget(slug: string, sqlFactory: typeof db = db) {
   return withPublicDb(async tx => {
     const [row] = await tx<{ url: string; publication_id: string; tenant_id: string }[]>`select * from garimpa.public_monetized_target(${slug})`;

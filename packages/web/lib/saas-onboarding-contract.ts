@@ -147,7 +147,9 @@ export function canCompleteOnboardingStep(
     return { canComplete: true };
   }
 
-  const previousRequiredStep = ONBOARDING_STEPS[targetIndex - 1]!;
+  // Individual materials do not require a campaign. Keep the legacy step for
+  // existing records, while the direct journey proceeds from audience to kit.
+  const previousRequiredStep = targetStep==='first_kit_approved'?'audience_policy_configured':ONBOARDING_STEPS[targetIndex - 1]!;
   if (!completedSteps.includes(previousRequiredStep)) {
     return {
       canComplete: false,

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import AdminLink from "./admin-link.tsx";
+import { useState,useEffect,useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 interface NavItem {
   id: string;
@@ -70,40 +71,80 @@ export default function AdminShell({
   children,
   curationCount = 0,
   accountHeader,
+  workspace=false,
 }: {
   children: React.ReactNode;
   curationCount?: number;
   accountHeader?: React.ReactNode;
+  workspace?: boolean;
 }) {
   const pathname = usePathname();
-  const [currentSearch, setCurrentSearch] = useState("");
+  const currentSearch = useSearchParams().toString();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobile,setMobile]=useState(false),toggle=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{const media=window.matchMedia('(max-width: 820px)'),update=()=>setMobile(media.matches);update();media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCurrentSearch(window.location.search);
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    const handleUrlChange = () => {
-      if (typeof window !== "undefined") {
-        setCurrentSearch(window.location.search);
-      }
-    };
-    window.addEventListener("popstate", handleUrlChange);
-    window.addEventListener("hashchange", handleUrlChange);
-    return () => {
-      window.removeEventListener("popstate", handleUrlChange);
-      window.removeEventListener("hashchange", handleUrlChange);
-    };
-  }, []);
-
-  const activeId = resolveActiveId(pathname, currentSearch);
-  const sectionTitle = resolveSectionTitle(activeId);
+  const activeId = workspace
+    ? pathname.startsWith("/admin/ofertas")
+      ? "ofertas"
+      : pathname.startsWith("/admin/divulgacoes") || pathname.startsWith("/admin/marketing")
+        ? "divulgacoes"
+        : pathname.startsWith("/admin/resultados") || pathname.startsWith("/admin/financeiro")
+          ? "resultados"
+          : pathname.startsWith("/admin/configuracoes") || pathname.startsWith("/admin/onboarding")
+            ? "ajustes"
+            : pathname === "/pauta"
+              ? "pauta"
+              : pathname.startsWith("/admin/curadoria")
+                ? "curadoria"
+                : pathname === "/admin" && new URLSearchParams(currentSearch).get("aba") === "rodagens"
+                  ? "operacao"
+                  : pathname === "/admin" && !new URLSearchParams(currentSearch).get("aba")
+                    ? "hoje"
+                    : "avancado"
+    : resolveActiveId(pathname, currentSearch);
+  const sectionTitle = workspace
+    ? ({
+        hoje: "Hoje",
+        ofertas: "Ofertas",
+        divulgacoes: "Divulgações",
+        resultados: "Resultados",
+        ajustes: "Configurações",
+        pauta: "Pauta Rápida",
+        curadoria: "Curadoria Geral",
+        operacao: "Operação & Captura",
+        avancado: "Ferramentas avançadas",
+      }[activeId] ?? "Meu negócio")
+    : resolveSectionTitle(activeId);
   const onPauta = pathname === "/pauta";
 
-  const navigationGroups: NavGroup[] = [
+  const navigationGroups: NavGroup[] = workspace
+    ? [
+        {
+          groupTitle: "Meu negócio",
+          items: [
+            { id: "hoje", href: "/admin", label: "Hoje", icon: "◉" },
+            { id: "ofertas", href: "/admin/ofertas", label: "Ofertas", icon: "◇" },
+            { id: "divulgacoes", href: "/admin/divulgacoes", label: "Divulgações", icon: "↗" },
+            { id: "resultados", href: "/admin/resultados", label: "Resultados", icon: "▥" },
+          ],
+        },
+        {
+          groupTitle: "Ferramentas & Catálogo",
+          items: [
+            { id: "pauta", href: "/pauta", label: "Pauta Rápida", icon: "📱" },
+            { id: "curadoria", href: "/admin/curadoria?aba=selecao", label: "Curadoria Geral", icon: "🎯" },
+            { id: "operacao", href: "/admin?aba=rodagens", label: "Operação & Captura", icon: "🔄" },
+          ],
+        },
+        {
+          groupTitle: "Minha conta",
+          items: [
+            { id: "ajustes", href: "/admin/configuracoes", label: "Configurações", icon: "⚙" },
+          ],
+        },
+      ]
+    : [
     {
       groupTitle: "Rotina",
       items: [
@@ -145,7 +186,7 @@ export default function AdminShell({
   ];
 
   return (
-    <main className="admin-page admin-shell">
+    <main className="admin-page admin-shell" onKeyDown={event=>{if(event.key==='Escape'&&drawerOpen){setDrawerOpen(false);toggle.current?.focus();}}}>
       {/* Top Header */}
       <header className="detail-header admin-shell-header">
         <div className="admin-header-left">
@@ -169,7 +210,7 @@ export default function AdminShell({
         </div>
 
         <div className="detail-header-actions">
-          {!onPauta && activeId !== "marketing" && (
+          {!workspace && !onPauta && activeId !== "marketing" && (
             <Link
               href="/pauta"
               className="admin-shell-pauta-link"
@@ -188,6 +229,7 @@ export default function AdminShell({
           </form>
           <button
             type="button"
+            ref={toggle}
             className="admin-shell-toggle"
             aria-expanded={drawerOpen}
             aria-controls="admin-shell-nav"
@@ -204,7 +246,8 @@ export default function AdminShell({
         <nav
           id="admin-shell-nav"
           className={"admin-shell-nav" + (drawerOpen ? " open" : "")}
-          aria-label="Navegação administrativa"
+          aria-label={workspace?'Navegação do negócio':'Navegação administrativa'}
+          inert={mobile&&!drawerOpen}
         >
           <div className="admin-shell-nav-inner">
             {navigationGroups.map((group) => (
@@ -214,17 +257,13 @@ export default function AdminShell({
                   {group.items.map((item) => {
                     const isActive = activeId === item.id;
                     return (
-                      <Link
+                      <AdminLink
                         key={item.id}
                         href={item.href}
                         className={"admin-shell-nav-item" + (isActive ? " active" : "")}
                         aria-current={isActive ? "page" : undefined}
                         onClick={() => {
                           setDrawerOpen(false);
-                          if (typeof window !== "undefined") {
-                            const url = new URL(item.href, window.location.origin);
-                            setCurrentSearch(url.search);
-                          }
                         }}
                       >
                         <span className="admin-nav-item-content">
@@ -238,7 +277,7 @@ export default function AdminShell({
                             {item.badge}
                           </span>
                         )}
-                      </Link>
+                      </AdminLink>
                     );
                   })}
                 </div>
@@ -266,7 +305,7 @@ export default function AdminShell({
           type="button"
           className="admin-shell-overlay"
           aria-label="Fechar navegação"
-          onClick={() => setDrawerOpen(false)}
+          onClick={() => {setDrawerOpen(false);toggle.current?.focus();}}
         />
       )}
     </main>

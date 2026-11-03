@@ -34,6 +34,7 @@ export default async function Page() {
       progress={JSON.parse(JSON.stringify(progress))}
       configs={JSON.parse(JSON.stringify(configs))}
       platformAdmin={Boolean(platform)}
+      canManage={c.membershipRole==='owner'}
     />
   );
 }

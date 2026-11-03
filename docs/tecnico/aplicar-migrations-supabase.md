@@ -47,3 +47,35 @@ As três aplicações usaram `lock_timeout=5s` e `statement_timeout=60s`. Foram 
 A aplicação do esquema não publica textos editoriais nem preenche moedas/configurações antigas por suposição. A simulação da primeira edição retornou zero produtos aptos, por isso ela não foi inicializada: o catálogo permanece disponível pelo caminho de transição. Antes de inicializar, publicar uma seleção válida e conferir `refresh-homepage.ts --tenant local --initialize` sem `--execute`.
 
 Em futuras aplicações, conferir nomes e versões deste mapeamento; não reaplicar os arquivos só porque os timestamps locais diferem do histórico remoto.
+
+## Renovação contínua da pauta — 01/11/2026
+
+`20261101125432_renew_editorial_pauta.sql` foi aplicada via MCP no projeto `spbuwcwmxlycchuwhfir` como `20261101130216_renew_editorial_pauta`. Acrescenta histórico de última presença e estado privado de habilitação/tentativa, com RLS por conta e sem privilégios públicos. Conferida antes em PGlite e PostgreSQL 17.6 local. A conta da casa habilitou a rotina pelo painel, mas continua aguardando produtos aptos; isso não equivale a criar uma edição nem a publicar o código web/worker novo. Veja o estado completo no plano de integração da captura, curadoria, vitrine e pauta.
+
+
+## Pauta melhorada — aplicada em produção em 01/11/2026
+
+`20261101193221_improve_editorial_recommendations.sql` foi gerada com o CLI oficial e validada em PostgreSQL 17.6 descartável. Acrescenta opção de compra, canais/edições/arquivo, confirmação de divulgação e descoberta por conta, com RLS privado e projeções públicas restritas. Não contém backfill de variantes desconhecidas nem ativa políticas por conta.
+
+**Dependência de publicação:** a unicidade antiga de observação por rodada/produto é substituída pela identidade com opção. Integrar os escritores compatíveis, encerrar jobs antigos e reiniciar as instâncias após a migration; código antigo com o alvo de conflito anterior falha depois da troca. Não usar rollback que reintroduza esse escritor sobre o novo esquema nem apagar observações para reverter a funcionalidade. As flags novas exigem configuração explícita. A configuração anterior de renovação não as habilita.
+
+Aplicada via MCP no projeto `spbuwcwmxlycchuwhfir`, após autorização, como `20261101221820_improve_editorial_recommendations`. A primeira tentativa foi integralmente revertida por espera de lock; após terminar a leitura que bloqueava a alteração, a mesma migration foi aplicada. Os escritores compatíveis já estavam publicados e não havia capturas antigas em andamento. Foram preservadas as 11.096 observações e conferidos a nova unicidade com opção, RLS e ausência de leitura pública direta nas seis tabelas novas. O advisor de segurança não apontou achados no schema `garimpa`.
+
+O [registro da integração](./plano-integracao-captura-curadoria-vitrine-pauta.md#integração-externa-publicada--01112026) contém versões publicadas, verificações e limites das fontes. A primeira ativação com ofertas reais permanece pendente: a migration não configura canais nem confirma opções ou avaliações por suposição. Não reaplicar o arquivo pela diferença entre o timestamp local e a versão remota.
+
+## Painel do afiliado — conta da casa em 02/11/2026
+
+Aplicadas pelo `apply_migration` do MCP no projeto `spbuwcwmxlycchuwhfir`, após autorização expressa para o banco conectado e ativação somente da casa. Os timestamps remotos estão em UTC, já em 03/11; os arquivos locais foram preservados:
+
+| Arquivo local | Versão remota | Nome |
+|---|---|---|
+| `20261102203423_affiliate_workspace.sql` | `20261103000929` | `affiliate_workspace` |
+| `20261103001149_restrict_workspace_runtime_privileges.sql` | `20261103001247` | `restrict_workspace_runtime_privileges` |
+
+A primeira acrescenta rascunhos pessoais, configuração e rollout por conta, campanhas opcionais e escopos restritivos sobre materiais, arquivos e links. Preserva as políticas restritivas de conta ativa e rollout comercial. A segunda corrige o efeito dos privilégios padrão do schema: `postgres` concede CRUD a `garimpa_app` em tabelas novas. Revogar explicitamente os privilégios do runtime antes de conceder os necessários é obrigatório para preservar o contrato; apenas `GRANT SELECT` não remove os privilégios herdados da criação. Não foi alterado o default do schema nem o acesso às tabelas anteriores.
+
+Verificados no banco conectado: RLS nas três tabelas novas; nenhuma leitura direta para `anon`/`authenticated`; rollout com somente `SELECT` para `garimpa_app`; rascunhos/configurações com `SELECT, INSERT, UPDATE`, sem `DELETE`; função pública restrita ao runtime público e com `search_path` fixo. O advisor de segurança não apontou achados no schema `garimpa`; os alertas globais e de outros schemas não foram alterados. O advisor de desempenho ainda sinaliza oportunidades de índices de FK e otimização das expressões RLS, inclusive nas tabelas novas; não são uma falha de isolamento nem foram tratadas como autorização para reestruturar o banco. Referências: [índices de FK](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys) e [expressões RLS por consulta](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select).
+
+Após aprovação dos limites, foi registrada uma única política ativa da casa (`internal-house-2026-11-02`): 50 novos materiais/dia, 10 campanhas abertas, `mercadolivre`, `shopee`, `aliexpress`, início imediato e sem vencimento. `terms_ref` registra a autorização de uso interno sem cobrança nesta conversa. Somente `workspace_rollout.tenant_id='local'` está habilitado. Não foram criadas contas, convites, cobranças, rascunhos de teste ou publicações no banco conectado.
+
+Conferidos novamente 12 cenários em PostgreSQL 17 descartável, incluindo o default de CRUD observado em produção e a negação efetiva de alteração do rollout/exclusão de configurações pelo runtime. A tela autenticada no localhost mostrou a habilitação e os limites aprovados. O código web ainda não foi publicado em produção; público, canais, primeira oferta/material real e piloto convidado continuam separados da aplicação do esquema. Veja o [relatório consolidado](../experiencia-esperada-bizuminer.md).
