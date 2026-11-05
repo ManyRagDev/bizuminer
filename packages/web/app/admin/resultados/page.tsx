@@ -35,11 +35,19 @@ export default async function Page() {
     `;
 
     const topProducts = await tx<any[]>`
-      select p.id, p.title, p.slug, coalesce(p.display_title, p.title) as display_title, count(c.id)::int as clicks
+      select 
+        p.id, 
+        p.title, 
+        max(pub.slug) as slug, 
+        p.title as display_title, 
+        count(c.id)::int as clicks
       from garimpa.click_event c
-      join garimpa.product p on p.id = c.product_id
+      join garimpa.publication pub on pub.id = c.publication_id
+      join garimpa.product p on p.id = pub.product_id
       where c.tenant_id = ${c.tenantId}
-      group by p.id, p.title, p.slug, p.display_title
+        and pub.tenant_id = ${c.tenantId}
+        and p.tenant_id = ${c.tenantId}
+      group by p.id, p.title
       order by clicks desc
       limit 5
     `.catch(() => []);
