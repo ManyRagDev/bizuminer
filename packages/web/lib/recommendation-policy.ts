@@ -37,15 +37,18 @@ export function recommendationBlockers(candidate: EditorialCandidate, channel: R
   if (candidate.offerMaterialInvalid)blockers.push("As condições desta opção mudaram; confira a oferta novamente.");
   if (channel === "home") return blockers;
   blockers.push(...homepageClarityBlockers({ ...candidate, assessment: null }));
-  if(candidate.assessment?.presentation?.status==='withdrawn')blockers.push("A ficha foi retirada. Revise a indicação antes de divulgar novamente.");
-  if (!candidate.assessment) blockers.push("Avalie o benefício e o mérito antes da indicação direta.");
-  else for (const [key, dimension] of Object.entries(candidate.assessment.dimensions)) {
-    if (!["strong", "exceptional"].includes(dimension.level)) blockers.push(`Indicação direta exige avaliação forte: ${key}.`);
+  if (candidate.assessment?.presentation?.status==='withdrawn') blockers.push("A ficha foi retirada. Revise a indicação antes de divulgar novamente.");
+  if (candidate.assessment) {
+    for (const [key, dimension] of Object.entries(candidate.assessment.dimensions)) {
+      if (!["strong", "exceptional"].includes(dimension.level)) blockers.push(`Indicação direta exige avaliação forte: ${key}.`);
+    }
+    if (hasSuperiorityClaim([candidate.assessment.benefit,candidate.assessment.audience,candidate.assessment.purchaseContents].join(" "))
+      || /R\$|\d+[.,]?\d*\s*%|menor pre[çc]o/iu.test([candidate.assessment.benefit,candidate.assessment.audience,candidate.assessment.purchaseContents].join(" "))) {
+      blockers.push("Explique benefício e conteúdo sem alegações de preço; registre comparações na justificativa da oferta.");
+    }
+    if (!candidate.offerOptionKey || !candidate.offerOptionLabel) blockers.push("Escolha uma opção de compra confirmada.");
   }
-  if (candidate.assessment && (hasSuperiorityClaim([candidate.assessment.benefit,candidate.assessment.audience,candidate.assessment.purchaseContents].join(" "))
-    || /R\$|\d+[.,]?\d*\s*%|menor pre[çc]o/iu.test([candidate.assessment.benefit,candidate.assessment.audience,candidate.assessment.purchaseContents].join(" ")))) blockers.push("Explique benefício e conteúdo sem alegações de preço; registre comparações na justificativa da oferta.");
-  if (candidate.currency !== "BRL" || candidate.priceType !== "exact") blockers.push("Indicação direta exige preço exato e moeda confirmada.");
-  if (!candidate.offerOptionKey || !candidate.offerOptionLabel) blockers.push("Escolha uma opção de compra confirmada.");
+  if (candidate.currency && candidate.currency !== "BRL") blockers.push("Indicação direta exige moeda BRL.");
   return [...new Set(blockers)];
 }
 /** Merit precedes novelty. Exposure is confirmed publication, never copying or opening. */

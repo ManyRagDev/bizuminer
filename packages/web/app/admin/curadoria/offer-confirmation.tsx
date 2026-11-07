@@ -22,7 +22,7 @@ export default function OfferConfirmation({candidate,onOpen}:{candidate:Editoria
   }},[open]);
   const [pending,start]=useTransition(),router=useRouter();
   return <section className="offer-confirmation">
-    <button type="button" onClick={()=>{if(!open)onOpen?.();setOpen(!open);}}>{candidate.offerOptionKey ? "Reconfirmar opção e preço" : "Confirmar opção de compra"}</button>
+    <button type="button" onClick={()=>{if(!open)onOpen?.();setOpen(!open);}}>{candidate.offerOptionKey ? "✏️ Editar opção e preço conferidos" : "🔍 Conferir opção e fixar preço na loja (Opcional)"}</button>
     {open && <form ref={form} onChange={event=>{
       const values=Object.fromEntries([...new FormData(event.currentTarget)].map(([k,v])=>[k,String(v)]));
       setDraft({...values,expectedObservationId:draft.expectedObservationId ?? candidate.latestObservationId ?? ""});
@@ -34,23 +34,23 @@ export default function OfferConfirmation({candidate,onOpen}:{candidate:Editoria
           variantKey:String(data.get('variantLabel'))===candidate.offerOptionLabel ? evidence.variantIdentity?.key??optionIdentity(String(data.get('variantLabel'))) : optionIdentity(String(data.get('variantLabel'))),variantLabel:String(data.get("variantLabel")),priceCents:Math.round(Number(data.get("price"))*100),
           quantity:Number(data.get("quantity")),contents:String(data.get("contents")),dimensions:String(data.get("dimensions")),sellerId:String(data.get("sellerId")),
           payment:String(data.get("payment")),coupon:String(data.get("coupon")),region:String(data.get("region")),shipping:String(data.get("shipping")),confirmation:String(data.get("confirmation"))});
-        setMessage(result.ok ? ("preparationFailed" in result ? "Opção registrada. A preparação precisa ser tentada novamente." : "Opção registrada e seleções reavaliadas. Confira o mérito com os dados confirmados.") : `Não foi possível salvar: ${result.error}. Atualize os dados e tente novamente.`);
+        setMessage(result.ok ? ("preparationFailed" in result ? "Opção registrada. A preparação precisa ser tentada novamente." : "Opção registrada e seleções reavaliadas com sucesso!") : `Não foi possível salvar: ${result.error}. Atualize os dados e tente novamente.`);
         if(result.ok){setDraft({});setOpen(false);router.refresh();}
       });
     }}>
       {draft.expectedObservationId && draft.expectedObservationId!==candidate.latestObservationId && <p role="alert">O anúncio recebeu novos dados. Seu rascunho foi preservado; inicie uma nova conferência antes de salvar.</p>}
-      <button type="button" onClick={()=>{setDraft({});setOpen(false);}}>Descartar rascunho e iniciar nova conferência</button>
-      <p>Confira a opção na loja e registre os fatos observados. A faixa do anúncio não confirma esta compra. Isso não aprova o produto nem cria preços de dias anteriores.</p>
-      <p>Em cada condição, escolha o que você conferiu. Se ainda não souber uma informação, a oferta continuará pendente.</p>
-      <a href={candidate.productUrl} target="_blank" rel="noopener noreferrer nofollow">Abrir anúncio para conferência ↗</a>
-      <label>Opção indicada (cor, modelo, tamanho)<input name="variantLabel" required minLength={2} defaultValue={candidate.offerOptionLabel}/></label>
-      <label>Preço confirmado em reais<input name="price" type="number" min="0.01" max="1000000" step="0.01" defaultValue={candidate.offerOptionKey ? (candidate.priceCents/100).toFixed(2):undefined} required/></label>
-      <label>Quantidade da compra<input name="quantity" type="number" min="1" max="10000" defaultValue={(candidate.offerEvidence as any)?.packageQuantity ?? 1} required/></label>
-      <label>O que vem nesta opção<textarea name="contents" required minLength={2} defaultValue={(candidate.offerEvidence as any)?.packageContents?.join("; ")}/></label>
+      <button type="button" onClick={()=>{setDraft({});setOpen(false);}}>Descartar rascunho e fechar</button>
+      <p style={{ margin: "10px 0 6px", fontSize: "14px", fontWeight: 600 }}>Conferir e fixar a variante real da oferta na loja</p>
+      <p style={{ margin: "0 0 12px", fontSize: "13px", color: "var(--ink-muted, #71717a)" }}>Abra o link da loja externa para conferir se o anúncio tem variações (ex: kit, voltagem, cor) e registre o preço exato da opção recomendada.</p>
+      <div style={{ marginBottom: "14px" }}><a href={candidate.productUrl} target="_blank" rel="noopener noreferrer nofollow" style={{ display: "inline-block", padding: "6px 12px", background: "var(--paper-deep, #f4f4f5)", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: 500 }}>🔗 Abrir anúncio na loja oficial ↗</a></div>
+      <label>Opção indicada (ex: Azul, 110V, Kit com 2)<input name="variantLabel" required minLength={2} defaultValue={candidate.offerOptionLabel}/></label>
+      <label>Preço confirmado em reais (ex: 49.90)<input name="price" type="number" min="0.01" max="1000000" step="0.01" defaultValue={candidate.offerOptionKey ? (candidate.priceCents/100).toFixed(2):undefined} required/></label>
+      <label>Quantidade de itens nesta opção<input name="quantity" type="number" min="1" max="10000" defaultValue={(candidate.offerEvidence as any)?.packageQuantity ?? 1} required/></label>
+      <label>O que vem nesta opção (conteúdo da embalagem)<textarea name="contents" required minLength={2} defaultValue={(candidate.offerEvidence as any)?.packageContents?.join("; ")}/></label>
       {([["sellerId","Vendedor na loja"],["dimensions","Dimensões ou tamanho"],["payment","Forma de pagamento exigida"],["coupon","Cupom e condições de uso"],["region","Região da oferta"],["shipping","Frete: valor ou informação conhecida"]] as const).map(([key,label])=><ConditionField key={key} name={key} label={label} value={draft[key]??known(key)} initialState={draft[key+'State']}/>)}
-      <label>Onde e como conferiu a opção, preço, foto e conteúdo<textarea name="confirmation" required minLength={10} maxLength={1000}/></label>
-      <label><input type="checkbox" required/> Conferi esta opção e seu preço em reais na loja agora, incluindo a correspondência da imagem e as condições acima.</label>
-      <button type="submit" disabled={pending}>{pending ? "Registrando…":"Registrar conferência"}</button>
+      <label>Onde e como conferiu a opção, preço, foto e conteúdo<textarea name="confirmation" required minLength={10} maxLength={1000} placeholder="Ex: Conferi na página da Shopee selecionando a cor azul no checkout"/></label>
+      <label style={{ display: "flex", alignItems: "center", gap: "8px", margin: "12px 0" }}><input type="checkbox" required/> Conferi esta opção e seu preço em reais na loja agora, incluindo a correspondência da foto e as condições acima.</label>
+      <button type="submit" disabled={pending} style={{ padding: "10px", width: "100%", fontWeight: 600 }}>{pending ? "Registrando…":"Registrar conferência e salvar"}</button>
     </form>}
     {message && <p role="status">{message}</p>}
   </section>;

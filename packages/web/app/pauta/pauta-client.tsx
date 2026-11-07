@@ -210,7 +210,7 @@ export default function PautaClient({
           </span>
         </div>
         <p className="pauta-selection-note">
-          {selectionMode === "catalog" ? "Catálogo de transição · confira a oferta antes de divulgar" : `Indicações preparadas para ${channel==="stories" ? "Stories":"WhatsApp"}`}{selectionVersion !== null ? ` · versão ${selectionVersion}` : ""}.
+          {selectionMode === "catalog" ? "Sugestão da vitrine (maiores descontos e notas do dia) · confira a oferta antes de postar" : `Indicações preparadas para ${channel==="stories" ? "Stories":"WhatsApp"}`}{selectionVersion !== null ? ` · versão ${selectionVersion}` : ""}.
           Copiar um link não confirma divulgação.
         </p>
         {renewal.renewedAt && <p className="pauta-selection-note">Última renovação: {new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(renewal.renewedAt))} (São Paulo).</p>}
@@ -306,7 +306,15 @@ export default function PautaClient({
 
       {loadError && <p className="pauta-empty" role="alert">{loadError}</p>}
       {!loading && !loadError && products.length === 0 && (
-        <p className="pauta-empty">Nenhum destaque válido para divulgação agora. Confira os produtos e a seleção na curadoria.</p>
+        <div style={{ padding: "32px 20px", textAlign: "center", background: "var(--paper-deep, #f4f4f5)", borderRadius: "12px", margin: "24px 0" }}>
+          <h3 style={{ fontSize: "16px", marginBottom: "8px", color: "var(--ink-title, #18181b)" }}>Nenhuma oferta pronta na pauta agora</h3>
+          <p style={{ color: "var(--ink-muted, #71717a)", fontSize: "14px", lineHeight: 1.5, maxWidth: "420px", margin: "0 auto 16px" }}>
+            As ofertas aprovadas podem estar fora da janela recente ou a seleção automática deste canal ainda não foi ativada.
+          </p>
+          <a href="/admin/curadoria?aba=selecao" style={{ display: "inline-block", padding: "10px 18px", background: "var(--brand, #0070f3)", color: "#fff", borderRadius: "8px", fontWeight: 600, textDecoration: "none", fontSize: "14px" }}>
+            Ir para Curadoria e ativar Pauta →
+          </a>
+        </div>
       )}
 
       {done.length > 0 && (
@@ -364,8 +372,23 @@ export default function PautaClient({
                     {product.editorialContext && <p className="pauta-editorial-context">{product.editorialContext}</p>}
                     {product.offerOptionLabel && <p><b>Opção:</b> {product.offerOptionLabel}</p>}
                     {product.offerConditions && <p><b>Condições:</b> {product.offerConditions}</p>}
-                    <div className="pauta-card-meta">
+                    <div className="pauta-card-meta" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
                       <strong><a href={product.detailUrl ?? `/bizu/${product.slug}`}>{offerPriceLabel(product)}</a></strong>
+                      {product.discountPercent != null && product.discountPercent > 0 && (
+                        <span style={{ background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 700 }}>
+                          {product.discountPercent}% OFF
+                        </span>
+                      )}
+                      {product.lowestVerified && (
+                        <span style={{ background: "#fef3c7", color: "#92400e", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 600 }}>
+                          🔥 Menor preço histórico
+                        </span>
+                      )}
+                      {product.ratingStar != null && product.ratingStar > 0 && (
+                        <span style={{ fontSize: "12px", color: "var(--ink-muted, #71717a)" }}>
+                          ★ {product.ratingStar.toFixed(1)}
+                        </span>
+                      )}
                       {mp && <span>{mp.stampLabel}</span>}
                     </div>
                   </div>

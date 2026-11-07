@@ -13,13 +13,17 @@ export default function PublishedSelection({
       className="curation-published-selection"
       aria-labelledby="published-selection-title"
     >
-      <h2 id="published-selection-title">Produtos da página inicial</h2>
-      {!selection.homepageReady && <p>A nova composição aguarda ativação inicial. Complete as evidências ou avaliações e ative uma edição. O catálogo de transição continua disponível até lá.</p>}
-      <p className="curation-muted">
+      <h2 id="published-selection-title">Produtos em destaque na vitrine (Home)</h2>
+      {!selection.homepageReady && (
+        <p style={{ fontSize: "14px", color: "var(--ink-muted, #71717a)" }}>
+          A vitrine pública está ativa exibindo as melhores ofertas do catálogo. A personalização manual da ordem é opcional.
+        </p>
+      )}
+      <p className="curation-muted" style={{ fontSize: "14px", color: "var(--ink-muted, #71717a)" }}>
         {selection.mode === "catalog"
-          ? selection.homepageReady ? "A seleção automática está ativa. Personalizar uma edição é opcional." : "Catálogo de transição: estes produtos ainda não compõem uma edição diária renovável."
-          : "Estes são os produtos válidos da edição editorial neste momento."}{" "}
-        {selection.products.length > 0 && "Os destaques da página inicial estão identificados abaixo."}
+          ? "Vitrine automática ativa: os produtos aprovados com maiores descontos e melhores avaliações são exibidos na Home."
+          : "Produtos da seleção editorial ativa neste momento."}{" "}
+        {selection.products.length > 0 && "Os destaques principais estão marcados abaixo."}
       </p>
       {selection.products.length ? (
         <ol className="curation-published-grid">

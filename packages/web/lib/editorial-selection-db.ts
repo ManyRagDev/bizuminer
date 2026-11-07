@@ -798,13 +798,67 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
   const { readRecommendationEdition }=await import("./recommendation-db.ts");
   const { recommendationChannel }=await import("./recommendation-policy.ts");
   const prepared=await readRecommendationEdition(recommendationChannel(destination),tenantId,sqlFactory);
-  if (prepared) return prepared;
+  if (prepared && prepared.products && prepared.products.length > 0) return prepared;
   const { readHomepageEdition } = await import("./homepage-db.ts");
-  if (destination==='stories' || destination==='whatsapp') return {mode:"unavailable",schemaReady:true,id:null,version:null,validUntil:null,products:[],heroProductIds:[],heroValidUntil:null};
+  if (destination==='stories' || destination==='whatsapp') {
+    const { publicHeroCandidates } = await import("./public-offer-db.ts");
+    try {
+      const candidates = await publicHeroCandidates(tenantId, sqlFactory);
+      if (candidates && candidates.length > 0) {
+        const sorted = [...candidates].sort((a, b) => {
+          const discountA = a.claimed_discount_rate ?? 0;
+          const discountB = b.claimed_discount_rate ?? 0;
+          const ratingA = a.rating_star ?? 0;
+          const ratingB = b.rating_star ?? 0;
+          return (Number(b.lowest_verified) - Number(a.lowest_verified))
+            || (discountB - discountA)
+            || (ratingB - ratingA)
+            || a.id.localeCompare(b.id);
+        });
+        const limit = destination === 'whatsapp' ? 12 : 8;
+        const products = sorted.slice(0, limit).map(p => ({
+          id: p.id,
+          slug: p.slug,
+          title: p.title,
+          displayTitle: p.displayTitle ?? p.title,
+          marketplace: p.marketplace,
+          priceCents: p.price_cents,
+          originalPriceCents: p.original_price_cents,
+          discountPercent: p.claimed_discount_rate != null ? Math.round(p.claimed_discount_rate * 100) : null,
+          imageUrl: p.image_url,
+          ratingStar: p.rating_star,
+          salesCount: p.sales_count,
+          salesLabel: p.sales_label,
+          category: p.category,
+          benefit: p.benefit ?? "Oferta imperdível da vitrine.",
+          editorialRationale: "Oferta selecionada da vitrine pelo maior desconto e avaliação.",
+          editorialPurchaseContents: p.purchaseContents ?? "",
+          offerOptionKey: p.offerOptionKey ?? null,
+          offerOptionLabel: p.offerOptionLabel ?? null,
+          offerValidUntil: p.offerValidUntil ?? p.evidence_observed_at ?? null,
+          previousMinPriceCents: p.previous_min_price_cents,
+          lowestVerified: p.lowest_verified,
+          currency: p.currency ?? "BRL",
+          priceType: p.priceType ?? "exact",
+        }));
+        return {
+          mode: "catalog",
+          schemaReady: true,
+          id: null,
+          version: null,
+          validUntil: null,
+          products: products as any,
+          heroProductIds: products.slice(0, 3).map(p => p.id),
+          heroValidUntil: null,
+          homepageReady: true,
+        };
+      }
+    } catch {
+      // Fall through to empty if candidates fail
+    }
+    return {mode:"unavailable",schemaReady:true,id:null,version:null,validUntil:null,products:[],heroProductIds:[],heroValidUntil:null};
+  }
   const stored = await readHomepageEdition(destination, tenantId, sqlFactory);
-  // Public reads only consume prepared editions. Until explicit activation the
-  // ordinary paginated catalog stays available, without inventing highlights
-  // or re-running the private editorial desk on every visit.
   return stored ?? {mode:"catalog",schemaReady:true,id:null,version:null,validUntil:null,products:[],heroProductIds:[],heroValidUntil:null};
 }
 

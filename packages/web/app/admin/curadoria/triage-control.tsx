@@ -25,17 +25,17 @@ export default function TriageControl({ eligible }: { eligible: number }) {
       <div>
         <strong>
           {eligible
-            ? `${eligible === 100 ? "Pelo menos " : ""}${eligible} ${eligible === 1 ? "produto disponível" : "produtos disponíveis"} para triagem`
-            : "Nenhum produto elegível para triagem agora"}
+            ? `${eligible === 100 ? "Pelo menos " : ""}${eligible} ${eligible === 1 ? "novo produto capturado aguardando triagem" : "novos produtos capturados aguardando triagem"}`
+            : "Nenhum produto novo para triagem agora"}
         </strong>
-        <p>
+        <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--ink-muted, #71717a)" }}>
           {eligible
-            ? "A IA avalia até 100 produtos da fila geral, de todas as lojas. Casos que exigem decisão humana ficam em Pendências."
-            : "Os produtos retidos precisam de novas evidências ou revisão humana. Para ampliar o catálogo, capture novas ofertas."}
+            ? "A IA analisa as ofertas capturadas pelas lojas, descarta lixo/peças industriais e aprova os achadinhos de qualidade para a vitrine."
+            : "Todas as capturas recentes já foram analisadas. Capture novas ofertas ou revise casos pendentes na fila."}
         </p>
       </div>
-      <button type="button" disabled={pending || eligible === 0} onClick={run}>
-        {pending ? "Avaliando…" : "Triar com IA"}
+      <button type="button" disabled={pending || eligible === 0} onClick={run} style={{ fontWeight: 600 }}>
+        {pending ? "Analisando com IA…" : "⚡ Triar produtos com IA"}
       </button>
       {message && <p role="status">{message}</p>}
     </div>

@@ -102,7 +102,7 @@ async function CurationPage({
           <div className="curation-review-actions">
             {state.ready && (
               <a className="admin-curation-start" href="/pauta">
-                Preparar pauta →
+                Abrir Pauta de Links (WhatsApp) →
               </a>
             )}
             <a href="/admin#captura-hoje">Capturar novas ofertas</a>
@@ -114,9 +114,9 @@ async function CurationPage({
         <PublishedSelection selection={published} />
         <HomepageMetrics rows={engagement} />
         <details className="curation-manual-edition" open={Boolean(params.revisar)}>
-          <summary>Avaliar produtos e conferir opções</summary>
-          <p>
-            Confira as opções e registre o mérito dos candidatos. A lista e a ordem de cada destino são definidas nos controles de canal acima.
+          <summary style={{ cursor: "pointer", fontWeight: 600 }}>🔍 Revisão Manual & Ficha Editorial (Opcional)</summary>
+          <p style={{ color: "var(--ink-muted, #71717a)", margin: "8px 0 16px" }}>
+            Use esta área se desejar conferir um produto na loja externa, fixar a variante exata (cor, voltagem, kit) ou escrever uma ressalva sincera para turbinar o destaque na pauta.
           </p>
           <SelecaoView reviewOnly
             key={params.revisar ?? "editorial-desk"}
