@@ -130,12 +130,12 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
-              {!stale && deal.currency && deal.originalPriceKind === "source_claimed" && deal.priceType === "exact" && deal.originalPriceCents !== null && deal.originalPriceCents > deal.priceCents && (
+              {!stale && deal.originalPriceKind === "source_claimed" && deal.priceType === "exact" && deal.originalPriceCents !== null && deal.originalPriceCents > deal.priceCents && (
                 // Satori não suporta text-decoration (mesmo bug de "fit-content": erro
                 // minificado "u2 is not iterable" no pipe da resposta). Sem risco de
                 // reintroduzir — o contraste de tamanho/cor já distingue o preço anterior.
                 <div style={{ display: "flex", fontSize: 26, fontWeight: 600, color: INK_QUIET }}>
-                  {formatOfferMoney(deal.originalPriceCents, deal.currency)}
+                  {formatOfferMoney(deal.originalPriceCents, deal.currency || "BRL")}
                 </div>
               )}
               <div style={{ display: "flex", fontSize: price.length > 18 ? 36 : price.length > 12 ? 44 : 64, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
@@ -153,7 +153,7 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
                 color: INK_MUTED,
               }}
             >
-              {stale ? `Última captura ${ageLabel ?? "sem data"} · confira o preço atual` : deal.currency ? "Ofertas monitoradas · link de afiliado" : "Moeda não confirmada · confira na loja · link de afiliado"}
+              {stale ? `Última captura ${ageLabel ?? "sem data"} · confira o preço atual` : "Ofertas monitoradas · link de afiliado"}
             </div>
           </div>
         </div>

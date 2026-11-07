@@ -88,14 +88,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   });
   // Mesma regra do card OG: "ainda sem histórico" é selo negativo, e um selo
   // negativo numa peça de divulgação só ocupa espaço. Silêncio é o padrão.
-  const badge = stale || product.priceType !== "exact" || product.currency !== "BRL" || highlight?.tone === "unproven" ? null : highlight;
+  const badge = stale || product.priceType !== "exact" || (product.currency && product.currency !== "BRL") || highlight?.tone === "unproven" ? null : highlight;
   const photo = await fetchProductImage(deal.image_url);
   const marketplace = marketplaceDef(deal.marketplace);
   const stamp = marketplace
     ? { label: marketplace.stampLabel, style: marketplace.stampStyle }
     : { label: deal.marketplace, style: "outlined" as const };
 
-  const hasReference = !stale && !!product.currency && product.originalPriceKind === "source_claimed" && product.priceType === "exact" && deal.original_price_cents !== null && deal.original_price_cents > deal.price_cents;
+  const hasReference = !stale && (product.currency ?? "BRL") === "BRL" && product.originalPriceKind === "source_claimed" && product.priceType === "exact" && deal.original_price_cents !== null && deal.original_price_cents > deal.price_cents;
 
   return new ImageResponse(
     (
@@ -212,11 +212,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
         <div style={{ display: "flex", flexDirection: "column" }}>
           {hasReference && (
             <div style={{ display: "flex", fontSize: 34, fontWeight: 600, color: INK_QUIET }}>
-              Na loja: {formatOfferMoney(deal.original_price_cents!, product.currency)}
+              Na loja: {formatOfferMoney(deal.original_price_cents!, product.currency || "BRL")}
             </div>
           )}
           {stale && <div style={{ display: "flex", fontSize: 26, color: INK_MUTED }}>Última captura · confira o preço atual</div>}
-          {!product.currency && <div style={{ display: "flex", fontSize: 26, color: INK_MUTED }}>Moeda não confirmada · confira na loja</div>}
           <div style={{ display: "flex", marginTop: 4, fontSize: offerPriceLabel(product).length > 18 ? 54 : 104, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
             {offerPriceLabel(product)}
           </div>

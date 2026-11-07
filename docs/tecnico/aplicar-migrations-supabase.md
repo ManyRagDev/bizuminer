@@ -79,3 +79,16 @@ Verificados no banco conectado: RLS nas três tabelas novas; nenhuma leitura dir
 Após aprovação dos limites, foi registrada uma única política ativa da casa (`internal-house-2026-11-02`): 50 novos materiais/dia, 10 campanhas abertas, `mercadolivre`, `shopee`, `aliexpress`, início imediato e sem vencimento. `terms_ref` registra a autorização de uso interno sem cobrança nesta conversa. Somente `workspace_rollout.tenant_id='local'` está habilitado. Não foram criadas contas, convites, cobranças, rascunhos de teste ou publicações no banco conectado.
 
 Conferidos novamente 12 cenários em PostgreSQL 17 descartável, incluindo o default de CRUD observado em produção e a negação efetiva de alteração do rollout/exclusão de configurações pelo runtime. A tela autenticada no localhost mostrou a habilitação e os limites aprovados. O código web ainda não foi publicado em produção; público, canais, primeira oferta/material real e piloto convidado continuam separados da aplicação do esquema. Veja o [relatório consolidado](../experiencia-esperada-bizuminer.md).
+
+## Comparabilidade de histórico e moeda padrão (R$) — 07/11/2026
+
+Aplicada pelo `apply_migration` do MCP no projeto `spbuwcwmxlycchuwhfir`:
+
+| Arquivo local | Nome |
+|---|---|
+| `20261107185200_fix_price_comparability_and_currency_defaults.sql` | `fix_price_comparability_and_currency_defaults` |
+
+Atualizou `garimpa.public_offer_candidates`, `garimpa.public_offer_rows_scoped` e `garimpa.public_deal_detail` para:
+1. Tratar preços de um mesmo anúncio como comparáveis na ausência de conflito explícito de variantes, permitindo a exibição do gráfico e cálculo de menor preço para ofertas coletadas via APIs oficiais (Shopee, AliExpress).
+2. Adotar `BRL` (R$) como moeda padrão transparente, eliminando alertas de atrito de "moeda não confirmada".
+3. Permitir abertura direta de ofertas com até 60 dias de histórico (com aviso de preço não confirmado/estale quando aplicável) em vez de 404 imediato.

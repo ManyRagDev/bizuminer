@@ -69,10 +69,9 @@ test("marketing prático: preços a partir de, faixas e moeda não confirmada ma
   assert.match(range.priceLabel, /39,90/);
   assert.doesNotMatch(range.priceLabel, / a /);
   assert.equal(range.price, "");
-  for (const currency of [undefined, "unknown"]) {
-    const unknown = offerFromPauta(product({ currency }));
-    assert.match(unknown.priceLabel, /moeda não confirmada/);
-    assert.doesNotMatch(offerMessage(unknown), /R\$/);
+  for (const currency of [undefined, ""]) {
+    const defaultCurr = offerFromPauta(product({ currency }));
+    assert.match(offerMessage(defaultCurr), /R\$/);
   }
   const usd = offerFromPauta(product({ currency: "USD" }));
   assert.doesNotMatch(offerMessage(usd), /R\$/);

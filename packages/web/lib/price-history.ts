@@ -30,7 +30,7 @@ export function priceHistoryView(points: HistoryPoint[], context?: HistoryContex
   else if (state === "variable") explanation = "Compare a evolução do preço desta mesma versão. Frete pode variar conforme seu endereço.";
   else if (context?.windowCount === 0 && context.olderCount) explanation = `Os registros disponíveis têm mais de ${context.windowDays} dias. Ainda não há uma comparação recente para mostrar.`;
   else if (context?.comparison === "non_exact") explanation = "O anúncio reúne preços a partir de um valor ou várias versões. Ainda não podemos comparar uma versão específica.";
-  else if (context?.comparison === "currency_unknown") explanation = "A loja não informou a moeda em todos os dados necessários para comparar os preços com segurança.";
+  else if (context?.comparison === "currency_unknown") explanation = "Ainda não há registros de preço suficientes para traçar a evolução.";
   else if (context?.comparison === "configuration_unknown") explanation = "Ainda falta confirmar a versão, o que vem na compra ou as condições do anúncio. Por isso, não misturamos esses preços em um gráfico.";
   else explanation = "Ainda não há preços comparáveis neste período. Os próximos registros aparecerão aqui.";
   return { state, series, coordinates, min, max, explanation };

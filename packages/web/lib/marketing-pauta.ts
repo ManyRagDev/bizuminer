@@ -43,10 +43,7 @@ export function offerFromPauta(product: MarketingPautaProduct): RoutineOffer {
     (Number.isFinite(product.priceCents) && product.priceCents > 0) ||
     (typeof product.priceMinCents === "number" && product.priceMinCents > 0);
   const currencyKnown = /^[A-Z]{3}$/.test(product.currency || "");
-  const label = hasPrice
-    ? offerPriceLabel(product) +
-      (!currencyKnown ? " (moeda não confirmada)" : "")
-    : "";
+  const label = hasPrice ? offerPriceLabel(product) : "";
   return {
     name: (product.displayTitle || product.title).slice(0, 250),
     variant: [product.offerOptionLabel,product.purchaseContents || product.editorialPurchaseContents].filter(Boolean).join(" · ").slice(0,500),
@@ -55,7 +52,7 @@ export function offerFromPauta(product: MarketingPautaProduct): RoutineOffer {
       2000,
     ),
     price:
-      hasPrice && product.currency === "BRL" && product.priceType === "exact"
+      hasPrice && (product.currency === "BRL" || !product.currency) && product.priceType === "exact"
         ? (product.priceCents / 100).toFixed(2).replace(".", ",")
         : "",
     priceLabel: label,

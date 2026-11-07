@@ -450,15 +450,22 @@ export async function dealDetail(slug: string, tenantId = "local", sqlFactory: t
     `;
     const evidence = observations.at(-1)?.offer_evidence;
     const configuration = buildConfigurationKey(evidence);
-    const history = observations.filter(o => o.price_cents > 0 && evidence?.currency && o.offer_evidence?.currency === evidence.currency
-      && configuration !== null && buildConfigurationKey(o.offer_evidence) === configuration)
+    const targetCurrency = evidence?.currency || "BRL";
+    const history = observations.filter(o => o.price_cents > 0
+      && (o.offer_evidence?.currency || "BRL") === targetCurrency
+      && (
+        (configuration !== null && buildConfigurationKey(o.offer_evidence) === configuration)
+        || (configuration === null && buildConfigurationKey(o.offer_evidence) === null
+            && !(o.offer_evidence?.priceMinCents && o.offer_evidence?.priceMaxCents && o.offer_evidence.priceMinCents !== o.offer_evidence.priceMaxCents)
+            && !(evidence?.priceMinCents && evidence?.priceMaxCents && evidence.priceMinCents !== evidence.priceMaxCents))
+      ))
       .map(({ price_cents, observed_at }) => ({ price_cents, observed_at }));
-    const comparison: HistoryContext["comparison"] = evidence?.priceType && evidence.priceType !== "exact" ? "non_exact"
-      : !evidence?.currency ? "currency_unknown" : !configuration ? "configuration_unknown" : "comparable";
-    const [presented] = await hydrateProductPresentations([projectConservativePriceEvidence(deal)], tenantId, snapshotFactory);
+    const comparison: HistoryContext["comparison"] = evidence?.priceMinCents && evidence?.priceMaxCents && evidence.priceMinCents !== evidence.priceMaxCents
+      ? "non_exact" : "comparable";
+    const [presented] = await hydrateProductPresentations([deal], tenantId, snapshotFactory);
     return { deal: presented, price_history: history, history_context: { windowDays: 90, totalCount: deal.observation_count,
       windowCount: observations.length, comparableCount: history.length, excludedCount: observations.length - history.length,
-      comparison, currency: evidence?.currency } };
+      comparison, currency: targetCurrency } };
     }) as unknown as DealDetail | null;
   } finally {
     await connection.end();
@@ -722,7 +729,7 @@ export async function globalHeroProducts(
     `;
 
     const heroScorable: Array<{ row: DealRow; score: number }> = rows.map((r) => {
-      const row = projectConservativePriceEvidence(r);
+      const row = r;
       const scorable: HeroScorable = {
         priceCents: row.price_cents,
         previousMinPriceCents: row.previous_min_price_cents,

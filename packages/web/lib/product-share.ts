@@ -15,7 +15,7 @@ export function productShareDescription(product: {
   evidence_observed_at: Date | string | null;
 } & Partial<ProductPresentation>, now = new Date()): string {
   const store = marketplaceDef(product.marketplace)?.label ?? product.marketplace;
-  const price = offerPriceLabel({ ...product, priceCents: product.price_cents }).replace(/ /g, " ") + (product.currency ? "" : " (moeda não confirmada)");
+  const price = offerPriceLabel({ ...product, priceCents: product.price_cents }).replace(/ /g, " ");
   const context = product.benefit ? `${product.benefit} ` : "";
   if (priceFreshness(product.evidence_observed_at, now) === "stale") {
     return `${context}Última captura: ${price} na ${store}, ${seenAgo(product.evidence_observed_at, now) ?? "sem data"}. Confira o preço atual.`;

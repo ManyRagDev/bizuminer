@@ -6,13 +6,13 @@ const date = (value: Date | string) => new Date(value).toLocaleDateString("pt-BR
 
 export default function PriceHistory({ points, context, totalCount }: { points: HistoryPoint[]; context?: HistoryContext; totalCount: number }) {
   const view = priceHistoryView(points, context);
-  const money = (cents: number) => offerPriceLabel({ priceCents: cents, currency: context?.currency, priceType: "exact" });
+  const money = (cents: number) => offerPriceLabel({ priceCents: cents, currency: context?.currency || "BRL", priceType: "exact" });
   const path = view.coordinates.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
   return <section className="history-section" aria-labelledby="history-title">
     <div><p className="eyebrow">Antes de decidir</p><h2 id="history-title">Como esse preço mudou?</h2>
       <p>{view.explanation}</p>
       <p className={styles.counts}>{totalCount} registro{totalCount === 1 ? "" : "s"} coletado{totalCount === 1 ? "" : "s"} no anúncio · {view.series.length} comparáve{view.series.length === 1 ? "l" : "is"} nos últimos {context?.windowDays ?? 90} dias.</p>
-      {!!context?.excludedCount && <p className={styles.counts}>{context.excludedCount} registro{context.excludedCount === 1 ? " ficou fora porque não confirma" : "s ficaram fora porque não confirmam"} a mesma versão, moeda ou condições de compra.</p>}
+      {!!context?.excludedCount && <p className={styles.counts}>{context.excludedCount} registro{context.excludedCount === 1 ? " ficou fora porque não confirma" : "s ficaram fora porque não confirmam"} a mesma versão ou condições de compra.</p>}
     </div>
     <div className="history-card">
       {view.series.length ? <>

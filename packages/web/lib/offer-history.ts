@@ -2,27 +2,14 @@
 export function sameOfferConfigurationSql(latest: string, historical: string): string {
   if (![latest, historical].every((alias) => /^[a-z_]+$/.test(alias))) throw new Error("invalid_sql_alias");
   const key = (alias: string) => `coalesce(${alias}.offer_evidence->'variantIdentity'->>'key', ${alias}.offer_evidence->>'variantKey')`;
-  const stateCheck = (alias: string) => `(not (${alias}.offer_evidence ? 'variantIdentity') or coalesce(${alias}.offer_evidence->'variantIdentity'->>'state','unknown') in ('source_verified','human_verified'))`;
-  const quantity = (alias: string) => `coalesce(${alias}.offer_evidence->'packageQuantity', ${alias}.offer_evidence->'conditions'->'quantity')`;
-  const material = (alias: string) => `jsonb_build_object(
-    'key', ${key(alias)},
-    'label', ${alias}.offer_evidence->'variantLabel',
-    'quantity', ${quantity(alias)},
-    'contents', ${alias}.offer_evidence->'packageContents',
-    'dimensions', ${alias}.offer_evidence->'dimensions')`;
   const singlePrice = (alias: string) => `(${alias}.offer_evidence->>'priceMinCents' is null
     or ${alias}.offer_evidence->>'priceMaxCents' is null
     or ${alias}.offer_evidence->>'priceMinCents'=${alias}.offer_evidence->>'priceMaxCents')`;
-  const exactType = (alias: string) => `(${alias}.offer_evidence->>'priceType' is null or ${alias}.offer_evidence->>'priceType'='exact')`;
-  const currencyMatch = `(${latest}.offer_evidence->>'currency' is null or ${historical}.offer_evidence->>'currency' is null or ${latest}.offer_evidence->>'currency'=${historical}.offer_evidence->>'currency')`;
-  return `(${key(latest)} is not null
-    and ${key(historical)} is not null
-    and ${key(latest)}=${key(historical)}
-    and ${stateCheck(latest)} and ${stateCheck(historical)}
-    and ${material(latest)}=${material(historical)}
-    and ${singlePrice(latest)} and ${singlePrice(historical)}
-    and ${exactType(latest)} and ${exactType(historical)}
-    and ${currencyMatch})`;
+  const currencyMatch = `(coalesce(${latest}.offer_evidence->>'currency', 'BRL') = coalesce(${historical}.offer_evidence->>'currency', 'BRL'))`;
+  return `(${currencyMatch} and ${singlePrice(latest)} and ${singlePrice(historical)} and (
+    (${key(latest)} is not null and ${key(historical)} is not null and ${key(latest)} = ${key(historical)})
+    or (${key(latest)} is null and ${key(historical)} is null)
+  ))`;
 }
 
 /**
