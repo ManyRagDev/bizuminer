@@ -42,7 +42,8 @@ export default async function Home({ searchParams }: HomeProps) {
   const currentSavedRows = await hydrateProductPresentations(savedRows.filter((row) => row.available));
   const homepageEngagement = issueHomepageEngagementTicket(selection.homepageEditionId, !isUserAdmin);
 
-  const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date());
+  const renderTimestamp = new Date().toISOString();
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date(renderTimestamp));
 
-  return <Vitrine homepageReady={selection.homepageReady ?? false} homepageEngagement={homepageEngagement} homepageEditionId={selection.homepageEditionId ?? null} editorialProducts={selection.products} editorialHeroIds={selection.heroProductIds} editorialHeroValidUntil={selection.heroValidUntil} editorialStateKey={publishedEditorialStateKey(selection)} editorialVersion={selection.version} initialProducts={products} initialTotal={page.total} initialState={initialState} categories={presentation.categories} dateLabel={dateLabel} initialSavedIds={initialSavedIds} initialSavedProducts={currentSavedRows.map(toVitrineProduct)} cacheScope={session?.appUserId ?? null} marketplaceCounts={presentation.marketplaceCounts} isUserAdmin={isUserAdmin} />;
+  return <Vitrine homepageReady={selection.homepageReady ?? false} homepageEngagement={homepageEngagement} homepageEditionId={selection.homepageEditionId ?? null} editorialProducts={selection.products} editorialHeroIds={selection.heroProductIds} editorialHeroValidUntil={selection.heroValidUntil} editorialStateKey={publishedEditorialStateKey(selection)} editorialVersion={selection.version} initialProducts={products} initialTotal={page.total} initialState={initialState} categories={presentation.categories} dateLabel={dateLabel} renderTimestamp={renderTimestamp} initialSavedIds={initialSavedIds} initialSavedProducts={currentSavedRows.map(toVitrineProduct)} cacheScope={session?.appUserId ?? null} marketplaceCounts={presentation.marketplaceCounts} isUserAdmin={isUserAdmin} />;
 }

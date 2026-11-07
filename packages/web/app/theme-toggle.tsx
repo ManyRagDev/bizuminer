@@ -41,8 +41,8 @@ export function ThemeToggle({ className = "", withLabel = false }: { className?:
       aria-pressed={theme === null ? undefined : isDark}
       suppressHydrationWarning
     >
-      <span className="theme-toggle-icon" aria-hidden="true">{isDark ? "☾" : "☀"}</span>
-      {withLabel && <b>{theme === null ? "Tema" : isDark ? "Tema escuro" : "Tema claro"}</b>}
+      <span className="theme-toggle-icon" aria-hidden="true" suppressHydrationWarning>{isDark ? "☾" : "☀"}</span>
+      {withLabel && <b suppressHydrationWarning>{theme === null ? "Tema" : isDark ? "Tema escuro" : "Tema claro"}</b>}
     </button>
   );
 }

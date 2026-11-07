@@ -22,12 +22,16 @@ export default function HomeBanner({ product, selectionVersion, onProductClick, 
   const headingId = preview ? "cover-preview-title" : "home-banner-title";
 
   return <section className={"home-banner " + (featured ? "home-banner-featured" : "home-banner-institutional")} id={preview ? undefined : "topo"} aria-labelledby={headingId}
-    data-selection-version={selectionVersion ?? undefined} data-home-product={preview ? undefined : featured?.id} data-home-surface={featured && !preview ? "hero" : undefined}>
+    data-selection-version={selectionVersion ?? undefined} data-home-product={preview ? undefined : featured?.id} data-home-surface={featured && !preview ? "hero" : undefined} suppressHydrationWarning>
     <div className="home-banner-copy">
       <p className="home-banner-eyebrow"><span aria-hidden="true">✳</span> {featured ? "Um achado em destaque" : "BizuMiner · vale a descoberta"}</p>
-      <Heading className="home-banner-title" id={headingId}>{featured ? featured.coverHeadline : <>Menos procura.<br /><em>Mais descobertas.</em></>}</Heading>
-      <p className="home-banner-description">{featured ? featured.benefit : "Ideias úteis para a sua rotina. Preços e detalhes para escolher bem."}</p>
-      {featured && <p className="home-banner-product-name">{featured.displayTitle}</p>}
+      {preview ? (
+        <h3 className="home-banner-title" id={headingId} suppressHydrationWarning>{featured ? featured.coverHeadline : <>Menos procura.<br /><em>Mais descobertas.</em></>}</h3>
+      ) : (
+        <h1 className="home-banner-title" id={headingId} suppressHydrationWarning>{featured ? featured.coverHeadline : <>Menos procura.<br /><em>Mais descobertas.</em></>}</h1>
+      )}
+      <p className="home-banner-description" suppressHydrationWarning>{featured ? featured.benefit : "Ideias úteis para a sua rotina. Preços e detalhes para escolher bem."}</p>
+      {featured && <p className="home-banner-product-name" suppressHydrationWarning>{featured.displayTitle}</p>}
       {preview ? <span className="home-banner-cta">Conhecer o achado <span aria-hidden="true">↗</span></span> : featured ? <Link className="home-banner-cta" href={optionDetailPath(featured.slug,featured.offerOptionKey)} prefetch={false} onClick={() => onProductClick(featured.id)}>
         Conhecer o achado <span aria-hidden="true">↗</span>
       </Link> : <a className="home-banner-cta" href="#explorar">Encontrar meu próximo bizu <span aria-hidden="true">↓</span></a>}

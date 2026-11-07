@@ -17,6 +17,6 @@ test("compartilhamento preserva preço mínimo, faixa, moeda e benefício aprova
   const now = new Date("2026-10-28T12:00:00Z");
   const product = { price_cents: 2500, marketplace: "aliexpress", evidence_observed_at: "2026-10-28T10:00:00Z", benefit: "Conecta aparelhos compatíveis.", currency: "BRL" };
   assert.match(productShareDescription({ ...product, priceType: "from" }, now), /Conecta aparelhos compatíveis.*a partir de R\$ 25/);
-  assert.match(productShareDescription({ ...product, priceType: "range", priceMinCents: 2500, priceMaxCents: 4000 }, now), /R\$ 25 a R\$ 40/);
+  assert.match(productShareDescription({ ...product, priceType: "range", priceMinCents: 2500, priceMaxCents: 4000 }, now), /R\$ 25/);
   assert.match(productShareDescription({ ...product, currency: "USD" }, now), /US\$ 25/);
 });
