@@ -31,6 +31,44 @@ export interface CopyOfferData {
   purchaseContents?: string | null;
 }
 
+export type PautaLikeProduct = {
+  title: string;
+  displayTitle?: string | null;
+  benefit?: string | null;
+  editorialRationale?: string | null;
+  caveat?: string | null;
+  priceCents: number;
+  previousMinPriceCents?: number | null;
+  historyDays?: number;
+  observationCount?: number;
+  lowestVerified?: boolean;
+  marketplace: string;
+  shareUrl: string;
+  bioCode?: string;
+  offerOptionLabel?: string | null;
+  purchaseContents?: string | null;
+  editorialPurchaseContents?: string | null;
+};
+
+export function extractPautaCopyData(product: PautaLikeProduct): CopyOfferData {
+  return {
+    title: product.title,
+    displayTitle: product.displayTitle,
+    benefit: product.benefit || product.editorialRationale,
+    caveat: product.caveat,
+    priceCents: product.priceCents,
+    previousMinPriceCents: product.previousMinPriceCents,
+    historyDays: product.historyDays,
+    observationCount: product.observationCount,
+    lowestVerified: product.lowestVerified,
+    marketplace: product.marketplace,
+    shareUrl: product.shareUrl,
+    bioCode: product.bioCode,
+    offerOptionLabel: product.offerOptionLabel,
+    purchaseContents: product.purchaseContents || product.editorialPurchaseContents,
+  };
+}
+
 export function extractCopyData(offer: WorkspaceOffer): CopyOfferData {
   const c = offer.candidate;
   return {
@@ -58,11 +96,14 @@ export function buildRelampagoCopy(data: CopyOfferData): string {
   const title = data.displayTitle || data.title;
   const currentPrice = formatPriceBRL(data.priceCents);
   const mpLabel = data.marketplace === "mercadolivre" ? "Mercado Livre" : data.marketplace === "shopee" ? "Shopee" : "AliExpress";
+  const storeRef = data.marketplace === "mercadolivre" ? "no Mercado Livre" : `na ${mpLabel}`;
   
   let header = "🔥 *MENOR PREÇO HISTÓRICO!*";
   if (data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents) {
     const diffPct = Math.round(((data.previousMinPriceCents - data.priceCents) / data.previousMinPriceCents) * 100);
     header = `🔥 *QUEDA REAL DE ${diffPct}%!*`;
+  } else if (!data.lowestVerified) {
+    header = "🔥 *OFERTA RELÂMPAGO!*";
   }
 
   const lines = [
@@ -72,9 +113,9 @@ export function buildRelampagoCopy(data: CopyOfferData): string {
   ];
 
   if (data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents) {
-    lines.push(`💥 De ~${formatPriceBRL(data.previousMinPriceCents)}~ por *${currentPrice}* na ${mpLabel}`);
+    lines.push(`💥 De ~${formatPriceBRL(data.previousMinPriceCents)}~ por *${currentPrice}* ${storeRef}`);
   } else {
-    lines.push(`💥 Por *${currentPrice}* na ${mpLabel}`);
+    lines.push(`💥 Por *${currentPrice}* ${storeRef}`);
   }
 
   if (data.lowestVerified) {
@@ -83,6 +124,8 @@ export function buildRelampagoCopy(data: CopyOfferData): string {
 
   if (data.benefit) {
     lines.push(`⚡ ${data.benefit}`);
+  } else if (data.offerOptionLabel) {
+    lines.push(`⚡ Versão: ${data.offerOptionLabel}`);
   }
 
   lines.push("");

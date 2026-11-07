@@ -8,6 +8,11 @@ import type { PautaQrBundle } from "../../lib/qr-service";
 import { copyToClipboard } from "../../lib/clipboard";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
 import { offerPriceLabel } from "../../lib/offer-price";
+import {
+  extractPautaCopyData,
+  generateOfferCopy,
+  type CopyTone,
+} from "../../lib/copy-styles";
 
 interface PautaProduct extends VitrineProduct {
   shareUrl: string;
@@ -17,6 +22,7 @@ interface PautaProduct extends VitrineProduct {
   editorialPurchaseContents: string;
   editorialContext?: string | null;
   isHeroHighlight?: boolean;
+  bioCode?: string;
 }
 
 const STORAGE_KEY = "bm_pauta_copied";
@@ -80,6 +86,18 @@ export default function PautaClient({
     qrBundle?.defaultMode ?? "local"
   );
   const [copiedMobileUrl, setCopiedMobileUrl] = useState(false);
+  const [tone, setTone] = useState<CopyTone>("relampago");
+  const [openPreviews, setOpenPreviews] = useState<Set<string>>(new Set());
+
+  const togglePreview = (id: string) => {
+    setOpenPreviews((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const reloadPauta=useRef<(()=>Promise<void>)|null>(null);
   const mutationEpoch=useRef(0);
   const [confirmingId,setConfirmingId]=useState<string|null>(null);
@@ -156,18 +174,23 @@ export default function PautaClient({
     return ()=>window.clearTimeout(timer);
   },[selectionValidUntil,products]);
 
-  async function copyLink(product: PautaProduct) {
+  async function copyLink(product: PautaProduct, forceOnlyLink = false) {
     if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true);
-    // Keep clipboard access in the user gesture, including on iOS. Preview
-    // preparation runs ahead of the click instead of delaying the copy.
-    const ok = await copyToClipboard(product.shareUrl);
+    // When in WhatsApp channel, default action copies the rich copy (relâmpago/sincero/direto).
+    // When in Stories channel or explicitly requested, copies the link URL.
+    const isCopyingLink = forceOnlyLink || channel === "stories";
+    const text = isCopyingLink
+      ? product.shareUrl
+      : generateOfferCopy(extractPautaCopyData(product), tone);
+
+    const ok = await copyToClipboard(text);
     if (!ok && typeof window !== "undefined") {
-      window.prompt("Copie o link abaixo:", product.shareUrl);
+      window.prompt("Copie o conteúdo abaixo:", text);
     }
     if (ok) {
-      writeDoneId(product.copyKey ?? product.id,scope);
+      writeDoneId(product.copyKey ?? product.id, scope);
       setDoneIds((prev) => new Set([...prev, product.copyKey ?? product.id]));
-      setCopiedId(product.id);
+      setCopiedId(forceOnlyLink ? `${product.id}:link` : product.id);
       setTimeout(() => setCopiedId(null), 2000);
     }
   }
@@ -223,7 +246,40 @@ export default function PautaClient({
         </div>
       </header>
 
-      <nav className="pauta-card-actions" aria-label="Canal da pauta"><button type="button" aria-pressed={channel==='whatsapp'} onClick={()=>setChannel('whatsapp')}>WhatsApp</button><button type="button" aria-pressed={channel==='stories'} onClick={()=>setChannel('stories')}>Stories</button></nav>
+      <nav className="pauta-card-actions" aria-label="Canal da pauta">
+        <button type="button" aria-pressed={channel==='whatsapp'} onClick={()=>setChannel('whatsapp')}>WhatsApp</button>
+        <button type="button" aria-pressed={channel==='stories'} onClick={()=>setChannel('stories')}>Stories</button>
+      </nav>
+
+      {channel === "whatsapp" && (
+        <div className="pauta-tone-bar">
+          <span className="pauta-tone-label">Tom do WhatsApp:</span>
+          <button
+            type="button"
+            className={`pauta-tone-pill ${tone === "relampago" ? "active" : ""}`}
+            onClick={() => setTone("relampago")}
+            title="Foco em urgência honesta e menor preço"
+          >
+            🔥 Relâmpago
+          </button>
+          <button
+            type="button"
+            className={`pauta-tone-pill ${tone === "sincero" ? "active" : ""}`}
+            onClick={() => setTone("sincero")}
+            title="Foco em autoridade e ressalvas transparentes"
+          >
+            🤝 Sincero
+          </button>
+          <button
+            type="button"
+            className={`pauta-tone-pill ${tone === "direto" ? "active" : ""}`}
+            onClick={() => setTone("direto")}
+            title="Curto e objetivo para grupos rápidos"
+          >
+            ⚡ Curto
+          </button>
+        </div>
+      )}
       {exposureMessage && <p role="status">{exposureMessage}</p>}
       {bundle && (
         <section className="pauta-qr-banner" aria-label="Acesso no celular">
@@ -326,12 +382,12 @@ export default function PautaClient({
               onPointerEnter={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
               onFocus={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
               onClick={() => copyLink(product)}
-              title="Copiar novamente"
+              title={channel === "whatsapp" ? "Copiar mensagem novamente" : "Copiar link novamente"}
             >
               <span className="pauta-done-check">✓</span>
               <span className="pauta-done-title">{product.displayTitle ?? product.title}</span>
               <span className="pauta-done-code">
-                {product.shareUrl.replace(/^https?:\/\/[^/]+/, "")}
+                {product.bioCode || product.shareUrl.replace(/^https?:\/\/[^/]+/, "")}
               </span>
             </button>
           ))}
@@ -399,9 +455,20 @@ export default function PautaClient({
                   onFocus={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
                   onClick={() => copyLink(product)}
                 >
-                  {copiedId === product.id ? "✓ COPIADO" : "COPIAR LINK"}
+                  {copiedId === product.id
+                    ? (channel === "whatsapp" ? "✓ MENSAGEM COPIADA!" : "✓ LINK COPIADO!")
+                    : (channel === "whatsapp" ? "📋 COPIAR WHATSAPP" : "COPIAR LINK DO STORY")}
                 </button>
                 <div className="pauta-card-actions">
+                  {channel === "whatsapp" && (
+                    <button
+                      type="button"
+                      onClick={() => copyLink(product, true)}
+                      title="Copiar apenas a URL sem o texto da cópia"
+                    >
+                      {copiedId === `${product.id}:link` ? "✓ Link copiado" : "🔗 Copiar só o link"}
+                    </button>
+                  )}
                   <a href={product.detailUrl ?? `/bizu/${product.slug}`}>Conferir indicação</a>
                   <a href={product.shopUrl ?? `/go/${product.slug}`} target="_blank" rel="noreferrer sponsored">Conferir na loja ↗</a>
                   {channel==='stories' && <a href={product.storyUrl} target="_blank" rel="noreferrer">Abrir arte do Story</a>}
@@ -418,8 +485,32 @@ export default function PautaClient({
                     finally{setConfirmingId(null);}
                   }}>{confirmingId===product.id ? 'Confirmando…':'Confirmar que divulguei'}</button>}
                 </div>
-                {isNext && (
-                  <p className="pauta-card-preview">{product.shareUrl}</p>
+                {channel === "whatsapp" ? (
+                  <div className="pauta-preview-box">
+                    <div className="pauta-preview-header">
+                      <span className="pauta-preview-tag">
+                        {isNext ? `Prévia da mensagem (${tone}):` : "Prévia da mensagem:"}
+                      </span>
+                      {!isNext && (
+                        <button
+                          type="button"
+                          className="pauta-preview-toggle-btn"
+                          onClick={() => togglePreview(product.id)}
+                        >
+                          {openPreviews.has(product.id) ? "Ocultar prévia ▲" : "Ver prévia ▼"}
+                        </button>
+                      )}
+                    </div>
+                    {(isNext || openPreviews.has(product.id)) && (
+                      <pre className="pauta-card-message-preview">
+                        {generateOfferCopy(extractPautaCopyData(product), tone)}
+                      </pre>
+                    )}
+                  </div>
+                ) : (
+                  isNext && (
+                    <p className="pauta-card-preview">{product.shareUrl}</p>
+                  )
                 )}
               </article>
             );

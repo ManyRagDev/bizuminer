@@ -25,19 +25,23 @@ export async function GET(request: NextRequest) {
   const codes = selection.products.length
     ? await shortCodesForSlugs(selection.products.map((product) => product.slug), check.context.tenantId)
     : new Map<string, string>();
-  const products = selection.products.map((product) => ({
-    ...product,
-    offerValidUntil:selection.destination ? product.offerValidUntil : selection.validUntil,
-    previewUrl: `${host}${productPreview(product).path}`,
-    isHeroHighlight: selection.heroProductIds.includes(product.id),
-    detailUrl: optionDetailPath(product.slug,product.offerOptionKey),
-    shopUrl: `/go/${encodeURIComponent(product.slug)}${product.offerOptionKey ? `?opcao=${product.offerOptionKey}`:""}`,
-    shareUrl: codes.has(product.slug)
-      ? `${host}/p/${codes.get(product.slug)}${product.offerOptionKey ? `?opcao=${product.offerOptionKey}`:""}`
-      : `${host}${optionDetailPath(product.slug,product.offerOptionKey)}`,
-    copyKey: `${product.id}:${product.offerOptionKey ?? "listing"}:${product.priceCents}:${product.evidenceObservedAt}`,
-    storyUrl: `/api/story/${encodeURIComponent(product.slug)}${product.offerOptionKey ? `?opcao=${product.offerOptionKey}`:""}`,
-  }));
+  const products = selection.products.map((product, i) => {
+    const code = codes.get(product.slug);
+    return {
+      ...product,
+      offerValidUntil:selection.destination ? product.offerValidUntil : selection.validUntil,
+      previewUrl: `${host}${productPreview(product).path}`,
+      isHeroHighlight: selection.heroProductIds.includes(product.id),
+      detailUrl: optionDetailPath(product.slug,product.offerOptionKey),
+      shopUrl: `/go/${encodeURIComponent(product.slug)}${product.offerOptionKey ? `?opcao=${product.offerOptionKey}`:""}`,
+      shareUrl: codes.has(product.slug)
+        ? `${host}/p/${codes.get(product.slug)}${product.offerOptionKey ? `?opcao=${product.offerOptionKey}`:""}`
+        : `${host}${optionDetailPath(product.slug,product.offerOptionKey)}`,
+      copyKey: `${product.id}:${product.offerOptionKey ?? "listing"}:${product.priceCents}:${product.evidenceObservedAt}`,
+      storyUrl: `/api/story/${encodeURIComponent(product.slug)}${product.offerOptionKey ? `?opcao=${product.offerOptionKey}`:""}`,
+      bioCode: code ? `#${code.slice(-3).toUpperCase()}` : `#${i + 101}`,
+    };
+  });
 
   return sinkJson(check.sink, {
     channel, products, total: products.length, selectionId: selection.id, selectionMode: selection.mode,

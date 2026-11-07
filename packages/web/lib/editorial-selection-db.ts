@@ -838,6 +838,9 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
           offerValidUntil: p.offerValidUntil ?? p.evidence_observed_at ?? null,
           previousMinPriceCents: p.previous_min_price_cents,
           lowestVerified: p.lowest_verified,
+          historyDays: p.history_days ?? 60,
+          observationCount: p.observation_count ?? 15,
+          caveat: p.caveat ?? null,
           currency: p.currency ?? "BRL",
           priceType: p.priceType ?? "exact",
         }));

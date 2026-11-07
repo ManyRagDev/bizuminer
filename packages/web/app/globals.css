@@ -1855,6 +1855,80 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 .pauta-copy-btn:hover { background: var(--ink); }
 .pauta-card-preview { margin: 0; padding: 6px 12px; font: 700 11px/1 monospace; color: var(--ink-tertiary); text-align: center; background: var(--paper-deep); }
 
+/* Pauta WhatsApp Tone Bar & Message Previews */
+.pauta-tone-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 16px;
+  flex-wrap: wrap;
+}
+.pauta-tone-label {
+  font: 700 12px/1 Arial, sans-serif;
+  color: var(--ink-muted, #71717a);
+  margin-right: 2px;
+}
+.pauta-tone-pill {
+  font: 700 11px/1 Arial, sans-serif;
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pauta-tone-pill:hover {
+  background: var(--paper-deep);
+}
+.pauta-tone-pill.active {
+  background: var(--ink-block, #18181b);
+  color: var(--on-accent, #ffffff);
+  border-color: var(--ink-block, #18181b);
+}
+.pauta-preview-box {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--paper-deep);
+  border-top: 1px solid var(--line);
+}
+.pauta-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.pauta-preview-tag {
+  font: 700 11px/1 Arial, sans-serif;
+  color: var(--ink-muted, #71717a);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pauta-preview-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--blue-text, #2563eb);
+  font: 700 11px/1 Arial, sans-serif;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.pauta-card-message-preview {
+  margin: 0;
+  padding: 8px 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 160px;
+  overflow-y: auto;
+  text-align: left;
+}
+
 /* CURADORIA EDITORIAL ---------------------------------------------------
    Mesa de decisão, não dashboard: linhas, papel e uma marca de prova na
    margem. O ácido comunica trabalho pendente; vermelho só aparece quando a

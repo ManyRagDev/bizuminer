@@ -6,6 +6,7 @@ import {
   buildDiretoCopy,
   buildPostSparkPrompt,
   generateOfferCopy,
+  extractPautaCopyData,
 } from "../lib/copy-styles.ts";
 
 const mockOffer = {
@@ -75,4 +76,44 @@ test("generateOfferCopy switches tones correctly", () => {
 
   const direto = generateOfferCopy(mockOffer, "direto");
   assert.match(direto, /⚡/);
+});
+
+test("extractPautaCopyData converts pauta product into rich whatsapp copy with relampago style", () => {
+  const pautaProduct = {
+    id: "prod-1",
+    slug: "shopee-teclado-mecanico",
+    title: "Teclado Mecânico Gamer Switch Red RGB",
+    displayTitle: "Teclado Mecânico RGB Switch Red",
+    priceCents: 14990,
+    previousMinPriceCents: 21990,
+    lowestVerified: true,
+    marketplace: "shopee",
+    shareUrl: "https://bizuminer.com.br/p/tk1",
+    bioCode: "#105",
+    benefit: "Switches hot-swappable e iluminação RGB programável",
+    caveat: "Cabo fixo, não é removível",
+    editorialRationale: "Melhor custo-benefício mecânico da categoria",
+    editorialPurchaseContents: "Teclado + Removedor de teclas",
+    offerOptionLabel: "Switch Red",
+  };
+
+  const copyData = extractPautaCopyData(pautaProduct);
+  assert.equal(copyData.title, pautaProduct.title);
+  assert.equal(copyData.displayTitle, pautaProduct.displayTitle);
+  assert.equal(copyData.benefit, pautaProduct.benefit);
+  assert.equal(copyData.bioCode, "#105");
+
+  const relampagoCopy = generateOfferCopy(copyData, "relampago");
+  assert.match(relampagoCopy, /🔥 \*QUEDA REAL DE 32%!\*/);
+  assert.match(relampagoCopy, /\*Teclado Mecânico RGB Switch Red\*/);
+  assert.match(relampagoCopy, /💥 De ~R\$ 219,90~ por \*R\$ 149,90\* na Shopee/);
+  assert.match(relampagoCopy, /✓ Menor preço dos últimos 60 dias no monitoramento/);
+  assert.match(relampagoCopy, /⚡ Switches hot-swappable e iluminação RGB programável/);
+  assert.match(relampagoCopy, /🛒 \*Garanta aqui:\* https:\/\/bizuminer\.com\.br\/p\/tk1/);
+  assert.match(relampagoCopy, /\(Código na Bio: \*#105\*\)/);
+
+  // Fallback to editorialRationale when benefit is absent
+  const withoutBenefit = { ...pautaProduct, benefit: undefined };
+  const fallbackCopy = generateOfferCopy(extractPautaCopyData(withoutBenefit), "relampago");
+  assert.match(fallbackCopy, /⚡ Melhor custo-benefício mecânico da categoria/);
 });
