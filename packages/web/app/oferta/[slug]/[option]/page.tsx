@@ -15,6 +15,8 @@ import {getPageSession} from '../../../../lib/auth.ts';
 import {validUserId} from '../../../../lib/member-contract.ts';
 import {savedProductIds,isWatching} from '../../../../lib/member-db.ts';
 import DetailActions from '../../../_components/detail-actions.tsx';
+import TrackProductView from '../../../_components/track-product-view.tsx';
+import AffiliateLink from '../../../_components/affiliate-link.tsx';
 
 export const dynamic="force-dynamic";
 type Props={params:Promise<{slug:string;option:string}>;searchParams:Promise<{c?:string}>};
@@ -45,7 +47,23 @@ export default async function ConfirmedOfferPage({params,searchParams}:Props){
       <div className="deal-price"><strong>{offerPriceLabel(p)}</strong><em>Conferido em {new Date(String(p.evidenceObservedAt)).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})} (São Paulo).</em></div>
       {p.offerConditions && <p><b>Condições observadas:</b> {p.offerConditions}</p>}
       <p>Na loja, selecione <b>{p.offerOptionLabel}</b>. O anúncio pode abrir sem a opção selecionada. Confira o frete e o total para seu endereço antes de concluir.</p>
-      <a className="deal-cta" href={go} target="_blank" rel="noreferrer sponsored">Conferir esta opção na loja ↗</a>
+      <TrackProductView
+        id={p.id}
+        name={p.displayTitle ?? p.title}
+        price={p.priceCents ? p.priceCents / 100 : undefined}
+        category={p.category ?? undefined}
+        store={marketplaceDef(p.marketplace)?.label ?? p.marketplace}
+      />
+      <AffiliateLink
+        href={go}
+        className="deal-cta"
+        id={p.id}
+        name={p.displayTitle ?? p.title}
+        store={marketplaceDef(p.marketplace)?.label ?? p.marketplace}
+        price={p.priceCents ? p.priceCents / 100 : undefined}
+      >
+        Conferir esta opção na loja ↗
+      </AffiliateLink>
       <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       <DetailActions product={p} initialSaved={saved.includes(p.id)} initialWatching={watching} isLoggedIn={!!session} cacheScope={session?.appUserId??null}/>
     </article>

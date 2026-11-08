@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { copyToClipboard } from "../../lib/clipboard";
 import { productShareUrl } from "../../lib/product-share";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
+import { trackShare } from "../../lib/analytics";
 
 export default function CopyProductLink({ slug, title, previewUrl,optionKey }: { optionKey?:string;slug: string; title: string; previewUrl?: string }) {
   const [copied, setCopied] = useState(false);
@@ -30,6 +31,7 @@ export default function CopyProductLink({ slug, title, previewUrl,optionKey }: {
       return;
     }
     setCopied(true);
+    trackShare({ id: slug, method: "copy_link" });
     window.setTimeout(() => setCopied(false), 2000);
   }
 

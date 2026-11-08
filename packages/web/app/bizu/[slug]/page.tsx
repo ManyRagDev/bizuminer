@@ -19,6 +19,8 @@ import DetailHeader from "../../_components/detail-header";
 import DetailActions from "../../_components/detail-actions";
 import CatalogBackLink from "../../_components/catalog-back-link";
 import PriceHistory from "./price-history";
+import TrackProductView from "../../_components/track-product-view";
+import AffiliateLink from "../../_components/affiliate-link";
 import { offerPriceLabel, offerPriceNote, formatOfferMoney } from "../../../lib/offer-price";
 import RedirectBanner from "./redirect-banner";
 import { campaignExitPath } from "../../../lib/campaign-exit";
@@ -107,7 +109,23 @@ export default async function DealPage({ params, searchParams }: PageProps) {
             ⚠️ <strong>Atenção:</strong> Esta oferta foi verificada {seenAgo(deal.evidence_observed_at)}. O preço e estoque podem ter variado no marketplace.
           </div>
         )}
-        <a className="deal-cta" href={campaignExitPath(deal.slug, c)} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a>
+        <TrackProductView
+          id={deal.id}
+          name={product.title}
+          price={deal.price_cents ? deal.price_cents / 100 : undefined}
+          category={deal.category ?? undefined}
+          store={mpLabel}
+        />
+        <AffiliateLink
+          href={campaignExitPath(deal.slug, c)}
+          className="deal-cta"
+          id={deal.id}
+          name={product.title}
+          store={mpLabel}
+          price={deal.price_cents ? deal.price_cents / 100 : undefined}
+        >
+          {mpCta} <span>↗</span>
+        </AffiliateLink>
         <CopyProductLink slug={deal.slug} title={product.title} previewUrl={`${shareBaseUrl().replace(/\/$/, "")}${productPreview(product).path}`} />
         <DetailActions product={product} initialSaved={savedInAccount} initialWatching={watching} isLoggedIn={!!session} cacheScope={session?.appUserId ?? null} />
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
@@ -115,6 +133,6 @@ export default async function DealPage({ params, searchParams }: PageProps) {
     </article>
     <PriceHistory points={history} context={detail.history_context} totalCount={deal.observation_count} />
     {related.length > 0 && <section className="related-section" aria-labelledby="related-title"><div className="related-heading"><p className="eyebrow">Continue descobrindo</p><h2 id="related-title">Mais em {deal.category}</h2></div><div className="related-rail">{related.map((item) => <article key={item.id} className="related-card"><Link className="related-image" href={`/bizu/${item.slug}`} prefetch={false}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill sizes="(max-width: 820px) 68vw, 22vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</Link><p>{item.category}</p><h3><Link href={`/bizu/${item.slug}`} prefetch={false}>{item.title}</Link></h3><strong>{offerPriceLabel(item)}</strong><Link className="related-link" href={`/bizu/${item.slug}`} prefetch={false}>ver detalhes <span>→</span></Link></article>)}</div></section>}
-    <div className="deal-sticky-cta"><a href={campaignExitPath(deal.slug, c)} target="_blank" rel="noreferrer sponsored">{mpCta} <span>↗</span></a></div>
+    <div className="deal-sticky-cta"><AffiliateLink href={campaignExitPath(deal.slug, c)} id={deal.id} name={product.title} store={mpLabel} price={deal.price_cents ? deal.price_cents / 100 : undefined}>{mpCta} <span>↗</span></AffiliateLink></div>
   </main>;
 }

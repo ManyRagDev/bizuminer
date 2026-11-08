@@ -20,6 +20,7 @@ import { CATALOG_RETURN_KEY, parseCatalogReturn } from "../lib/catalog-navigatio
 import { useHomepageEngagement } from "./_components/use-homepage-engagement";
 import HomeBanner from "./_components/home-banner";
 import { selectCoverProduct } from "../lib/home-cover";
+import { trackEvent } from "../lib/analytics";
 
 type EditorialProduct = VitrineProduct & { editorialRationale: string; editorialContext: string; editorialPurchaseContents: string };
 
@@ -43,7 +44,12 @@ const discountPercentOf = (product: VitrineProduct): number | null => {
   }
   return null;
 };
-const trackInteraction = (event: string, productId?: string) => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("bizuminer:interaction", { detail: { event, productId } })); };
+const trackInteraction = (event: string, productId?: string) => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("bizuminer:interaction", { detail: { event, productId } }));
+    trackEvent(event, productId ? { item_id: productId } : {});
+  }
+};
 
 function paginationItems(current: number, total: number): Array<number | "ellipsis-left" | "ellipsis-right"> {
   if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
