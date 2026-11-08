@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import type postgres from "postgres";
-import { buildAffiliateLink } from "../../capture/src/adapters/mercadolivre/affiliate-link.ts";
 import { authorizeAccountTransaction, releaseAccountTransaction } from "./account-scope.ts";
 import { HOLD_REASONS, REJECTION_REASONS } from "./curation-contract.ts";
 import { db } from "./db.ts";
@@ -8,6 +7,7 @@ import { candidateRows, latestAssessments, toCandidate, validateSuperiorityClaim
 import { hasSuperiorityClaim } from "./editorial-selection.ts";
 import { getProductPresentations } from "./product-presentation-db.ts";
 import { sourceProductPresentation } from "./product-presentation.ts";
+import { buildPautaMlTarget, httpsShopUrl, issuePautaLink, type MlPautaConfig } from "./pauta-link.ts";
 import { composeLivePauta, PAUTA_PRICE_WINDOW_MS, type PautaCandidate, type PautaChannel } from "./pauta-policy.ts";
 import { RECOMMENDATION_POLICY_VERSION, validateChannelPolicy, type ConfirmedExposure } from "./recommendation-policy.ts";
 import { withAccountDb, type AccountContext } from "./tenant-db.ts";
@@ -29,41 +29,18 @@ type LinkFacts = {
   affiliate_url: string | null;
   triage_score: number | null;
 };
-type MlLinkConfig = { tracking_id: string; tool_id: string };
-
-function shopUrl(value: string | null, hosts: string[]): URL | null {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" && !url.username && !url.password && !url.port
-      && hosts.some(host => url.hostname === host || url.hostname.endsWith(`.${host}`)) ? url : null;
-  } catch { return null; }
-}
-
-function shareTarget(candidate: PautaCandidate, facts: LinkFacts, ml: MlLinkConfig | undefined): PautaCandidate["shareTarget"] {
+function shareTarget(tenantId: string, candidate: PautaCandidate, facts: LinkFacts, ml: MlPautaConfig | undefined): PautaCandidate["shareTarget"] {
   if (facts.publication_status && facts.publication_status !== "active") return null;
   if (candidate.marketplace !== "mercadolivre") {
     const hosts = candidate.marketplace === "shopee" ? ["shopee.com.br", "shopee.ee"] : ["aliexpress.com"];
-    return facts.slug && shopUrl(facts.affiliate_url, hosts) ? { kind: "site", slug: facts.slug } : null;
+    return facts.slug && httpsShopUrl(facts.affiliate_url, hosts) ? { kind: "site", slug: facts.slug } : null;
   }
-  const url = shopUrl(candidate.productUrl, ["mercadolivre.com.br"]);
-  if (!ml || !url) return null;
+  if (!ml || !httpsShopUrl(candidate.productUrl, ["mercadolivre.com.br"])) return null;
   if (facts.slug) return { kind: "site", slug: facts.slug };
-  // A public option page requires a publication. A listing link can go straight
-  // to the same captured offer with the account's verified attribution strategy.
-  const wid = url.searchParams.get("wid");
-  const listing = wid ?? (!url.pathname.includes("/p/")
-    ? url.pathname.match(/MLB-?(\d{6,})/i)?.[1] : undefined);
-  const listingId = listing?.replace(/^MLB-?/i, "");
-  if (candidate.offerOptionKey || !listingId || listingId !== facts.external_id.replace(/^MLB-?/i, "")) return null;
-  url.search = "";
-  url.hash = "";
-  if (wid) url.searchParams.set("wid", wid);
-  const link = buildAffiliateLink({
-    productUrl: url.href, itemId: facts.external_id,
-    trackingId: ml.tracking_id, toolId: ml.tool_id, subId: `pauta-${facts.external_id}`,
-  });
-  return link?.attributionVerified ? { kind: "marketplace", url: link.url } : null;
+  // Keep the option page and the existing publication rules for confirmed options.
+  if (candidate.offerOptionKey || !buildPautaMlTarget(candidate.productUrl, facts.external_id, ml)) return null;
+  const token = issuePautaLink(tenantId, candidate.id);
+  return token ? { kind: "pauta", token } : null;
 }
 
 async function selectOffers(tx: Tx, context: AccountContext, channel: PautaChannel, now: Date) {
@@ -80,7 +57,7 @@ async function selectOffers(tx: Tx, context: AccountContext, channel: PautaChann
   const ids = rows.map(row => row.id);
   if (!ids.length) return { config, selected: [], reasonsById: new Map<string, string[]>() };
   const assessments = await latestAssessments(tx, tenantId);
-  const [ml] = await tx<MlLinkConfig[]>`select c.tracking_id,c.tool_id
+  const [ml] = await tx<MlPautaConfig[]>`select c.tracking_id,c.tool_id
     from garimpa.affiliate_marketplace_config c
     join garimpa.affiliate_account a on a.id=c.affiliate_id and a.status='active'
     where a.tenant_id=${tenantId} and c.affiliate_id=${affiliateId}
@@ -105,7 +82,7 @@ async function selectOffers(tx: Tx, context: AccountContext, channel: PautaChann
       triageScore: typeof score === "number" && score >= 1 && score <= 5 ? score : null,
       shareTarget: null,
     };
-    candidate.shareTarget = facts ? shareTarget(candidate, facts, ml) : null;
+    candidate.shareTarget = facts ? shareTarget(tenantId, candidate, facts, ml) : null;
     return candidate;
   });
   const claimAssessments = candidates.flatMap(c =>

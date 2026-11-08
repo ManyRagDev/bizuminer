@@ -111,7 +111,7 @@ Esta tela reflete o que os visitantes reais estão vendo no site:
 
 1. Abra **Pauta de divulgação** e escolha WhatsApp ou Stories. A lista consulta o catálogo da sua conta a cada atualização. Para entrar, a oferta precisa estar aprovada, ter preço exato em reais observado nas últimas 48 horas e ter um link de afiliado válido.
 2. Confira **Capturas recentes** para ver o estado de cada produto. Use o filtro por loja. Se o lote salvou os produtos e a triagem foi interrompida, abra a oferta na Curadoria para revisá-la.
-3. Escolha as ofertas em **Prontas para divulgar**. O mérito editorial e a recência definem a ordem, com os limites configurados para cada canal. No Mercado Livre, uma oferta pode usar o link direto de afiliado da conta antes de ter uma página pública no Bizu.
+3. Escolha as ofertas em **Prontas para divulgar**. O mérito editorial e a recência definem a ordem, com os limites configurados para cada canal. Os links copiados abrem no BizuMiner. O botão de compra leva ao anúncio com a atribuição da conta de afiliado, inclusive quando a oferta do Mercado Livre ainda está fora da vitrine.
 4. Copie a mensagem ou o link e publique no canal. Use **Confirmar divulgação** depois de publicar para iniciar o intervalo daquele produto no canal.
 
 ---

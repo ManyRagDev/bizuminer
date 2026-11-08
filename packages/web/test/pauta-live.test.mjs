@@ -10,7 +10,7 @@ const offer = (id, fields = {}) => ({
   priceCents: 9900, priceType: "exact", currency: "BRL",
   imageUrl: "https://http2.mlstatic.com/photo.jpg", lastSeenAt: observed(2), evidenceObservedAt: observed(2),
   curationStatus: "approved", offerEvidence: {}, assessment: null, triageScore: 4,
-  shareTarget: { kind: "marketplace", url: "https://produto.mercadolivre.com.br/MLB-123456789" }, ...fields,
+  shareTarget: { kind: "pauta", token: "fixture" }, ...fields,
 });
 const select = (items, exposures = new Map(), manual = null) =>
   composeLivePauta(items, policy, exposures, now, manual, new Set());

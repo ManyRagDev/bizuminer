@@ -23,9 +23,10 @@ export async function GET(request: NextRequest) {
     const host = shareBaseUrl().replace(/\/$/, "");
     const products = selection.products.map(({ shareTarget, shortCode, ...product }) => {
       const copyKey = JSON.stringify([product.id, product.offerOptionKey, product.priceCents, product.offerConditions]);
-      if (shareTarget.kind === "marketplace") {
+      if (shareTarget.kind === "pauta") {
+        const detailUrl = `/p/pauta/${shareTarget.token}`;
         return {
-          ...product, copyKey, detailUrl: shareTarget.url, shopUrl: shareTarget.url, shareUrl: shareTarget.url,
+          ...product, copyKey, detailUrl, shopUrl: `/go/pauta/${shareTarget.token}`, shareUrl: `${host}${detailUrl}`,
           previewUrl: null,
           storyUrl: `/api/story/${encodeURIComponent(product.id)}?pauta=1&conta=${encodeURIComponent(check.context.tenantId)}`,
         };

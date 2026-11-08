@@ -73,7 +73,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const check = await checkAffiliateUser(request);
     if (check.kind !== "ok") return new Response(null, { status: check.kind === "no_session" ? 401 : 403, headers: noStore });
     const pauta = await readLivePauta(check.context, "stories", null);
-    product = pauta.products.find(p => p.id === slug && p.shareTarget.kind === "marketplace");
+    product = pauta.products.find(p => p.id === slug && p.shareTarget.kind === "pauta");
     if (!product) return new Response("Oferta indisponível neste canal", { status: 404, headers: noStore });
   } else if (option) {
     product = (await confirmedOfferDetail(slug, option))?.product;

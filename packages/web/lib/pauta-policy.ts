@@ -9,7 +9,7 @@ export const PAUTA_PRICE_WINDOW_MS = PRICE_CURRENT_WINDOW_HOURS * 3_600_000;
 
 export interface PautaCandidate extends EditorialCandidate {
   triageScore: number | null;
-  shareTarget: { kind: "site"; slug: string } | { kind: "marketplace"; url: string } | null;
+  shareTarget: { kind: "site"; slug: string } | { kind: "pauta"; token: string } | null;
 }
 
 export function pautaBlockers(candidate: PautaCandidate, now: Date): string[] {
