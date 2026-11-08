@@ -86,6 +86,8 @@ test("extractPautaCopyData converts pauta product into rich whatsapp copy with r
     displayTitle: "Teclado Mecânico RGB Switch Red",
     priceCents: 14990,
     previousMinPriceCents: 21990,
+    historyDays: 60,
+    observationCount: 15,
     lowestVerified: true,
     marketplace: "shopee",
     shareUrl: "https://bizuminer.com.br/p/tk1",
@@ -117,3 +119,46 @@ test("extractPautaCopyData converts pauta product into rich whatsapp copy with r
   const fallbackCopy = generateOfferCopy(extractPautaCopyData(withoutBenefit), "relampago");
   assert.match(fallbackCopy, /⚡ Melhor custo-benefício mecânico da categoria/);
 });
+
+test("buildRelampagoCopy does not claim historical low when product has no observation history", () => {
+  const newProductWithoutHistory = {
+    title: "Mouse Ergonômico Vertical Sem Fio",
+    priceCents: 8900,
+    previousMinPriceCents: null,
+    historyDays: 0,
+    observationCount: 1,
+    lowestVerified: true, // In database, single observation can evaluate to lowestVerified = true
+    marketplace: "mercadolivre",
+    shareUrl: "https://bizuminer.com.br/p/mouse-v",
+    benefit: "Design vertical anatômico que previne fadiga no punho",
+    discountPercent: 10,
+  };
+
+  const copy = buildRelampagoCopy(newProductWithoutHistory);
+  // Must NOT claim menor preço histórico or mention 60 dias
+  assert.doesNotMatch(copy, /MENOR PREÇO HISTÓRICO/);
+  assert.doesNotMatch(copy, /Menor preço dos últimos/);
+  // Instead, gives honest attractive headline and real discount badge
+  assert.match(copy, /🔥 \*ACHADO DO DIA!\*/);
+  assert.match(copy, /✓ 10% de desconto na loja/);
+  assert.match(copy, /⚡ Design vertical anatômico que previne fadiga no punho/);
+});
+
+test("buildRelampagoCopy claims historical low only with solid observation history", () => {
+  const productWithRealHistory = {
+    title: "Monitor 24 IPS 100Hz",
+    priceCents: 49900,
+    previousMinPriceCents: null,
+    historyDays: 45,
+    observationCount: 18,
+    lowestVerified: true,
+    marketplace: "shopee",
+    shareUrl: "https://bizuminer.com.br/p/monitor",
+    benefit: "Painel IPS de cores vivas e taxa de 100Hz",
+  };
+
+  const copy = buildRelampagoCopy(productWithRealHistory);
+  assert.match(copy, /🔥 \*MENOR PREÇO HISTÓRICO!\*/);
+  assert.match(copy, /✓ Menor preço dos últimos 45 dias no monitoramento/);
+});
+

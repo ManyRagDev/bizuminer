@@ -24,6 +24,8 @@ export interface CopyOfferData {
   historyDays?: number;
   observationCount?: number;
   lowestVerified?: boolean;
+  discountPercent?: number | null;
+  ratingStar?: number | null;
   marketplace: string;
   shareUrl: string;
   bioCode?: string;
@@ -42,6 +44,8 @@ export type PautaLikeProduct = {
   historyDays?: number;
   observationCount?: number;
   lowestVerified?: boolean;
+  discountPercent?: number | null;
+  ratingStar?: number | null;
   marketplace: string;
   shareUrl: string;
   bioCode?: string;
@@ -61,6 +65,8 @@ export function extractPautaCopyData(product: PautaLikeProduct): CopyOfferData {
     historyDays: product.historyDays,
     observationCount: product.observationCount,
     lowestVerified: product.lowestVerified,
+    discountPercent: product.discountPercent,
+    ratingStar: product.ratingStar,
     marketplace: product.marketplace,
     shareUrl: product.shareUrl,
     bioCode: product.bioCode,
@@ -81,6 +87,8 @@ export function extractCopyData(offer: WorkspaceOffer): CopyOfferData {
     historyDays: c.historyDays,
     observationCount: c.observationCount,
     lowestVerified: c.lowestVerified,
+    discountPercent: c.discountPercent != null ? c.discountPercent : (c.previousMinPriceCents && c.previousMinPriceCents > c.priceCents ? Math.round(((c.previousMinPriceCents - c.priceCents) / c.previousMinPriceCents) * 100) : null),
+    ratingStar: c.ratingStar,
     marketplace: c.marketplace,
     shareUrl: offer.shareUrl || `/bizu/${c.slug}`,
     bioCode: offer.bioCode,
@@ -90,7 +98,7 @@ export function extractCopyData(offer: WorkspaceOffer): CopyOfferData {
 }
 
 /**
- * 1. Estilo Relâmpago: Foco em urgência honesta, queda de preço e menor registro.
+ * 1. Estilo Relâmpago: Foco em urgência honesta, adaptando o gancho ao fato real da oferta.
  */
 export function buildRelampagoCopy(data: CopyOfferData): string {
   const title = data.displayTitle || data.title;
@@ -98,12 +106,22 @@ export function buildRelampagoCopy(data: CopyOfferData): string {
   const mpLabel = data.marketplace === "mercadolivre" ? "Mercado Livre" : data.marketplace === "shopee" ? "Shopee" : "AliExpress";
   const storeRef = data.marketplace === "mercadolivre" ? "no Mercado Livre" : `na ${mpLabel}`;
   
-  let header = "🔥 *MENOR PREÇO HISTÓRICO!*";
-  if (data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents) {
-    const diffPct = Math.round(((data.previousMinPriceCents - data.priceCents) / data.previousMinPriceCents) * 100);
+  const hasHistory = (data.observationCount ?? 0) >= 3 && (data.historyDays ?? 0) >= 7;
+  const hasDrop = Boolean(data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents);
+  const diffPct = hasDrop
+    ? Math.round(((data.previousMinPriceCents! - data.priceCents) / data.previousMinPriceCents!) * 100)
+    : (data.discountPercent ?? 0);
+
+  // Variação honesta do cabeçalho de acordo com a evidência disponível
+  let header = "⚡ *OFERTA RELÂMPAGO!*";
+  if (hasDrop && diffPct > 0) {
     header = `🔥 *QUEDA REAL DE ${diffPct}%!*`;
-  } else if (!data.lowestVerified) {
-    header = "🔥 *OFERTA RELÂMPAGO!*";
+  } else if (data.lowestVerified && hasHistory) {
+    header = "🔥 *MENOR PREÇO HISTÓRICO!*";
+  } else if (diffPct >= 15) {
+    header = `🔥 *OFERTA COM ${diffPct}% OFF!*`;
+  } else if (data.benefit) {
+    header = "🔥 *ACHADO DO DIA!*";
   }
 
   const lines = [
@@ -112,14 +130,22 @@ export function buildRelampagoCopy(data: CopyOfferData): string {
     `*${title}*`,
   ];
 
-  if (data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents) {
-    lines.push(`💥 De ~${formatPriceBRL(data.previousMinPriceCents)}~ por *${currentPrice}* ${storeRef}`);
+  if (hasDrop) {
+    lines.push(`💥 De ~${formatPriceBRL(data.previousMinPriceCents!)}~ por *${currentPrice}* ${storeRef}`);
   } else {
     lines.push(`💥 Por *${currentPrice}* ${storeRef}`);
   }
 
-  if (data.lowestVerified) {
-    lines.push("✓ Menor preço dos últimos 60 dias no monitoramento");
+  // Linha de prova social / auditoria só promete o que os dados sustentam
+  if (data.lowestVerified && hasHistory) {
+    const days = data.historyDays && data.historyDays > 0 ? data.historyDays : 60;
+    lines.push(`✓ Menor preço dos últimos ${days} dias no monitoramento`);
+  } else if (hasDrop) {
+    lines.push("✓ Queda de preço confirmada no radar");
+  } else if (data.discountPercent && data.discountPercent > 0) {
+    lines.push(`✓ ${data.discountPercent}% de desconto na loja`);
+  } else if (data.ratingStar && data.ratingStar >= 4.5) {
+    lines.push(`✓ Muito bem avaliado (nota ${data.ratingStar.toFixed(1)} estrelas)`);
   }
 
   if (data.benefit) {
