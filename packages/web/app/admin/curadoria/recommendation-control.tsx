@@ -13,8 +13,8 @@ const labels = {
 
 const channelHints = {
   home: "Destaques e ofertas principais da página inicial do site.",
-  whatsapp: "As ofertas imperdíveis (maiores descontos, histórico estável e melhores notas) para postar nos grupos.",
-  stories: "Seleção com fotos e apelo visual para postar nos Stories.",
+  whatsapp: "Ofertas com preço recente que passaram pela curadoria do Bizu.",
+  stories: "Ofertas recentes aprovadas, com arte para compartilhar.",
 };
 
 interface Choice { id: string; title: string; displayTitle?: string; offerOptionLabel?: string }
@@ -61,7 +61,7 @@ function ChannelForm({ channel, current, canManage, tenantId, candidates }: { te
           Ativar geração automática deste canal
         </label>
         <p style={{ margin: "2px 0 12px 24px", fontSize: "13px", color: "var(--ink-muted, #71717a)" }}>
-          💡 O BizuMiner seleciona sozinho as melhores oportunidades da vitrine aprovada (maior desconto real e melhores avaliações).
+          {channel === "home" ? "O BizuMiner seleciona os destaques da vitrine." : "A pauta usa as capturas recentes e a avaliação do Bizu."}
         </p>
 
         <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -77,7 +77,7 @@ function ChannelForm({ channel, current, canManage, tenantId, candidates }: { te
             <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: 500 }}>
               Adicionar um produto à lista:
               <select ref={picker} defaultValue="" style={{ display: "block", width: "100%", marginTop: "4px" }}>
-                <option value="">Escolha um produto da vitrine</option>
+                <option value="">Escolha um produto da curadoria</option>
                 {candidates.filter(c => !chosen.includes(c.id)).map(c => <option key={c.id} value={c.id}>{c.displayTitle ?? c.title}</option>)}
               </select>
             </label>
@@ -137,7 +137,8 @@ function ChannelForm({ channel, current, canManage, tenantId, candidates }: { te
         </button>
       </fieldset>
       <p style={{ fontSize: "12px", color: "var(--ink-muted, #71717a)", marginTop: "8px" }}>
-        Versão {current?.version ?? "ainda não criada"} · {current?.prepared_count ?? 0} produtos na lista
+        Versão {current?.version ?? "ainda não criada"}
+        {channel === "home" ? ` · ${current?.prepared_count ?? 0} produtos na lista` : " · seleção consultada ao abrir a pauta"}
       </p>
       {message && <p role="status" style={{ marginTop: "8px", fontWeight: 500, color: message.includes("sucesso") ? "var(--brand, #0070f3)" : "inherit" }}>{message}</p>}
     </form>
@@ -155,7 +156,7 @@ export default function RecommendationControl({ desk, canManage, tenantId, candi
       <p className="eyebrow">Distribuição & Pauta</p>
       <h2>O que vai para cada canal hoje</h2>
       <p style={{ color: "var(--ink-muted, #71717a)", lineHeight: 1.5 }}>
-        Aqui você configura quais ofertas vão para o <strong>WhatsApp</strong>, <strong>Stories</strong> e <strong>Página Inicial</strong>. O BizuMiner prioriza automaticamente os maiores descontos reais e melhores avaliações da vitrine. Copiar ou abrir links na pauta não envia nada automaticamente — você tem total controle antes de postar.
+        Ajuste os limites de cada canal. WhatsApp e Stories usam as ofertas aprovadas com preço recente e link válido. Você confirma na pauta o que já divulgou.
       </p>
 
       {!desk.ready ? (
@@ -215,11 +216,10 @@ export default function RecommendationControl({ desk, canManage, tenantId, candi
             </div>
           )}
 
-          <h3 style={{ marginTop: "24px", fontSize: "16px" }}>Histórico das ofertas selecionadas</h3>
-          <p style={{ fontSize: "13px", color: "var(--ink-muted, #71717a)" }}>Mostra a solidez do histórico de preços das ofertas atualmente preparadas para publicação.</p>
-          {desk.coverage.length ? (
+          <h3 style={{ marginTop: "24px", fontSize: "16px" }}>Histórico das ofertas da página inicial</h3>
+          {desk.coverage.some(c => c.channel === "home") ? (
             <ul style={{ fontSize: "13px", lineHeight: 1.6 }}>
-              {desk.coverage.map(c => (
+              {desk.coverage.filter(c => c.channel === "home").map(c => (
                 <li key={c.channel}>
                   <strong>{labels[c.channel as RecommendationChannel]}</strong>: {c.with_series}/{c.shown} com preços comparáveis em ao menos 2 dias; {c.configuration_unknown} com configuração genérica; {c.stale} com preço há mais de 48h sem nova conferência.
                 </li>

@@ -335,7 +335,7 @@ export async function editorialSelectionSchemaReady(sql: QueryClient): Promise<b
   return rows[0]?.ready === true;
 }
 
-export async function candidateRows(sql: QueryClient, tenantId: string, productIds?: string[],includePending=false): Promise<CandidateRow[]> {
+export async function candidateRows(sql: QueryClient, tenantId: string, productIds?: string[],includePending=false, observedSince?: Date): Promise<CandidateRow[]> {
   const rows = await sql.unsafe<CandidateRow[]>(`select f.*, obs.offer_evidence,obs.id as latest_observation_id,obs.id as observation_id,
     (obs.offer_evidence->>'variantKey' is not null and not exists (
       select 1 from garimpa.price_observation historical where historical.tenant_id=f.tenant_id
@@ -347,7 +347,8 @@ export async function candidateRows(sql: QueryClient, tenantId: string, productI
       order by o.observed_at desc, o.id desc limit 1) obs on true
     where f.tenant_id=$1 and ($2::text[] is null or f.id=any($2))
       and ($2::text[] is not null or ((f.status in ('approved','held') or ($3::boolean and f.status='pending')) and f.last_seen_at >= now()-interval '7 days'))
-    order by f.observed_at desc, f.id limit case when $3::boolean then 300 else null end`, [tenantId, productIds ?? null,includePending]);
+      and ($4::timestamptz is null or f.observed_at >= $4)
+    order by f.observed_at desc, f.id limit case when $3::boolean then 300 else null end`, [tenantId, productIds ?? null,includePending,observedSince ?? null]);
   const { selectedOptionFacts } = await import("./offer-option-db.ts");
   const options = await selectedOptionFacts(sql,tenantId,rows.map(row => row.id));
   return rows.map(row => options.has(row.id) ? { ...row, ...options.get(row.id),
@@ -391,7 +392,7 @@ function toAssessment(row: AssessmentRow): EditorialAssessment {
   return { ...row.assessment, id: row.id, policyVersion: row.policy_version, createdAt: new Date(row.created_at).toISOString(),
     priceCentsAtAssessment: row.snapshot?.price_cents, presentationInvalidatedAt: row.presentation_invalidated_at ?? null };
 }
-async function latestAssessments(sql: QueryClient, tenantId: string): Promise<Map<string, EditorialAssessment>> {
+export async function latestAssessments(sql: QueryClient, tenantId: string): Promise<Map<string, EditorialAssessment>> {
   const rows = await sql.unsafe<AssessmentRow[]>(`select distinct on (product_id)
     id, product_id, assessment, snapshot, policy_version, created_at,
     to_jsonb(editorial_assessment)->>'presentation_invalidated_at' as presentation_invalidated_at from garimpa.editorial_assessment

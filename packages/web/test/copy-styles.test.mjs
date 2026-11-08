@@ -26,28 +26,30 @@ const mockOffer = {
   purchaseContents: "Fone + Estojo + Cabo",
 };
 
-test("buildRelampagoCopy generates high urgency copy with discount and bio code", () => {
+test("Achado abre com produto e preço e usa o histórico comparável", () => {
   const copy = buildRelampagoCopy(mockOffer);
-  assert.match(copy, /QUEDA REAL DE 42%!/);
-  assert.match(copy, /De ~R\$ 189~ por \*R\$ 109\*/);
-  assert.match(copy, /https:\/\/www\.bizuminer\.com\.br\/p\/qcy1/);
+  assert.match(copy, /^\*Fone Bluetooth QCY T13 ANC\* por \*R\$ 109\* no Mercado Livre/);
+  assert.match(copy, /É o menor preço que registramos em 60 dias\./);
+  assert.match(copy, /Ver oferta: https:\/\/www\.bizuminer\.com\.br\/p\/qcy1/);
   assert.match(copy, /#104/);
+  assert.doesNotMatch(copy, /urgente|garanta|imperdível|off!/i);
 });
 
-test("buildSinceroCopy includes benefit, caveat and audit proof", () => {
+test("Com contexto inclui a versão, benefício, conteúdo e ressalva", () => {
   const copy = buildSinceroCopy(mockOffer);
-  assert.match(copy, /Bizu verificado/);
-  assert.match(copy, /Ponto forte/);
-  assert.match(copy, /A ressalva/);
-  assert.match(copy, /Auditado em 22 coletas/);
-  assert.match(copy, /#104/);
+  assert.match(copy, /Bateria de 30h/);
+  assert.match(copy, /Opção: Preto/);
+  assert.match(copy, /Vem com Fone \+ Estojo \+ Cabo/);
+  assert.match(copy, /Cabo de carregamento curto/);
+  assert.doesNotMatch(copy, /audita|segurança/i);
 });
 
-test("buildDiretoCopy generates short clean copy", () => {
-  const copy = buildDiretoCopy(mockOffer);
-  assert.match(copy, /⚡ \*Fone Bluetooth QCY T13 ANC\*/);
-  assert.match(copy, /De ~R\$ 189~ por \*R\$ 109\*/);
-  assert.match(copy, /Bio: \*#104\*/);
+test("Curto mantém preço, condição e link", () => {
+  const copy = buildDiretoCopy({ ...mockOffer, offerConditions: "Preço com cupom FONE10" });
+  assert.match(copy, /\*R\$ 109\* no Mercado Livre/);
+  assert.match(copy, /Preço com cupom FONE10/);
+  assert.match(copy, /Código na bio: #104/);
+  assert.doesNotMatch(copy, /menor preço/i);
 });
 
 test("buildPostSparkPrompt generates static post prompt with format match signal", () => {
@@ -67,15 +69,10 @@ test("buildPostSparkPrompt generates carousel prompt with 5 slides matching Post
   assert.match(prompt, /CTA: Acesse o link na bio \(Código #104\)/);
 });
 
-test("generateOfferCopy switches tones correctly", () => {
-  const relampago = generateOfferCopy(mockOffer, "relampago");
-  assert.match(relampago, /QUEDA REAL/);
-
-  const sincero = generateOfferCopy(mockOffer, "sincero");
-  assert.match(sincero, /Bizu verificado/);
-
-  const direto = generateOfferCopy(mockOffer, "direto");
-  assert.match(direto, /⚡/);
+test("generateOfferCopy preserva os três tons", () => {
+  assert.equal(generateOfferCopy(mockOffer, "relampago"), buildRelampagoCopy(mockOffer));
+  assert.equal(generateOfferCopy(mockOffer, "sincero"), buildSinceroCopy(mockOffer));
+  assert.equal(generateOfferCopy(mockOffer, "direto"), buildDiretoCopy(mockOffer));
 });
 
 test("extractPautaCopyData converts pauta product into rich whatsapp copy with relampago style", () => {
@@ -106,18 +103,14 @@ test("extractPautaCopyData converts pauta product into rich whatsapp copy with r
   assert.equal(copyData.bioCode, "#105");
 
   const relampagoCopy = generateOfferCopy(copyData, "relampago");
-  assert.match(relampagoCopy, /🔥 \*QUEDA REAL DE 32%!\*/);
-  assert.match(relampagoCopy, /\*Teclado Mecânico RGB Switch Red\*/);
-  assert.match(relampagoCopy, /💥 De ~R\$ 219,90~ por \*R\$ 149,90\* na Shopee/);
-  assert.match(relampagoCopy, /✓ Menor preço dos últimos 60 dias no monitoramento/);
-  assert.match(relampagoCopy, /⚡ Switches hot-swappable e iluminação RGB programável/);
-  assert.match(relampagoCopy, /🛒 \*Garanta aqui:\* https:\/\/bizuminer\.com\.br\/p\/tk1/);
-  assert.match(relampagoCopy, /\(Código na Bio: \*#105\*\)/);
+  assert.match(relampagoCopy, /\*Teclado Mecânico RGB Switch Red\* por \*R\$ 149,90\* na Shopee/);
+  assert.match(relampagoCopy, /menor preço que registramos em 60 dias/);
+  assert.match(relampagoCopy, /Switches hot-swappable e iluminação RGB programável/);
+  assert.match(relampagoCopy, /Ver oferta: https:\/\/bizuminer\.com\.br\/p\/tk1/);
 
-  // Fallback to editorialRationale when benefit is absent
   const withoutBenefit = { ...pautaProduct, benefit: undefined };
   const fallbackCopy = generateOfferCopy(extractPautaCopyData(withoutBenefit), "relampago");
-  assert.match(fallbackCopy, /⚡ Melhor custo-benefício mecânico da categoria/);
+  assert.doesNotMatch(fallbackCopy, /Melhor custo-benefício/);
 });
 
 test("buildRelampagoCopy does not claim historical low when product has no observation history", () => {
@@ -135,13 +128,10 @@ test("buildRelampagoCopy does not claim historical low when product has no obser
   };
 
   const copy = buildRelampagoCopy(newProductWithoutHistory);
-  // Must NOT claim menor preço histórico or mention 60 dias
-  assert.doesNotMatch(copy, /MENOR PREÇO HISTÓRICO/);
-  assert.doesNotMatch(copy, /Menor preço dos últimos/);
-  // Instead, gives honest attractive headline and real discount badge
-  assert.match(copy, /🔥 \*ACHADO DO DIA!\*/);
-  assert.match(copy, /✓ 10% de desconto na loja/);
-  assert.match(copy, /⚡ Design vertical anatômico que previne fadiga no punho/);
+  assert.doesNotMatch(copy, /menor preço/i);
+  assert.match(copy, /O anúncio indica 10% de desconto\./);
+  assert.match(copy, /Design vertical anatômico/);
+  assert.doesNotMatch(buildRelampagoCopy({ ...newProductWithoutHistory, discountPercent: 100 }), /100%/);
 });
 
 test("buildRelampagoCopy claims historical low only with solid observation history", () => {
@@ -158,7 +148,6 @@ test("buildRelampagoCopy claims historical low only with solid observation histo
   };
 
   const copy = buildRelampagoCopy(productWithRealHistory);
-  assert.match(copy, /🔥 \*MENOR PREÇO HISTÓRICO!\*/);
-  assert.match(copy, /✓ Menor preço dos últimos 45 dias no monitoramento/);
+  assert.match(copy, /É o menor preço que registramos em 45 dias\./);
 });
 

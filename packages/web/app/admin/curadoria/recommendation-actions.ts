@@ -5,6 +5,7 @@ import { configureRecommendationChannel, refreshRecommendationEditions, type Con
 import { confirmOfferOption } from "../../../lib/offer-option-db.ts";
 import type { ConfirmOfferInput } from "../../../lib/offer-option.ts";
 import { saveDiscoveryPolicy,type DiscoveryPolicyInput } from "../../../lib/discovery-policy-db.ts";
+import { previewLivePauta } from "../../../lib/pauta-db.ts";
 
 export async function configureDiscoveryAction(input:DiscoveryPolicyInput){
   return accountOperation(async()=>{
@@ -19,7 +20,7 @@ export async function configureChannelAction(input:ConfigureChannelInput) {
     if (account.membershipRole!=="owner") return {ok:false as const,error:"forbidden"};
     const result=await configureRecommendationChannel(input);
     if (result.ok) {
-      try { await refreshRecommendationEditions(account.tenantId); }
+      try { if (input.channel === "home") await refreshRecommendationEditions(account.tenantId); }
       catch { revalidatePath("/admin/curadoria");return {ok:true as const,preparationFailed:true}; }
       revalidatePath("/admin/curadoria"); revalidatePath("/pauta"); revalidatePath("/");
     }
@@ -27,7 +28,13 @@ export async function configureChannelAction(input:ConfigureChannelInput) {
   },input.expectedTenantId);
 }
 export async function previewChannelsAction(tenantId:string) {
-  return accountOperation(async account=>refreshRecommendationEditions(account.tenantId,undefined,true),tenantId);
+  return accountOperation(async account => {
+    const saved = await refreshRecommendationEditions(account.tenantId, undefined, true);
+    if (!saved.configured) return saved;
+    const whatsapp = await previewLivePauta(account, "whatsapp");
+    const stories = await previewLivePauta(account, "stories");
+    return { ...saved, channels: [...saved.channels.filter(channel => channel.channel === "home"), whatsapp, stories] };
+  }, tenantId);
 }
 export async function confirmOfferAction(input:ConfirmOfferInput) {
   return accountOperation(async account=>{

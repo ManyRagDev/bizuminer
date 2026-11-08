@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { VitrineProduct } from "../../lib/deal-view";
-import { marketplaceDef } from "../../lib/marketplaces";
+import { MARKETPLACES, marketplaceDef } from "../../lib/marketplaces";
 import type { PautaQrBundle } from "../../lib/qr-service";
 import { copyToClipboard } from "../../lib/clipboard";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
 import { offerPriceLabel } from "../../lib/offer-price";
+import type { PautaCapture } from "../../lib/pauta-db";
+import { freshnessLabel, MINIMUM_HISTORY } from "../../lib/deal-signal";
 import {
   extractPautaCopyData,
   generateOfferCopy,
@@ -16,14 +18,29 @@ import {
 
 interface PautaProduct extends VitrineProduct {
   shareUrl: string;
-  detailUrl: string;shopUrl:string;storyUrl:string;copyKey:string;
-  previewUrl: string;
+  detailUrl: string;
+  shopUrl: string;
+  storyUrl: string | null;
+  copyKey: string;
+  confirmationId: string;
+  previewUrl: string | null;
   editorialRationale: string;
-  editorialPurchaseContents: string;
-  editorialContext?: string | null;
-  isHeroHighlight?: boolean;
   bioCode?: string;
 }
+
+const captureLabels: Record<PautaCapture["status"], string> = {
+  ready: "Na pauta",
+  pending: "Aguardando triagem",
+  rejected: "Rejeitada",
+  held: "Em espera",
+  blocked: "Fora da pauta",
+  failed: "Triagem interrompida",
+};
+const captureTime = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short",
+});
+const priceBRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const toneLabels: Record<CopyTone, string> = { relampago: "Achado", sincero: "Com contexto", direto: "Curto" };
 
 const STORAGE_KEY = "bm_pauta_copied";
 const localDay = () => new Intl.DateTimeFormat("en-CA", {
@@ -68,18 +85,17 @@ export default function PautaClient({
 }) {
   const [channel,setChannel]=useState<"whatsapp"|"stories">("whatsapp");
   const scope=`${userKey}:${accountKey}:${channel}`;
-  const [editionId,setEditionId]=useState<string|null>(null);
   const [exposureMessage,setExposureMessage]=useState("");
   const [products, setProducts] = useState<PautaProduct[]>([]);
+  const [recent, setRecent] = useState<PautaCapture[]>([]);
+  const [recentTotal, setRecentTotal] = useState(0);
+  const [marketplace, setMarketplace] = useState("");
+  const [captureLimit, setCaptureLimit] = useState(12);
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [selectionMode, setSelectionMode] = useState("unavailable");
-  const [renewal, setRenewal] = useState<{ active: boolean; renewedAt: string | null }>({ active: false, renewedAt: null });
-  const [selectionVersion, setSelectionVersion] = useState<number | null>(null);
-  const [selectionValidUntil, setSelectionValidUntil] = useState<string | null>(null);
-  const [heroValidUntil, setHeroValidUntil] = useState<string | null>(null);
-  const [heroBadgeCurrent, setHeroBadgeCurrent] = useState(false);
+  const [active, setActive] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(true);
   const [activeTab, setActiveTab] = useState<"local" | "production">(
@@ -111,70 +127,107 @@ export default function PautaClient({
   }, []);
 
   useEffect(() => {
-    setProducts([]);setLoading(true);setDoneIds(readDoneIds(scope));
+    setProducts([]);
+    setRecent([]);
+    setRecentTotal(0);
+    setUpdatedAt(null);
+    setLoadError("");
+    setLoading(true);
+    setDoneIds(readDoneIds(scope));
     const controller = new AbortController();
     const warmer = createPreviewWarmer();
     previewWarmer.current = warmer;
     let checking = 0;
-    const load = async (force=false) => {
-      if (document.visibilityState === "hidden" || checking && !force) return;
+    let loadId = 0;
+    const load = async (force = false) => {
+      if (document.visibilityState === "hidden" || (checking && !force)) return;
       checking++;
-      const epoch=mutationEpoch.current;
-      // A pauta can stay open across the daily renewal. Re-read the local day
-      // instead of carrying yesterday's copied markers until a full reload.
+      const id = ++loadId;
+      const epoch = mutationEpoch.current;
       setDoneIds(readDoneIds(scope));
       try {
-        const response = await fetch(`/api/pauta?canal=${channel}`, { cache: "no-store", signal: controller.signal,headers:{"x-bm-account":accountKey} });
+        const query = new URLSearchParams({ canal: channel, loja: marketplace });
+        const response = await fetch(`/api/pauta?${query}`, {
+          cache: "no-store", signal: controller.signal, headers: { "x-bm-account": accountKey },
+        });
         if (!response.ok) throw new Error("pauta_failed");
-        const data = await response.json() as { products: PautaProduct[]; selectionMode: string; selectionVersion: number | null; validUntil: string | null; heroValidUntil: string | null; homepageReady?: boolean; renewedAt?: string | null;editionId?:string|null };
-        if (controller.signal.aborted || epoch!==mutationEpoch.current) return;
-        setProducts(data.products);setEditionId(data.editionId ?? null);
-        setSelectionMode(data.selectionMode);
-        setRenewal({ active: data.homepageReady === true, renewedAt: data.renewedAt ?? null });
-        setSelectionVersion(data.selectionVersion);
-        setSelectionValidUntil(data.validUntil);
-        setHeroValidUntil(data.heroValidUntil);
-        setHeroBadgeCurrent(data.heroValidUntil !== null && Date.parse(data.heroValidUntil) > Date.now());
+        const data = await response.json() as {
+          products: PautaProduct[]; recent: PautaCapture[]; recentTotal: number; active: boolean; updatedAt: string;
+        };
+        if (controller.signal.aborted || epoch !== mutationEpoch.current || id !== loadId) return;
+        setProducts(data.products);
+        setRecent(data.recent);
+        setRecentTotal(data.recentTotal);
+        setActive(data.active);
+        setUpdatedAt(data.updatedAt);
         setLoadError("");
-        // The URL contains the offer revision. The warmer skips unchanged,
-        // still-cached images and downloads at most two final previews at once.
         for (const product of data.products.slice(0, 10)) {
           if (product.previewUrl) void warmer.warm(product.previewUrl);
         }
       } catch {
-        if (!controller.signal.aborted && epoch===mutationEpoch.current) setLoadError("Não foi possível carregar a seleção. Atualize a página para tentar novamente.");
-      } finally { checking--; if (!controller.signal.aborted) setLoading(false); }
+        if (!controller.signal.aborted && epoch === mutationEpoch.current && id === loadId) {
+          setProducts([]);
+          setLoadError("Não foi possível consultar a pauta. Tente atualizar.");
+        }
+      } finally {
+        checking--;
+        if (!controller.signal.aborted && id === loadId) setLoading(false);
+      }
     };
-    reloadPauta.current=()=>load(true);
+    reloadPauta.current = () => load(true);
     void load();
-    const timer = window.setInterval(() => { void load(); }, 60_000);
+    const timer = window.setInterval(() => { void load(); }, 20_000);
     const onVisible = () => { void load(); };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
     return () => {
-      controller.abort();reloadPauta.current=null;window.clearInterval(timer);
+      controller.abort();
+      reloadPauta.current = null;
+      window.clearInterval(timer);
       warmer.dispose();
       if (previewWarmer.current === warmer) previewWarmer.current = null;
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [scope,channel,accountKey]);
+  }, [scope, channel, accountKey, marketplace]);
 
   useEffect(() => {
-    const deadline = heroValidUntil ? Date.parse(heroValidUntil) : NaN;
-    if (!Number.isFinite(deadline)) return;
-    const timer = window.setTimeout(() => setHeroBadgeCurrent(false), Math.max(0, deadline - Date.now() + 50));
+    const deadlines = products.map(p => Date.parse(p.offerValidUntil ?? "")).filter(Number.isFinite);
+    if (!deadlines.length) return;
+    const timer = window.setTimeout(() => {
+      setProducts(current => current.filter(p => Date.parse(p.offerValidUntil ?? "") > Date.now()));
+      void reloadPauta.current?.();
+    }, Math.max(0, Math.min(...deadlines) - Date.now() + 50));
     return () => window.clearTimeout(timer);
-  }, [heroValidUntil]);
-  useEffect(() => {
-    const deadlines=products.map(p=>Date.parse(p.offerValidUntil ?? selectionValidUntil ?? "")).filter(Number.isFinite);
-    const deadline=deadlines.length ? Math.min(...deadlines):NaN;
-    if (!Number.isFinite(deadline)) return;
-    const timer=window.setTimeout(()=>{setProducts(current=>current.filter(p=>Date.parse(p.offerValidUntil ?? selectionValidUntil ?? "")>Date.now()));setHeroBadgeCurrent(false);},Math.max(0,deadline-Date.now()+50));
-    return ()=>window.clearTimeout(timer);
-  },[selectionValidUntil,products]);
+  }, [products]);
+
+  async function confirmExposure(product: PautaProduct) {
+    setConfirmingId(product.id);
+    try {
+      const response = await fetch("/api/pauta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-bm-account": accountKey },
+        body: JSON.stringify({ channel, confirmationId: product.confirmationId, productId: product.id }),
+      });
+      if (response.status === 409) {
+        setExposureMessage("Esta oferta mudou de posição ou de condição. A pauta foi atualizada.");
+      } else if (response.ok) {
+        setExposureMessage("Divulgação registrada neste canal.");
+      } else {
+        throw new Error("confirmation_failed");
+      }
+      mutationEpoch.current++;
+      await reloadPauta.current?.();
+    } catch {
+      setExposureMessage("Não foi possível registrar a divulgação. Tente de novo.");
+    } finally { setConfirmingId(null); }
+  }
 
   async function copyLink(product: PautaProduct, forceOnlyLink = false) {
+    if (!(Date.parse(product.offerValidUntil ?? "") > Date.now())) {
+      void reloadPauta.current?.();
+      return;
+    }
     if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true);
     // When in WhatsApp channel, default action copies the rich copy (relâmpago/sincero/direto).
     // When in Stories channel or explicitly requested, copies the link URL.
@@ -233,11 +286,13 @@ export default function PautaClient({
           </span>
         </div>
         <p className="pauta-selection-note">
-          {selectionMode === "catalog" ? "Sugestão da vitrine (maiores descontos e notas do dia) · confira a oferta antes de postar" : `Indicações preparadas para ${channel==="stories" ? "Stories":"WhatsApp"}`}{selectionVersion !== null ? ` · versão ${selectionVersion}` : ""}.
-          Copiar um link não confirma divulgação.
+          Ofertas aprovadas pelo Bizu, em ordem de qualidade e atualidade. Copiar um link não registra a divulgação.
         </p>
-        {renewal.renewedAt && <p className="pauta-selection-note">Última renovação: {new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(new Date(renewal.renewedAt))} (São Paulo).</p>}
-        {!loading && !renewal.active && <p className="pauta-selection-note"><a href="/admin/curadoria?aba=selecao">Conferir renovação e produtos aptos na curadoria →</a></p>}
+        {updatedAt && <p className="pauta-selection-note">Última consulta às {captureTime.format(new Date(updatedAt))}.</p>}
+        <div className="pauta-card-actions">
+          <a href="#capturas-recentes">Capturas recentes</a>
+          <button type="button" disabled={loading} onClick={() => void reloadPauta.current?.()}>Atualizar agora</button>
+        </div>
         <div className="pauta-progress">
           <div
             className="pauta-progress-bar"
@@ -258,17 +313,17 @@ export default function PautaClient({
             type="button"
             className={`pauta-tone-pill ${tone === "relampago" ? "active" : ""}`}
             onClick={() => setTone("relampago")}
-            title="Foco em urgência honesta e menor preço"
+            title="Preço e o fato que mais destaca a oferta"
           >
-            🔥 Relâmpago
+            Achado
           </button>
           <button
             type="button"
             className={`pauta-tone-pill ${tone === "sincero" ? "active" : ""}`}
             onClick={() => setTone("sincero")}
-            title="Foco em autoridade e ressalvas transparentes"
+            title="Inclui benefício, condições e ressalvas"
           >
-            🤝 Sincero
+            Com contexto
           </button>
           <button
             type="button"
@@ -276,7 +331,7 @@ export default function PautaClient({
             onClick={() => setTone("direto")}
             title="Curto e objetivo para grupos rápidos"
           >
-            ⚡ Curto
+            Curto
           </button>
         </div>
       )}
@@ -365,19 +420,20 @@ export default function PautaClient({
         <div style={{ padding: "32px 20px", textAlign: "center", background: "var(--paper-deep, #f4f4f5)", borderRadius: "12px", margin: "24px 0" }}>
           <h3 style={{ fontSize: "16px", marginBottom: "8px", color: "var(--ink-title, #18181b)" }}>Nenhuma oferta pronta na pauta agora</h3>
           <p style={{ color: "var(--ink-muted, #71717a)", fontSize: "14px", lineHeight: 1.5, maxWidth: "420px", margin: "0 auto 16px" }}>
-            As ofertas aprovadas podem estar fora da janela recente ou a seleção automática deste canal ainda não foi ativada.
+            {active ? "Confira o motivo de cada oferta em Capturas recentes." : "Este canal está desativado ou chegou ao fim da validade."}
           </p>
-          <a href="/admin/curadoria?aba=selecao" style={{ display: "inline-block", padding: "10px 18px", background: "var(--brand, #0070f3)", color: "#fff", borderRadius: "8px", fontWeight: 600, textDecoration: "none", fontSize: "14px" }}>
-            Ir para Curadoria e ativar Pauta →
+          <a href={active ? "#capturas-recentes" : "/admin/curadoria?aba=selecao"} style={{ display: "inline-block", padding: "10px 18px", background: "var(--brand, #0070f3)", color: "#fff", borderRadius: "8px", fontWeight: 600, textDecoration: "none", fontSize: "14px" }}>
+            {active ? "Ver capturas recentes" : "Conferir configuração do canal"}
           </a>
         </div>
       )}
 
+      {products.length > 0 && <h2>Prontas para divulgar</h2>}
       {done.length > 0 && (
         <section className="pauta-done-section">
           {done.map((product) => (
+            <div key={product.id} className="pauta-copied-row">
             <button
-              key={product.id}
               className="pauta-done-item"
               onPointerEnter={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
               onFocus={() => { if (product.previewUrl) void previewWarmer.current?.warm(product.previewUrl, true); }}
@@ -387,9 +443,13 @@ export default function PautaClient({
               <span className="pauta-done-check">✓</span>
               <span className="pauta-done-title">{product.displayTitle ?? product.title}</span>
               <span className="pauta-done-code">
-                {product.bioCode || product.shareUrl.replace(/^https?:\/\/[^/]+/, "")}
+                {product.bioCode || marketplaceDef(product.marketplace)?.label}
               </span>
             </button>
+            <button type="button" disabled={confirmingId !== null} onClick={() => void confirmExposure(product)}>
+              {confirmingId === product.id ? "Registrando…" : "Confirmar divulgação"}
+            </button>
+            </div>
           ))}
         </section>
       )}
@@ -421,23 +481,21 @@ export default function PautaClient({
                       <span className="pauta-card-signal">PRÓXIMO</span>
                     )}
                     <h3><a href={product.detailUrl ?? `/bizu/${product.slug}`}>{product.displayTitle ?? product.title}</a></h3>
-                    <p className="pauta-editorial-rationale">{product.benefit ?? product.editorialRationale}</p>
-                    {product.isHeroHighlight && heroBadgeCurrent && <span className="pauta-card-signal">DESTAQUE DA HERO</span>}
-                    {(product.purchaseContents ?? product.editorialPurchaseContents) && <p className="pauta-editorial-contents"><b>O que vem:</b> {product.purchaseContents ?? product.editorialPurchaseContents}</p>}
+                    {(product.benefit || product.editorialRationale) && <p className="pauta-editorial-rationale">{product.benefit || product.editorialRationale}</p>}
+                    {product.purchaseContents && <p className="pauta-editorial-contents"><b>O que vem:</b> {product.purchaseContents}</p>}
                     {product.caveat && <p className="pauta-editorial-context"><b>Ressalva:</b> {product.caveat}</p>}
-                    {product.editorialContext && <p className="pauta-editorial-context">{product.editorialContext}</p>}
                     {product.offerOptionLabel && <p><b>Opção:</b> {product.offerOptionLabel}</p>}
                     {product.offerConditions && <p><b>Condições:</b> {product.offerConditions}</p>}
                     <div className="pauta-card-meta" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
                       <strong><a href={product.detailUrl ?? `/bizu/${product.slug}`}>{offerPriceLabel(product)}</a></strong>
-                      {product.discountPercent != null && product.discountPercent > 0 && (
+                      {product.discountPercent != null && product.discountPercent > 0 && product.discountPercent < 99 && (
                         <span style={{ background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 700 }}>
-                          {product.discountPercent}% OFF
+                          {product.discountPercent}% no anúncio
                         </span>
                       )}
-                      {product.lowestVerified && (
+                      {product.lowestVerified && product.historyDays >= MINIMUM_HISTORY.days && product.observationCount >= MINIMUM_HISTORY.observations && (
                         <span style={{ background: "#fef3c7", color: "#92400e", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 600 }}>
-                          🔥 Menor preço histórico
+                          Menor preço no histórico
                         </span>
                       )}
                       {product.ratingStar != null && product.ratingStar > 0 && (
@@ -446,6 +504,7 @@ export default function PautaClient({
                         </span>
                       )}
                       {mp && <span>{mp.stampLabel}</span>}
+                      <span>{freshnessLabel(product.evidenceObservedAt)}</span>
                     </div>
                   </div>
                 </div>
@@ -471,25 +530,16 @@ export default function PautaClient({
                   )}
                   <a href={product.detailUrl ?? `/bizu/${product.slug}`}>Conferir indicação</a>
                   <a href={product.shopUrl ?? `/go/${product.slug}`} target="_blank" rel="noreferrer sponsored">Conferir na loja ↗</a>
-                  {channel==='stories' && <a href={product.storyUrl} target="_blank" rel="noreferrer">Abrir arte do Story</a>}
-                  {editionId && <button type="button" disabled={confirmingId!==null} onClick={async()=>{
-                    setConfirmingId(product.id);
-                    try{
-                      const response=await fetch('/api/pauta',{method:'POST',headers:{'Content-Type':'application/json','x-bm-account':accountKey},body:JSON.stringify({channel,editionId,productId:product.id})});
-                      if(!response.ok)throw new Error();
-                      const result=await response.json() as {preparationFailed?:boolean};
-                      mutationEpoch.current++;
-                      setExposureMessage(result.preparationFailed ? 'Divulgação registrada. Não foi possível completar a atualização da pauta agora.':'Divulgação confirmada. A pauta foi reavaliada para respeitar o intervalo deste canal.');
-                      await reloadPauta.current?.();
-                    }catch{setExposureMessage('Não foi possível confirmar a divulgação. Atualize a pauta e tente novamente.');}
-                    finally{setConfirmingId(null);}
-                  }}>{confirmingId===product.id ? 'Confirmando…':'Confirmar que divulguei'}</button>}
+                  {channel === "stories" && product.storyUrl && <a href={product.storyUrl} target="_blank" rel="noreferrer">Abrir arte do Story</a>}
+                  <button type="button" disabled={confirmingId !== null} onClick={() => void confirmExposure(product)}>
+                    {confirmingId === product.id ? "Registrando…" : "Confirmar divulgação"}
+                  </button>
                 </div>
                 {channel === "whatsapp" ? (
                   <div className="pauta-preview-box">
                     <div className="pauta-preview-header">
                       <span className="pauta-preview-tag">
-                        {isNext ? `Prévia da mensagem (${tone}):` : "Prévia da mensagem:"}
+                        {isNext ? `Prévia da mensagem (${toneLabels[tone]})` : "Prévia da mensagem"}
                       </span>
                       {!isNext && (
                         <button
@@ -517,6 +567,43 @@ export default function PautaClient({
           })}
         </section>
       )}
+      <section id="capturas-recentes" className="pauta-captures">
+        <div className="pauta-card-actions">
+          <h2>Capturas recentes</h2>
+          <label>
+            Loja
+            <select value={marketplace} onChange={event => { setMarketplace(event.target.value); setCaptureLimit(12); }}>
+              <option value="">Todas as lojas</option>
+              {MARKETPLACES.map(store => <option key={store.slug} value={store.slug}>{store.label}</option>)}
+            </select>
+          </label>
+        </div>
+        <p className="pauta-selection-note">
+          {updatedAt ? `${recentTotal} produtos com preço registrado nas últimas 48 horas.` : "Preços registrados nas últimas 48 horas."}
+          {recentTotal > recent.length && " Mostrando as 200 mais recentes. Use o filtro por loja para refinar."}
+        </p>
+        {loading && <p>Buscando capturas…</p>}
+        {!loading && !loadError && !recent.length && <p>Nenhuma captura nesta janela.</p>}
+        {recent.length > 0 && <ul className="pauta-capture-list">
+          {recent.slice(0, captureLimit).map(capture => (
+            <li key={capture.id}>
+              <div>
+                <strong>{capture.title}</strong>
+                <p>{marketplaceDef(capture.marketplace)?.label ?? capture.marketplace} · {captureTime.format(new Date(capture.capturedAt))}</p>
+                {capture.priceType === "exact" && capture.currency === "BRL" && <p>{priceBRL.format(capture.priceCents / 100)}</p>}
+              </div>
+              <div>
+                <strong>{captureLabels[capture.status]}</strong>
+                <p>{capture.reasons.join(" ")}</p>
+                {capture.status !== "ready" && <a href={`/admin/ofertas/${encodeURIComponent(capture.id)}`}>Conferir oferta</a>}
+              </div>
+            </li>
+          ))}
+        </ul>}
+        {captureLimit < recent.length && <div className="pauta-card-actions">
+          <button type="button" onClick={() => setCaptureLimit(limit => limit + 24)}>Ver mais capturas</button>
+        </div>}
+      </section>
     </div>
   );
 }

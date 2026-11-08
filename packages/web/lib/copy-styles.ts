@@ -1,6 +1,6 @@
-import type { EditorialCandidate } from "./editorial-selection.ts";
 import type { WorkspaceOffer } from "./affiliate-workspace-contract.ts";
-import { offerPriceLabel } from "./offer-price.ts";
+import { offerPriceLabel, type OfferPrice } from "./offer-price.ts";
+import { MINIMUM_HISTORY } from "./deal-signal.ts";
 
 export type CopyTone = "relampago" | "sincero" | "direto";
 
@@ -14,7 +14,7 @@ export function formatPriceBRL(cents: number): string {
     .replace(/\u00A0/g, " ");
 }
 
-export interface CopyOfferData {
+export interface CopyOfferData extends OfferPrice {
   title: string;
   displayTitle?: string | null;
   benefit?: string | null;
@@ -31,9 +31,10 @@ export interface CopyOfferData {
   bioCode?: string;
   offerOptionLabel?: string | null;
   purchaseContents?: string | null;
+  offerConditions?: string | null;
 }
 
-export type PautaLikeProduct = {
+export type PautaLikeProduct = OfferPrice & {
   title: string;
   displayTitle?: string | null;
   benefit?: string | null;
@@ -52,15 +53,21 @@ export type PautaLikeProduct = {
   offerOptionLabel?: string | null;
   purchaseContents?: string | null;
   editorialPurchaseContents?: string | null;
+  offerConditions?: string | null;
 };
 
 export function extractPautaCopyData(product: PautaLikeProduct): CopyOfferData {
   return {
     title: product.title,
     displayTitle: product.displayTitle,
-    benefit: product.benefit || product.editorialRationale,
+    benefit: product.benefit,
     caveat: product.caveat,
     priceCents: product.priceCents,
+    priceType: product.priceType,
+    priceMinCents: product.priceMinCents,
+    priceMaxCents: product.priceMaxCents,
+    currency: product.currency,
+    offerConditions: product.offerConditions,
     previousMinPriceCents: product.previousMinPriceCents,
     historyDays: product.historyDays,
     observationCount: product.observationCount,
@@ -83,6 +90,11 @@ export function extractCopyData(offer: WorkspaceOffer): CopyOfferData {
     benefit: c.assessment?.benefit ?? c.benefit,
     caveat: c.caveat,
     priceCents: c.priceCents,
+    priceType: c.priceType,
+    priceMinCents: c.priceMinCents,
+    priceMaxCents: c.priceMaxCents,
+    currency: c.currency,
+    offerConditions: c.offerConditions,
     previousMinPriceCents: c.previousMinPriceCents,
     historyDays: c.historyDays,
     observationCount: c.observationCount,
@@ -97,131 +109,54 @@ export function extractCopyData(offer: WorkspaceOffer): CopyOfferData {
   };
 }
 
-/**
- * 1. Estilo Relâmpago: Foco em urgência honesta, adaptando o gancho ao fato real da oferta.
- */
+function offerHeadline(data: CopyOfferData): string {
+  const store = { mercadolivre: "no Mercado Livre", shopee: "na Shopee", aliexpress: "no AliExpress" }[data.marketplace];
+  const from = data.priceType === "from" || data.priceType === "range";
+  const price = offerPriceLabel(from ? { ...data, priceType: "from" } : data).replace(/\u00A0/g, " ");
+  const title = data.displayTitle || data.title;
+  const priceLine = from ? `*${price}*` : `por *${price}*`;
+  return `*${title}* ${priceLine}${store ? ` ${store}` : ""}`;
+}
+
+function comparablePriceLine(data: CopyOfferData): string | null {
+  if (data.priceType && data.priceType !== "exact") return null;
+  const days = data.historyDays ?? 0;
+  if (data.lowestVerified && days >= MINIMUM_HISTORY.days
+    && (data.observationCount ?? 0) >= MINIMUM_HISTORY.observations) {
+    return `É o menor preço que registramos em ${days} dias.`;
+  }
+  if (data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents && (!data.currency || data.currency === "BRL")) {
+    return `O menor preço que tínhamos registrado era ${formatPriceBRL(data.previousMinPriceCents)}.`;
+  }
+  return null;
+}
+
+function shareLines(data: CopyOfferData): string[] {
+  return [`Ver oferta: ${data.shareUrl}`, ...(data.bioCode ? [`Código na bio: ${data.bioCode}`] : [])];
+}
+
 export function buildRelampagoCopy(data: CopyOfferData): string {
-  const title = data.displayTitle || data.title;
-  const currentPrice = formatPriceBRL(data.priceCents);
-  const mpLabel = data.marketplace === "mercadolivre" ? "Mercado Livre" : data.marketplace === "shopee" ? "Shopee" : "AliExpress";
-  const storeRef = data.marketplace === "mercadolivre" ? "no Mercado Livre" : `na ${mpLabel}`;
-  
-  const hasHistory = (data.observationCount ?? 0) >= 3 && (data.historyDays ?? 0) >= 7;
-  const hasDrop = Boolean(data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents);
-  const diffPct = hasDrop
-    ? Math.round(((data.previousMinPriceCents! - data.priceCents) / data.previousMinPriceCents!) * 100)
-    : (data.discountPercent ?? 0);
-
-  // Variação honesta do cabeçalho de acordo com a evidência disponível
-  let header = "⚡ *OFERTA RELÂMPAGO!*";
-  if (hasDrop && diffPct > 0) {
-    header = `🔥 *QUEDA REAL DE ${diffPct}%!*`;
-  } else if (data.lowestVerified && hasHistory) {
-    header = "🔥 *MENOR PREÇO HISTÓRICO!*";
-  } else if (diffPct >= 15) {
-    header = `🔥 *OFERTA COM ${diffPct}% OFF!*`;
-  } else if (data.benefit) {
-    header = "🔥 *ACHADO DO DIA!*";
-  }
-
-  const lines = [
-    header,
-    "",
-    `*${title}*`,
-  ];
-
-  if (hasDrop) {
-    lines.push(`💥 De ~${formatPriceBRL(data.previousMinPriceCents!)}~ por *${currentPrice}* ${storeRef}`);
-  } else {
-    lines.push(`💥 Por *${currentPrice}* ${storeRef}`);
-  }
-
-  // Linha de prova social / auditoria só promete o que os dados sustentam
-  if (data.lowestVerified && hasHistory) {
-    const days = data.historyDays && data.historyDays > 0 ? data.historyDays : 60;
-    lines.push(`✓ Menor preço dos últimos ${days} dias no monitoramento`);
-  } else if (hasDrop) {
-    lines.push("✓ Queda de preço confirmada no radar");
-  } else if (data.discountPercent && data.discountPercent > 0) {
-    lines.push(`✓ ${data.discountPercent}% de desconto na loja`);
-  } else if (data.ratingStar && data.ratingStar >= 4.5) {
-    lines.push(`✓ Muito bem avaliado (nota ${data.ratingStar.toFixed(1)} estrelas)`);
-  }
-
-  if (data.benefit) {
-    lines.push(`⚡ ${data.benefit}`);
-  } else if (data.offerOptionLabel) {
-    lines.push(`⚡ Versão: ${data.offerOptionLabel}`);
-  }
-
-  lines.push("");
-  lines.push(`🛒 *Garanta aqui:* ${data.shareUrl}`);
-  if (data.bioCode) {
-    lines.push(`(Código na Bio: *${data.bioCode}*)`);
-  }
-
-  return lines.join("\n");
+  const discount = data.discountPercent ?? 0;
+  const priceNote = comparablePriceLine(data)
+    ?? (discount > 0 && discount < 99 ? `O anúncio indica ${discount}% de desconto.` : null);
+  const detail = data.offerConditions || (data.offerOptionLabel ? `Opção: ${data.offerOptionLabel}` : null);
+  return [offerHeadline(data), ...[priceNote, data.benefit, detail].filter(Boolean), "", ...shareLines(data)].join("\n");
 }
 
-/**
- * 2. Estilo Amigo Sincero: Foco em autoridade, prós reais e ressalvas transparentes.
- */
 export function buildSinceroCopy(data: CopyOfferData): string {
-  const title = data.displayTitle || data.title;
-  const currentPrice = formatPriceBRL(data.priceCents);
-
-  const lines = [
-    "🤝 *Bizu verificado: vale a pena?*",
-    "",
-    `*${title}* por *${currentPrice}*`,
-  ];
-
-  if (data.benefit) {
-    lines.push(`✅ *Ponto forte:* ${data.benefit}`);
-  }
-
-  if (data.caveat) {
-    lines.push(`⚠️ *A ressalva:* ${data.caveat}`);
-  } else if (data.offerOptionLabel) {
-    lines.push(`ℹ️ *Versão conferida:* ${data.offerOptionLabel}`);
-  }
-
-  if (data.observationCount && data.observationCount > 3) {
-    lines.push(`📊 Auditado em ${data.observationCount} coletas de preço nos últimos ${data.historyDays || 30} dias.`);
-  }
-
-  lines.push("");
-  lines.push(`👉 *Confira os detalhes e compre com segurança:* ${data.shareUrl}`);
-  if (data.bioCode) {
-    lines.push(`(Ou busque pelo código *${data.bioCode}* no link da bio)`);
-  }
-
-  return lines.join("\n");
+  const detail = [
+    data.benefit,
+    data.offerOptionLabel ? `Opção: ${data.offerOptionLabel}` : null,
+    data.purchaseContents ? `Vem com ${data.purchaseContents}.` : null,
+    data.offerConditions,
+    data.caveat,
+    comparablePriceLine(data),
+  ].filter(Boolean);
+  return [offerHeadline(data), ...detail, "", ...shareLines(data)].join("\n");
 }
 
-/**
- * 3. Estilo Direto ao Ponto: Curto, sem enrolação, perfeito para grupos rápidos.
- */
 export function buildDiretoCopy(data: CopyOfferData): string {
-  const title = data.displayTitle || data.title;
-  const currentPrice = formatPriceBRL(data.priceCents);
-
-  const lines = [
-    `⚡ *${title}*`,
-  ];
-
-  if (data.previousMinPriceCents && data.previousMinPriceCents > data.priceCents) {
-    lines.push(`De ~${formatPriceBRL(data.previousMinPriceCents)}~ por *${currentPrice}*`);
-  } else {
-    lines.push(`Por apenas *${currentPrice}*`);
-  }
-
-  lines.push(`🔗 ${data.shareUrl}`);
-  if (data.bioCode) {
-    lines.push(`Bio: *${data.bioCode}*`);
-  }
-
-  return lines.join("\n");
+  return [offerHeadline(data), ...(data.offerConditions ? [data.offerConditions] : []), ...shareLines(data)].join("\n");
 }
 
 /**

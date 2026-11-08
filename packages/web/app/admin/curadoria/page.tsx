@@ -100,11 +100,7 @@ async function CurationPage({
             </p>
           </div>
           <div className="curation-review-actions">
-            {state.ready && (
-              <a className="admin-curation-start" href="/pauta">
-                Abrir Pauta de Links (WhatsApp) →
-              </a>
-            )}
+            <a className="admin-curation-start" href="/pauta">Abrir pauta de divulgação →</a>
             <a href="/admin#captura-hoje">Capturar novas ofertas</a>
           </div>
         </section>

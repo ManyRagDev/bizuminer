@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { inAccountScope } from "../../../../lib/account-scope";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth";
-import { getPublishedEditorialSelection } from "../../../../lib/editorial-selection-db";
+import { readLivePauta } from "../../../../lib/pauta-db";
 import { fetchProductImage, ogFonts } from "../../../../lib/og-assets";
 
 export const preferredRegion = "gru1";
@@ -31,8 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     const requestedSlugs = new Set<string>(slugs);
-    const selection = await getPublishedEditorialSelection("pauta");
-    const products = selection.products.filter((product) => requestedSlugs.has(product.slug));
+    const selection = await readLivePauta(check.context, body?.channel === "stories" ? "stories" : "whatsapp", null);
+    const products = selection.products.filter(({ shareTarget }) =>
+      shareTarget.kind === "site" && requestedSlugs.has(shareTarget.slug));
 
     // As URLs vêm da seleção autorizada no servidor, nunca do corpo enviado
     // pelo navegador. O pool fica livre enquanto fontes e fotos são aquecidas.

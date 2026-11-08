@@ -1,13 +1,16 @@
 import {offerArtworkFacts} from "../../../../lib/offer-artwork.ts";
 import { confirmedOfferDetail } from "../../../../lib/confirmed-offer-db.ts";
 import { ImageResponse } from "next/og";
+import type { NextRequest } from "next/server";
 import { dealDetail } from "../../../../lib/db";
-import { priceFreshness, priceHighlight } from "../../../../lib/deal-signal";
+import { MINIMUM_HISTORY, priceFreshness, priceHighlight } from "../../../../lib/deal-signal";
 import { marketplaceDef } from "../../../../lib/marketplaces";
 import { fetchProductImage, ogFonts } from "../../../../lib/og-assets";
 import { toVitrineProduct } from "../../../../lib/deal-view";
 import { formatOfferMoney, offerPriceLabel } from "../../../../lib/offer-price";
 import { storyLinkLabel } from "../../../../lib/story-link";
+import { checkAffiliateUser } from "../../../../lib/api-auth";
+import { readLivePauta } from "../../../../lib/pauta-db";
 
 export const preferredRegion = "gru1";
 
@@ -60,42 +63,44 @@ const BLUE = "#2563eb";
 const BLUE_TEXT = "#1d4ed8";
 const LINE = "rgba(21, 21, 21, 0.18)";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const fonts = await ogFonts();
-  const option=new URL(_req.url).searchParams.get("opcao");
-  const confirmed=option ? await confirmedOfferDetail(slug,option):null;
-  if(option && !confirmed)return new Response("Opção expirada ou indisponível",{status:404,headers:{"Cache-Control":"no-store"}});
-  const detail = option ? null:await dealDetail(slug);
-
-  if (!detail && !confirmed) {
-    return new ImageResponse(<Fallback />, { ...SIZE, fonts });
+  const privateArtwork = request.nextUrl.searchParams.get("pauta") === "1";
+  const option = request.nextUrl.searchParams.get("opcao");
+  const noStore = { "Cache-Control": "private, no-store" };
+  let product;
+  if (privateArtwork) {
+    const check = await checkAffiliateUser(request);
+    if (check.kind !== "ok") return new Response(null, { status: check.kind === "no_session" ? 401 : 403, headers: noStore });
+    const pauta = await readLivePauta(check.context, "stories", null);
+    product = pauta.products.find(p => p.id === slug && p.shareTarget.kind === "marketplace");
+    if (!product) return new Response("Oferta indisponível neste canal", { status: 404, headers: noStore });
+  } else if (option) {
+    product = (await confirmedOfferDetail(slug, option))?.product;
+    if (!product) return new Response("Opção expirada ou indisponível", { status: 404, headers: noStore });
+  } else {
+    const detail = await dealDetail(slug);
+    if (detail) product = toVitrineProduct(detail.deal);
   }
-
-  const product=confirmed?.product ?? toVitrineProduct(detail!.deal);
-  const deal=confirmed ? {price_cents:product.priceCents,previous_min_price_cents:product.previousMinPriceCents,observation_count:product.observationCount,
-    history_days:product.historyDays,lowest_verified:product.lowestVerified,evidence_observed_at:product.evidenceObservedAt,
-    original_price_cents:product.originalPriceCents,image_url:product.imageUrl,marketplace:product.marketplace} : detail!.deal;
-  const stale = priceFreshness(deal.evidence_observed_at) === "stale";
+  if (!product) return new ImageResponse(<Fallback />, { ...SIZE, fonts: await ogFonts() });
+  const stale = priceFreshness(product.evidenceObservedAt) === "stale";
   const title = product.displayTitle ?? product.title;
   const facts=offerArtworkFacts(product);
   const highlight = priceHighlight({
-    priceCents: deal.price_cents,
-    previousMinPriceCents: deal.previous_min_price_cents,
-    observationCount: deal.observation_count,
-    historyDays: deal.history_days,
-    lowestVerified: deal.lowest_verified,
+    ...product,
+    lowestVerified: product.lowestVerified && product.historyDays >= MINIMUM_HISTORY.days
+      && product.observationCount >= MINIMUM_HISTORY.observations,
   });
   // Mesma regra do card OG: "ainda sem histórico" é selo negativo, e um selo
   // negativo numa peça de divulgação só ocupa espaço. Silêncio é o padrão.
   const badge = stale || product.priceType !== "exact" || (product.currency && product.currency !== "BRL") || highlight?.tone === "unproven" ? null : highlight;
-  const photo = await fetchProductImage(deal.image_url);
-  const marketplace = marketplaceDef(deal.marketplace);
+  const [photo, fonts] = await Promise.all([fetchProductImage(product.imageUrl), ogFonts()]);
+  const marketplace = marketplaceDef(product.marketplace);
   const stamp = marketplace
     ? { label: marketplace.stampLabel, style: marketplace.stampStyle }
-    : { label: deal.marketplace, style: "outlined" as const };
+    : { label: product.marketplace, style: "outlined" as const };
 
-  const hasReference = !stale && (product.currency ?? "BRL") === "BRL" && product.originalPriceKind === "source_claimed" && product.priceType === "exact" && deal.original_price_cents !== null && deal.original_price_cents > deal.price_cents;
+  const hasReference = !stale && (product.currency ?? "BRL") === "BRL" && product.originalPriceKind === "source_claimed" && product.priceType === "exact" && product.originalPriceCents !== null && product.originalPriceCents > product.priceCents;
 
   return new ImageResponse(
     (
@@ -212,7 +217,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
         <div style={{ display: "flex", flexDirection: "column" }}>
           {hasReference && (
             <div style={{ display: "flex", fontSize: 34, fontWeight: 600, color: INK_QUIET }}>
-              Na loja: {formatOfferMoney(deal.original_price_cents!, product.currency || "BRL")}
+              Preço de referência no anúncio: {formatOfferMoney(product.originalPriceCents!, product.currency || "BRL")}
             </div>
           )}
           {stale && <div style={{ display: "flex", fontSize: 26, color: INK_MUTED }}>Última captura · confira o preço atual</div>}
@@ -237,7 +242,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
             }}
           >
             <div style={{ display: "flex", fontSize: 40, fontWeight: 800, letterSpacing: "-0.01em", color: BLUE_TEXT }}>
-              {storyLinkLabel()}
+              {privateArtwork ? "Veja a oferta pelo link" : storyLinkLabel()}
             </div>
             <div style={{ display: "flex", fontSize: 24, fontWeight: 600, color: INK_MUTED }}>
               link de afiliado
@@ -246,7 +251,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
         </div>
       </div>
     ),
-    { ...SIZE, fonts },
+    { ...SIZE, fonts, ...(privateArtwork ? { headers: noStore } : {}) },
   );
 }
 

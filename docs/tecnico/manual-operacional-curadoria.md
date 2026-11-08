@@ -109,14 +109,10 @@ Esta tela reflete o que os visitantes reais estão vendo no site:
 
 ### Passo 5: Seleção de Destaques e Publicação (~2 min)
 
-Com o catálogo do dia aprovado e balanceado:
-
-1. Escolha **1 a 3 "Achados de Ouro"**:
-   - Itens com desconto real comprovado, boa avaliação de compradores e apelo visual forte.
-2. Copie o link curto ou o link do Bizu (`/p/<code>` ou `/bizu/<slug>`).
-3. Dispare nos canais de distribuição:
-   - Grupo VIP / Canal do WhatsApp / Telegram
-   - Stories do Instagram (@bizuminer)
+1. Abra **Pauta de divulgação** e escolha WhatsApp ou Stories. A lista consulta o catálogo da sua conta a cada atualização. Para entrar, a oferta precisa estar aprovada, ter preço exato em reais observado nas últimas 48 horas e ter um link de afiliado válido.
+2. Confira **Capturas recentes** para ver o estado de cada produto. Use o filtro por loja. Se o lote salvou os produtos e a triagem foi interrompida, abra a oferta na Curadoria para revisá-la.
+3. Escolha as ofertas em **Prontas para divulgar**. O mérito editorial e a recência definem a ordem, com os limites configurados para cada canal. No Mercado Livre, uma oferta pode usar o link direto de afiliado da conta antes de ter uma página pública no Bizu.
+4. Copie a mensagem ou o link e publique no canal. Use **Confirmar divulgação** depois de publicar para iniciar o intervalo daquele produto no canal.
 
 ---
 

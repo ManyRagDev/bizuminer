@@ -6449,3 +6449,27 @@ kbd { min-width: 21px; padding: 2px 5px; display: inline-block; border: 1px soli
 .pauta-card > .pauta-card-actions { padding-inline: 12px; }
 .pauta-card-preview { overflow-wrap: anywhere; line-height: 1.4; }
 .recommendation-control button, .offer-confirmation button { min-height: 44px; }
+
+.pauta-copied-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pauta-copied-row .pauta-done-item { flex: 1 1 240px; min-width: 0; }
+.pauta-copied-row > button:last-child, .pauta-captures select {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.pauta-captures { margin-top: 32px; scroll-margin-top: 16px; }
+.pauta-captures label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pauta-capture-list { margin: 12px 0; padding: 0; list-style: none; }
+.pauta-capture-list li {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 8px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.pauta-capture-list p { margin: 4px 0; color: var(--ink-muted); font-size: 13px; }
