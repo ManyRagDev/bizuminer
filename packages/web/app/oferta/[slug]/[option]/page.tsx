@@ -11,7 +11,7 @@ import { shareBaseUrl } from "../../../../lib/site-url.ts";
 import { marketplaceDef } from "../../../../lib/marketplaces.ts";
 import PriceHistory from "../../../bizu/[slug]/price-history.tsx";
 import {cookies} from 'next/headers';
-import {getPageSession} from '../../../../lib/auth.ts';
+import {getPageSession, isAffiliate} from '../../../../lib/auth.ts';
 import {validUserId} from '../../../../lib/member-contract.ts';
 import {savedProductIds,isWatching} from '../../../../lib/member-db.ts';
 import DetailActions from '../../../_components/detail-actions.tsx';
@@ -35,7 +35,7 @@ export default async function ConfirmedOfferPage({params,searchParams}:Props){
   if(!detail)notFound();
   const p=detail.product,{c}=await searchParams;
   const uid=(await cookies()).get('bm_uid')?.value,session=await getPageSession(validUserId(uid)?uid:null);
-  const [saved,watching]=session?await Promise.all([savedProductIds(session.appUserId),isWatching(session.appUserId,p.id)]):[[],false];
+  const [saved,watching,isUserAdmin]=session?await Promise.all([savedProductIds(session.appUserId),isWatching(session.appUserId,p.id),isAffiliate(session.authUser)]):[[],false,false];
   const go=`/go/${encodeURIComponent(slug)}?opcao=${encodeURIComponent(option)}${c ? `&c=${encodeURIComponent(c)}`:""}`;
   return <main className="confirmed-offer">
     <Link href="/" prefetch={false}>← Explorar achados</Link>
@@ -67,6 +67,6 @@ export default async function ConfirmedOfferPage({params,searchParams}:Props){
       <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       <DetailActions product={p} initialSaved={saved.includes(p.id)} initialWatching={watching} isLoggedIn={!!session} cacheScope={session?.appUserId??null}/>
     </article>
-    <PriceHistory points={detail.priceHistory} context={detail.historyContext} totalCount={detail.historyContext.totalCount}/>
+    <PriceHistory points={detail.priceHistory} context={detail.historyContext} totalCount={detail.historyContext.totalCount} isAdmin={isUserAdmin}/>
   </main>;
 }

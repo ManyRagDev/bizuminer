@@ -60,6 +60,9 @@ describe("toRate", () => {
     assert.equal(toRate(0.15), 0.15);
     assert.equal(toRate(15), 0.15);
     assert.equal(toRate("0.07"), 0.07);
+    assert.equal(toRate(1), 0.01);
+    assert.equal(toRate("1"), 0.01);
+    assert.equal(toRate(100), 1.0);
   });
 
   it("rejeita valores impossíveis", () => {

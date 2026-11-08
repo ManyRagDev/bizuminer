@@ -131,7 +131,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
         <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       </section>
     </article>
-    <PriceHistory points={history} context={detail.history_context} totalCount={deal.observation_count} />
+    <PriceHistory points={history} context={detail.history_context} totalCount={deal.observation_count} isAdmin={isUserAdmin} />
     {related.length > 0 && <section className="related-section" aria-labelledby="related-title"><div className="related-heading"><p className="eyebrow">Continue descobrindo</p><h2 id="related-title">Mais em {deal.category}</h2></div><div className="related-rail">{related.map((item) => <article key={item.id} className="related-card"><Link className="related-image" href={`/bizu/${item.slug}`} prefetch={false}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill sizes="(max-width: 820px) 68vw, 22vw" /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}</Link><p>{item.category}</p><h3><Link href={`/bizu/${item.slug}`} prefetch={false}>{item.title}</Link></h3><strong>{offerPriceLabel(item)}</strong><Link className="related-link" href={`/bizu/${item.slug}`} prefetch={false}>ver detalhes <span>→</span></Link></article>)}</div></section>}
     <div className="deal-sticky-cta"><AffiliateLink href={campaignExitPath(deal.slug, c)} id={deal.id} name={product.title} store={mpLabel} price={deal.price_cents ? deal.price_cents / 100 : undefined}>{mpCta} <span>↗</span></AffiliateLink></div>
   </main>;

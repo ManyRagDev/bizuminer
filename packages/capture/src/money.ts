@@ -68,7 +68,7 @@ export function toRate(value: unknown): number | undefined {
   if (value === null || value === undefined) return undefined;
   const n = typeof value === "number" ? value : Number(String(value).replace(",", "."));
   if (!Number.isFinite(n) || n < 0) return undefined;
-  const rate = n > 1 ? n / 100 : n;
+  const rate = n >= 1 ? n / 100 : n;
   return rate > 1 ? undefined : rate;
 }
 

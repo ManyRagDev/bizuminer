@@ -802,21 +802,12 @@ export async function getPublishedEditorialSelection(destination: EditorialDesti
   const { readHomepageEdition } = await import("./homepage-db.ts");
   if (destination==='stories' || destination==='whatsapp') {
     const { publicHeroCandidates } = await import("./public-offer-db.ts");
+    const { rankPautaCandidates } = await import("./pauta-ranking.ts");
     try {
       const candidates = await publicHeroCandidates(tenantId, sqlFactory);
       if (candidates && candidates.length > 0) {
-        const sorted = [...candidates].sort((a, b) => {
-          const discountA = a.claimed_discount_rate ?? 0;
-          const discountB = b.claimed_discount_rate ?? 0;
-          const ratingA = a.rating_star ?? 0;
-          const ratingB = b.rating_star ?? 0;
-          return (Number(b.lowest_verified) - Number(a.lowest_verified))
-            || (discountB - discountA)
-            || (ratingB - ratingA)
-            || a.id.localeCompare(b.id);
-        });
-        const limit = destination === 'whatsapp' ? 12 : 8;
-        const products = sorted.slice(0, limit).map(p => ({
+        const selected = rankPautaCandidates(candidates, destination);
+        const products = selected.map(p => ({
           id: p.id,
           slug: p.slug,
           title: p.title,

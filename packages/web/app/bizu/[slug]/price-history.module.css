@@ -4,6 +4,7 @@
 .point { fill:var(--blue,#1a56db); }
 .dates { display:flex; justify-content:space-between; font-size:.78rem; color:#59657a; }
 .counts { font-size:.83rem; color:#59657a; }
+.adminAudit { margin-top:8px; padding:6px 10px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:4px; font-size:.78rem; color:#64748b; line-height:1.4; }
 .empty { min-height:210px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:12px; }
 .empty span { color:#1a56db; font-size:2rem; }
 .empty p { margin:0; color:#59657a; font-size:.95rem; }

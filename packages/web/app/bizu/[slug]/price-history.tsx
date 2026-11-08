@@ -4,15 +4,21 @@ import styles from "./price-history.module.css";
 
 const date = (value: Date | string) => new Date(value).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "short" });
 
-export default function PriceHistory({ points, context, totalCount }: { points: HistoryPoint[]; context?: HistoryContext; totalCount: number }) {
+export default function PriceHistory({ points, context, totalCount, isAdmin }: { points: HistoryPoint[]; context?: HistoryContext; totalCount: number; isAdmin?: boolean }) {
   const view = priceHistoryView(points, context);
   const money = (cents: number) => offerPriceLabel({ priceCents: cents, currency: context?.currency || "BRL", priceType: "exact" });
   const path = view.coordinates.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
   return <section className="history-section" aria-labelledby="history-title">
     <div><p className="eyebrow">Antes de decidir</p><h2 id="history-title">Como esse preço mudou?</h2>
       <p>{view.explanation}</p>
-      <p className={styles.counts}>{totalCount} registro{totalCount === 1 ? "" : "s"} coletado{totalCount === 1 ? "" : "s"} no anúncio · {view.series.length} comparáve{view.series.length === 1 ? "l" : "is"} nos últimos {context?.windowDays ?? 90} dias.</p>
-      {!!context?.excludedCount && <p className={styles.counts}>{context.excludedCount} registro{context.excludedCount === 1 ? " ficou fora porque não confirma" : "s ficaram fora porque não confirmam"} a mesma versão ou condições de compra.</p>}
+      {isAdmin && (
+        <aside className={styles.adminAudit} aria-label="Diagnóstico administrativo do histórico">
+          <small>
+            <b>[Diagnóstico admin]</b> {totalCount} registro{totalCount === 1 ? "" : "s"} coletado{totalCount === 1 ? "" : "s"} no anúncio · {view.series.length} comparáve{view.series.length === 1 ? "l" : "is"} nos últimos {context?.windowDays ?? 90} dias.
+            {!!context?.excludedCount && ` ${context.excludedCount} registro${context.excludedCount === 1 ? " ficou fora porque não confirma" : "s ficaram fora porque não confirmam"} a mesma versão ou condições.`}
+          </small>
+        </aside>
+      )}
     </div>
     <div className="history-card">
       {view.series.length ? <>
