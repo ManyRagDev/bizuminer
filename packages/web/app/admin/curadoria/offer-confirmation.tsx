@@ -21,8 +21,8 @@ export default function OfferConfirmation({candidate,onOpen}:{candidate:Editoria
     const field=form.current.elements.namedItem(key);if(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)field.value=value;
   }},[open]);
   const [pending,start]=useTransition(),router=useRouter();
-  return <section className="offer-confirmation">
-    <button type="button" onClick={()=>{if(!open)onOpen?.();setOpen(!open);}}>{candidate.offerOptionKey ? "✏️ Editar opção e preço conferidos" : "🔍 Conferir opção e fixar preço na loja (Opcional)"}</button>
+  return <section className="offer-confirmation" id={`confirmar-opcao-${candidate.id}`}>
+    <button type="button" onClick={()=>{if(!open)onOpen?.();setOpen(!open);}}>{candidate.offerOptionKey ? "✏️ Editar opção e preço conferidos" : "🔍 Registrar opção e preço conferidos na loja"}</button>
     {open && <form ref={form} onChange={event=>{
       const values=Object.fromEntries([...new FormData(event.currentTarget)].map(([k,v])=>[k,String(v)]));
       setDraft({...values,expectedObservationId:draft.expectedObservationId ?? candidate.latestObservationId ?? ""});

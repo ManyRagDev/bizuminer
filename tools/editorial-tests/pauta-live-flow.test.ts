@@ -10,7 +10,11 @@ const { readTodayOperations } = require("../../packages/web/lib/today-operation-
 const { readPublicPautaLink, redirectPublicPautaLink } = require("../../packages/web/lib/pauta-link-db.ts");
 const { defaultChannelPolicy } = require("../../packages/web/lib/recommendation-policy.ts");
 process.env.DATABASE_URL = "postgresql://isolated-fixture-unused";
-const { pg, factory } = await commercialFixture();
+const { pg, factory, adminFactory } = await commercialFixture();
+const { inAccountScope } = require("../../packages/web/lib/account-scope.ts");
+const { confirmOfferOption } = require("../../packages/web/lib/offer-option-db.ts");
+const { confirmedOfferDetail } = require("../../packages/web/lib/confirmed-offer-db.ts");
+const { publicMonetizedTarget } = require("../../packages/web/lib/public-offer-db.ts");
 const account = (tenantId: string): AccountContext => ({
   tenantId, affiliateId: `aff_${tenantId}`, actor: "human", actorAppUserId: `user_${tenantId}`,
   authenticatedAuthUserId: `auth_${tenantId}`, membershipRole: "owner", requestId: "pauta-fixture",
@@ -194,6 +198,48 @@ try {
   `);
   assert.deepEqual((await readTodayOperations(a, factory)).activities.map(step => step.kind), ["triage"]);
   console.log("PASS operação de Hoje distingue lote, navegador, triagem e monitoramento por conta");
+  await pg.exec(`
+    insert into garimpa.product(id,tenant_id,marketplace,external_id,title,product_url,image_url,last_price_cents,last_seen_at)
+    values ('p_shopee','a','shopee','111','Jogo de chaves','https://shopee.com.br/product/1/111','https://example.test/a.jpg',2490,now()),
+      ('p_ali','a','aliexpress','222','Luminária USB','https://pt.aliexpress.com/item/222.html','https://example.test/b.jpg',3490,now());
+    insert into garimpa.product_curation(tenant_id,product_id,status)
+    values ('a','p_shopee','approved'),('a','p_ali','approved')
+    on conflict(tenant_id,product_id) do update set status=excluded.status;
+    insert into garimpa.price_observation(id,tenant_id,product_id,price_cents,observed_at,offer_evidence,claimed_discount_rate)
+    values ('o_shopee','a','p_shopee',2490,now(),'{"version":2,"currency":"BRL","priceType":"range","priceMinCents":2490,"priceMaxCents":8490}',0.4),
+      ('o_ali','a','p_ali',3490,now(),'{"version":2,"currency":"BRL","priceType":"unknown"}',0.5);
+    insert into garimpa.publication(id,tenant_id,affiliate_id,product_id,channel,slug,status,affiliate_url)
+    values ('pub_shopee','a','aff_a','p_shopee','web','shp-111','active','https://s.shopee.com.br/fixture'),
+      ('pub_ali','a','aff_a','p_ali','web','ali-222','active','https://s.click.aliexpress.com/e/fixture');
+  `);
+  const storeRead = (channel: "whatsapp" | "stories") => readLivePauta(a, channel, "aliexpress", factory);
+  const unconfirmed = await storeRead("whatsapp");
+  assert.deepEqual(unconfirmed.products.map(p => p.id), ["p_shopee"]);
+  assert.equal(unconfirmed.products[0].priceMaxCents, 8490);
+  assert.equal(unconfirmed.products[0].discountPercent, null);
+  assert.match(unconfirmed.recent.find(p => p.id === "p_ali")!.reasons.join(" "), /Confirme manualmente/);
+  const confirmation = await inAccountScope(a, () => confirmOfferOption({
+    expectedTenantId: "a", productId: "p_ali", expectedObservationId: "o_ali",
+    variantKey: "human:luz-quente", variantLabel: "Luz quente", priceCents: 3990,
+    quantity: 1, contents: "Luminária USB", dimensions: "NA", sellerId: "Loja A",
+    payment: "NA", coupon: "NA", region: "Brasil", shipping: "Calculado para o CEP",
+    confirmation: "Preço em BRL da variante Luz quente conferido na página do anúncio.",
+  }, factory));
+  assert.equal(confirmation.ok, true);
+  for (const channel of ["whatsapp", "stories"] as const) {
+    const result = await storeRead(channel);
+    assert.equal(result.products.length, 2);
+    const ali = result.products.find(p => p.id === "p_ali")!;
+    assert.equal(ali.priceCents, 3990);
+    assert.equal(ali.offerOptionKey, confirmation.optionKey);
+    assert.deepEqual(ali.shareTarget, { kind: "site", slug: "ali-222" });
+  }
+  const detail = await confirmedOfferDetail("ali-222", confirmation.optionKey, adminFactory);
+  assert.equal(detail?.product.priceCents, 3990);
+  assert.equal((await publicMonetizedTarget("ali-222", adminFactory))?.url, "https://s.click.aliexpress.com/e/fixture");
+  assert.equal((await publicMonetizedTarget("shp-111", adminFactory))?.url, "https://s.shopee.com.br/fixture");
+  assert.ok((await read(b)).products.every(p => !["p_shopee", "p_ali"].includes(p.id)));
+  console.log("PASS Shopee com faixa e AliExpress com opção manual confirmada nos dois canais e link de afiliado");
 } finally {
   await pg.close();
 }

@@ -6,11 +6,17 @@ export function formatOfferMoney(cents: number, currency = "BRL"): string {
 }
 export function offerPriceLabel(product: OfferPrice): string {
   const money = (value: number) => formatOfferMoney(value, product.currency || "BRL");
-  if (product.priceType === "from") return `a partir de ${money(product.priceMinCents ?? product.priceCents)}`;
-  return money(product.priceMinCents ?? product.priceCents);
+  const min = product.priceMinCents ?? product.priceCents;
+  const max = product.priceMaxCents;
+  if (product.priceType === "range" && max != null && min != null && max > min) {
+    return `${money(min)} a ${money(max)}`;
+  }
+  if (product.priceType === "from") return `a partir de ${money(min)}`;
+  return money(min);
 }
 export function offerPriceNote(product: OfferPrice): string | null {
-  if (product.priceType === "range" || product.priceType === "from") return "O valor depende da versão escolhida. Confira na loja.";
+  if (product.priceType === "range") return "O preço varia conforme a opção escolhida.";
+  if (product.priceType === "from") return "O valor depende da versão escolhida. Confira na loja.";
   if (product.priceType !== "exact") return "Preço exibido no anúncio. Confirme a versão e as condições na loja.";
   return null;
 }

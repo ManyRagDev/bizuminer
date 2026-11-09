@@ -201,7 +201,7 @@ export function editorialOfferBlockers(candidate: {
   curationStatus: string; evidenceFingerprint: string; evidenceObservedAt: Date | string | null;
   lastSeenAt: Date | string; imageUrl: string | null; priceCents: number;
   offerEvidence?: unknown;
-}, now = new Date()): string[] {
+}, now = new Date(), allowVerifiedRange = false): string[] {
   const blockers: string[] = [];
   if (candidate.curationStatus !== "approved") blockers.push("Produto sem aprovação editorial.");
   const seen = new Date(candidate.lastSeenAt).getTime();
@@ -212,15 +212,15 @@ export function editorialOfferBlockers(candidate: {
   if (!Number.isSafeInteger(candidate.priceCents) || candidate.priceCents <= 0) blockers.push("Preço inválido.");
   const evidence = candidate.offerEvidence && typeof candidate.offerEvidence === "object"
     ? candidate.offerEvidence as Record<string, unknown> : {};
-  if (typeof evidence.priceMinCents === "number" && typeof evidence.priceMaxCents === "number"
+  if (!allowVerifiedRange && typeof evidence.priceMinCents === "number" && typeof evidence.priceMaxCents === "number"
       && evidence.priceMinCents !== evidence.priceMaxCents) {
     blockers.push("O anúncio informa uma faixa de preços; confirme o preço da configuração antes do destaque.");
   }
   return blockers;
 }
 
-export function editorialSelectionBlockers(candidate: Parameters<typeof editorialOfferBlockers>[0] & { evidenceFingerprint: string }, assessment: EditorialAssessment | null, now = new Date()): string[] {
-  const blockers = editorialOfferBlockers(candidate, now);
+export function editorialSelectionBlockers(candidate: Parameters<typeof editorialOfferBlockers>[0] & { evidenceFingerprint: string }, assessment: EditorialAssessment | null, now = new Date(), allowVerifiedRange = false): string[] {
+  const blockers = editorialOfferBlockers(candidate, now, allowVerifiedRange);
   if (!assessment) return [...blockers, "Avaliação do destaque ainda não registrada."];
   const validated = validateEditorialAssessment(assessment, true);
   if (!validated.ok) {

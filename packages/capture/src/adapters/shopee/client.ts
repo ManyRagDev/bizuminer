@@ -84,10 +84,11 @@ export class ShopeeClient {
     query: string,
     variables: Record<string, unknown>,
     ctx: CaptureContext,
+    maxAttempts = 5,
   ): Promise<T> {
     return withRetry(() => this.requestOnce<T>(cred, query, variables, ctx), {
       signal: ctx.signal,
-      maxAttempts: 5,
+      maxAttempts,
       onRetry: ({ attempt, delayMs, error }) => {
         ctx.log({
           level: "warn",

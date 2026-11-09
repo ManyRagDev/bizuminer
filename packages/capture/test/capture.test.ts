@@ -370,6 +370,33 @@ describe("ShopeeAdapter", () => {
     assert.equal(page.nextCursor, "page:2");
   });
 
+  it("reduz a primeira página após 10000 persistente e mantém o limite na próxima página", async (test) => {
+    test.mock.method(Math, "random", () => 0);
+    const calls: { page: number; limit: number; keyword: string }[] = [];
+    const adapter = new ShopeeAdapter({
+      ratePerSecond: 1000,
+      fetchImpl: async (_input, init) => {
+        const { variables } = JSON.parse(String(init?.body));
+        calls.push(variables);
+        if (variables.limit === 50) return Response.json({ errors: [{ extensions: { code: 10000 } }] });
+        return okResponse([node], variables.page === 1)(_input, init);
+      },
+    });
+    const first = await adapter.fetchOffers(cred, { keyword: "fone" }, ctx);
+    assert.equal(first.nextCursor, "page:2:20");
+    const second = await adapter.fetchOffers(cred, { keyword: "fone", cursor: first.nextCursor }, ctx);
+    assert.equal(second.nextCursor, undefined);
+    assert.equal(calls.filter(call => call.limit === 50).length, 5);
+    assert.deepEqual(calls.slice(-2).map(({ page, limit, keyword }) => [page, limit, keyword]), [[1, 20, "fone"], [2, 20, "fone"]]);
+  });
+
+  it("trata a falta da lista de produtos como falha de resposta", async () => {
+    const adapter = new ShopeeAdapter({
+      fetchImpl: async () => Response.json({ data: { productOfferV2: null } }),
+    });
+    await assert.rejects(adapter.fetchOffers(cred, {}, ctx), { kind: "malformed_response" });
+  });
+
   it("ShopeeClient repete e recupera em erro de sistema 10000", async () => {
     let attempts = 0;
     const adapter = new ShopeeAdapter({

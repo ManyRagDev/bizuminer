@@ -13,17 +13,17 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ rascunho?: string }>;
+  searchParams: Promise<{ rascunho?: string; conta?: string }>;
 }) {
-  const c = await pageAccount();
+  const { rascunho, conta } = await searchParams;
+  const c = await pageAccount(conta);
   if (!c) return null;
   const { id } = await params,
     { offers } = await workspaceOffers(c, id),
     offer = offers.find((o) => o.candidate.id === id);
   if (!offer) notFound();
   const p = offer.candidate;
-  const { rascunho } = await searchParams,
-    selectedDraft = validDraftId(rascunho) ? rascunho : null;
+  const selectedDraft = validDraftId(rascunho) ? rascunho : null;
   return (
     <div className="bm-workspace">
       <AdminLink href="/admin/ofertas">← Ofertas</AdminLink>

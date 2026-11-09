@@ -151,3 +151,17 @@ test("buildRelampagoCopy claims historical low only with solid observation histo
   assert.match(copy, /É o menor preço que registramos em 45 dias\./);
 });
 
+
+test("a mensagem da Shopee mostra os dois valores e o aviso de variação em todos os estilos", () => {
+  const range = {
+    title: "Jogo de ferramentas", marketplace: "shopee", priceType: "range", currency: "BRL",
+    priceCents: 2490, priceMinCents: 2490, priceMaxCents: 8490, discountPercent: 90,
+    shareUrl: "https://www.bizuminer.com.br/bizu/shp-123",
+  };
+  for (const tone of ["relampago", "sincero", "direto"]) {
+    const copy = generateOfferCopy(range, tone);
+    assert.match(copy, /R\$ 24,90 a R\$ 84,90/);
+    assert.match(copy, /preço varia conforme a opção/);
+    assert.doesNotMatch(copy, /90%|menor preço/);
+  }
+});

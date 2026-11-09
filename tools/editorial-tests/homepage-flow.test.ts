@@ -27,6 +27,7 @@ try {
   await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261027030237_compose_homepage_editions.sql", import.meta.url), "utf8"));
   await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261028041629_durable_product_presentation.sql", import.meta.url), "utf8"));
   await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261101125432_renew_editorial_pauta.sql", import.meta.url), "utf8"));
+  await pg.exec(await readFile(new URL("../../packages/persistence/supabase/migrations/20261109022751_balance_public_catalog_marketplaces.sql", import.meta.url), "utf8"));
   await pg.exec(`
     insert into garimpa.affiliate_account(id,tenant_id,public_slug,display_name,status)
       values('aff_a','a','a','A','active'),('aff_b','b','b','B','active');
@@ -34,14 +35,17 @@ try {
     insert into garimpa.affiliate_membership(affiliate_id,app_user_id,role) values('aff_a','user_a','owner');
     insert into garimpa.app_user_role(app_user_id,role) values('user_a','afiliado');
     insert into garimpa.product(id,tenant_id,marketplace,external_id,title,product_url,last_price_cents,last_seen_at,category,image_url)
-      select 'p_'||i,case when i<29 then 'a' else 'b' end,case when i%2=0 then 'shopee' else 'aliexpress' end,
+      select 'p_'||i,case when i<29 then 'a' else 'b' end,
+        case when i between 23 and 28 then 'mercadolivre' when i%2=0 then 'shopee' else 'aliexpress' end,
         i::text,case when i<9 then 'Fone de ouvido '||i else 'Produto independente '||i end,
         'https://example.test/product/'||i,2500,now(),case when i%3=0 then 'Casa' else 'Tecnologia' end,'https://example.test/image.jpg'
       from generate_series(1,30) i;
     insert into garimpa.product_curation(tenant_id,product_id,status)
       select tenant_id,id,'approved' from garimpa.product on conflict(tenant_id,product_id) do update set status='approved';
     insert into garimpa.publication(id,tenant_id,affiliate_id,product_id,channel,slug,status,affiliate_url)
-      select 'pub_'||id,tenant_id,'aff_'||tenant_id,id,'web',case when marketplace='shopee' then 'shp-' else 'ali-' end||external_id,'active','https://example.test/affiliate' from garimpa.product;
+      select 'pub_'||id,tenant_id,'aff_'||tenant_id,id,'web',
+        case marketplace when 'shopee' then 'shp-' when 'mercadolivre' then 'ml-' else 'ali-' end||external_id,
+        'active','https://example.test/affiliate' from garimpa.product;
   `);
   await pg.query(`insert into garimpa.price_observation(id,tenant_id,product_id,price_cents,observed_at,rating_star,offer_evidence)
     select 'obs_'||id,tenant_id,id,2500,now(),4.7,$1::jsonb from garimpa.product`, [JSON.stringify(evidence)]);
@@ -77,15 +81,23 @@ try {
     await pg.query("update garimpa.price_observation set offer_evidence=$1 where tenant_id='a'", [JSON.stringify(evidence)]);
   });
   let first: any;
-  await scenario("persisted edition powers home, pauta and default grid with identical order", async () => {
+  await scenario("persisted edition powers highlights while the default grid pages the full public catalog", async () => {
     const result = await refreshHomepageEdition("a", factory, new Date(), false, false);
     assert.equal(result.ready, true); assert.ok(result.count >= 12);
     first = await getPublishedEditorialSelection("home", "a", factory);
     const pauta = await getPublishedEditorialSelection("pauta", "a", factory);
     assert.deepEqual(first.products.map((p: any) => p.id), pauta.products.map((p: any) => p.id));
-    const page = await catalogPage({}, "a", factory, first);
-    assert.deepEqual(page.page.deals.map((p: any) => p.id), first.products.slice(0, 12).map((p: any) => p.id));
-    assert.equal(page.page.total, first.products.length);
+    const page = await catalogPage({ limit: 24 }, "a", factory, first);
+    const next = await catalogPage({ limit: 24, offset: 24 }, "a", factory, first);
+    const [projection] = await publicQuery("select garimpa.public_catalog('a','{\"limit\":24,\"freshnessDays\":7}') as value");
+    assert.equal(page.page.total, 28);
+    assert.equal(next.page.total, 28);
+    assert.equal(page.page.deals.length, 24);
+    assert.equal(next.page.deals.length, 4);
+    assert.equal(new Set([...page.page.deals, ...next.page.deals].map((p: any) => p.id)).size, 28);
+    assert.deepEqual(new Set(page.page.deals.slice(0, 3).map((p: any) => p.marketplace)),
+      new Set(["shopee", "mercadolivre", "aliexpress"]));
+    assert.deepEqual(page.page.deals.map((p: any) => p.id), projection.value.deals.map((p: any) => p.id));
     assert.equal(page.page.selectionStateKey, publishedEditorialStateKey(first));
     assert.equal(first.heroProductIds.length, 3);
     assert.equal((await getHomepageRenewalState("a", factory)).outcome, "published");
@@ -136,6 +148,21 @@ try {
     const page = await catalogPage({ sort: "price", category: "Casa" }, "a", factory, first);
     assert.ok(page.page.deals.every((p: any) => p.category === "Casa"));
     assert.equal(page.page.selectionStateKey, publishedEditorialStateKey(first));
+  });
+  await scenario("a verified highlight option keeps its price and link in the full catalog", async () => {
+    const normal = await catalogPage({ limit: 24 }, "a", factory, first);
+    const selected = first.products.find((product: any) => normal.page.deals.some((row: any) => row.id === product.id));
+    assert.ok(selected);
+    const verifiedOption = { ...selected, offerOptionKey: "test-option", priceType: "exact", priceCents: 1999, currency: "BRL" };
+    const selection = { ...first, products: [verifiedOption] };
+    const mixed = await catalogPage({ limit: 24 }, "a", factory, selection);
+    const byPrice = await catalogPage({ limit: 24, sort: "price", marketplace: selected.marketplace }, "a", factory, selection);
+    assert.equal(mixed.page.total, 28);
+    assert.deepEqual(mixed.page.deals.map((row: any) => row.id), normal.page.deals.map((row: any) => row.id));
+    const row = mixed.page.deals.find((row: any) => row.id === selected.id);
+    assert.equal(row?.offerOptionKey, "test-option");
+    assert.equal(row?.price_cents, 1999);
+    assert.ok(byPrice.page.deals.every((row: any) => row.marketplace === selected.marketplace && row.price_cents === 2500));
   });
   await scenario("eligibility is rechecked before refresh: rejection, price update and publication withdrawal disappear", async () => {
     const [a, b, c] = first.products;

@@ -20,7 +20,7 @@ import type {
   RawOffer,
   ValidationResult,
 } from "../../types.ts";
-import { MARKETPLACE, ShopeeClient, type ShopeeClientOptions, type ShopeeCredentialFields } from "./client.ts";
+import { MARKETPLACE, SYSTEM_ERROR_CODE, ShopeeClient, type ShopeeClientOptions, type ShopeeCredentialFields } from "./client.ts";
 import { mapProductNodes, type ShopeeProductOfferResponse } from "./mapper.ts";
 import {
   GENERATE_SHORT_LINK_MUTATION,
@@ -71,10 +71,10 @@ export class ShopeeAdapter implements CaptureAdapter {
     ctx: CaptureContext,
   ): Promise<OfferPage> {
     const fields = readCredential(cred);
-    const page = cursorToPage(params.cursor);
-    const limit = Math.min(params.pageSize ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
-
-    const data = await this.client.request<ShopeeProductOfferResponse>(
+    const { page, limit: cursorLimit } = readPageCursor(params.cursor);
+    const requestedLimit = Math.min(params.pageSize ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+    let limit = cursorLimit ?? requestedLimit;
+    const request = (limit: number, maxAttempts?: number) => this.client.request<ShopeeProductOfferResponse>(
       fields,
       PRODUCT_OFFER_QUERY,
       {
@@ -82,13 +82,30 @@ export class ShopeeAdapter implements CaptureAdapter {
         shopId: params.shopId ? Number(params.shopId) : null,
         page,
         limit,
-        // 2 = ordenação por comissão; mantido explícito para não depender do padrão.
+        // Keep the ordering and search scope when recovering a query.
         sortType: 2,
       },
       ctx,
+      maxAttempts,
     );
 
-    const nodes = data.productOfferV2?.nodes ?? [];
+    let data;
+    try {
+      data = await request(limit);
+    } catch (error) {
+      if (!(error instanceof CaptureError) || error.vendorCode !== SYSTEM_ERROR_CODE
+        || page !== 1 || params.cursor || limit <= 10) throw error;
+      // Only the first page can change size. The cursor pins the new page boundaries.
+      const originalLimit = limit;
+      limit = originalLimit > 20 ? 20 : 10;
+      ctx.log({ level: "warn", msg: "Shopee retornou erro de sistema; tentando página menor", data: { originalLimit, limit } });
+      data = await request(limit, 2);
+    }
+
+    const nodes = data.productOfferV2?.nodes;
+    if (!Array.isArray(nodes)) {
+      throw new CaptureError({ kind: "malformed_response", marketplace: MARKETPLACE, message: "Shopee não devolveu a lista de ofertas" });
+    }
     const capturedAt = new Date();
     const { offers, skipped } = mapProductNodes(nodes, capturedAt);
 
@@ -113,7 +130,7 @@ export class ShopeeAdapter implements CaptureAdapter {
 
     return {
       offers: filtered,
-      nextCursor: hasNext ? pageToCursor(page + 1) : undefined,
+      nextCursor: hasNext ? pageToCursor(page + 1, limit === requestedLimit ? undefined : limit) : undefined,
     };
   }
 
@@ -191,15 +208,15 @@ function readCredential(cred: Credential): ShopeeCredentialFields {
  * Encapsular aqui permite trocar para `scrollId` — que é o que o
  * conversionReport usa — sem mudar o núcleo.
  */
-function pageToCursor(page: number): string {
-  return `page:${page}`;
+function pageToCursor(page: number, limit?: number): string {
+  return limit === undefined ? `page:${page}` : `page:${page}:${limit}`;
 }
 
-function cursorToPage(cursor?: string): number {
-  if (!cursor) return 1;
-  const match = /^page:(\d+)$/.exec(cursor);
-  const page = match ? Number(match[1]) : NaN;
-  return Number.isFinite(page) && page > 0 ? page : 1;
+function readPageCursor(cursor?: string): { page: number; limit?: number } {
+  const match = /^page:(\d+)(?::(10|20))?$/.exec(cursor ?? "");
+  const page = Number(match?.[1]);
+  if (!Number.isSafeInteger(page) || page < 1) return { page: 1 };
+  return { page, limit: match?.[2] ? Number(match[2]) : undefined };
 }
 
 export { MARKETPLACE as SHOPEE_MARKETPLACE };

@@ -49,3 +49,26 @@ test("respeita seleção manual e intervalo de divulgação do canal", () => {
   assert.equal(select([offer("a", { priceCents: 8900, offerOptionKey: "outra" })], exposures).selected.length, 0);
   assert.deepEqual(select([offer("a"), offer("b")], new Map(), ["b"]).selected.map(p => p.id), ["b"]);
 });
+
+test("reserva espaço para lojas elegíveis na pauta automática sem alterar a ordem manual", () => {
+  const ml = [offer("ml1", { triageScore: 5 }), offer("ml2", { triageScore: 5 })];
+  const shopee = offer("shopee", { marketplace: "shopee", triageScore: 3 });
+  assert.deepEqual(select([...ml, shopee]).selected.map(p => p.id), ["ml1", "shopee"]);
+  assert.deepEqual(select([...ml, shopee], new Map(), ["ml2", "ml1", "shopee"]).selected.map(p => p.id), ["ml2", "ml1"]);
+});
+
+test("admite somente faixa Shopee em reais com ambos os limites válidos e link", () => {
+  const range = offer("kit", { marketplace: "shopee", priceType: "range", priceMinCents: 9900, priceMaxCents: 12900,
+    offerEvidence: { priceMinCents: 9900, priceMaxCents: 12900 } });
+  assert.equal(select([range]).selected.length, 1);
+  assert.equal(select([{ ...range, priceMaxCents: undefined }]).selected.length, 0);
+  assert.equal(select([{ ...range, currency: "USD" }]).selected.length, 0);
+  assert.equal(select([{ ...range, shareTarget: null }]).selected.length, 0);
+  assert.equal(select([{ ...range, offerEvidence: { ...range.offerEvidence, conditions: { coupon: "TESTE" } } }]).selected.length, 0);
+});
+
+test("exige conferência manual para AliExpress mesmo se o anúncio informar um preço único", () => {
+  const ali = offer("ali", { marketplace: "aliexpress", offerOptionKey: "option" });
+  assert.match(select([ali]).reasonsById.get("ali")[0], /Confirme manualmente/);
+  assert.equal(select([{ ...ali, offerEvidence: { verification: { method: "editorial_confirmation" } } }]).selected.length, 1);
+});

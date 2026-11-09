@@ -261,9 +261,10 @@ export async function readLivePauta(context: AccountContext, channel: PautaChann
         ? Date.parse(assessment.comparativeBasis?.checkedAt ?? "") : NaN;
       return {
         ...presentation, ...product,
+        ...(product.priceType === "range" ? { discountPercent: null, originalPriceCents: null, lowestVerified: false } : {}),
         benefit: presentation.benefit || (assessment?.benefit && !hasSuperiorityClaim(assessment.benefit) ? assessment.benefit : undefined),
         purchaseContents: presentation.purchaseContents ?? assessment?.purchaseContents,
-        editorialRationale: assessment?.publicRationale ?? "",
+        editorialRationale: product.priceType === "range" ? "" : assessment?.publicRationale ?? "",
         offerValidUntil: new Date(Math.min(
           +new Date(product.evidenceObservedAt!) + PAUTA_PRICE_WINDOW_MS,
           Date.parse(candidate.lastSeenAt) + 7 * 86_400_000,

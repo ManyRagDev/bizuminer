@@ -5,7 +5,7 @@ import postgres from "postgres";
 import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "./catalog-policy.ts";
 import { publishedEditorialStateKey, type PublishedEditorialSelection } from "./editorial-selection.ts";
 import type { DealQuery, FreshnessBand } from "./deal-query";
-import { freshnessDays, priceRangeForBand, isHomepageSelectionQuery } from "./deal-query.ts";
+import { CATALOG_DEFAULT_FRESHNESS, freshnessDays, isHomepageSelectionQuery, priceRangeForBand, shouldInterleaveMarketplaces } from "./deal-query.ts";
 import { categoryDesirabilityFromStats, heroScore, type CategoryStats, type HeroScorable } from "./desirability.ts";
 import { toVitrineProduct, type VitrineProduct } from "./deal-view.ts";
 import { parseProductSlug, slugCaseSql } from "./marketplaces.ts";
@@ -81,26 +81,39 @@ function publicCatalogQuery(query: DealQuery): Record<string, unknown> {
     category: query.category?.trim() || null, search: query.search?.trim() || null,
     marketplace: query.marketplace?.trim() || null, minPriceCents: bounds.min, maxPriceCents: bounds.max,
     minRating: query.minRating ?? null, minDiscount: query.minDiscount ?? null,
-    freshnessDays: freshnessDays(query.freshness ?? "2d"), sort: query.sort ?? "signal",
+    freshnessDays: freshnessDays(query.freshness ?? CATALOG_DEFAULT_FRESHNESS), sort: query.sort ?? "signal",
     lowestOnly: query.lowestOnly ?? false, hasHistory: query.hasHistory ?? false,
     limit: query.limit ?? 12, offset: query.offset ?? 0,
   };
 }
 
+/** The highlights can supply a verified option for a matching public listing. */
+function withHomepageOptions(page: DealsPage, query: DealQuery, selection: PublishedEditorialSelection): DealsPage {
+  if (!selection.homepageReady || !isHomepageSelectionQuery(query)) return page;
+  const options = new Map(selection.products.filter((product) => product.offerOptionKey).map((product) => [product.id, product]));
+  return { ...page, deals: page.deals.map((row) => {
+    const option = options.get(row.id);
+    if (!option || option.slug !== row.slug) return row;
+    return {
+      ...row,
+      offerOptionKey: option.offerOptionKey, offerOptionLabel: option.offerOptionLabel,
+      offerConditions: option.offerConditions, offerValidUntil: option.offerValidUntil,
+      priceType: option.priceType, currency: option.currency,
+      priceMinCents: option.priceMinCents, priceMaxCents: option.priceMaxCents, originalPriceKind: option.originalPriceKind,
+      price_cents: option.priceCents, original_price_cents: option.originalPriceCents,
+      claimed_discount_rate: option.discountPercent === null ? null : option.discountPercent / 100,
+      rating_star: option.ratingStar, sales_count: option.salesCount, sales_label: option.salesLabel,
+      evidence_observed_at: option.evidenceObservedAt,
+      previous_min_price_cents: option.previousMinPriceCents, min_price_cents: option.previousMinPriceCents,
+      observation_count: option.observationCount, history_days: option.historyDays, lowest_verified: option.lowestVerified,
+      purchaseContents: option.purchaseContents, benefit: option.benefit,
+    };
+  }) };
+}
+
 /** A seleção editorial determina a ordem inicial; filtros explícitos preservam sua ordenação. */
 export async function topDeals(query: DealQuery = {}, tenantId = "local", publishedSelection?: PublishedEditorialSelection, sqlFactory: typeof db = db): Promise<DealsPage> {
   const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId, sqlFactory);
-  if (isHomepageSelectionQuery(query) && selection.homepageReady) {
-    const deals: DealRow[] = selection.products.map(p => ({ offerOptionKey:p.offerOptionKey,offerOptionLabel:p.offerOptionLabel,offerConditions:p.offerConditions,offerValidUntil:p.offerValidUntil,coverHeadline:p.coverHeadline,coverImageApproved:p.coverImageApproved,displayTitle:p.displayTitle,sourceTitle:p.sourceTitle,titleOrigin:p.titleOrigin,
-      editorialRevisionId:p.editorialRevisionId,editorialReviewedAt:p.editorialReviewedAt,benefit:p.benefit,audience:p.audience,caveat:p.caveat,purchaseContents:p.purchaseContents,
-      priceType:p.priceType,priceMinCents:p.priceMinCents,priceMaxCents:p.priceMaxCents,currency:p.currency,originalPriceKind:p.originalPriceKind, id: p.id, slug: p.slug, title: p.title, marketplace: p.marketplace,
-      price_cents: p.priceCents, original_price_cents: p.originalPriceCents, claimed_discount_rate: p.discountPercent === null ? null : p.discountPercent / 100,
-      min_price_cents: p.previousMinPriceCents, previous_min_price_cents: p.previousMinPriceCents, observation_count: p.observationCount,
-      history_days: p.historyDays, lowest_verified: p.lowestVerified, category: p.category, image_url: p.imageUrl,
-      rating_star: p.ratingStar, sales_label: p.salesLabel, sales_count: p.salesCount, evidence_observed_at: p.evidenceObservedAt }));
-    const offset = Math.max(0, query.offset ?? 0), limit = Math.min(24, Math.max(1, query.limit ?? 12));
-    return { deals: deals.slice(offset, offset + limit), total: deals.length, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) };
-  }
   const publicReader = await import("./public-offer-db.ts");
   if (await publicReader.publicProjectionReady(sqlFactory)) {
     const page = await publicReader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
@@ -112,7 +125,8 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local", publis
   const category = query.category?.trim() || null;
   const search = query.search?.trim() || null;
   const marketplace = query.marketplace?.trim() || null;
-  const freshness = query.freshness ?? "2d";
+  const freshness = query.freshness ?? CATALOG_DEFAULT_FRESHNESS;
+  const interleave = shouldInterleaveMarketplaces(query);
   const minRating = query.minRating ?? null;
   const minDiscount = query.minDiscount ?? null;
   const lowestOnly = query.lowestOnly ?? false;
@@ -202,15 +216,8 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local", publis
           and (${minDiscount}::numeric is null or l.claimed_discount_rate >= (${minDiscount}::numeric / 100))
           and (${lowestOnly}::boolean is false or (s.history_comparable and s.observation_count >= 3 and s.history_days >= 7 and l.price_cents <= s.previous_min_price_cents))
           and (${hasHistory}::boolean is false or (s.observation_count >= 3 and s.history_days >= 7))
-      )
-      select id, title, image_url, category, marketplace, slug,
-             price_cents, original_price_cents, claimed_discount_rate,
-             rating_star, sales_label, sales_count, evidence_observed_at,
-             min_price_cents, previous_min_price_cents,
-             observation_count, history_days, lowest_verified,
-             in_current_run, total_count
-      from ranked
-      order by
+      ), ordered as (
+      select ranked.*, row_number() over (order by
         case when ${sort} = 'signal' then array_position(${selectedIds}::text[], id) end asc nulls last,
         case when ${sort} = 'signal' then in_current_run end desc nulls last,
         case when ${sort} = 'signal' then lowest_verified end desc nulls last,
@@ -219,7 +226,22 @@ export async function topDeals(query: DealQuery = {}, tenantId = "local", publis
         case when ${sort} = 'price' then price_cents end asc nulls last,
         case when ${sort} = 'popularity' then sales_count end desc nulls last,
         case when ${sort} = 'recent' then evidence_observed_at end desc nulls last,
-        id asc
+        id asc) as catalog_position
+      from ranked
+      ), mixed as (
+      select ordered.*, case when ${interleave}::boolean then
+        row_number() over (partition by marketplace order by catalog_position)
+      end as marketplace_position
+      from ordered
+      )
+      select id, title, image_url, category, marketplace, slug,
+             price_cents, original_price_cents, claimed_discount_rate,
+             rating_star, sales_label, sales_count, evidence_observed_at,
+             min_price_cents, previous_min_price_cents,
+             observation_count, history_days, lowest_verified,
+             in_current_run, total_count
+      from mixed
+      order by marketplace_position nulls last, catalog_position
       limit ${limit}
       offset ${offset}
     `;
@@ -287,26 +309,23 @@ export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantI
 /** Lista e facetas públicas reutilizam a mesma projeção no banco. */
 export async function catalogPage(query: DealQuery = {}, tenantId = "local", sqlFactory: typeof db = db, publishedSelection?: PublishedEditorialSelection): Promise<CatalogPage> {
   const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId, sqlFactory);
-  if (isHomepageSelectionQuery(query) && selection.homepageReady) {
-    const [page, presentation] = await Promise.all([topDeals(query, tenantId, selection, sqlFactory), catalogPresentation(query.freshness, tenantId, sqlFactory)]);
-    return { page, presentation };
-  }
   const reader = await import("./public-offer-db.ts");
   if (await reader.publicProjectionReady(sqlFactory)) {
     const page = await reader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
     page.selectionVersion = selection.version;
     page.selectionStateKey = publishedEditorialStateKey(selection);
+    const dealsPage = withHomepageOptions(page, query, selection);
     if (Array.isArray(page.categories) && page.marketplaceCounts && typeof page.marketplaceCounts === "object") {
-      return { page, presentation: { categories: page.categories, marketplaceCounts: page.marketplaceCounts } };
+      return { page: dealsPage, presentation: { categories: page.categories, marketplaceCounts: page.marketplaceCounts } };
     }
     // Mantém compatibilidade no intervalo entre publicar o app e a migração.
-    return { page, presentation: await catalogPresentation(query.freshness, tenantId, sqlFactory) };
+    return { page: dealsPage, presentation: await catalogPresentation(query.freshness, tenantId, sqlFactory) };
   }
   const [page, presentation] = await Promise.all([
     topDeals(query, tenantId, selection, sqlFactory),
     catalogPresentation(query.freshness, tenantId, sqlFactory),
   ]);
-  return { page, presentation };
+  return { page: withHomepageOptions(page, query, selection), presentation };
 }
 
 /**

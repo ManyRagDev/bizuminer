@@ -1,5 +1,5 @@
 import type { WorkspaceOffer } from "./affiliate-workspace-contract.ts";
-import { offerPriceLabel, type OfferPrice } from "./offer-price.ts";
+import { offerPriceLabel, offerPriceNote, type OfferPrice } from "./offer-price.ts";
 import { MINIMUM_HISTORY } from "./deal-signal.ts";
 
 export type CopyTone = "relampago" | "sincero" | "direto";
@@ -112,7 +112,7 @@ export function extractCopyData(offer: WorkspaceOffer): CopyOfferData {
 function offerHeadline(data: CopyOfferData): string {
   const store = { mercadolivre: "no Mercado Livre", shopee: "na Shopee", aliexpress: "no AliExpress" }[data.marketplace];
   const from = data.priceType === "from" || data.priceType === "range";
-  const price = offerPriceLabel(from ? { ...data, priceType: "from" } : data).replace(/\u00A0/g, " ");
+  const price = offerPriceLabel(data).replace(/\u00A0/g, " ");
   const title = data.displayTitle || data.title;
   const priceLine = from ? `*${price}*` : `por *${price}*`;
   return `*${title}* ${priceLine}${store ? ` ${store}` : ""}`;
@@ -132,13 +132,14 @@ function comparablePriceLine(data: CopyOfferData): string | null {
 }
 
 function shareLines(data: CopyOfferData): string[] {
-  return [`Ver oferta: ${data.shareUrl}`, ...(data.bioCode ? [`Código na bio: ${data.bioCode}`] : [])];
+  const variation = data.priceType === "range" ? offerPriceNote(data) : null;
+  return [...(variation ? [variation] : []), `Ver oferta: ${data.shareUrl}`, ...(data.bioCode ? [`Código na bio: ${data.bioCode}`] : [])];
 }
 
 export function buildRelampagoCopy(data: CopyOfferData): string {
   const discount = data.discountPercent ?? 0;
   const priceNote = comparablePriceLine(data)
-    ?? (discount > 0 && discount < 99 ? `O anúncio indica ${discount}% de desconto.` : null);
+    ?? (data.priceType !== "range" && discount > 0 && discount < 99 ? `O anúncio indica ${discount}% de desconto.` : null);
   const detail = data.offerConditions || (data.offerOptionLabel ? `Opção: ${data.offerOptionLabel}` : null);
   return [offerHeadline(data), ...[priceNote, data.benefit, detail].filter(Boolean), "", ...shareLines(data)].join("\n");
 }

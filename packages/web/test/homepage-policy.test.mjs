@@ -64,10 +64,10 @@ test("edição manual preserva a ordem explícita da grade e continua limitando 
   assert.deepEqual(ids(composeHomepage(pool, now, undefined, positions)), ["first", "second", "best"]);
   assert.equal(composeHomepage(pool, now, undefined, positions).heroes[0].candidate.id, "best");
 });
-test("filtros e ordens explícitas consultam catálogo; offset sozinho pagina a edição", () => {
+test("a capa acompanha o catálogo sem filtros", () => {
   assert.equal(isHomepageSelectionQuery({}), true);
   assert.equal(isHomepageSelectionQuery({ offset: 24 }), true);
-  for (const query of [{ category: "Casa" }, { search: "fone" }, { marketplace: "shopee" }, { sort: "price" }, { sort: "recent" }, { minRating: 4 }, { minDiscount: 20 }, { freshness: "7d" }, { hasHistory: true }, { priceBand: "under_100" }]) assert.equal(isHomepageSelectionQuery(query), false);
+  for (const query of [{ category: "Casa" }, { search: "fone" }, { marketplace: "shopee" }, { sort: "price" }, { sort: "recent" }, { minRating: 4 }, { minDiscount: 20 }, { freshness: "2d" }, { hasHistory: true }, { priceBand: "under_100" }]) assert.equal(isHomepageSelectionQuery(query), false);
 });
 test("renovação diária limita descoberta a um quarto, mesmo com muitos candidatos pontuando mais", () => {
   const old = Array.from({ length: 24 }, (_, i) => item(`old${i}`));

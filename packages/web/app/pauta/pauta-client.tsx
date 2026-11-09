@@ -7,7 +7,7 @@ import { MARKETPLACES, marketplaceDef } from "../../lib/marketplaces";
 import type { PautaQrBundle } from "../../lib/qr-service";
 import { copyToClipboard } from "../../lib/clipboard";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
-import { offerPriceLabel } from "../../lib/offer-price";
+import { offerPriceLabel, offerPriceNote } from "../../lib/offer-price";
 import type { PautaCapture, PautaCaptureActions } from "../../lib/pauta-db";
 import { freshnessLabel, MINIMUM_HISTORY } from "../../lib/deal-signal";
 import {
@@ -506,6 +506,7 @@ export default function PautaClient({
                     {product.caveat && <p className="pauta-editorial-context"><b>Ressalva:</b> {product.caveat}</p>}
                     {product.offerOptionLabel && <p><b>Opção:</b> {product.offerOptionLabel}</p>}
                     {product.offerConditions && <p><b>Condições:</b> {product.offerConditions}</p>}
+                    {product.priceType === "range" && <p>{offerPriceNote(product)}</p>}
                     <div className="pauta-card-meta" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
                       <strong><a href={product.detailUrl ?? `/bizu/${product.slug}`}>{offerPriceLabel(product)}</a></strong>
                       {product.discountPercent != null && product.discountPercent > 0 && product.discountPercent < 99 && (
@@ -632,7 +633,12 @@ export default function PautaClient({
                 <p>{capture.reasons.join(" ")}</p>
                 {capture.status === "review" && <a href={`/admin/ofertas/${encodeURIComponent(capture.id)}`}>Revisar esta oferta</a>}
                 {(capture.status === "pending" || capture.status === "failed" || capture.status === "retry") && <a href={curationTriageUrl}>Abrir triagem com IA</a>}
-                {capture.status === "blocked" && <a href={`/admin/ofertas/${encodeURIComponent(capture.id)}`}>Ver detalhes da oferta</a>}
+                {capture.status === "blocked" && (
+                  <a href={`/admin/ofertas/${encodeURIComponent(capture.id)}?conta=${encodeURIComponent(accountKey)}#confirmar-opcao-${encodeURIComponent(capture.id)}`}>
+                    {capture.marketplace === "aliexpress" && capture.reasons.some(reason => reason.startsWith("Confirme manualmente"))
+                      ? "Confirmar preço da opção" : "Ver detalhes da oferta"}
+                  </a>
+                )}
               </div>
             </li>
           ))}

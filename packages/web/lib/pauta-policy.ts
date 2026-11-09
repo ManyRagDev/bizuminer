@@ -12,17 +12,28 @@ export interface PautaCandidate extends EditorialCandidate {
   shareTarget: { kind: "site"; slug: string } | { kind: "pauta"; token: string } | null;
 }
 
+function verifiedShopeeRange(candidate: PautaCandidate): boolean {
+  const { priceMinCents: min, priceMaxCents: max } = candidate;
+  return candidate.marketplace === "shopee" && candidate.currency === "BRL" && candidate.priceType === "range"
+    && typeof min === "number" && typeof max === "number"
+    && Number.isSafeInteger(min) && Number.isSafeInteger(max) && min > 0 && max > min;
+}
+
 export function pautaBlockers(candidate: PautaCandidate, now: Date): string[] {
   const assessment = candidate.assessment;
+  const range = verifiedShopeeRange(candidate);
   const reasons = assessment
-    ? editorialSelectionBlockers(candidate, assessment, now)
-    : editorialOfferBlockers(candidate, now);
+    ? editorialSelectionBlockers(range ? { ...candidate, priceCents: candidate.priceMaxCents! } : candidate, assessment, now, range)
+    : editorialOfferBlockers(candidate, now, range);
   if (assessment?.presentation?.status === "withdrawn") reasons.push("A ficha foi retirada pela curadoria.");
   if (candidate.offerMaterialInvalid) reasons.push("As condições mudaram. Confira a opção novamente.");
-  if (candidate.currency !== "BRL" || candidate.priceType !== "exact") {
-    reasons.push("Confirme o preço exato em reais.");
+  const evidence = candidate.offerEvidence as { conditions?: Record<string, unknown>; verification?: { method?: string } } | null;
+  if (!range && (candidate.currency !== "BRL" || candidate.priceType !== "exact"
+      || candidate.marketplace === "aliexpress" && (!candidate.offerOptionKey || evidence?.verification?.method !== "editorial_confirmation"))) {
+    reasons.push(candidate.marketplace === "aliexpress"
+      ? "Confirme manualmente o preço de uma opção em reais."
+      : "Confirme o preço exato em reais.");
   }
-  const evidence = candidate.offerEvidence as { conditions?: Record<string, unknown> } | null;
   const conditions = evidence?.conditions;
   if (!candidate.offerOptionKey && conditions && ["coupon", "payment", "region", "quantity"].some(key => conditions[key])) {
     reasons.push("Confira as condições desse preço antes de divulgar.");
@@ -60,10 +71,10 @@ export function composeLivePauta<T extends PautaCandidate>(
     const quality = candidate.assessment
       ? classifyHeroCandidate(candidate, now).score ?? 0
       : candidate.triageScore !== null ? candidate.triageScore * 20 : 75;
-    const drop = candidate.previousMinPriceCents && candidate.previousMinPriceCents > candidate.priceCents
+    const drop = candidate.priceType === "exact" && candidate.previousMinPriceCents && candidate.previousMinPriceCents > candidate.priceCents
       ? (1 - candidate.priceCents / candidate.previousMinPriceCents) * 100 : 0;
     const ageHours = Math.max(0, now.getTime() - observed) / 3_600_000;
-    const score = quality + Math.min(8, drop) + (pautaHasHistoricalLow(candidate) ? 4 : 0) + (ageHours <= 24 ? 8 : 0);
+    const score = quality + Math.min(8, drop) + (candidate.priceType === "exact" && pautaHasHistoricalLow(candidate) ? 4 : 0) + (ageHours <= 24 ? 8 : 0);
     ranked.push({ candidate, observed, score });
   }
   ranked.sort((a, b) => manualOrder
@@ -71,18 +82,31 @@ export function composeLivePauta<T extends PautaCandidate>(
     : b.score - a.score || b.observed - a.observed || a.candidate.id.localeCompare(b.candidate.id));
 
   const families = new Map<string, number>();
-  const selected: T[] = [];
-  for (const { candidate } of ranked) {
-    const family = homepageFamily(candidate);
-    const count = families.get(family) ?? 0;
-    if (count >= policy.familyLimit) {
-      reasonsById.set(candidate.id, ["Outra oferta da mesma família teve prioridade."]);
-    } else if (selected.length >= policy.limit) {
-      reasonsById.set(candidate.id, ["Oferta apta. Ficou abaixo do corte deste canal."]);
-    } else {
-      selected.push(candidate);
-      families.set(family, count + 1);
+  const represented = new Set<string>();
+  const chosen = new Set<string>();
+  const familyCount = (candidate: T) => families.get(homepageFamily(candidate)) ?? 0;
+  const select = (candidate: T) => {
+    chosen.add(candidate.id);
+    represented.add(candidate.marketplace);
+    families.set(homepageFamily(candidate), familyCount(candidate) + 1);
+  };
+  if (!manualOrder) {
+    // Give each eligible shop a chance before filling the remaining slots by merit.
+    for (const { candidate } of ranked) {
+      if (chosen.size >= policy.limit) break;
+      if (!represented.has(candidate.marketplace) && familyCount(candidate) < policy.familyLimit) select(candidate);
     }
   }
+  for (const { candidate } of ranked) {
+    if (chosen.has(candidate.id)) continue;
+    if (familyCount(candidate) >= policy.familyLimit) {
+      reasonsById.set(candidate.id, ["Outra oferta da mesma família teve prioridade."]);
+    } else if (chosen.size >= policy.limit) {
+      reasonsById.set(candidate.id, ["Oferta apta. Ficou abaixo do corte deste canal."]);
+    } else {
+      select(candidate);
+    }
+  }
+  const selected = ranked.flatMap(({ candidate }) => chosen.has(candidate.id) ? [candidate] : []);
   return { selected, reasonsById };
 }

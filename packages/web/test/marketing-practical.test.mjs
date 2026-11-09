@@ -66,8 +66,7 @@ test("marketing prático: preços a partir de, faixas e moeda não confirmada ma
   const range = offerFromPauta(
     product({ priceType: "range", priceMinCents: 3990, priceMaxCents: 8990 }),
   );
-  assert.match(range.priceLabel, /39,90/);
-  assert.doesNotMatch(range.priceLabel, / a /);
+  assert.match(range.priceLabel, /39,90 a.*89,90/);
   assert.equal(range.price, "");
   for (const currency of [undefined, ""]) {
     const defaultCurr = offerFromPauta(product({ currency }));

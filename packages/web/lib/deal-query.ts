@@ -8,7 +8,7 @@ export type PriceBand = typeof priceBands[number];
 
 /**
  * Janela de frescura do preço: quando o preço foi capturado.
- * O padrão de 48 h evita destacar preços antigos. "7d" é o teto público.
+ * "7d" é o padrão do catálogo e o teto público.
  * "14d" e "all" seguem aceitos para URLs antigas, mas a consulta do catálogo
  * nunca ultrapassa a validade global de sete dias.
  */
@@ -37,11 +37,12 @@ export type DealQuery = {
 };
 
 export const CATALOG_PAGE_SIZE = 24;
+export const CATALOG_DEFAULT_FRESHNESS: FreshnessBand = "7d";
 
-/** Explicit searches, filters and sort orders retain catalog semantics. */
+/** The homepage cover is shown with the unfiltered catalog. */
 export function isHomepageSelectionQuery(query: DealQuery): boolean {
   return (query.sort ?? "signal") === "signal" && !query.category && !query.search?.trim() && !query.marketplace
-    && (query.priceBand ?? "all") === "all" && (query.freshness ?? "2d") === "2d"
+    && (query.priceBand ?? "all") === "all" && (query.freshness ?? CATALOG_DEFAULT_FRESHNESS) === CATALOG_DEFAULT_FRESHNESS
     && query.minRating == null && query.minDiscount == null && !query.lowestOnly && !query.hasHistory;
 }
 
@@ -86,7 +87,7 @@ export function dealQueryFromSearchParams(params: URLSearchParams): Required<Dea
     sort: dealSorts.includes(rawSort as DealSort) ? rawSort as DealSort : "signal",
     priceBand: priceBands.includes(rawBand as PriceBand) ? rawBand as PriceBand : "all",
     marketplace: isKnownMarketplace(rawMarketplace) ? rawMarketplace : null,
-    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : "2d",
+    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : CATALOG_DEFAULT_FRESHNESS,
     minRating: rawRating ? Math.min(Math.max(Number.parseFloat(rawRating), 1), 5) : null,
     minDiscount: rawDiscount ? Math.min(Math.max(Number.parseFloat(rawDiscount), 1), 100) : null,
     lowestOnly: params.get("lowestOnly") === "true",
@@ -95,17 +96,8 @@ export function dealQueryFromSearchParams(params: URLSearchParams): Required<Dea
 }
 
 /**
- * A vitrine deve **sempre mostrar as duas lojas** misturadas na home — é o
- * chamariz (decisão do dono, 27/08/2026). Mas isso só vale para a vitrine
- * curada: se a pessoa pediu "menor preço", intercalar poria um item de R$500
- * acima de um de R$100 e quebraria a promessa explícita do controle.
- *
- * Regra: intercala só no sinal (padrão) e sem recorte de loja — com filtro
- * de loja há uma partição só, e intercalar não significaria nada.
- *
- * Função pura e exportada de propósito: o modo de falha aqui é silencioso
- * (ninguém percebe que "menor preço" parou de ordenar por preço até um
- * usuário reclamar), então fica travado por teste.
+ * Intercala as lojas na ordenação padrão. Ordenações explícitas e filtros
+ * por loja preservam a ordem solicitada.
  */
 export function shouldInterleaveMarketplaces(
   query: Pick<DealQuery, "sort" | "marketplace">,
@@ -150,7 +142,7 @@ export function catalogStateFromSearchParams(params: URLSearchParams): CatalogSt
     sort: dealSorts.includes(rawSort as DealSort) ? rawSort as DealSort : "signal",
     priceBand: priceBands.includes(rawBand as PriceBand) ? rawBand as PriceBand : "all",
     marketplace: isKnownMarketplace(rawMarketplace) ? rawMarketplace : null,
-    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : "2d",
+    freshness: freshnessBands.includes(rawFreshness as FreshnessBand) ? rawFreshness as FreshnessBand : CATALOG_DEFAULT_FRESHNESS,
     minRating: rawRating ? Math.min(Math.max(Number.parseFloat(rawRating), 1), 5) : null,
     minDiscount: rawDiscount ? Math.min(Math.max(Number.parseFloat(rawDiscount), 1), 100) : null,
     lowestOnly: params.get("menorPreco") === "true",
@@ -166,7 +158,7 @@ export function catalogStateToSearchParams(state: CatalogState): URLSearchParams
   if (state.sort !== "signal") params.set("ordem", state.sort);
   if (state.search) params.set("busca", state.search);
   if (state.marketplace) params.set("loja", state.marketplace);
-  if (state.freshness && state.freshness !== "2d") params.set("frescor", state.freshness);
+  if (state.freshness && state.freshness !== CATALOG_DEFAULT_FRESHNESS) params.set("frescor", state.freshness);
   if (state.minRating != null) params.set("avaliacao", String(state.minRating));
   if (state.minDiscount != null) params.set("desconto", String(state.minDiscount));
   if (state.lowestOnly) params.set("menorPreco", "true");
