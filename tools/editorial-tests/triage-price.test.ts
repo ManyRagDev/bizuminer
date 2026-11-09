@@ -5,7 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 const require = createRequire(import.meta.url);
 const { loadAutomatedTriageCandidates, triageInputStillCurrent } = require("../../packages/web/lib/triage-candidates-db.ts");
 const { processIngestionPipeline } = require("../../packages/web/lib/curation-pipeline.ts");
-const { applyAutomatedTriageDecisions, curationQueue, curationSummary, reviewProduct } = require("../../packages/web/lib/curation-db.ts");
+const { applyAutomatedTriageDecisions, curationQueue, curationSummary, reviewProduct, runPendingAutomatedTriage } = require("../../packages/web/lib/curation-db.ts");
 const { confirmSpotCheck, rejectAndLearnSpotCheck, getRecentSpotCheckProducts } = require("../../packages/web/lib/editorial-compass.ts");
 process.env.DATABASE_URL = "postgresql://isolated-fixture-unused";
 const pg = new PGlite();
@@ -51,6 +51,11 @@ await pg.exec(`
   create table garimpa.price_observation(id text primary key,tenant_id text,product_id text,price_cents int,
     original_price_cents int,rating_star float,sales_count int,observed_at timestamptz,offer_evidence jsonb);
   create table garimpa.capture_run(id text primary key,tenant_id text,parameters jsonb);
+  create table garimpa.editorial_guideline(tenant_id text,guideline text,auto_publish boolean,
+    min_score_auto_publish int,updated_at timestamptz);
+  create table garimpa.triage_run(id text primary key default gen_random_uuid()::text,tenant_id text,
+    status text,total_input int,model_name text,pipeline_version text,metadata jsonb,finished_at timestamptz,
+    approved_count int,held_count int,rejected_count int,annotated_count int,error_message text);
   alter table garimpa.price_observation add capture_run_id text;
   alter table garimpa.product add external_id text default '123',
     add product_url text default 'https://example.com/product',add image_url text;
@@ -97,6 +102,19 @@ const evaluator = async (items: any[]) => items.map((item) => ({ productId: item
   editorialCategory: "gadget_util", justification: "Produto útil; caso isolado de teste." }));
 
 try {
+  await scenario("Resposta parcial da IA registra erro, preserva decisões e mantém o restante elegível", async () => {
+    await reset();
+    await seed({id:"responded"});
+    await seed({id:"unanswered"});
+    await assert.rejects(runPendingAutomatedTriage("local", 10, {
+      autoPublish: true,
+      evaluator: (items: any[]) => evaluator(items.filter(item => item.productId === "responded")),
+    }, factory), /triage_incomplete/);
+    const result = await pg.query(`select status,total_input,approved_count,error_message
+      from garimpa.triage_run where tenant_id='local'`);
+    assert.deepEqual(result.rows, [{status:"error",total_input:2,approved_count:1,error_message:"triage_incomplete"}]);
+    assert.deepEqual((await load()).map((item: any) => item.id), ["unanswered"]);
+  });
   await scenario("Triagem do lote exclui produtos capturados em outro lote e tenant", async () => {
     await reset(); await seed({id:"in-batch",status:"held",reason:"weak_offer",actor:"rule",ages:[]});
     await seed({id:"other-batch",status:"held",reason:"weak_offer",actor:"rule",ages:[]});

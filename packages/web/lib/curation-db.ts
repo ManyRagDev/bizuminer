@@ -1239,8 +1239,8 @@ export async function runPendingAutomatedTriage(
   }
 
   const [guidelineConfig, goldenExamples] = await Promise.all([
-    getEditorialGuideline(tenantId),
-    getGoldenExamples(tenantId, 6),
+    getEditorialGuideline(tenantId, sqlFactory),
+    getGoldenExamples(tenantId, 6, sqlFactory),
   ]);
 
   const mergedOptions: PipelineOptions = {
@@ -1277,22 +1277,25 @@ export async function runPendingAutomatedTriage(
     throw err;
   }
 
+  let summary: TriageApplicationSummary;
+  let completionError: string | null;
   try {
     const decisions = await processIngestionPipeline(candidates, mergedOptions);
-    const summary = await applyAutomatedTriageDecisions(decisions, tenantId, triageRunId, sqlFactory, options?.captureBatch);
+    summary = await applyAutomatedTriageDecisions(decisions, tenantId, triageRunId, sqlFactory, options?.captureBatch);
+    completionError = summary.processed < candidates.length ? "triage_incomplete" : null;
 
     if (triageRunId) {
       try {
         await withTenantDb(tenantId, async (sqlUpdate) => {
           await sqlUpdate`
             update garimpa.triage_run
-            set status = 'ok',
+            set status = ${completionError ? "error" : "ok"},
                 finished_at = now(),
-                total_input = ${summary.processed},
                 approved_count = ${summary.approved},
                 held_count = ${summary.held},
                 rejected_count = ${summary.rejected},
-                annotated_count = ${summary.annotatedPending}
+                annotated_count = ${summary.annotatedPending},
+                error_message = ${completionError}
             where id = ${triageRunId} and tenant_id = ${tenantId}
           `;
         }, sqlFactory);
@@ -1302,7 +1305,6 @@ export async function runPendingAutomatedTriage(
       }
     }
 
-    return { ...summary, triageRunId };
   } catch (err) {
     if (triageRunId) {
       try {
@@ -1321,6 +1323,8 @@ export async function runPendingAutomatedTriage(
     }
     throw err;
   }
+  if (completionError) throw new Error(completionError);
+  return { ...summary, triageRunId };
 }
 
 export interface ApprovedVitrineProduct {

@@ -21,7 +21,7 @@ export const AI_CURATION_BATCH_SIZE = 25;
  * fallback costuma ter capacidade livre. Configurável via env
  * `GEMINI_FALLBACK_MODELS` (lista separada por vírgula).
  */
-export const DEFAULT_FALLBACK_MODELS = ["gemini-2.0-flash"];
+export const DEFAULT_FALLBACK_MODELS = ["gemini-3.5-flash-lite"];
 
 export interface RetryConfig {
   /** Total de tentativas incluindo a primeira (3 = 1 + 2 retries). */
