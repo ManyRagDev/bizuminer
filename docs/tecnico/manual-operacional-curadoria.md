@@ -10,7 +10,7 @@
 ## 1. Visão Geral do Ciclo Editorial
 
 O BizuMiner opera pelo princípio de **curadoria por exceções**:
-- A **máquina faz a triagem pesada**: coleta centenas de produtos, descarta itens baratos inúteis (lixo), filtra peças industriais/peças de reposição, agrupa ofertas duplicadas e pré-classifica candidatos promissores com base na diretriz editorial configurada.
+- A **máquina faz a triagem pesada**. Coleta produtos, filtra peças industriais e de reposição e classifica candidatos pela utilidade e pela diretriz editorial da conta.
 - O **humano atua como editor-chefe**: define o tom editorial, resolve dúvidas limítrofes, audita uma pequena amostra diária e decide o que ganha destaque na vitrine do dia.
 
 ```
@@ -34,6 +34,8 @@ O BizuMiner opera pelo princípio de **curadoria por exceções**:
 ### Passo 1: Ingestão e Triagem com Loop Fechado (~2 min)
 
 O dia começa atualizando o catálogo das lojas parceiras e rodando a triagem de novos produtos.
+
+Produtos com preço válido entram na triagem em qualquer faixa de valor. Use a faixa completa quando houver variações. Afirmações de queda de preço exigem histórico comparável da mesma configuração. Produtos recentes retidos automaticamente pelo antigo piso de R$ 20 podem voltar à triagem da fila geral.
 
 #### Opção A: Pelo Terminal (Recomendado)
 Basta rodar a varredura com a flag `--trigger-triage`. Ela captura as ofertas e dispara a IA automaticamente ao terminar:
@@ -110,7 +112,7 @@ Esta tela reflete o que os visitantes reais estão vendo no site:
 ### Passo 5: Seleção de Destaques e Publicação (~2 min)
 
 1. Abra **Pauta de divulgação** e escolha WhatsApp ou Stories. A lista consulta o catálogo da sua conta a cada atualização. Para entrar, a oferta precisa estar aprovada, ter preço exato em reais observado nas últimas 48 horas e ter um link de afiliado válido.
-2. Confira **Capturas recentes** para ver o estado de cada produto. Use o filtro por loja. Se o lote salvou os produtos e a triagem foi interrompida, abra a oferta na Curadoria para revisá-la.
+2. Abra **Pendências de curadoria** quando houver decisões humanas ou ofertas que podem voltar à triagem com IA. Use o **Histórico de capturas** para consultar motivos e filtrar por loja.
 3. Escolha as ofertas em **Prontas para divulgar**. O mérito editorial e a recência definem a ordem, com os limites configurados para cada canal. Os links copiados abrem no BizuMiner. O botão de compra leva ao anúncio com a atribuição da conta de afiliado, inclusive quando a oferta do Mercado Livre ainda está fora da vitrine.
 4. Copie a mensagem ou o link e publique no canal. Use **Confirmar divulgação** depois de publicar para iniciar o intervalo daquele produto no canal.
 

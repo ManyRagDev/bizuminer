@@ -11,6 +11,7 @@ import { buildPautaMlTarget, httpsShopUrl, issuePautaLink, type MlPautaConfig } 
 import { composeLivePauta, PAUTA_PRICE_WINDOW_MS, type PautaCandidate, type PautaChannel } from "./pauta-policy.ts";
 import { RECOMMENDATION_POLICY_VERSION, validateChannelPolicy, type ConfirmedExposure } from "./recommendation-policy.ts";
 import { withAccountDb, type AccountContext } from "./tenant-db.ts";
+import { PRODUCT_EVIDENCE_TTL_DAYS } from "./catalog-policy.ts";
 
 type Tx = postgres.TransactionSql;
 type ChannelConfig = {
@@ -107,12 +108,17 @@ type CaptureRow = {
   price_type: string | null;
   currency: string | null;
   observed_at: Date;
-  status: string | null;
+  stage: Exclude<PautaCapture["status"], "ready" | "blocked"> | "approved";
   reason_code: string | null;
   reason_detail: string | null;
-  batch_failed: boolean | null;
+  ai_justification: string | null;
   total: number;
+  review_total: number;
+  triage_total: number;
+  retry_total: number;
 };
+
+export type PautaCaptureActions = { review: number; triage: number; retry: number };
 
 export type PautaCapture = {
   id: string;
@@ -122,7 +128,7 @@ export type PautaCapture = {
   priceType: string | null;
   currency: string | null;
   capturedAt: string;
-  status: "ready" | "pending" | "rejected" | "held" | "blocked" | "failed";
+  status: "ready" | "pending" | "review" | "retry" | "processing" | "deferred" | "rejected" | "held" | "blocked" | "failed";
   reasons: string[];
 };
 
@@ -131,13 +137,18 @@ const curationReasons = new Map<string, string>([...REJECTION_REASONS, ...HOLD_R
 function captureStatus(row: CaptureRow, selection: Awaited<ReturnType<typeof selectOffers>>): Pick<PautaCapture, "status" | "reasons"> {
   if (selection.selected.some(p => p.id === row.id)) return { status: "ready", reasons: ["Pronta neste canal."] };
   const reviewReason = row.reason_detail || curationReasons.get(row.reason_code ?? "");
-  if (row.status === "rejected") return { status: "rejected", reasons: [reviewReason || "A oferta foi rejeitada na curadoria."] };
-  if (row.status === "held") return { status: "held", reasons: [reviewReason || "Em espera na curadoria."] };
-  if (row.status !== "approved") return row.batch_failed
-    ? { status: "failed", reasons: ["A captura foi salva, mas a triagem do lote não terminou. Revise a oferta na Curadoria."] }
-    : { status: "pending", reasons: ["Aguardando triagem."] };
-  return { status: "blocked", reasons: selection.reasonsById.get(row.id) ??
-    [selection.config ? "Falta uma observação válida para divulgação." : "Este canal está desativado ou venceu."] };
+  switch (row.stage) {
+    case "approved": return { status: "blocked", reasons: selection.reasonsById.get(row.id) ??
+      [selection.config ? "Falta uma observação válida para divulgação." : "Este canal está desativado ou venceu."] };
+    case "review": return { status: "review", reasons: [row.ai_justification || "A Curadoria precisa decidir se a oferta entra no catálogo."] };
+    case "retry": return { status: "retry", reasons: ["Retida pelo antigo piso de R$ 20. A triagem geral pode reavaliar a oferta."] };
+    case "processing": return { status: "processing", reasons: ["O lote de captura ainda está em andamento."] };
+    case "deferred": return { status: "deferred", reasons: ["A revisão foi adiada na Curadoria."] };
+    case "rejected": return { status: "rejected", reasons: [reviewReason || "A oferta foi rejeitada na curadoria."] };
+    case "held": return { status: "held", reasons: [reviewReason || "Em espera na curadoria."] };
+    case "failed": return { status: "failed", reasons: ["A captura foi salva. Execute a triagem geral para avaliar a oferta."] };
+    case "pending": return { status: "pending", reasons: ["A captura foi salva e pode ser avaliada na triagem geral."] };
+  }
 }
 
 async function recentCaptures(tx: Tx, tenantId: string, now: Date, marketplace: string | null) {
@@ -148,18 +159,46 @@ async function recentCaptures(tx: Tx, tenantId: string, now: Date, marketplace: 
         and o.observed_at>=${new Date(+now - PAUTA_PRICE_WINDOW_MS)}
         and o.observed_at<=${new Date(+now + 60_000)}
       order by o.product_id,o.observed_at desc,o.id desc
+    ), classified as (
+      select p.id,p.title,p.marketplace,o.price_cents,o.price_type,o.currency,o.observed_at,
+        c.reason_code,c.reason_detail,
+        case when event.actor_type='llm' and event.to_status='pending'
+          then nullif(event.metadata#>>'{automation,aiJustification}','') end as ai_justification,
+        case
+          when c.status in ('approved','rejected') then c.status
+          when c.deferred_until>${now} then 'deferred'
+          when c.status='held' and event.actor_type='rule' and event.to_status='held'
+            and c.reason_code=event.reason_code and c.reason_code in ('insufficient_evidence','weak_offer')
+            and event.metadata#>>'{automation,pricePolicy,version}'='triage-value-v1'
+            and event.metadata#>>'{automation,pricePolicy,outcome}' in ('unverified_value','low_value')
+            and o.price_cents>0 and p.last_seen_at>=${new Date(+now - PRODUCT_EVIDENCE_TTL_DAYS * 86_400_000)} then 'retry'
+          when c.status='held' then 'held'
+          when c.status is distinct from 'pending' or exists (
+            select 1 from garimpa.curation_event decision where decision.tenant_id=p.tenant_id and decision.product_id=p.id
+              and (decision.actor_type='llm' or (decision.actor_type='rule' and decision.to_status in ('rejected','held')))
+          ) then 'review'
+          when b.status='running' and (b.metadata#>>'{execution,deadline}')::timestamptz>${now} then 'processing'
+          when (b.status in ('error','partial') and b.metadata#>'{execution,triage}' is null)
+            or (b.status='running' and (b.metadata#>>'{execution,deadline}')::timestamptz<=${now}) then 'failed'
+          else 'pending'
+        end as stage
+      from latest o join garimpa.product p on p.tenant_id=${tenantId} and p.id=o.product_id
+      left join garimpa.product_curation c on c.tenant_id=p.tenant_id and c.product_id=p.id
+      left join lateral (
+        select e.actor_type,e.to_status,e.reason_code,e.metadata
+        from garimpa.curation_event e where e.tenant_id=p.tenant_id and e.product_id=p.id
+        order by e.id desc limit 1
+      ) event on true
+      left join garimpa.capture_run r on r.tenant_id=p.tenant_id and r.id=o.capture_run_id
+      left join garimpa.capture_batch b on b.tenant_id=r.tenant_id
+        and b.id::text=r.parameters->>'operationBatchId'
+      where (${marketplace}::text is null or p.marketplace=${marketplace})
     )
-    select p.id,p.title,p.marketplace,o.price_cents,o.price_type,o.currency,o.observed_at,c.status,c.reason_code,c.reason_detail,
-      ((b.status in ('error','partial') and b.metadata->'execution'->'triage' is null) or (b.status='running'
-        and (b.metadata->'execution'->>'deadline')::timestamptz<=${now})) as batch_failed,
-      count(*) over ()::int as total
-    from latest o join garimpa.product p on p.tenant_id=${tenantId} and p.id=o.product_id
-    left join garimpa.product_curation c on c.tenant_id=p.tenant_id and c.product_id=p.id
-    left join garimpa.capture_run r on r.tenant_id=p.tenant_id and r.id=o.capture_run_id
-    left join garimpa.capture_batch b on b.tenant_id=r.tenant_id
-      and b.id::text=r.parameters->>'operationBatchId'
-    where (${marketplace}::text is null or p.marketplace=${marketplace})
-    order by o.observed_at desc,p.id limit 200`;
+    select classified.*,count(*) over ()::int as total,
+      count(*) filter (where stage='review') over ()::int as review_total,
+      count(*) filter (where stage in ('pending','failed')) over ()::int as triage_total,
+      count(*) filter (where stage='retry') over ()::int as retry_total
+    from classified order by observed_at desc,id limit 200`;
 }
 
 function offerConfirmationId(tenantId: string, channel: PautaChannel, version: number, candidate: PautaCandidate) {
@@ -234,7 +273,9 @@ export async function readLivePauta(context: AccountContext, channel: PautaChann
       priceType: row.price_type, currency: row.currency,
       capturedAt: row.observed_at.toISOString(), ...captureStatus(row, selection),
     }));
-    return { products, recent, recentTotal: captures[0]?.total ?? 0, active: selection.config !== null, updatedAt: now.toISOString() };
+    const first = captures[0];
+    const captureActions: PautaCaptureActions = { review: first?.review_total ?? 0, triage: first?.triage_total ?? 0, retry: first?.retry_total ?? 0 };
+    return { products, recent, recentTotal: first?.total ?? 0, captureActions, active: selection.config !== null, updatedAt: now.toISOString() };
   }, sqlFactory);
 }
 

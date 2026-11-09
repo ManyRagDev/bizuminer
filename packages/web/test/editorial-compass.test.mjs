@@ -160,7 +160,7 @@ test("Piloto Automático: filtros determinísticos e rejeições por risco preva
       id: "prod_cheap",
       marketplace: "shopee",
       title: "Adesivo decorativo infantil simples",
-      priceCents: 990, // R$ 9,90 < R$ 20,00
+      priceCents: 990,
       ratingStar: 4.9,
       salesCount: 1000,
       familyKey: null,
@@ -183,6 +183,14 @@ test("Piloto Automático: filtros determinísticos e rejeições por risco preva
     minScoreAutoPublish: 4,
     evaluator: async () => [
       {
+        productId: "prod_cheap",
+        desirabilityScore: 4,
+        hasMisleadingClaim: false,
+        isAdultOrUnsafe: false,
+        editorialCategory: "utilidade_pratica",
+        justification: "Produto útil, com boa avaliação.",
+      },
+      {
         productId: "prod_miracle",
         desirabilityScore: 4,
         hasMisleadingClaim: true,
@@ -197,8 +205,8 @@ test("Piloto Automático: filtros determinísticos e rejeições por risco preva
 
   const cheap = decisions.find((d) => d.productId === "prod_cheap");
   assert.ok(cheap);
-  assert.equal(cheap.status, "held");
-  assert.equal(cheap.reasonCode, "insufficient_evidence");
+  assert.equal(cheap.status, "approved");
+  assert.equal(cheap.actorType, "llm");
 
   const miracle = decisions.find((d) => d.productId === "prod_miracle");
   assert.ok(miracle);

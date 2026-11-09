@@ -24,33 +24,6 @@ test("Benchmark: dataset canônico possui exatamente 50 casos estruturados", () 
   );
 });
 
-test("Benchmark: 10/10 preços abaixo de R$ 20 sem histórico aguardam evidência", async () => {
-  const cheapJunkItems = benchmarkData.filter((d) => d.group === "cheap_junk");
-  assert.equal(cheapJunkItems.length, 10);
-
-  const candidates = cheapJunkItems.map((d) => ({
-    id: d.id,
-    marketplace: "shopee",
-    title: d.title,
-    priceCents: d.priceCents,
-    ratingStar: d.ratingStar,
-    salesCount: d.salesCount,
-    familyKey: null,
-    category: d.category,
-  }));
-
-  const decisions = await processIngestionPipeline(candidates, {
-    evaluator: async () => [],
-  });
-
-  assert.equal(decisions.length, 10);
-  for (const dec of decisions) {
-    assert.equal(dec.status, "held");
-    assert.equal(dec.reasonCode, "insufficient_evidence");
-    assert.equal(dec.actorType, "rule");
-  }
-});
-
 test("Benchmark: 5/5 casos de risco/peças industriais/adulto são rejeitados deterministamente", async () => {
   const riskItems = benchmarkData.filter((d) => d.group === "forbidden_risk");
   assert.equal(riskItems.length, 5);
@@ -143,8 +116,9 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
     });
   };
 
-  // Piloto automático ativo com minScore = 4
+  // Piloto automático ativo com minScore = 4 e limite explícito de 3 representantes
   const decisions = await processIngestionPipeline(candidates, {
+    maxRepresentatives: 3,
     autoPublish: true,
     minScoreAutoPublish: 4,
     evaluator: mockEvaluator,
@@ -154,7 +128,6 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
 
   // Verificações de segurança absoluta
   const approved = decisions.filter((d) => d.status === "approved");
-  const held = decisions.filter((d) => d.status === "held");
   const rejected = decisions.filter((d) => d.status === "rejected");
   const pending = decisions.filter((d) => d.status === "pending");
 
@@ -164,11 +137,12 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
     assert.equal(dec?.status, "rejected", "Item de risco deve ser rejeitado: " + riskId);
   }
 
-  // 2. Preços abaixo de R$ 20 sem referência comparável continuam em revisão
-  for (const junkId of benchmarkData.filter((b) => b.group === "cheap_junk").map((b) => b.id)) {
-    const dec = decisions.find((d) => d.productId === junkId);
-    assert.equal(dec?.status, "held", "Preço baixo sem referência deve ser verificado: " + junkId);
-    assert.equal(dec?.reasonCode, "insufficient_evidence");
+  // 2. Itens baratos com pouco apelo são rejeitados pela avaliação editorial.
+  for (const fixture of benchmarkData.filter((b) => b.group === "cheap_junk")) {
+    const dec = decisions.find((d) => d.productId === fixture.id);
+    assert.equal(dec?.status, fixture.expectedStatus);
+    assert.equal(dec?.reasonCode, fixture.expectedReason);
+    assert.equal(dec?.actorType, fixture.expectedActor);
   }
 
   // 3. Nenhum produto com nota regular (score < 4) foi aprovado no piloto automático
@@ -184,7 +158,6 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
   }
 
   assert.ok(approved.length >= 15, "Deve aprovar pelo menos 15 achadinhos válidos");
-  assert.ok(held.length >= 10, "Deve reter itens sub-ticket sem histórico suficiente");
   assert.ok(pending.length >= 2, "Excedentes de saturação devem aguardar exame humano");
   assert.ok(rejected.length >= 5, "Deve rejeitar itens de risco");
 });

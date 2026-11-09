@@ -58,6 +58,28 @@ try {
   const pending = await read();
   assert.deepEqual(pending.products, []);
   assert.deepEqual(pending.recent.map(p => [p.id, p.status]), [["p_a", "pending"]]);
+  assert.deepEqual(pending.captureActions, { review: 0, triage: 1, retry: 0 });
+  await pg.exec(`
+    insert into garimpa.capture_batch(id,tenant_id,requested_marketplaces,pages,status)
+    values ('10000000-0000-4000-8000-000000000001','a',array['mercadolivre'],1,'error');
+    insert into garimpa.capture_run(id,tenant_id,marketplace,started_at,status,parameters)
+    values ('pauta-failed-run','a','mercadolivre',now(),'error','{"operationBatchId":"10000000-0000-4000-8000-000000000001"}');
+    update garimpa.price_observation set capture_run_id='pauta-failed-run' where id='o_a';
+  `);
+  assert.equal((await read()).recent[0].status, "failed");
+  await pg.exec(`
+    insert into garimpa.curation_event(tenant_id,product_id,from_status,to_status,actor_type,metadata)
+    values ('a','p_a','pending','pending','llm','{"automation":{"aiJustification":"Produto útil, mas pouco diferente das alternativas."}}');
+  `);
+  const reviewed = await read();
+  assert.equal(reviewed.recent[0].status, "review");
+  assert.deepEqual(reviewed.recent[0].reasons, ["Produto útil, mas pouco diferente das alternativas."]);
+  assert.deepEqual(reviewed.captureActions, { review: 1, triage: 0, retry: 0 });
+  await pg.exec("update garimpa.product_curation set deferred_until=now()+interval '1 day' where product_id='p_a'");
+  const deferred = await read();
+  assert.equal(deferred.recent[0].status, "deferred");
+  assert.deepEqual(deferred.captureActions, { review: 0, triage: 0, retry: 0 });
+  await pg.exec("update garimpa.product_curation set deferred_until=null where product_id='p_a'");
   await pg.exec("update garimpa.product_curation set status='approved' where tenant_id='a' and product_id='p_a'");
   const approved = (await read()).products[0];
   assert.equal(approved.id, "p_a");
@@ -109,6 +131,34 @@ try {
   await pg.exec("update garimpa.publication set status='expired' where id='pub_b'");
   assert.equal((await redirectPublicPautaLink(bToken, factory)).status, 404);
   console.log("PASS captura → link Bizu → afiliado da conta, com recaptura, revogação e divulgação idempotente");
+
+  await pg.exec(`
+    update garimpa.product_curation set status='held',reason_code='insufficient_evidence' where product_id='p_a';
+    insert into garimpa.curation_event(tenant_id,product_id,from_status,to_status,actor_type,reason_code,metadata)
+    values ('a','p_a','pending','held','rule','insufficient_evidence',
+      '{"automation":{"pricePolicy":{"version":"triage-value-v1","outcome":"unverified_value"}}}');
+  `);
+  const oldFloor = await read();
+  assert.equal(oldFloor.recent[0].status, "retry");
+  assert.deepEqual(oldFloor.captureActions, { review: 0, triage: 0, retry: 1 });
+  await pg.exec(`
+    update garimpa.price_observation set observed_at=now()-interval '1 hour' where product_id='p_a';
+    insert into garimpa.product(id,tenant_id,marketplace,external_id,title,product_url,last_price_cents,last_seen_at)
+    select 'rejected-'||n,'a','mercadolivre','MLB20000'||n,'Histórico '||n,'https://produto.mercadolivre.com.br/MLB-20000'||n,500,now()
+      from generate_series(1,200) n;
+    insert into garimpa.product_curation(tenant_id,product_id,status,reason_code)
+    select 'a',id,'rejected','low_utility' from garimpa.product where id like 'rejected-%'
+    on conflict (tenant_id,product_id) do update set status=excluded.status,reason_code=excluded.reason_code;
+    insert into garimpa.price_observation(id,tenant_id,product_id,price_cents,observed_at)
+    select 'obs-'||id,'a',id,500,now() from garimpa.product where id like 'rejected-%';
+  `);
+  const cappedHistory = await read();
+  assert.equal(cappedHistory.recentTotal, 201);
+  assert.equal(cappedHistory.recent.length, 200);
+  assert.ok(cappedHistory.recent.every(product => product.status === "rejected"));
+  assert.deepEqual(cappedHistory.captureActions, { review: 0, triage: 0, retry: 1 });
+  assert.deepEqual((await read(b)).captureActions, { review: 0, triage: 0, retry: 0 });
+  console.log("PASS distingue decisão humana, triagem interrompida, revisão adiada e retenção antiga acima do limite do histórico");
 } finally {
   await pg.close();
 }

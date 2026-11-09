@@ -137,9 +137,10 @@
     "ratingStar": 4.1,
     "salesCount": 50,
     "category": "Cabos",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_02",
@@ -149,9 +150,10 @@
     "ratingStar": 4.2,
     "salesCount": 120,
     "category": "Acessórios",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_03",
@@ -161,9 +163,10 @@
     "ratingStar": 4.5,
     "salesCount": 800,
     "category": "Celulares",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_04",
@@ -173,9 +176,10 @@
     "ratingStar": 4.8,
     "salesCount": 300,
     "category": "Papelaria",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_05",
@@ -185,9 +189,10 @@
     "ratingStar": 4,
     "salesCount": 90,
     "category": "Áudio",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_06",
@@ -197,9 +202,10 @@
     "ratingStar": 4.3,
     "salesCount": 400,
     "category": "Beleza",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_07",
@@ -209,9 +215,10 @@
     "ratingStar": 4.2,
     "salesCount": 150,
     "category": "Cozinha",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_08",
@@ -221,9 +228,10 @@
     "ratingStar": 4.1,
     "salesCount": 60,
     "category": "Beleza",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_09",
@@ -233,9 +241,10 @@
     "ratingStar": 4,
     "salesCount": 110,
     "category": "Lavanderia",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_cj_10",
@@ -245,9 +254,10 @@
     "ratingStar": 4.4,
     "salesCount": 45,
     "category": "Papelaria",
-    "expectedStatus": "held",
-    "expectedReason": "insufficient_evidence",
-    "expectedActor": "rule"
+    "expectedStatus": "rejected",
+    "expectedReason": "low_utility",
+    "expectedActor": "llm",
+    "mockScore": 2
   },
   {
     "id": "bench_eb_01",

@@ -4,8 +4,7 @@ import type { TriageInputVersion } from "./ai-curation-contract.ts";
 import { PRODUCT_EVIDENCE_TTL_DAYS } from "./catalog-policy.ts";
 import { sameOfferConfigurationSql } from "./offer-history.ts";
 import {
-  MIN_PRODUCT_VALUE_CENTS_DEFAULT, TRIAGE_VALUE_POLICY_VERSION,
-  VALUE_REFERENCE_LOOKBACK_DAYS, VALUE_REFERENCE_MIN_DAYS, VALUE_REFERENCE_MIN_OBSERVATIONS,
+  TRIAGE_VALUE_POLICY_VERSION, VALUE_REFERENCE_LOOKBACK_DAYS,
 } from "./triage-value-policy.ts";
 
 type QueryClient = Pick<postgres.Sql, "unsafe">;
@@ -20,7 +19,6 @@ export async function loadAutomatedTriageCandidates(
   sql: QueryClient,
   tenantId: string,
   limit: number,
-  minValueCents = MIN_PRODUCT_VALUE_CENTS_DEFAULT,
   captureBatchId?: string,
 ): Promise<CandidateProduct[]> {
   const comparable = sameOfferConfigurationSql("latest", "historical");
@@ -28,23 +26,25 @@ export async function loadAutomatedTriageCandidates(
     with candidates as (
       select f.id, f.marketplace, f.title, f.price_cents as "priceCents",
         f.rating_star as "ratingStar", f.sales_count as "salesCount", f.family_key as "familyKey", f.category,
+        (latest.offer_evidence->>'priceMinCents')::int as "priceMinCents",
+        (latest.offer_evidence->>'priceMaxCents')::int as "priceMaxCents",
         f.status as "currentStatus", event.id::text as "latestEventId",
         latest.id::text as "priceObservationId", md5(coalesce(latest.offer_evidence::text,'null')) as "offerEvidenceKey",
         latest.observed_at as "observedAt", f.queued_at,
         history.reference_price_cents as "referencePriceCents",
         history.observation_count as "referenceObservationCount", history.history_days as "referenceHistoryDays",
-        (f.price_cents >= $3 or (history.reference_price_cents >= $3 and f.price_cents > 0
-          and f.price_cents < history.reference_price_cents
-          and history.observation_count >= ${VALUE_REFERENCE_MIN_OBSERVATIONS}
-          and history.history_days >= ${VALUE_REFERENCE_MIN_DAYS})) as value_eligible,
         (f.status='pending' and not exists (
           select 1 from garimpa.curation_event e where e.tenant_id=f.tenant_id and e.product_id=f.id
-            and e.actor_type in ('rule','llm'))) as never_triaged,
+            and (e.actor_type='llm' or (e.actor_type='rule' and e.to_status in ('rejected','held'))))) as never_triaged,
         (f.status='held' and event.actor_type='rule' and event.to_status='held'
           and f.reason_code=event.reason_code and (
             event.reason_code='weak_offer' or (event.reason_code='insufficient_evidence'
-              and event.metadata->'automation'->'pricePolicy'->>'version'=$4
-              and event.metadata->'automation'->'pricePolicy'->>'outcome' in ('unverified_value','invalid_price'))
+              and (
+                (event.metadata#>>'{automation,pricePolicy,version}'='triage-value-v1'
+                  and event.metadata#>>'{automation,pricePolicy,outcome}' in ('unverified_value','invalid_price'))
+                or (event.metadata#>>'{automation,pricePolicy,version}'=$4
+                  and event.metadata#>>'{automation,pricePolicy,outcome}'='invalid_price')
+              ))
           )) as automatic_price_hold
       from garimpa.curation_queue_facts f
       join lateral (select o.id,o.price_cents,o.observed_at,o.offer_evidence
@@ -63,23 +63,28 @@ export async function loadAutomatedTriageCandidates(
           and historical.price_cents > 0
           and jsonb_typeof(latest.offer_evidence->'variantKey')='string'
           and nullif(btrim(latest.offer_evidence->>'variantKey'),'') is not null
+          and coalesce(latest.offer_evidence->>'priceType','exact')='exact'
+          and coalesce(historical.offer_evidence->>'priceType','exact')='exact'
+          and (historical.offer_evidence->'packageQuantity') is not distinct from (latest.offer_evidence->'packageQuantity')
+          and (historical.offer_evidence->'packageContents') is not distinct from (latest.offer_evidence->'packageContents')
           and ${comparable}) history
       where f.tenant_id=$1 and f.status in ('pending','held')
         and (f.deferred_until is null or f.deferred_until<=now())
         and f.last_seen_at>=now()-interval '${PRODUCT_EVIDENCE_TTL_DAYS} days'
-        and ($5::uuid is null or exists (
+        and ($3::uuid is null or exists (
           select 1 from garimpa.price_observation batch_observation
           join garimpa.capture_run batch_run on batch_run.id=batch_observation.capture_run_id
             and batch_run.tenant_id=batch_observation.tenant_id
           where batch_observation.tenant_id=f.tenant_id and batch_observation.product_id=f.id
-            and batch_run.parameters->>'operationBatchId'=$5::text
+            and batch_run.parameters->>'operationBatchId'=$3::text
         ))
     )
-    select * from candidates where never_triaged or (automatic_price_hold and value_eligible)
-    order by value_eligible desc,queued_at asc,id asc limit $2
-  `, [tenantId, Math.min(Math.max(limit, 1), 200), minValueCents, TRIAGE_VALUE_POLICY_VERSION, captureBatchId ?? null]);
+    select * from candidates where never_triaged or (automatic_price_hold and "priceCents" > 0)
+    order by ("priceCents" > 0) desc nulls last,queued_at asc,id asc limit $2
+  `, [tenantId, Math.min(Math.max(limit, 1), 200), captureBatchId ?? null, TRIAGE_VALUE_POLICY_VERSION]);
   return rows.map((row) => ({
     id: row.id, marketplace: row.marketplace, title: row.title, priceCents: row.priceCents,
+    priceMinCents: row.priceMinCents ?? null, priceMaxCents: row.priceMaxCents ?? null,
     ratingStar: row.ratingStar, salesCount: row.salesCount, familyKey: row.familyKey, category: row.category,
     comparablePriceHistory: { referencePriceCents: row.referencePriceCents,
       observationCount: row.referenceObservationCount, historyDays: row.referenceHistoryDays },

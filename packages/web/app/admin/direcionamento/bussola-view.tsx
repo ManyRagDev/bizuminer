@@ -138,8 +138,8 @@ export default function BussolaView({
           <div className="safeguard-pill">
             <span className="safeguard-icon" aria-hidden="true">🛡️</span>
             <div>
-              <strong>Piso de Valor R$ 20</strong>
-              <small>Itens de valor baixo bloqueados</small>
+              <strong>Preço e utilidade</strong>
+              <small>Achados úteis em qualquer faixa de preço</small>
             </div>
           </div>
           <div className="safeguard-pill">

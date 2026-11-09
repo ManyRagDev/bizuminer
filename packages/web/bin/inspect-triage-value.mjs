@@ -13,6 +13,7 @@ const sql = postgres(process.env.DATABASE_URL, {
 try {
   const report = await sql.begin("isolation level repeatable read read only", async (tx) => {
     await tx`set local statement_timeout = '20000ms'`;
+    await tx`select set_config('garimpa.tenant_id','local',true),set_config('garimpa.actor_type','worker',true)`;
     const candidates = await loadAutomatedTriageCandidates(tx, "local", 200);
     const outcomes = {};
     for (const candidate of candidates) {
@@ -21,7 +22,7 @@ try {
     }
     const coverage = await tx`
       select c.status, count(*)::int as products,
-        count(*) filter (where latest.price_cents<2000)::int as below_value_floor,
+        count(*) filter (where latest.price_cents<=0)::int as invalid_prices,
         count(*) filter (where jsonb_typeof(latest.offer_evidence->'variantKey')='string'
           and nullif(btrim(latest.offer_evidence->>'variantKey'),'') is not null)::int as identified_configurations
       from garimpa.product p

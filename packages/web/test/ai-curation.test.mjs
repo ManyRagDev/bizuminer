@@ -9,30 +9,38 @@ import {
 } from "../lib/ai-curation-service.ts";
 import { processIngestionPipeline } from "../lib/curation-pipeline.ts";
 
-test("Estágio 1: preço abaixo de R$ 20 sem referência é retido por falta de evidência", async () => {
+test("Estágio 1: variações com preço inicial abaixo de R$ 20 chegam à IA com a faixa inteira", async () => {
   const products = [
     {
       id: "prod_cheap",
       marketplace: "shopee",
-      title: "Chaveiro emborrachado fofo",
-      priceCents: 1500, // R$ 15,00
+      title: "Jogo de lençol com fronhas",
+      priceCents: 1499,
+      priceMinCents: 1499,
+      priceMaxCents: 4090,
       ratingStar: 4.8,
       salesCount: 100,
       familyKey: null,
-      category: "Acessórios",
+      category: "Casa",
     },
   ];
 
   const decisions = await processIngestionPipeline(products, {
-    evaluator: async () => [],
+    evaluator: async ([item]) => {
+      assert.equal(item.priceFormatted, "R$ 14.99 a R$ 40.90");
+      assert.equal(item.verifiedPriceReference, undefined);
+      return [{
+        productId: item.productId, desirabilityScore: 4, hasMisleadingClaim: false,
+        isAdultOrUnsafe: false, editorialCategory: "utilidade_pratica", justification: "Útil para a rotina.",
+      }];
+    },
   });
 
   assert.equal(decisions.length, 1);
   assert.equal(decisions[0].productId, "prod_cheap");
-  assert.equal(decisions[0].status, "held");
-  assert.equal(decisions[0].reasonCode, "insufficient_evidence");
-  assert.match(decisions[0].reasonDetail, /falta histórico comparável/);
-  assert.equal(decisions[0].actorType, "rule");
+  assert.equal(decisions[0].status, "pending");
+  assert.equal(decisions[0].reasonCode, null);
+  assert.equal(decisions[0].actorType, "llm");
 });
 
 test("Estágio 1: produto com termo sexual é rejeitado como adult_sexual", async () => {

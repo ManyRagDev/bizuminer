@@ -30,7 +30,9 @@ function translateReason(reason: string | null): string {
   if (!reason) return "Sem código de motivo";
   switch (reason) {
     case "weak_offer":
-      return "Ticket baixo (< R$ 20)";
+      return "Oferta fraca";
+    case "insufficient_evidence":
+      return "Evidência insuficiente";
     case "family_saturation":
       return "Saturação de família (produtos repetidos)";
     case "adult_sexual":

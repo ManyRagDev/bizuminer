@@ -98,11 +98,12 @@ const evaluator = async (items: any[]) => items.map((item) => ({ productId: item
 
 try {
   await scenario("Triagem do lote exclui produtos capturados em outro lote e tenant", async () => {
-    await reset(); await seed({id:"in-batch",price:4000}); await seed({id:"other-batch",price:4000});
+    await reset(); await seed({id:"in-batch",status:"held",reason:"weak_offer",actor:"rule",ages:[]});
+    await seed({id:"other-batch",status:"held",reason:"weak_offer",actor:"rule",ages:[]});
     const batch="00000000-0000-0000-0000-000000000001";
     await pg.query("insert into garimpa.capture_run values('batch-run','local',$1)",[JSON.stringify({operationBatchId:batch})]);
     await pg.exec("update garimpa.price_observation set capture_run_id='batch-run' where product_id='in-batch'");
-    assert.deepEqual((await loadAutomatedTriageCandidates(sql,"local",20,2000,batch)).map((p:any)=>p.id),["in-batch"]);
+    assert.deepEqual((await loadAutomatedTriageCandidates(sql,"local",20,batch)).map((p:any)=>p.id),["in-batch"]);
     assert.equal((await loadAutomatedTriageCandidates(sql,"local",20)).length,2);
   });
   await scenario("SQL real permite R$ 100 para R$ 11 e entrega a referência à IA", async () => {
@@ -119,51 +120,59 @@ try {
   await scenario("Preço riscado sem observações anteriores não comprova valor", async () => {
     await reset(); await seed({ages:[]});
     const [decision] = await processIngestionPipeline(await load(),{autoPublish:true,evaluator});
-    assert.equal(decision.reasonCode,"insufficient_evidence");
+    assert.equal(decision.status,"approved");
+    assert.equal(decision.pricePolicy.outcome,"current_price");
   });
-  await scenario("Histórico de variante, quantidade ou conteúdo diferentes não abre exceção", async () => {
+  await scenario("Variante, quantidade ou conteúdo diferentes não comprovam queda de preço", async () => {
     for (const latestEvidence of [{...evidence,variantKey:"so-cabo"},
       {...evidence,packageQuantity:2},{...evidence,packageContents:["Cabo"]}]) {
       await reset(); await seed({latestEvidence});
       const [decision] = await processIngestionPipeline(await load(),{autoPublish:true,evaluator});
-      assert.equal(decision.reasonCode,"insufficient_evidence");
+      assert.equal(decision.pricePolicy.outcome,"current_price");
     }
   });
   await scenario("Preço de faixa, chave vazia ou identidade ausente não comprova configuração", async () => {
     for (const latestEvidence of [null,{...evidence,variantKey:""},{...evidence,variantKey:123},
-      {...evidence,priceMinCents:1100,priceMaxCents:10000}]) {
+      {...evidence,priceMinCents:1100,priceMaxCents:10000},{...evidence,priceType:"from"}]) {
       await reset(); await seed({latestEvidence});
       const [decision] = await processIngestionPipeline(await load(),{autoPublish:true,evaluator});
-      assert.equal(decision.reasonCode,"insufficient_evidence");
+      assert.equal(decision.pricePolicy.outcome,"current_price");
     }
   });
   await scenario("Exclui a observação atual e exige três anteriores em sete dias dentro de 90", async () => {
     for (const ages of [[14,7],[6,3,1],[120,110,100]]) {
       await reset(); await seed({ages});
       const [decision] = await processIngestionPipeline(await load(),{autoPublish:true,evaluator});
-      assert.equal(decision.reasonCode,"insufficient_evidence");
+      assert.equal(decision.pricePolicy.outcome,"current_price");
     }
   });
   await scenario("Um preço anterior baixo impede escolher só as referências altas", async () => {
     await reset(); await seed();
-    await pg.query("update garimpa.price_observation set price_cents=1500 where id=$1",["local:flash:prior-1"]);
+    await pg.query("update garimpa.price_observation set price_cents=1000 where id=$1",["local:flash:prior-1"]);
     const [decision] = await processIngestionPipeline(await load(),{autoPublish:true,evaluator});
-    assert.equal(decision.reasonCode,"weak_offer");
+    assert.equal(decision.pricePolicy.outcome,"current_price");
   });
-  await scenario("Recupera retenção automática antiga pelo piso somente com evidência válida", async () => {
-    await reset(); await seed({status:"held",reason:"weak_offer",actor:"rule"});
+  await scenario("Recupera retenção automática antiga pelo piso mesmo sem histórico comparável", async () => {
+    await reset(); await seed({status:"held",reason:"weak_offer",actor:"rule",ages:[]});
     const candidates = await load();
     assert.equal(candidates.length,1);
     assert.equal((await processIngestionPipeline(candidates,{autoPublish:true,evaluator}))[0].status,"approved");
-    await reset(); await seed({status:"held",reason:"weak_offer",actor:"rule",ages:[]});
-    assert.equal((await load()).length,0);
   });
-  await scenario("Falta de evidência do piso volta quando há histórico; outros motivos ficam preservados", async () => {
-    await reset(); await seed({status:"held",reason:"insufficient_evidence",actor:"rule",
+  await scenario("Falta de histórico do piso volta à fila; outras faltas de evidência ficam preservadas", async () => {
+    await reset(); await seed({status:"held",reason:"insufficient_evidence",actor:"rule",ages:[],
       metadata:{automation:{pricePolicy:{version:"triage-value-v1",outcome:"unverified_value"}}}});
     assert.equal((await load()).length,1);
     await reset(); await seed({status:"held",reason:"insufficient_evidence",actor:"rule"});
     assert.equal((await load()).length,0);
+  });
+  await scenario("Preço inválido retido volta somente após receber um preço positivo", async () => {
+    for (const version of ["triage-value-v1","triage-value-v2"]) {
+      await reset(); await seed({status:"held",reason:"insufficient_evidence",actor:"rule",price:0,ages:[],
+        metadata:{automation:{pricePolicy:{version,outcome:"invalid_price"}}}});
+      assert.equal((await load()).length,0);
+      await pg.exec("update garimpa.price_observation set price_cents=1 where id='local:flash:current'");
+      assert.equal((await load()).length,1);
+    }
   });
   await scenario("Não reavalia decisões humanas, aprovados, rejeitados, saturação ou anotados", async () => {
     for (const options of [
@@ -191,16 +200,15 @@ try {
       assert.equal(await triageInputStillCurrent(sql,"local",candidate.id,candidate.inputVersion),false);
     }
   });
-  await scenario("Referência não cruza tenant e preço válido fica à frente de revisão sem evidência", async () => {
+  await scenario("Referência não cruza tenant e preço válido fica à frente do preço inválido", async () => {
     await reset(); await seed({ages:[]}); await seed({tenant:"other"});
-    await seed({id:"verified"});
-    const candidates = await load("local",1);
-    assert.equal(candidates.length,1);
-    assert.equal(candidates[0].id,"verified");
-    assert.equal((await load()).find((candidate: any) => candidate.id==="flash").comparablePriceHistory.referencePriceCents,null);
+    await seed({id:"aaa-invalid",price:0});
+    const [candidate] = await load("local",1);
+    assert.equal(candidate.id,"flash");
+    assert.equal(candidate.comparablePriceHistory.referencePriceCents,null);
   });
   await scenario("Adiados e produtos fora da validade continuam fora da triagem", async () => {
-    await reset(); await seed();
+    await reset(); await seed({status:"held",reason:"weak_offer",actor:"rule",ages:[]});
     await pg.exec("update garimpa.product_curation set deferred_until=now()+interval '1 day'");
     assert.equal((await load()).length,0);
     await pg.exec("update garimpa.product_curation set deferred_until=null; update garimpa.product set last_seen_at=now()-interval '8 days'");
@@ -223,7 +231,8 @@ try {
     assert.equal((await pg.query<any>("select count(*)::int as count from garimpa.curation_event")).rows[0].count,2);
   });
   await scenario("Com piloto desligado, retenção recuperada passa de held para pending no banco", async () => {
-    await reset(); await seed({status:"held",reason:"weak_offer",actor:"rule"});
+    await reset(); await seed({status:"held",reason:"insufficient_evidence",actor:"rule",ages:[],
+      metadata:{automation:{pricePolicy:{version:"triage-value-v1",outcome:"unverified_value"}}}});
     const decisions = await processIngestionPipeline(await load(),{autoPublish:false,evaluator});
     const summary = await applyAutomatedTriageDecisions(decisions,"local",undefined,factory);
     assert.equal(summary.annotatedPending,1); assert.equal(summary.approved,0);

@@ -6462,6 +6462,11 @@ kbd { min-width: 21px; padding: 2px 5px; display: inline-block; border: 1px soli
   font: inherit;
 }
 .pauta-captures { margin-top: 32px; scroll-margin-top: 16px; }
+.pauta-captures > summary { cursor: pointer; padding-block: 12px; font-weight: 700; }
+.pauta-capture-attention { padding: 16px; border: 1px solid var(--warning-line); border-radius: 8px; background: var(--surface); }
+.pauta-capture-attention h2, .pauta-capture-attention .pauta-card-actions p { margin: 0; }
+.pauta-capture-attention .pauta-card-actions { align-items: center; justify-content: space-between; }
+.pauta-review-needed { color: var(--warning); }
 .pauta-captures label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .pauta-capture-list { margin: 12px 0; padding: 0; list-style: none; }
 .pauta-capture-list li {

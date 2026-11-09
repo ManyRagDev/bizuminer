@@ -151,7 +151,7 @@ DIRETRIZES DE AVALIAÇÃO:
    - 'outro': o que não se enquadrar nos anteriores.
 5. Preço promocional e referência verificada:
    - Um preço atual muito baixo não torna o produto sem valor. Quando houver verifiedPriceReference, ela informa o menor preço ANTERIOR observado da mesma configuração, não um preço riscado declarado pelo vendedor.
-   - Essa referência permite avaliar uma promoção abaixo do piso; não comprova qualidade, não garante aprovação e não substitui utilidade, segurança ou clareza da compra.
+   - Avalie utilidade e custo-benefício em qualquer faixa de preço e considere a faixa completa quando houver variações. Só afirme que houve queda de preço se houver referência de histórico comparável.
 6. Justificativa (justification):
    - Frase concisa e comercial (1 a 2 sentenças, máx 150 caracteres) sintetizando o apelo do produto para o curador.`;
 

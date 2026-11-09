@@ -8,7 +8,7 @@ import type { PautaQrBundle } from "../../lib/qr-service";
 import { copyToClipboard } from "../../lib/clipboard";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
 import { offerPriceLabel } from "../../lib/offer-price";
-import type { PautaCapture } from "../../lib/pauta-db";
+import type { PautaCapture, PautaCaptureActions } from "../../lib/pauta-db";
 import { freshnessLabel, MINIMUM_HISTORY } from "../../lib/deal-signal";
 import {
   extractPautaCopyData,
@@ -30,12 +30,19 @@ interface PautaProduct extends VitrineProduct {
 
 const captureLabels: Record<PautaCapture["status"], string> = {
   ready: "Na pauta",
-  pending: "Aguardando triagem",
+  pending: "Triagem por iniciar",
+  review: "Decisão humana necessária",
+  retry: "Reavaliar com IA",
+  processing: "Lote em andamento",
+  deferred: "Revisão adiada",
   rejected: "Rejeitada",
   held: "Em espera",
   blocked: "Fora da pauta",
   failed: "Triagem interrompida",
 };
+const emptyCaptureActions: PautaCaptureActions = { review: 0, triage: 0, retry: 0 };
+const curationReviewUrl = "/admin/curadoria?aba=excecoes&sub=singulars";
+const curationTriageUrl = "/admin/curadoria?aba=selecao";
 const captureTime = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short",
 });
@@ -89,6 +96,7 @@ export default function PautaClient({
   const [products, setProducts] = useState<PautaProduct[]>([]);
   const [recent, setRecent] = useState<PautaCapture[]>([]);
   const [recentTotal, setRecentTotal] = useState(0);
+  const [captureActions, setCaptureActions] = useState(emptyCaptureActions);
   const [marketplace, setMarketplace] = useState("");
   const [captureLimit, setCaptureLimit] = useState(12);
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
@@ -130,6 +138,7 @@ export default function PautaClient({
     setProducts([]);
     setRecent([]);
     setRecentTotal(0);
+    setCaptureActions(emptyCaptureActions);
     setUpdatedAt(null);
     setLoadError("");
     setLoading(true);
@@ -152,12 +161,14 @@ export default function PautaClient({
         });
         if (!response.ok) throw new Error("pauta_failed");
         const data = await response.json() as {
-          products: PautaProduct[]; recent: PautaCapture[]; recentTotal: number; active: boolean; updatedAt: string;
+          products: PautaProduct[]; recent: PautaCapture[]; recentTotal: number;
+          captureActions: PautaCaptureActions; active: boolean; updatedAt: string;
         };
         if (controller.signal.aborted || epoch !== mutationEpoch.current || id !== loadId) return;
         setProducts(data.products);
         setRecent(data.recent);
         setRecentTotal(data.recentTotal);
+        setCaptureActions(data.captureActions);
         setActive(data.active);
         setUpdatedAt(data.updatedAt);
         setLoadError("");
@@ -271,6 +282,12 @@ export default function PautaClient({
   const pending = products.filter((p) => !doneIds.has(p.copyKey ?? p.id));
   const done = products.filter((p) => doneIds.has(p.copyKey ?? p.id));
   const progress = products.length > 0 ? done.length / products.length : 0;
+  const actionCount = captureActions.review + captureActions.triage + captureActions.retry;
+  const emptyAction = !active
+    ? { href: "/admin/configuracoes", label: "Conferir configuração do canal" }
+    : actionCount > 0
+      ? { href: "#pendencias-curadoria", label: "Ver pendências" }
+      : { href: "#capturas-recentes", label: "Ir ao histórico de capturas" };
 
   return (
     <div className="pauta-page">
@@ -290,7 +307,8 @@ export default function PautaClient({
         </p>
         {updatedAt && <p className="pauta-selection-note">Última consulta às {captureTime.format(new Date(updatedAt))}.</p>}
         <div className="pauta-card-actions">
-          <a href="#capturas-recentes">Capturas recentes</a>
+          {actionCount > 0 && !loadError && <a href="#pendencias-curadoria">Pendências de curadoria ({actionCount})</a>}
+          <a href="#capturas-recentes">Histórico de capturas</a>
           <button type="button" disabled={loading} onClick={() => void reloadPauta.current?.()}>Atualizar agora</button>
         </div>
         <div className="pauta-progress">
@@ -420,10 +438,10 @@ export default function PautaClient({
         <div style={{ padding: "32px 20px", textAlign: "center", background: "var(--paper-deep, #f4f4f5)", borderRadius: "12px", margin: "24px 0" }}>
           <h3 style={{ fontSize: "16px", marginBottom: "8px", color: "var(--ink-title, #18181b)" }}>Nenhuma oferta pronta na pauta agora</h3>
           <p style={{ color: "var(--ink-muted, #71717a)", fontSize: "14px", lineHeight: 1.5, maxWidth: "420px", margin: "0 auto 16px" }}>
-            {active ? "Confira o motivo de cada oferta em Capturas recentes." : "Este canal está desativado ou chegou ao fim da validade."}
+            {active ? "Confira as pendências de curadoria ou consulte o histórico para entender o que ficou fora da pauta." : "Este canal está desativado ou chegou ao fim da validade."}
           </p>
-          <a href={active ? "#capturas-recentes" : "/admin/curadoria?aba=selecao"} style={{ display: "inline-block", padding: "10px 18px", background: "var(--brand, #0070f3)", color: "#fff", borderRadius: "8px", fontWeight: 600, textDecoration: "none", fontSize: "14px" }}>
-            {active ? "Ver capturas recentes" : "Conferir configuração do canal"}
+          <a href={emptyAction.href} style={{ display: "inline-block", padding: "10px 18px", background: "var(--brand, #0070f3)", color: "#fff", borderRadius: "8px", fontWeight: 600, textDecoration: "none", fontSize: "14px" }}>
+            {emptyAction.label}
           </a>
         </div>
       )}
@@ -567,9 +585,24 @@ export default function PautaClient({
           })}
         </section>
       )}
-      <section id="capturas-recentes" className="pauta-captures">
+      {actionCount > 0 && !loadError && <section id="pendencias-curadoria" className="pauta-captures pauta-capture-attention" aria-labelledby="pauta-capture-attention-heading">
+        <h2 id="pauta-capture-attention-heading">Pendências de curadoria</h2>
+        <p className="pauta-selection-note">Capturas das últimas 48 horas{marketplace && ` · ${marketplaceDef(marketplace)?.label ?? marketplace}`}.</p>
+        {captureActions.review > 0 && <div className="pauta-card-actions">
+          <p><strong>{captureActions.review}</strong> {captureActions.review === 1 ? "oferta precisa" : "ofertas precisam"} de uma decisão humana.</p>
+          <a href={curationReviewUrl}>Abrir fila de decisão</a>
+        </div>}
+        {(captureActions.triage > 0 || captureActions.retry > 0) && <div className="pauta-card-actions">
+          <div>
+            {captureActions.triage > 0 && <p><strong>{captureActions.triage}</strong> {captureActions.triage === 1 ? "oferta ainda precisa passar" : "ofertas ainda precisam passar"} pela triagem.</p>}
+            {captureActions.retry > 0 && <p><strong>{captureActions.retry}</strong> {captureActions.retry === 1 ? "oferta retida" : "ofertas retidas"} pelo antigo piso de R$ 20 podem ser reavaliadas pela IA.</p>}
+          </div>
+          <a href={curationTriageUrl}>Abrir triagem com IA</a>
+        </div>}
+      </section>}
+      <details id="capturas-recentes" className="pauta-captures">
+        <summary>Histórico de capturas{updatedAt ? ` (${recentTotal})` : ""}</summary>
         <div className="pauta-card-actions">
-          <h2>Capturas recentes</h2>
           <label>
             Loja
             <select value={marketplace} onChange={event => { setMarketplace(event.target.value); setCaptureLimit(12); }}>
@@ -593,9 +626,11 @@ export default function PautaClient({
                 {capture.priceType === "exact" && capture.currency === "BRL" && <p>{priceBRL.format(capture.priceCents / 100)}</p>}
               </div>
               <div>
-                <strong>{captureLabels[capture.status]}</strong>
+                <strong className={capture.status === "review" ? "pauta-review-needed" : undefined}>{captureLabels[capture.status]}</strong>
                 <p>{capture.reasons.join(" ")}</p>
-                {capture.status !== "ready" && <a href={`/admin/ofertas/${encodeURIComponent(capture.id)}`}>Conferir oferta</a>}
+                {capture.status === "review" && <a href={`/admin/ofertas/${encodeURIComponent(capture.id)}`}>Revisar esta oferta</a>}
+                {(capture.status === "pending" || capture.status === "failed" || capture.status === "retry") && <a href={curationTriageUrl}>Abrir triagem com IA</a>}
+                {capture.status === "blocked" && <a href={`/admin/ofertas/${encodeURIComponent(capture.id)}`}>Ver detalhes da oferta</a>}
               </div>
             </li>
           ))}
@@ -603,7 +638,7 @@ export default function PautaClient({
         {captureLimit < recent.length && <div className="pauta-card-actions">
           <button type="button" onClick={() => setCaptureLimit(limit => limit + 24)}>Ver mais capturas</button>
         </div>}
-      </section>
+      </details>
     </div>
   );
 }

@@ -1228,7 +1228,7 @@ export async function runPendingAutomatedTriage(
             and (metadata->'execution'->>'deadline')::timestamptz>now()`;
         if (owners.length !== 1) throw new Error("capture_batch_ownership_lost");
       }
-      return await loadAutomatedTriageCandidates(sql, tenantId, limit, options?.minPriceCents, options?.captureBatch?.id);
+      return await loadAutomatedTriageCandidates(sql, tenantId, limit, options?.captureBatch?.id);
     }, sqlFactory);
   } catch (err) {
     throw err;
@@ -1261,7 +1261,7 @@ export async function runPendingAutomatedTriage(
           'running',
           ${candidates.length},
           ${process.env.GEMINI_MODEL ?? "gemini-2.5-flash"},
-          'curation-pipeline-v3',
+          'curation-pipeline-v4',
           ${sqlRun.json({ captureBatchId: options?.captureBatch?.id ?? null })}
         )
         returning id

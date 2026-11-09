@@ -26,38 +26,43 @@ test("R$ 100 observado antes e R$ 11 agora avança com contexto verificado e ain
   assert.equal(payload[0].priceFormatted, "R$ 11.00");
 });
 
-test("Preço original riscado e histórico sem identidade não liberam a exceção", async () => {
-  let called = false;
+test("Preço baixo entra na triagem sem converter o preço riscado em desconto verificado", async () => {
   const [decision] = await processIngestionPipeline([{
     ...product, originalPriceCents: 10000, previousMinPriceCents: 10000, observationCount: 50, historyDays: 30,
-  }], { autoPublish: true, evaluator: async () => { called = true; return []; } });
-  assert.equal(called, false);
-  assert.equal(decision.status, "held");
-  assert.equal(decision.reasonCode, "insufficient_evidence");
+  }], { autoPublish: true, evaluator: async (items) => {
+    assert.equal(items[0].verifiedPriceReference, undefined);
+    return approvedEvaluation(items);
+  } });
+  assert.equal(decision.status, "approved");
+  assert.equal(decision.pricePolicy.outcome, "current_price");
 });
 
-test("Produto habitualmente abaixo de R$ 20 continua retido por valor", async () => {
+test("Queda verificada também vale para um produto habitualmente abaixo de R$ 20", async () => {
   const [decision] = await processIngestionPipeline([{
     ...product, comparablePriceHistory: { ...history, referencePriceCents: 1500 },
-  }], { autoPublish: true, evaluator: async () => assert.fail("Não deve consultar IA") });
-  assert.equal(decision.status, "held");
-  assert.equal(decision.reasonCode, "weak_offer");
-  assert.match(decision.reasonDetail, /Valor anterior comparável R\$ 15.00/);
+  }], { autoPublish: true, evaluator: async (items) => approvedEvaluation(items) });
+  assert.equal(decision.status, "approved");
+  assert.equal(decision.pricePolicy.outcome, "verified_discount");
 });
 
-test("Referência com poucas observações, poucos dias ou valor inválido exige revisão", async () => {
+test("Histórico insuficiente, inválido ou sem queda mantém apenas o preço atual", async () => {
   for (const reference of [
     { ...history, observationCount: 2 }, { ...history, historyDays: 6 },
     { ...history, referencePriceCents: null }, { ...history, referencePriceCents: NaN },
+    { ...history, referencePriceCents: product.priceCents },
   ]) {
     const [decision] = await processIngestionPipeline([{ ...product, comparablePriceHistory: reference }], {
-      autoPublish: true, evaluator: async () => assert.fail("Referência insuficiente"),
+      evaluator: async (items) => {
+        assert.equal(items[0].verifiedPriceReference, undefined);
+        return approvedEvaluation(items);
+      },
     });
-    assert.equal(decision.reasonCode, "insufficient_evidence");
+    assert.equal(decision.status, "pending");
+    assert.equal(decision.pricePolicy.outcome, "current_price");
   }
 });
 
-test("Exceção de preço não remove aprovação manual nem rejeições editoriais", async () => {
+test("Contexto de preço preserva aprovação manual e rejeições editoriais", async () => {
   const candidate = { ...product, comparablePriceHistory: history };
   const [manual] = await processIngestionPipeline([candidate], { autoPublish: false, evaluator: async (items) => approvedEvaluation(items) });
   assert.equal(manual.status, "pending");
@@ -77,11 +82,11 @@ test("Promoção com histórico não contorna filtros de segurança ou de nota d
   assert.deepEqual(decisions.map((d) => d.reasonCode), ["adult_sexual", "low_quality_listing"]);
 });
 
-test("Preço positivo no piso segue normalmente e preço zero não avança", async () => {
+test("Preço positivo de um centavo segue normalmente e preço zero não avança", async () => {
   const decisions = await processIngestionPipeline([
-    { ...product, id: "at-floor", priceCents: 2000 },
+    { ...product, id: "one-cent", priceCents: 1 },
     { ...product, id: "zero", priceCents: 0, comparablePriceHistory: history },
   ], { autoPublish: true, evaluator: async (items) => approvedEvaluation(items) });
-  assert.equal(decisions.find((d) => d.productId === "at-floor").status, "approved");
+  assert.equal(decisions.find((d) => d.productId === "one-cent").status, "approved");
   assert.equal(decisions.find((d) => d.productId === "zero").reasonCode, "insufficient_evidence");
 });
