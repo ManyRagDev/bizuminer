@@ -243,7 +243,7 @@ export class PostgresStore implements OfferStore {
         insert into ${sql(this.s)}.capture_run
           (id, tenant_id, marketplace, started_at, status, collector_run_id, parameters)
         values (gen_random_uuid()::text, ${run.tenantId}, ${run.marketplace}, ${run.startedAt},
-                'running', ${run.collectorRunId}, ${sql.json(run.parameters)})
+                'running', ${run.collectorRunId}, ${sql.json(run.parameters as any)})
         returning id
       `;
       return rows[0]!.id;
@@ -258,7 +258,7 @@ export class PostgresStore implements OfferStore {
         set finished_at = ${run.finishedAt}, status = ${run.status},
             items_captured = ${run.itemsCaptured}, items_new = ${run.itemsNew},
             price_changes = ${run.priceChanges}, error = ${run.error ?? null},
-            parameters = parameters || ${sql.json(run.parameterPatch ?? {})}
+            parameters = parameters || ${sql.json((run.parameterPatch ?? {}) as any)}
         where id = ${runId}
       `;
     });

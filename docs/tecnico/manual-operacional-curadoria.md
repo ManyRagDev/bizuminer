@@ -98,6 +98,8 @@ Acesse a aba **[Seleção do Dia](/admin/curadoria?aba=selecao)**.
 
 Esta tela reflete o que os visitantes reais estão vendo no site:
 
+Na vitrine pública, o catálogo pagina todas as ofertas publicadas com preço observado nos últimos sete dias. A ordem inicial intercala as lojas disponíveis. A capa usa a edição editorial da conta.
+
 1. Percorra visualmente a grade de produtos ativos.
 2. Verifique se há boa diversidade de categorias:
    - Cozinha e casa prática
@@ -111,7 +113,8 @@ Esta tela reflete o que os visitantes reais estão vendo no site:
 
 ### Passo 5: Seleção de Destaques e Publicação (~2 min)
 
-1. Abra **Pauta de divulgação** e escolha WhatsApp ou Stories. A lista consulta o catálogo da sua conta a cada atualização. Para entrar, a oferta precisa estar aprovada, ter preço exato em reais observado nas últimas 48 horas e ter um link de afiliado válido.
+1. Abra **Pauta de divulgação** e escolha WhatsApp ou Stories. A lista consulta o catálogo da sua conta a cada atualização. Para entrar, a oferta precisa estar aprovada, ter preço em reais observado nas últimas 48 horas e ter um link de afiliado válido. A Shopee também pode entrar com a faixa completa em reais quando a API informa os dois limites. A mensagem informa que o valor varia conforme a opção escolhida.
+   - Para o AliExpress, filtre **AliExpress** no **Histórico de capturas** e abra **Confirmar preço da opção** em uma oferta aprovada. Escolha a variante na loja e salve o preço em reais e as condições no BizuMiner. Uma nova coleta do preço geral do anúncio não renova a validade da opção conferida.
 2. Abra **Pendências de curadoria** quando houver decisões humanas ou ofertas que podem voltar à triagem com IA. Use o **Histórico de capturas** para consultar motivos e filtrar por loja.
 3. Escolha as ofertas em **Prontas para divulgar**. O mérito editorial e a recência definem a ordem, com os limites configurados para cada canal. Os links copiados abrem no BizuMiner. O botão de compra leva ao anúncio com a atribuição da conta de afiliado, inclusive quando a oferta do Mercado Livre ainda está fora da vitrine.
 4. Copie a mensagem ou o link e publique no canal. Use **Confirmar divulgação** depois de publicar para iniciar o intervalo daquele produto no canal.

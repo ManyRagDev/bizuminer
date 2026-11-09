@@ -22,3 +22,10 @@ export function affiliateLinksV2Enabled(env: FlagsEnv = process.env): boolean {
 export function extensionCaptureEnabled(env: FlagsEnv = process.env): boolean {
   return env.EXTENSION_CAPTURE_ENABLED === "true";
 }
+
+/** The browser import pilot is enabled by store. Existing ML behavior is unchanged. */
+export function extensionBatchMarketplaceEnabled(marketplace: "mercadolivre" | "amazon" | "aliexpress", env: FlagsEnv = process.env) {
+  if (marketplace === "mercadolivre") return true;
+  if (env.NODE_ENV === "development" && !env.VERCEL) return true;
+  return (marketplace === "amazon" ? env.AMAZON_BROWSER_CAPTURE_ENABLED : env.ALIEXPRESS_BROWSER_CAPTURE_ENABLED) === "true";
+}

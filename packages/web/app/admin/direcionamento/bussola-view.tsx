@@ -9,10 +9,11 @@ import type {
 import { saveEditorialGuidelineAction } from "./actions.ts";
 
 const PROMPT_SUGGESTIONS = [
+  { label: "+ 12 Departamentos Completos", text: "Aprovar produtos acabados de alta utilidade em qualquer um dos 12 departamentos (Casa, Eletro, Informática, Ferramentas, Beleza, Esporte, Auto, Brinquedos, Papelaria, etc.)." },
+  { label: "+ Preservar Variações Reais", text: "Preservar variações legítimas de voltagem (110V/220V), kits (40 vs 46 peças), capacidades e tamanhos, descartando apenas clones idênticos." },
   { label: "+ Gadgets e presentes criativos", text: "Privilegiar gadgets inteligentes, presentes criativos e novidades práticas com forte apelo visual." },
-  { label: "+ Soluções para o cotidiano", text: "Focar em produtos que resolvem pequenas dores diárias de organização, cozinha e tecnologia pessoal." },
-  { label: "+ Filtrar peças industriais", text: "Descartar peças de reposição avulsas, parafusos, insumos industriais secos e componentes sem apelo popular." },
-  { label: "+ Ticket atrativo", text: "Dar preferência a ofertas com ticket percebido vantajoso e boa percepção de custo-benefício." },
+  { label: "+ Filtrar peças industriais", text: "Descartar peças de reposição avulsas (parafusos soltos, capacitores, cabos flat internos) e anúncios incompreensíveis." },
+  { label: "+ Prova Social e Ticket", text: "Dar preferência a ofertas com boa reputação (estrelas, vendas confirmadas) e percepção vantajosa de custo-benefício." },
 ];
 
 export default function BussolaView({
@@ -221,9 +222,9 @@ export default function BussolaView({
               <strong>O que a IA deve privilegiar:</strong>
             </div>
             <ul>
-              <li>Produtos que resolvem dores cotidianas reais com simplicidade.</li>
-              <li>Gadgets, utilidades domésticas inteligentes e itens visuais para compra de impulso.</li>
-              <li>Ofertas com ticket atrativo e boa reputação comprovada.</li>
+              <li>Produtos acabados nos 12 departamentos que resolvem necessidades reais do consumidor.</li>
+              <li>Gadgets, utilidades domésticas, ferramentas, eletrônicos, brinquedos e itens de impulso.</li>
+              <li>Variações legítimas (voltagem, tamanho, peças de kit) e ofertas com boa prova social comprovada.</li>
             </ul>
           </div>
 
@@ -233,9 +234,9 @@ export default function BussolaView({
               <strong>O que a IA deve filtrar e rejeitar:</strong>
             </div>
             <ul>
-              <li>Peças de reposição industrial avulsas (parafusos, engrenagens, fios sem conector).</li>
-              <li>Produtos genéricos sem apelo popular ou utilidade evidente.</li>
-              <li>Anúncios com fotos amadoras poluídas ou promessas enganosas.</li>
+              <li>Peças de reposição industrial avulsas (parafusos soltos, rolamentos avulsos, cabos flat internos).</li>
+              <li>Anúncios incompreensíveis, fotos poluídas ou promessas milagrosas/enganosas.</li>
+              <li>Clones e anúncios idênticos duplicados sem diferencial de oferta.</li>
             </ul>
           </div>
         </div>

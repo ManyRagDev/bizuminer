@@ -29,6 +29,11 @@ import {
   type CapturePlan,
   type CapturePlanMode,
 } from "../src/capture-plan.ts";
+import {
+  buildDepartmentPlan,
+  formatDepartmentPlanPreview,
+} from "../src/department-plan.ts";
+import type { SourceQueryOrder } from "../../capture/src/types.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string): string | undefined => {
@@ -39,9 +44,12 @@ const flag = (name: string): string | undefined => {
 const tenantId = flag("tenant") ?? "local";
 if(!/^[a-z0-9._-]{1,64}$/.test(tenantId)) throw new Error("invalid_capture_tenant");
 const pages = Number(flag("pages") ?? 1);
+const pageSize = flag("page-size") ? Number(flag("page-size")) : 20;
 const minDiscount = flag("min-discount") ? Number(flag("min-discount")) : undefined;
 const keyword = flag("keyword");
 const requestedMode = flag("mode") ?? "all";
+const requestedPlan = flag("plan");
+const requestedOrder = (flag("order") as SourceQueryOrder | undefined) ?? "sales";
 const dryRun = args.includes("--dry-run");
 const operationBatchId = flag("operation-batch");
 
@@ -49,6 +57,8 @@ if (!(["directed", "exploratory", "all"] as const).includes(requestedMode as Cap
   console.error('[bloqueado] --mode deve ser "directed", "exploratory" ou "all".');
   process.exit(1);
 }
+
+const isDepartmentPlan = requestedPlan === "departments" || requestedPlan === "department";
 
 const plan: CapturePlan = keyword
   ? {
@@ -62,13 +72,19 @@ const plan: CapturePlan = keyword
         },
       ],
     }
-  : CATEGORY_FIRST_PLAN;
-const mode = keyword ? "all" : (requestedMode as CapturePlanMode | "all");
+  : isDepartmentPlan
+    ? buildDepartmentPlan("aliexpress", { order: requestedOrder })
+    : CATEGORY_FIRST_PLAN;
+const mode = keyword || isDepartmentPlan ? "all" : (requestedMode as CapturePlanMode | "all");
 
 if (dryRun) {
+  if (isDepartmentPlan) {
+    console.log(formatDepartmentPlanPreview("aliexpress", { order: requestedOrder, pages, pageSize }));
+    process.exit(0);
+  }
   console.log(`Plano: ${plan.id} (${mode})`);
   for (const entry of entriesForMode(plan, mode)) {
-    console.log(`- [${entry.mode}] ${entry.category}${entry.family ? ` / ${entry.family}` : ""}: "${entry.keyword}"`);
+    console.log(`- [${entry.mode}] ${entry.category}${entry.family ? ` / ${entry.family}` : ""}: "${entry.keyword ?? entry.sourceQuery?.kind}"`);
   }
   process.exit(0);
 }
@@ -119,6 +135,7 @@ const summary = await runCapturePlan(
     plan,
     mode,
     maxPagesPerQuery: pages,
+    pageSize,
     minClaimedDiscount: minDiscount,
     operationBatchId,
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import type { WorkbenchItem, WorkbenchPage } from "../../lib/workbench-contract.ts";
 import { submitCurationDecision } from "./curadoria/actions.ts";
 
@@ -8,11 +8,35 @@ interface Props {
   initialPage: WorkbenchPage;
 }
 
+const brl = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
+
 export default function WorkbenchInteractiveTable({ initialPage }: Props) {
   const [items, setItems] = useState<WorkbenchItem[]>([...initialPage.items]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
+  const [selectedMarketplace, setSelectedMarketplace] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isPending, startTransition] = useTransition();
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of items) {
+      if (item.category) set.add(item.category);
+    }
+    return Array.from(set).sort();
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      if (selectedMarketplace !== "all" && item.marketplace !== selectedMarketplace) return false;
+      if (selectedCategory !== "all" && (item.category ?? "Sem categoria") !== selectedCategory) return false;
+      return true;
+    });
+  }, [items, selectedMarketplace, selectedCategory]);
 
   const handleDecision = (
     productId: string,
@@ -41,8 +65,12 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
         });
 
         if (res.ok) {
-          // Remove the resolved item from local list
           setItems((prev) => prev.filter((it) => it.productId !== productId));
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(productId);
+            return next;
+          });
         } else {
           setErrorMap((prev) => ({
             ...prev,
@@ -57,6 +85,60 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
       } finally {
         setResolvingId(null);
       }
+    });
+  };
+
+  const handleBulkDecision = (decision: "approve" | "hold" | "reject") => {
+    if (selectedIds.size === 0) return;
+    const targetIds = Array.from(selectedIds);
+    setResolvingId("bulk");
+
+    startTransition(async () => {
+      try {
+        const reasonCode =
+          decision === "reject"
+            ? "low_utility"
+            : decision === "hold"
+              ? "insufficient_evidence"
+              : undefined;
+
+        const successIds: string[] = [];
+        for (const productId of targetIds) {
+          const res = await submitCurationDecision({
+            productId,
+            decision,
+            reasonCode,
+          });
+          if (res.ok) successIds.push(productId);
+        }
+
+        const successSet = new Set(successIds);
+        setItems((prev) => prev.filter((it) => !successSet.has(it.productId)));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (const id of successIds) next.delete(id);
+          return next;
+        });
+      } finally {
+        setResolvingId(null);
+      }
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredItems.length && filteredItems.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredItems.map((i) => i.productId)));
+    }
+  };
+
+  const toggleSelect = (productId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
     });
   };
 
@@ -117,10 +199,112 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
               color: "var(--ink-muted, #71717a)",
             }}
           >
-            Decida com 1 clique diretamente na linha. A ação recomendada pelo sistema vem destacada, mas você tem o controle total.
+            Decida com 1 clique diretamente na linha ou selecione vários para aprovar/descartar em lote.
           </p>
         </div>
+
+        {/* Filtros da bancada */}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+          <select
+            value={selectedMarketplace}
+            onChange={(e) => setSelectedMarketplace(e.target.value)}
+            style={{ fontSize: "0.8125rem", padding: "4px 8px", borderRadius: "6px" }}
+          >
+            <option value="all">Todas as lojas</option>
+            <option value="shopee">Shopee</option>
+            <option value="aliexpress">AliExpress</option>
+            <option value="mercadolivre">Mercado Livre</option>
+          </select>
+
+          {categories.length > 0 && (
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{ fontSize: "0.8125rem", padding: "4px 8px", borderRadius: "6px" }}
+            >
+              <option value="all">Todos os departamentos</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       </div>
+
+      {/* Barra de Ações em Lote */}
+      {selectedIds.size > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "var(--surface-elevated, #f4f4f5)",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            marginBottom: "12px",
+            border: "1px solid var(--line, #e4e4e7)",
+          }}
+        >
+          <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>
+            {selectedIds.size} {selectedIds.size === 1 ? "item selecionado" : "itens selecionados"}
+          </span>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              disabled={resolvingId === "bulk" || isPending}
+              onClick={() => handleBulkDecision("approve")}
+              style={{
+                padding: "4px 12px",
+                background: "#16a34a",
+                color: "#fff",
+                borderRadius: "6px",
+                fontWeight: 600,
+                fontSize: "0.8125rem",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              ✓ Aprovar selecionados ({selectedIds.size})
+            </button>
+            <button
+              type="button"
+              disabled={resolvingId === "bulk" || isPending}
+              onClick={() => handleBulkDecision("hold")}
+              style={{
+                padding: "4px 12px",
+                background: "#d97706",
+                color: "#fff",
+                borderRadius: "6px",
+                fontWeight: 600,
+                fontSize: "0.8125rem",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              ⏸ Reter selecionados ({selectedIds.size})
+            </button>
+            <button
+              type="button"
+              disabled={resolvingId === "bulk" || isPending}
+              onClick={() => handleBulkDecision("reject")}
+              style={{
+                padding: "4px 12px",
+                background: "#dc2626",
+                color: "#fff",
+                borderRadius: "6px",
+                fontWeight: 600,
+                fontSize: "0.8125rem",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              ✕ Descartar selecionados ({selectedIds.size})
+            </button>
+          </div>
+        </div>
+      )}
 
       {pendingCount === 0 ? (
         <div
@@ -141,6 +325,18 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
             Você pode capturar mais ofertas ou preparar a pauta para publicação no Instagram e Telegram.
           </p>
         </div>
+      ) : filteredItems.length === 0 ? (
+        <div
+          style={{
+            padding: "1.5rem",
+            textAlign: "center",
+            background: "var(--surface-elevated, #fafafa)",
+            borderRadius: "8px",
+            color: "var(--ink-muted, #71717a)",
+          }}
+        >
+          Nenhum produto corresponde aos filtros selecionados.
+        </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table
@@ -157,6 +353,14 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
                   textAlign: "left",
                 }}
               >
+                <th style={{ padding: "10px 12px", width: "36px" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
+                    onChange={toggleSelectAll}
+                    aria-label="Selecionar todos os itens da bancada"
+                  />
+                </th>
                 <th style={{ padding: "10px 12px" }}>Produto</th>
                 <th style={{ padding: "10px 12px" }}>Loja</th>
                 <th style={{ padding: "10px 12px" }}>Preço</th>
@@ -167,20 +371,35 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => {
-                const isResolving = resolvingId === item.productId || isPending;
+              {filteredItems.map((item) => {
+                const isResolving = resolvingId === item.productId || resolvingId === "bulk" || isPending;
                 const suggested = item.primaryAction.suggestedDecision ?? "approved";
                 const isKitDraft = item.primaryAction.actionType === "create_kit_draft";
+                const isSelected = selectedIds.has(item.productId);
+
+                const hasRange =
+                  typeof item.priceMinCents === "number" &&
+                  typeof item.priceMaxCents === "number" &&
+                  item.priceMaxCents > item.priceMinCents;
 
                 return (
                   <tr
                     key={item.productId}
                     style={{
                       borderBottom: "1px solid var(--line, #e4e4e7)",
-                      opacity: resolvingId === item.productId ? 0.6 : 1,
-                      transition: "opacity 0.2s ease",
+                      opacity: isResolving ? 0.6 : 1,
+                      background: isSelected ? "var(--surface-elevated, #f0fdf4)" : "transparent",
+                      transition: "opacity 0.2s ease, background 0.2s ease",
                     }}
                   >
+                    <td style={{ padding: "12px", textAlign: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(item.productId)}
+                        aria-label={`Selecionar ${item.title}`}
+                      />
+                    </td>
                     <td style={{ padding: "12px", maxWidth: "260px" }}>
                       <div
                         style={{
@@ -193,8 +412,28 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
                       >
                         {item.title}
                       </div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--ink-muted, #71717a)", marginTop: "2px" }}>
-                        ID: {item.externalId}
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "2px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--ink-muted, #71717a)" }}>
+                          ID: {item.externalId}
+                        </span>
+                        {item.category && (
+                          <span
+                            style={{
+                              fontSize: "0.6875rem",
+                              background: "var(--surface-elevated, #f4f4f5)",
+                              padding: "1px 6px",
+                              borderRadius: "4px",
+                              color: "var(--ink, #18181b)",
+                            }}
+                          >
+                            {item.category}
+                          </span>
+                        )}
+                        {item.ratingStar !== null && item.ratingStar !== undefined && (
+                          <span style={{ fontSize: "0.6875rem", color: "#d97706", fontWeight: 600 }}>
+                            ★ {item.ratingStar} {item.salesCount ? `(${item.salesCount} vendas)` : ""}
+                          </span>
+                        )}
                       </div>
                       {errorMap[item.productId] && (
                         <div style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: "2px" }}>
@@ -205,11 +444,21 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
                     <td style={{ padding: "12px", textTransform: "capitalize" }}>
                       {item.marketplace}
                     </td>
-                    <td style={{ padding: "12px", fontWeight: 600 }}>
-                      {(item.currentPriceCents / 100).toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                    <td style={{ padding: "12px" }}>
+                      {hasRange ? (
+                        <div>
+                          <span style={{ fontWeight: 600 }}>
+                            {brl.format(item.priceMinCents! / 100)} a {brl.format(item.priceMaxCents! / 100)}
+                          </span>
+                          <div style={{ fontSize: "0.6875rem", color: "var(--ink-muted, #71717a)", marginTop: "2px" }}>
+                            faixa de opções
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ fontWeight: 600 }}>
+                          {brl.format(item.currentPriceCents / 100)}
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: "12px" }}>
                       <div
@@ -222,9 +471,20 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
                           fontSize: "0.8125rem",
                         }}
                       >
-                        {item.primaryAction.label}
+                        {item.aiScore ? `Nota ${item.aiScore}/5 ★` : item.primaryAction.label}
                       </div>
-                      {item.primaryAction.reason && (
+                      {item.aiJustification ? (
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--ink-muted, #71717a)",
+                            marginTop: "2px",
+                            maxWidth: "280px",
+                          }}
+                        >
+                          {item.aiJustification}
+                        </div>
+                      ) : item.primaryAction.reason ? (
                         <div
                           style={{
                             fontSize: "0.75rem",
@@ -234,7 +494,7 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
                         >
                           {item.primaryAction.reason}
                         </div>
-                      )}
+                      ) : null}
                     </td>
                     <td style={{ padding: "12px", textAlign: "right" }}>
                       {isKitDraft ? (

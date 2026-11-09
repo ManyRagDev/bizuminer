@@ -1,3 +1,4 @@
+import type { collectMarketplacePage } from "../content/marketplace-page.ts";
 /**
  * Service worker da extensão (E5). Recebe o clique no botão (CAPTURE), monta o
  * payload, preserva o requestId e faz POST na API do BizuMiner. Falha de rede
@@ -175,15 +176,13 @@ async function handleMessage(message: unknown): Promise<unknown> {
 
 const BROWSER_BATCH_KEY = "bm_browser_batch";
 async function prepareBrowserBatch() {
-  const token = await getToken(chromeStorage());
-  if (!token) return { ok: false, error: "not_paired" };
   // Preserve a prior uncertain POST so a retry keeps its idempotency key.
   const saved = (await chromeStorage().get(BROWSER_BATCH_KEY))[
     BROWSER_BATCH_KEY
   ] as
     | {
         batchId?: string;
-        payload?: ReturnType<typeof collectBrowserOffers>;
+        payload?: ReturnType<typeof collectBrowserOffers> | NonNullable<ReturnType<typeof collectMarketplacePage>>;
         sent?: boolean;
       }
     | undefined;
@@ -193,49 +192,38 @@ async function prepareBrowserBatch() {
     Date.parse(saved.payload.clientCapturedAt) > Date.now() - 30 * 60_000
   )
     return { ok: true, count: saved.payload.products.length, retry: true };
-  const baseUrl = await getActiveApiBase();
-  let response: Response;
-  try {
-    response = await fetch(
-      `${baseUrl}/api/extension/capture-batches`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: AbortSignal.timeout(15_000),
-      },
-    );
-  } catch (err) {
-    console.error("Falha de rede em prepareBrowserBatch:", err);
-    return { ok: false, error: "network" };
-  }
-  const job = await response.json();
-  if (!response.ok) return { ok: false, error: "not_paired" };
-  if (!job.batchId) return { ok: false, error: "no_waiting_batch" };
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (
-    tab?.id == null ||
-    !tab.url?.includes("mercadolivre.com.br/ofertas")
-  )
+  const url = tab?.url ? new URL(tab.url) : null;
+  const host = url?.hostname ?? "";
+  const marketplace = /(^|\.)mercadolivre\.com\.br$/.test(host) ? "mercadolivre"
+    : /(^|\.)amazon\.com\.br$/.test(host) ? "amazon"
+    : /(^|\.)aliexpress\.com$/.test(host) ? "aliexpress" : null;
+  if (tab?.id == null || url?.protocol !== "https:" || !marketplace)
     return { ok: false, error: "offers_page_required" };
 
-  let results;
+  let payload: ReturnType<typeof collectBrowserOffers> | ReturnType<typeof collectMarketplacePage> | undefined;
   try {
-    results = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: collectBrowserOffers,
-    });
+    const target = { tabId: tab.id };
+    const results = marketplace === "mercadolivre"
+      ? await chrome.scripting.executeScript({ target, func: collectBrowserOffers })
+      : await chrome.scripting.executeScript<[], ReturnType<typeof collectMarketplacePage>>({ target, files: ["content/marketplace-page.js"] });
+    payload = results[0]?.result;
   } catch (err) {
     console.error("Erro ao executar leitura de ofertas na aba ativa:", err);
     return { ok: false, error: "offers_page_required" };
   }
-  const payload = results[0]?.result;
-  if (!payload?.products.length) return { ok: false, error: "no_offers" };
+  if (!payload?.products.length) return { ok: false, error: "no_offers",
+    diagnostics: payload && "diagnostics" in payload ? payload.diagnostics : undefined };
+
   await chromeStorage().set({
-    [BROWSER_BATCH_KEY]: { batchId: job.batchId, payload, sent: false },
+    [BROWSER_BATCH_KEY]: { payload, sent: false },
   });
   return {
     ok: true,
     count: payload.products.length,
     ignored: payload.ignoredCards,
+    diagnostics: "diagnostics" in payload ? payload.diagnostics : undefined,
+    sample: payload.marketplace === "aliexpress" ? payload.products[0] : undefined,
   };
 }
 
@@ -247,18 +235,36 @@ async function importBrowserBatch() {
   ] as
     | {
         batchId?: string;
-        payload?: ReturnType<typeof collectBrowserOffers>;
+        payload?: ReturnType<typeof collectBrowserOffers> | NonNullable<ReturnType<typeof collectMarketplacePage>>;
         sent?: boolean;
       }
     | undefined;
-  if (!saved?.batchId || !saved.payload)
-    return { ok: false, error: "prepare_first" };
-  saved.sent = true;
-  await chromeStorage().set({ [BROWSER_BATCH_KEY]: saved });
-
+  if (!saved?.payload) return { ok: false, error: "prepare_first" };
   const baseUrl = await getActiveApiBase();
   let response: Response;
   try {
+    const marketplace = saved.payload.marketplace;
+    if (marketplace !== "mercadolivre") {
+      const capabilities = await fetch(`${baseUrl}/api/extension/capture-batches`, {
+        method: "OPTIONS", signal: AbortSignal.timeout(8_000),
+      });
+      const supported = capabilities.headers.get("X-Bizu-Capture-Marketplaces");
+      if (supported === null) return { ok: false, error: "marketplace_server_outdated" };
+      if (!supported.split(",").includes(marketplace)) return { ok: false, error: "marketplace_capture_unavailable" };
+    }
+    if (!saved.batchId) {
+      const query = marketplace === "mercadolivre" ? "" : `?marketplace=${marketplace}`;
+      const prepared = await fetch(`${baseUrl}/api/extension/capture-batches${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(15_000),
+      });
+      const job = await prepared.json();
+      if (!prepared.ok) return { ok: false, error: job.error ?? "network" };
+      if (!job.batchId) return { ok: false, error: "no_waiting_batch" };
+      saved.batchId = job.batchId;
+    }
+    saved.sent = true;
+    await chromeStorage().set({ [BROWSER_BATCH_KEY]: saved });
     response = await fetch(
       `${baseUrl}/api/extension/capture-batches`,
       {
@@ -296,10 +302,14 @@ async function handleCapture(msg: Record<string, unknown>): Promise<unknown> {
   const token = await getToken(chromeStorage());
   if (!token) return { ok: false, error: "not_paired" };
 
+  const marketplace: "mercadolivre" | "amazon" =
+    card.marketplace ??
+    (/(^|\.)amazon\.com\.br$/.test(new URL(pageUrl).hostname) ? "amazon" : "mercadolivre");
+
   const payload: CapturePayload = {
     version: 1,
     requestId,
-    marketplace: "mercadolivre",
+    marketplace,
     clientCapturedAt: new Date().toISOString(),
     page: { kind: pageKindFor(pageUrl), url: pageUrl },
     product: card,

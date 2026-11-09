@@ -206,7 +206,19 @@ export default function CurationReviewer({
               </p>
               <h3>{current.title}</h3>
               <p className="curation-review-price">
-                {brl.format(current.priceCents / 100)}
+                {typeof (current.offerEvidence as any)?.priceMinCents === "number" &&
+                typeof (current.offerEvidence as any)?.priceMaxCents === "number" &&
+                (current.offerEvidence as any).priceMaxCents > (current.offerEvidence as any).priceMinCents ? (
+                  <>
+                    {brl.format((current.offerEvidence as any).priceMinCents / 100)} a{" "}
+                    {brl.format((current.offerEvidence as any).priceMaxCents / 100)}
+                    <small style={{ display: "block", fontSize: "0.75rem", color: "var(--ink-muted, #71717a)", marginTop: "2px" }}>
+                      O preço varia conforme a opção escolhida na loja.
+                    </small>
+                  </>
+                ) : (
+                  brl.format(current.priceCents / 100)
+                )}
               </p>
               {current.status === "held" && (
                 <p className="curation-feedback">

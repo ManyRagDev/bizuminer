@@ -73,15 +73,30 @@ export async function POST(request: NextRequest) {
   let pages = 2;
   let consent = false;
   let requestedMarketplaces: string[] | undefined;
+  let planMode: "departments" | "keywords" | undefined;
+  let sortOrder: "sales" | "default" | "discount" | undefined;
+  let pageSize: number | undefined;
   try {
     const body = (await request.json()) as {
       pages?: number;
       consent?: boolean;
       marketplaces?: unknown;
+      planMode?: "departments" | "keywords";
+      sortOrder?: "sales" | "default" | "discount";
+      pageSize?: number;
     };
     if (Number.isInteger(body.pages))
       pages = Math.min(Math.max(body.pages!, 1), MAX_PAGES);
     consent = body.consent === true;
+    if (body.planMode === "departments" || body.planMode === "keywords") {
+      planMode = body.planMode;
+    }
+    if (body.sortOrder === "sales" || body.sortOrder === "default" || body.sortOrder === "discount") {
+      sortOrder = body.sortOrder;
+    }
+    if (Number.isInteger(body.pageSize)) {
+      pageSize = Math.min(Math.max(body.pageSize!, 20), 50);
+    }
     if (Array.isArray(body.marketplaces)) {
       requestedMarketplaces = body.marketplaces.filter(
         (value): value is string => typeof value === "string",
@@ -154,6 +169,11 @@ export async function POST(request: NextRequest) {
       executor,
       consent,
       check.appUserId,
+      {
+        planMode: planMode ?? "departments",
+        sortOrder: sortOrder ?? "sales",
+        pageSize: pageSize ?? 20,
+      },
     );
   } catch (error) {
     if (

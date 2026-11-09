@@ -68,3 +68,27 @@ test('DOM title beyond legacy limit is complete and minimum price is explicit', 
  source.querySelector=function(selector:string){return selector==='a.poly-component__title'?{href:'https://produto.mercadolivre.com.br/MLB-9876543210-teste_JM',textContent:title}:previous(selector);};
  const p=extract([source]).products[0];assert.equal(p.title,title);assert.equal(p.currency,'BRL');assert.equal(p.priceType,'from');
 });
+
+test("extração funciona em páginas de busca e categorias além de /ofertas", () => {
+  const searchResult = vm.runInNewContext(`(${collectBrowserOffers.toString()})()`, {
+    URL,
+    URLSearchParams,
+    location: { href: "https://lista.mercadolivre.com.br/teclado-mecanico" },
+    document: { querySelectorAll: () => [card("https://produto.mercadolivre.com.br/MLB-999888777-teclado_JM", "199 reais")] },
+    crypto: { randomUUID: () => "uuid-search" },
+  });
+  assert.equal(searchResult.products.length, 1);
+  assert.equal(searchResult.page.kind, "search");
+  assert.equal(searchResult.products[0].externalId, "MLB999888777");
+
+  const categoryResult = vm.runInNewContext(`(${collectBrowserOffers.toString()})()`, {
+    URL,
+    URLSearchParams,
+    location: { href: "https://www.mercadolivre.com.br/c/informatica" },
+    document: { querySelectorAll: () => [card("https://produto.mercadolivre.com.br/MLB-111222333-mouse_JM", "89 reais")] },
+    crypto: { randomUUID: () => "uuid-cat" },
+  });
+  assert.equal(categoryResult.products.length, 1);
+  assert.equal(categoryResult.page.kind, "category");
+  assert.equal(categoryResult.products[0].externalId, "MLB111222333");
+});

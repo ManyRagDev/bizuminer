@@ -66,7 +66,7 @@ export interface CaptureRunRecord {
   readonly priceChanges: number;
   readonly error?: string;
   readonly collectorRunId: string;
-  readonly parameters: Readonly<Record<string, string | number | boolean | null | undefined>>;
+  readonly parameters: Readonly<Record<string, unknown>>;
 }
 
 export type StartCaptureRunInput = Pick<CaptureRunRecord, "tenantId" | "marketplace" | "startedAt" | "collectorRunId" | "parameters">;
@@ -79,7 +79,7 @@ export interface FinishCaptureRunInput {
   readonly priceChanges: number;
   readonly error?: string;
   /** Métricas conhecidas apenas ao fim, mescladas ao JSON de auditoria. */
-  readonly parameterPatch?: Readonly<Record<string, string | number | boolean | null | undefined>>;
+  readonly parameterPatch?: Readonly<Record<string, unknown>>;
 }
 
 export interface OfferStore {

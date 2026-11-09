@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { extensionCorsHeaders } from "../../../../lib/extension-cors";
-import { extensionCaptureEnabled } from "../../../../lib/flags";
+import { extensionBatchMarketplaceEnabled, extensionCaptureEnabled } from "../../../../lib/flags";
 import { authenticateDevice } from "../../../../lib/extension-db";
 import { hashToken } from "../../../../lib/extension-token";
 import { browserCaptures } from "../../../../lib/browser-capture-db";
@@ -9,6 +9,7 @@ import {
   validBatchId,
 } from "../../../../lib/browser-capture-contract";
 import { dispatchCaptureBatchForDeviceMember } from "../../../../lib/capture-dispatch";
+import { isExtensionMarketplace } from "../../../../lib/extension-contract";
 import { captureIpKey, captureRateLimited } from "../../../../lib/rate-limit";
 
 export const preferredRegion = "gru1";
@@ -20,7 +21,12 @@ const cors = (request: NextRequest) => ({
   "Cache-Control": "no-store",
 });
 export async function OPTIONS(request: NextRequest) {
-  return new Response(null, { status: 204, headers: cors(request) });
+  return new Response(null, { status: 204, headers: {
+    ...cors(request),
+    "Access-Control-Expose-Headers": "X-Bizu-Capture-Marketplaces",
+    "X-Bizu-Capture-Marketplaces": ["mercadolivre", "amazon", "aliexpress"]
+      .filter(isExtensionMarketplace).filter(marketplace => extensionBatchMarketplaceEnabled(marketplace)).join(","),
+  } });
 }
 async function identity(request: NextRequest) {
   if (!extensionCaptureEnabled()) return null;
@@ -44,8 +50,13 @@ export async function GET(request: NextRequest) {
       { ok: false, error: "unauthorized" },
       { status: 401, headers: cors(request) },
     );
+  const marketplace = request.nextUrl.searchParams.get("marketplace") ?? "mercadolivre";
+  if (!isExtensionMarketplace(marketplace))
+    return Response.json({ ok: false, error: "marketplace_not_supported" }, { status: 400, headers: cors(request) });
+  if (!extensionBatchMarketplaceEnabled(marketplace))
+    return Response.json({ ok: false, error: "marketplace_capture_unavailable" }, { status: 403, headers: cors(request) });
   return Response.json(
-    { ok: true, batchId: await browserCaptures.pending(access) },
+    { ok: true, batchId: await browserCaptures.pending(access, marketplace) },
     { headers: cors(request) },
   );
 }
@@ -71,7 +82,6 @@ export async function POST(request: NextRequest) {
     if (!validBatchId(body.batchId)) throw new Error("invalid_batch_id");
     payload = validateBrowserCapture(body.payload);
   } catch (err) {
-    console.error("Erro na validação do lote da extensão:", err);
     return Response.json(
       {
         ok: false,
@@ -81,6 +91,8 @@ export async function POST(request: NextRequest) {
       { status: 400, headers },
     );
   }
+  if (!extensionBatchMarketplaceEnabled(payload.marketplace))
+    return Response.json({ ok: false, error: "marketplace_capture_unavailable" }, { status: 403, headers });
   try {
     const result = await browserCaptures.complete(
       access,

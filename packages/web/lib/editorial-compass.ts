@@ -113,7 +113,7 @@ export async function getAuditDesk(tenantId = scopedTenantId()) {
 }
 
 export const DEFAULT_GUIDELINE =
-  "Foco em utilidades práticas de casa, cozinha, gadgets inteligentes e presentes criativos com alto apelo visual e compra por impulso. Evitar peças industriais, ferramentas secas, insumos de reposição e itens de nicho ultra-específico.";
+  "Foco em utilidades práticas e produtos acabados de alta utilidade e apelo comercial nos 12 departamentos do catálogo (Casa, Eletrodomésticos, Eletrônicos, Informática, Ferramentas, Beleza, Esporte e Lazer, Auto, Brinquedos, Iluminação, Papelaria, Moda). Valorizar gadgets inteligentes, soluções para o dia a dia e itens com boas avaliações e vendas. Rejeitar peças industriais e técnicas de reposição avulsas (parafusos, rolamentos soltos, engrenagens industriais), cabos sem diferencial ou anúncios de baixa qualidade.";
 
 export async function getEditorialGuideline(tenantId = scopedTenantId(), sqlFactory: typeof db = db): Promise<EditorialGuidelineConfig> {
   const fallback: EditorialGuidelineConfig = {
@@ -224,8 +224,15 @@ export async function getGoldenExamples(tenantId = scopedTenantId(), limit = 6, 
           where e.tenant_id = ${tenantId}
             and e.actor_type = 'human'
           order by e.product_id, e.id desc
+        ),
+        balanced as (
+          select *,
+            row_number() over (partition by (to_status = 'approved') order by created_at desc) as rn
+          from latest_events
         )
-        select * from latest_events
+        select product_id, title, to_status, reason_code, reason_detail, metadata, created_at, price_cents
+        from balanced
+        where rn <= ${Math.ceil(Math.min(Math.max(limit, 1), 20) / 2)}
         order by created_at desc
         limit ${Math.min(Math.max(limit, 1), 20)}
       `;

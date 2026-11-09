@@ -29,11 +29,17 @@ type LinkFacts = {
   publication_status: string | null;
   affiliate_url: string | null;
   triage_score: number | null;
+  public_benefit: string | null;
+  amazon_tag_active: boolean;
 };
 function shareTarget(tenantId: string, candidate: PautaCandidate, facts: LinkFacts, ml: MlPautaConfig | undefined): PautaCandidate["shareTarget"] {
   if (facts.publication_status && facts.publication_status !== "active") return null;
+  if (candidate.marketplace === "amazon") {
+    return facts.slug && facts.publication_status === "active" && facts.amazon_tag_active
+      ? { kind: "site", slug: facts.slug } : null;
+  }
   if (candidate.marketplace !== "mercadolivre") {
-    const hosts = candidate.marketplace === "shopee" ? ["shopee.com.br", "shopee.ee"] : ["aliexpress.com"];
+    const hosts = candidate.marketplace === "shopee" ? ["shopee.com.br", "shopee.ee"] : ["s.click.aliexpress.com"];
     return facts.slug && httpsShopUrl(facts.affiliate_url, hosts) ? { kind: "site", slug: facts.slug } : null;
   }
   if (!ml || !httpsShopUrl(candidate.productUrl, ["mercadolivre.com.br"])) return null;
@@ -54,7 +60,7 @@ async function selectOffers(tx: Tx, context: AccountContext, channel: PautaChann
   const policy = validateChannelPolicy(config.policy);
   if (!policy || config.policy_version !== RECOMMENDATION_POLICY_VERSION) throw new Error("invalid_pauta_policy");
 
-  const rows = await candidateRows(tx, tenantId, undefined, false, new Date(+now - PAUTA_PRICE_WINDOW_MS));
+  const rows = await candidateRows(tx, tenantId, undefined, false, new Date(+now - PAUTA_PRICE_WINDOW_MS), true);
   const ids = rows.map(row => row.id);
   if (!ids.length) return { config, selected: [], reasonsById: new Map<string, string[]>() };
   const assessments = await latestAssessments(tx, tenantId);
@@ -65,12 +71,21 @@ async function selectOffers(tx: Tx, context: AccountContext, channel: PautaChann
       and c.marketplace='mercadolivre' and c.status='active'
       and nullif(c.tracking_id,'') is not null and nullif(c.tool_id,'') is not null`;
   const links = await tx<LinkFacts[]>`select p.id,p.external_id,pub.slug,pub.status as publication_status,pub.affiliate_url,
-      case when jsonb_typeof(event.score)='number' then (event.score #>> '{}')::float8 end as triage_score
+      (p.marketplace='amazon' and exists(select 1 from garimpa.affiliate_marketplace_config cfg
+        where cfg.affiliate_id=pub.affiliate_id and cfg.marketplace='amazon' and cfg.status='active'
+          and btrim(cfg.tracking_id) ~ '^[A-Za-z0-9_-]{1,80}$')) as amazon_tag_active,
+      case when jsonb_typeof(event.score)='number' then (event.score #>> '{}')::float8 end as triage_score,
+      event.public_benefit
     from garimpa.product p
     left join garimpa.publication pub on pub.product_id=p.id and pub.tenant_id=p.tenant_id
       and pub.affiliate_id=${affiliateId} and pub.channel='web'
     left join lateral (
-      select e.metadata->'automation'->'aiScore' as score from garimpa.curation_event e
+      select e.metadata->'automation'->'aiScore' as score,
+        coalesce(
+          nullif(btrim(e.metadata#>>'{automation,publicBenefit}'),''),
+          nullif(btrim(e.metadata#>>'{automation,aiJustification}'),'')
+        ) as public_benefit
+      from garimpa.curation_event e
       where e.tenant_id=p.tenant_id and e.product_id=p.id order by e.id desc limit 1
     ) event on true
     where p.tenant_id=${tenantId} and p.id=any(${ids})`;
@@ -81,8 +96,15 @@ async function selectOffers(tx: Tx, context: AccountContext, channel: PautaChann
     const candidate: PautaCandidate = {
       ...toCandidate(row, assessments.get(row.id) ?? null, now),
       triageScore: typeof score === "number" && score >= 1 && score <= 5 ? score : null,
+      aiBenefit: facts?.public_benefit ?? undefined,
       shareTarget: null,
     };
+    // An assessment from a different price/condition is not portable to a
+    // new browser observation. Keep the catalogue approval, drop the old copy.
+    const source = (candidate.offerEvidence as { source?: { method?: string } } | null)?.source;
+    if ((candidate.marketplace === "aliexpress" || candidate.marketplace === "amazon") && source?.method === "browser"
+      && candidate.assessment && candidate.assessment.evidenceFingerprint !== candidate.evidenceFingerprint
+      && candidate.assessment.presentation?.status !== "withdrawn") candidate.assessment = null;
     candidate.shareTarget = facts ? shareTarget(tenantId, candidate, facts, ml) : null;
     return candidate;
   });
@@ -154,13 +176,15 @@ function captureStatus(row: CaptureRow, selection: Awaited<ReturnType<typeof sel
 async function recentCaptures(tx: Tx, tenantId: string, now: Date, marketplace: string | null) {
   return tx<CaptureRow[]>`with latest as materialized (
       select distinct on (o.product_id) o.product_id,o.price_cents,o.observed_at,o.capture_run_id,
-        o.offer_evidence->>'priceType' as price_type,o.offer_evidence->>'currency' as currency
-      from garimpa.price_observation o where o.tenant_id=${tenantId}
-        and o.observed_at>=${new Date(+now - PAUTA_PRICE_WINDOW_MS)}
+        o.offer_evidence->>'priceType' as price_type,coalesce(o.offer_evidence->>'currency', 'BRL') as currency
+      from garimpa.price_observation o
+      join garimpa.product listing on listing.id=o.product_id and listing.tenant_id=o.tenant_id
+      where o.tenant_id=${tenantId} and o.observed_at>=${new Date(+now - PAUTA_PRICE_WINDOW_MS)}
         and o.observed_at<=${new Date(+now + 60_000)}
-      order by o.product_id,o.observed_at desc,o.id desc
+      order by o.product_id,case when listing.marketplace='aliexpress' and o.capture_source='extension'
+        and o.offer_evidence#>>'{source,method}'='browser' then 0 else 1 end,o.observed_at desc,o.id desc
     ), classified as (
-      select p.id,p.title,p.marketplace,o.price_cents,o.price_type,o.currency,o.observed_at,
+      select p.id,p.title,p.marketplace,p.family_key,p.category,o.price_cents,o.price_type,o.currency,o.observed_at,
         c.reason_code,c.reason_detail,
         case when event.actor_type='llm' and event.to_status='pending'
           then nullif(event.metadata#>>'{automation,aiJustification}','') end as ai_justification,
@@ -198,7 +222,14 @@ async function recentCaptures(tx: Tx, tenantId: string, now: Date, marketplace: 
       count(*) filter (where stage='review') over ()::int as review_total,
       count(*) filter (where stage in ('pending','failed')) over ()::int as triage_total,
       count(*) filter (where stage='retry') over ()::int as retry_total
-    from classified order by observed_at desc,id limit 200`;
+    from classified
+    order by date_trunc('hour', observed_at) desc,
+      row_number() over (
+        partition by date_trunc('hour', observed_at), coalesce(family_key, category, marketplace)
+        order by observed_at desc, id
+      ),
+      observed_at desc, id
+    limit 200`;
 }
 
 function offerConfirmationId(tenantId: string, channel: PautaChannel, version: number, candidate: PautaCandidate) {
@@ -255,14 +286,17 @@ export async function readLivePauta(context: AccountContext, channel: PautaChann
     const products = selection.selected.map(candidate => {
       const { productUrl: _url, lastSeenAt: _seen, curationStatus: _status, evidenceFingerprint: _fingerprint,
         offerEvidence: _evidence, tenantId: _tenant, assessment, selectionBlockers: _blockers, offerMaterialInvalid: _invalid,
-        latestObservationId: _latest, evidenceObservationId: _observation, triageScore: _score, shareTarget, ...product } = candidate;
+        latestObservationId: _latest, evidenceObservationId: _observation, triageScore: _score, aiBenefit, shareTarget, ...product } = candidate;
       const presentation = presentations.get(product.id) ?? sourceProductPresentation(product.title);
       const comparisonAt = assessment && hasSuperiorityClaim(assessment.publicRationale)
         ? Date.parse(assessment.comparativeBasis?.checkedAt ?? "") : NaN;
+      const safeAiBenefit = aiBenefit && !hasSuperiorityClaim(aiBenefit) && !/R\$|\b\d+[.,]?\d*\s*%/u.test(aiBenefit)
+        ? aiBenefit : undefined;
       return {
         ...presentation, ...product,
-        ...(product.priceType === "range" ? { discountPercent: null, originalPriceCents: null, lowestVerified: false } : {}),
-        benefit: presentation.benefit || (assessment?.benefit && !hasSuperiorityClaim(assessment.benefit) ? assessment.benefit : undefined),
+        ...(product.priceType === "range" || product.priceType === "from" || product.offerConditions && !product.offerOptionKey
+          ? { discountPercent: null, originalPriceCents: null, lowestVerified: false } : {}),
+        benefit: presentation.benefit || (assessment?.benefit && !hasSuperiorityClaim(assessment.benefit) ? assessment.benefit : safeAiBenefit),
         purchaseContents: presentation.purchaseContents ?? assessment?.purchaseContents,
         editorialRationale: product.priceType === "range" ? "" : assessment?.publicRationale ?? "",
         offerValidUntil: new Date(Math.min(

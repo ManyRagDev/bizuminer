@@ -9,6 +9,11 @@ test("reconhece famílias com evidência explícita no título", () => {
   assert.equal(productFamilyForTitle("Carregador USB C 65W GaN"), "carregamento");
   assert.equal(productFamilyForTitle("Cafeteira Elétrica Mondial Smart 15 Xícaras"), "cafeteiras");
   assert.equal(productFamilyForTitle("Cafeteira Expresso Oster Prima Latte II"), "cafeteiras");
+  assert.equal(productFamilyForTitle("Bolsa Feminina Ombro Transversal Tote"), "bolsas_mochilas");
+  assert.equal(productFamilyForTitle("ROMANTIC CROWN Mochila De Viagem Feminina Impermeável"), "bolsas_mochilas");
+  assert.equal(productFamilyForTitle("Câmera Segurança Wifi Ip Externa Prova D'água"), "cameras_seguranca");
+  assert.equal(productFamilyForTitle("Creatina Monohidratada 1kg 100% Pura - Dark Lab"), "suplementos");
+  assert.equal(productFamilyForTitle("Whey Protein 100% Pure 900g"), "suplementos");
 });
 
 test("não agrupa produto sem pista forte numa família genérica", () => {

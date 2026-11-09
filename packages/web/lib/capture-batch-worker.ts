@@ -12,13 +12,17 @@ export interface BatchStepResult {
   triage?: BatchTriageSummary;
 }
 export type BatchStepRunner = (step: {
-  kind: "capture" | "triage";
+  kind: "capture" | "triage" | "affiliate";
+  captureRunId?: string;
   tenantId: string;
   batchId: string;
   workerId: string;
   marketplace?: string;
   pages: number;
   mlConsent: boolean;
+  planMode?: "departments" | "keywords";
+  sortOrder?: "sales" | "default" | "discount";
+  pageSize?: number;
 }) => Promise<BatchStepResult>;
 
 /** One owner, sequential stores, then batch-scoped triage. Independent of HTTP/browser lifetime. */
@@ -82,6 +86,9 @@ export async function executeCaptureBatch(
           marketplace,
           pages: batch.pages,
           mlConsent: execution.mlConsent,
+          planMode: execution.planMode,
+          sortOrder: execution.sortOrder,
+          pageSize: execution.pageSize,
         });
       } catch {
         result = { ok: false, error: "capture_step_failed" };
@@ -92,6 +99,21 @@ export async function executeCaptureBatch(
         error: result.error,
       };
       await store.update(id, workerId, execution, "running", tenantId);
+    }
+    if (execution.browser?.marketplace === "aliexpress" && execution.browser.captureRunId) {
+      let linked: BatchStepResult;
+      try {
+        linked = await runStep({
+          kind: "affiliate", tenantId, batchId: id, workerId, marketplace: "aliexpress",
+          captureRunId: execution.browser.captureRunId, pages: batch.pages, mlConsent: execution.mlConsent,
+        });
+      } catch {
+        linked = { ok: false, error: "affiliate_links_pending" };
+      }
+      if (!linked.ok) {
+        execution.stores.aliexpress = { status: "partial", error: linked.error ?? "affiliate_links_pending" };
+        await store.update(id, workerId, execution, "running", tenantId);
+      }
     }
     const statuses = Object.values(execution.stores).map((step) => step.status);
     if (statuses.includes("awaiting_browser")) {

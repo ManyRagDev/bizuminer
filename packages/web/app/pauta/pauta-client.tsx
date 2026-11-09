@@ -506,7 +506,7 @@ export default function PautaClient({
                     {product.caveat && <p className="pauta-editorial-context"><b>Ressalva:</b> {product.caveat}</p>}
                     {product.offerOptionLabel && <p><b>Opção:</b> {product.offerOptionLabel}</p>}
                     {product.offerConditions && <p><b>Condições:</b> {product.offerConditions}</p>}
-                    {product.priceType === "range" && <p>{offerPriceNote(product)}</p>}
+                    {(product.priceType === "range" || product.priceType === "from") && <p>{offerPriceNote(product)}</p>}
                     <div className="pauta-card-meta" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
                       <strong><a href={product.detailUrl ?? `/bizu/${product.slug}`}>{offerPriceLabel(product)}</a></strong>
                       {product.discountPercent != null && product.discountPercent > 0 && product.discountPercent < 99 && (
@@ -626,7 +626,7 @@ export default function PautaClient({
               <div>
                 <strong>{capture.title}</strong>
                 <p>{marketplaceDef(capture.marketplace)?.label ?? capture.marketplace} · {captureTime.format(new Date(capture.capturedAt))}</p>
-                {capture.priceType === "exact" && capture.currency === "BRL" && <p>{priceBRL.format(capture.priceCents / 100)}</p>}
+                {capture.priceType === "exact" && (capture.currency === "BRL" || !capture.currency) && <p>{priceBRL.format(capture.priceCents / 100)}</p>}
               </div>
               <div>
                 <strong className={capture.status === "review" ? "pauta-review-needed" : undefined}>{captureLabels[capture.status]}</strong>

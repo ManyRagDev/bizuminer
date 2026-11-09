@@ -7,6 +7,7 @@ interface TodayCommandCenterProps {
   captureDoneToday: boolean;
   triageDoneToday: boolean;
   approvedToday: number;
+  eligibleTriage?: number;
   selectionReady: boolean;
   selectionLabel: string;
   awaiting: number;
@@ -67,9 +68,11 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
           <div>
             <strong>Triagem inicial</strong>
             <small>
-              {props.triageDoneToday
-                ? `${props.approvedToday} aprovados na última rodada de hoje`
-                : "sem rodada concluída hoje"}
+              {props.eligibleTriage && props.eligibleTriage > 0
+                ? `${props.eligibleTriage} ${props.eligibleTriage === 1 ? "novo capturado" : "novos capturados"} aguardando IA`
+                : props.triageDoneToday
+                  ? `${props.approvedToday} aprovados na última rodada de hoje`
+                  : "sem rodada concluída hoje"}
             </small>
           </div>
         </li>
@@ -93,7 +96,16 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
         </li>
       </ol>
       <div className="today-primary-action">
-        <a href="/admin/curadoria?aba=selecao">Abrir curadoria →</a>
+        {props.eligibleTriage && props.eligibleTriage > 0 ? (
+          <a
+            href="/admin/curadoria?aba=selecao"
+            style={{ background: "#7c3aed", color: "#fff", fontWeight: 600 }}
+          >
+            ⚡ Triar {props.eligibleTriage} produtos com IA →
+          </a>
+        ) : (
+          <a href="/admin/curadoria?aba=selecao">Abrir curadoria →</a>
+        )}
         <a href="#captura-hoje">Capturar ofertas</a>
         {pending > 0 && (
           <a href="#bancada-hoje" style={{ background: "transparent", color: "var(--accent, #0070f3)", border: "1px solid var(--accent, #0070f3)" }}>

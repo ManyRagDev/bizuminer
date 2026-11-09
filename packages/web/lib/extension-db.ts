@@ -184,7 +184,8 @@ export async function persistExtensionCapture(
   const clientCapturedAt = new Date(payload.clientCapturedAt);
   const originalPriceCents = p.originalPriceCents !== undefined && p.originalPriceCents > p.priceCents ? p.originalPriceCents : null;
   const claimedDiscountRate = originalPriceCents !== null ? 1 - p.priceCents / originalPriceCents : null;
-  const slug = `ml-${p.externalId}-${device.affiliatePublicSlug}`;
+  const slugPrefix = payload.marketplace === "amazon" ? "amz-" : "ml-";
+  const slug = `${slugPrefix}${p.externalId}-${device.affiliatePublicSlug}`;
 
   const context: AccountContext = {
     tenantId: device.tenantId,
@@ -229,7 +230,7 @@ export async function persistExtensionCapture(
         where o.tenant_id=${device.tenantId} and o.extension_device_id=${device.deviceId}
           and o.client_request_id=${payload.requestId}::uuid limit 1`;
       if(previousRequest) return {ok:true,duplicate:true,productId:previousRequest.product_id,
-        observationId:previousRequest.id,publication:{slug:`ml-${previousRequest.external_id}-${device.affiliatePublicSlug}`}};
+        observationId:previousRequest.id,publication:{slug:`${slugPrefix}${previousRequest.external_id}-${device.affiliatePublicSlug}`}};
 
 
       // 1. produto (upsert por tenant+marketplace+external_id)
@@ -237,7 +238,7 @@ export async function persistExtensionCapture(
         insert into garimpa.product as prod
           (id, tenant_id, marketplace, external_id, title, product_url, image_url,
            last_price_cents, first_seen_at, last_seen_at)
-        values (gen_random_uuid()::text, ${device.tenantId}, 'mercadolivre', ${p.externalId},
+        values (gen_random_uuid()::text, ${device.tenantId}, ${payload.marketplace}, ${p.externalId},
                 ${p.title}, ${p.productUrl}, ${p.imageUrl ?? null},
                 ${p.priceCents}, ${clientCapturedAt}, ${clientCapturedAt})
         on conflict (tenant_id, marketplace, external_id) do update set
@@ -261,7 +262,7 @@ export async function persistExtensionCapture(
                ${originalPriceCents}, ${claimedDiscountRate}, now(),
                'extension', ${device.deviceId}, ${payload.requestId}::uuid,
                ${payload.page.url}, ${clientCapturedAt}, ${p.title}, ${p.productUrl}, ${p.imageUrl ?? null},
-               ${tx.json({ ...browserOfferEvidence(p, p.productUrl, payload.clientCapturedAt) } as any)}
+               ${tx.json({ ...browserOfferEvidence(p, p.productUrl, payload.clientCapturedAt, payload.marketplace) } as any)}
         on conflict (extension_device_id, client_request_id)
           where extension_device_id is not null and client_request_id is not null
         do nothing

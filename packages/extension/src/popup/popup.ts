@@ -118,13 +118,17 @@ const batchResult = document.querySelector<HTMLElement>("#batch-result");
 const batchErrors: Record<string, string> = {
   not_paired: "Conecte a extensão ao painel antes de importar.",
   no_waiting_batch:
-    "Inicie uma captura com Mercado Livre no painel e aguarde a etapa do navegador.",
+    "Existe outra captura em andamento no painel. Aguarde a conclusão ou tente novamente.",
   offers_page_required:
-    "Abra a página de ofertas do Mercado Livre e conclua o acesso, se solicitado.",
+    "Abra uma página de produtos ou ofertas do Mercado Livre, Amazon Brasil ou AliExpress.",
+  ml_page_required:
+    "Abra uma página de produtos ou ofertas do Mercado Livre, Amazon Brasil ou AliExpress.",
   no_offers:
     "A listagem não tem ofertas completas. Confira se terminou de carregar.",
   continuation_pending:
     "Ofertas salvas. Tente importar novamente para retomar o executor; os produtos não serão duplicados.",
+  marketplace_server_outdated: "Este servidor ainda não aceita importações da Amazon ou do AliExpress. Confira se escolheu o ambiente Local.",
+  marketplace_capture_unavailable: "A importação desta loja ainda não foi liberada neste ambiente.",
   browser_capture_not_waiting:
     "Este lote venceu ou já foi concluído. Confira o painel.",
   browser_capture_already_completed:
@@ -144,11 +148,25 @@ batchPrepare?.addEventListener("click", async () => {
   batchPrepare.disabled = true;
   try {
     const result = await chrome.runtime.sendMessage({ type: "PREPARE_BATCH" });
-    if (batchResult)
-      batchResult.textContent = result.ok
-        ? `${result.count} ofertas prontas${result.ignored ? ` · ${result.ignored} cards incompletos ignorados` : ""}.`
-        : (batchErrors[result.error] ??
-          "Não foi possível ler a listagem. Abra as ofertas do Mercado Livre.");
+    if (batchResult) {
+      const summary = result.ok
+        ? `${result.count} ofertas prontas${result.ignored && !result.diagnostics ? ` · ${result.ignored} cards incompletos ignorados` : ""}.`
+        : batchErrors[result.error] ?? "Não foi possível ler a página de ofertas.";
+      const d = result.diagnostics;
+      const details = d ? [
+        `${d.products} anúncios identificados`,
+        d.noPrice && `${d.noPrice} sem preço detectado${d.visibleNoPrice ? ` (${d.visibleNoPrice} visíveis na tela)` : ""}`,
+        d.uncertainPrice && `${d.uncertainPrice} com preço indefinido`,
+        d.noTitle && `${d.noTitle} sem nome`,
+      ].filter(Boolean).join(" · ") : "";
+      const sample = result.sample;
+      const money = (cents: number) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const samplePrice = sample?.priceType === "range" && sample.priceMaxCents
+        ? `${money(sample.priceCents)} a ${money(sample.priceMaxCents)}`
+        : sample ? `${sample.priceType === "from" ? "a partir de " : ""}${money(sample.priceCents)}` : "";
+      batchResult.textContent = summary + (details ? ` Detectados: ${details}.` : "")
+        + (sample ? ` Exemplo: ${sample.title.slice(0, 85)} — ${samplePrice}.` : "");
+    }
     if (batchImport) {
       batchImport.hidden = !result.ok;
       batchImport.textContent = result.retry

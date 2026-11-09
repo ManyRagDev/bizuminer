@@ -1,6 +1,6 @@
 {
   "name": "@bizuminer/extension",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -10,7 +10,8 @@
     "test": "node --test --experimental-strip-types test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "build": "node scripts/build.mjs",
-    "build:dev": "node scripts/build.mjs --dev",
+    "build:dev": "node scripts/build.mjs",
+    "build:prod": "node scripts/build.mjs --prod",
     "verify:manifest": "node scripts/verify-manifest.mjs",
     "package": "node scripts/package.mjs"
   },

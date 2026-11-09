@@ -2,6 +2,7 @@ import { captureProcessFailure, runBoundedCaptureProcess } from "../lib/capture-
 import { fileURLToPath } from "node:url";
 import { executeCaptureBatch } from "../lib/capture-batch-worker.ts";
 import { captureBatches } from "../lib/capture-batch-db.ts";
+import { linkBrowserAliExpress } from "../lib/browser-affiliate-links.ts";
 import type { BatchStepRunner } from "../lib/capture-batch-worker.ts";
 
 const tenantIndex = process.argv.indexOf("--tenant");
@@ -20,6 +21,11 @@ const scripts: Record<string, string> = {
 };
 const runStep: BatchStepRunner = async (step) => {
   if (step.tenantId !== tenantId) return { ok: false, error: "capture_batch_tenant_mismatch" };
+  if (step.kind === "affiliate") {
+    if (!step.captureRunId) return { ok: false, error: "affiliate_links_pending" };
+    const result = await linkBrowserAliExpress(step.tenantId, step.captureRunId);
+    return result.failed > 0 ? { ok: false, error: "affiliate_links_pending" } : { ok: true };
+  }
   if (step.marketplace === "mercadolivre") return { ok: false, error: "manual_capture_only" };
   if (step.kind === "triage" && !process.env.GEMINI_API_KEY)
     return { ok: false, error: "gemini_key_not_configured" };
@@ -30,6 +36,11 @@ const runStep: BatchStepRunner = async (step) => {
     step.kind === "triage"
       ? ["--limit", "200", "--batch", step.batchId, "--worker", step.workerId, "--tenant", step.tenantId]
       : ["--pages", String(step.pages), "--operation-batch", step.batchId, "--tenant", step.tenantId];
+  if (step.kind === "capture") {
+    if (step.planMode) args.push("--plan", step.planMode);
+    if (step.sortOrder) args.push("--order", step.sortOrder);
+    if (step.pageSize) args.push("--page-size", String(step.pageSize));
+  }
   const env = process.env;
   const result = await runBoundedCaptureProcess(
     process.execPath,

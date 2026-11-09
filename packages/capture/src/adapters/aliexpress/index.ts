@@ -97,6 +97,15 @@ export class AliExpressAdapter implements CaptureAdapter {
       ship_to_country: SHIP_TO_COUNTRY,
     };
     if (params.keyword) business.keywords = params.keyword;
+    if (params.sourceQuery?.kind === "department") {
+      business.category_ids = params.sourceQuery.categoryId;
+      if (params.sourceQuery.order === "sales" || !params.sourceQuery.order) {
+        business.sort = "LAST_VOLUME_DESC";
+      } else if (params.sourceQuery.order === "discount") {
+        business.sort = "DISCOUNT_DESC";
+      }
+      // "default": não define sort, deixando a relevância natural da plataforma
+    }
     // O tracking_id vai no pedido para que o `promotion_link` devolvido já
     // venha atribuído à nossa conta. Sem ele a API responde igual, mas o
     // link não gera comissão — falha silenciosa e cara.
@@ -113,6 +122,24 @@ export class AliExpressAdapter implements CaptureAdapter {
     const nodes = result?.products?.product ?? [];
     const capturedAt = new Date();
     const { offers, skipped, skippedByCurrency } = mapProductNodes(nodes, capturedAt, TARGET_CURRENCY);
+
+    if (params.sourceQuery?.kind === "department") {
+      const requestedCatId = params.sourceQuery.categoryId;
+      const matched = nodes.filter(
+        (n) => String(n.first_level_category_id ?? "") === requestedCatId,
+      ).length;
+      ctx.log({
+        level: "info",
+        msg: "consulta AliExpress por departamento executada",
+        data: {
+          categoryId: requestedCatId,
+          order: params.sourceQuery.order ?? "sales",
+          received: nodes.length,
+          matchedFirstLevel: matched,
+          page,
+        },
+      });
+    }
 
     if (skipped > 0) {
       ctx.log({

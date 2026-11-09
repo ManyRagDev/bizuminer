@@ -38,6 +38,7 @@ export interface VariantIdentity {
 export interface OfferConditions {
   readonly quantity?: number;
   readonly payment?: string;
+  readonly membership?: string;
   readonly shipping?: string;
   readonly coupon?: string;
   readonly region?: string;

@@ -201,14 +201,14 @@ export function editorialOfferBlockers(candidate: {
   curationStatus: string; evidenceFingerprint: string; evidenceObservedAt: Date | string | null;
   lastSeenAt: Date | string; imageUrl: string | null; priceCents: number;
   offerEvidence?: unknown;
-}, now = new Date(), allowVerifiedRange = false): string[] {
+}, now = new Date(), allowVerifiedRange = false, allowMissingImage = false): string[] {
   const blockers: string[] = [];
   if (candidate.curationStatus !== "approved") blockers.push("Produto sem aprovação editorial.");
   const seen = new Date(candidate.lastSeenAt).getTime();
   if (!Number.isFinite(seen) || seen > now.getTime() + 60000 || now.getTime() - seen > 7 * 86400000) blockers.push("Produto fora da janela de presença de sete dias.");
   const observed = candidate.evidenceObservedAt ? new Date(candidate.evidenceObservedAt).getTime() : NaN;
   if (!Number.isFinite(observed) || observed > now.getTime() + 60000 || now.getTime() - observed > 48 * 3600000) blockers.push("Preço sem observação válida nas últimas 48 horas.");
-  if (!candidate.imageUrl) blockers.push("Produto sem imagem para apresentação.");
+  if (!candidate.imageUrl && !allowMissingImage) blockers.push("Produto sem imagem para apresentação.");
   if (!Number.isSafeInteger(candidate.priceCents) || candidate.priceCents <= 0) blockers.push("Preço inválido.");
   const evidence = candidate.offerEvidence && typeof candidate.offerEvidence === "object"
     ? candidate.offerEvidence as Record<string, unknown> : {};
@@ -219,8 +219,8 @@ export function editorialOfferBlockers(candidate: {
   return blockers;
 }
 
-export function editorialSelectionBlockers(candidate: Parameters<typeof editorialOfferBlockers>[0] & { evidenceFingerprint: string }, assessment: EditorialAssessment | null, now = new Date(), allowVerifiedRange = false): string[] {
-  const blockers = editorialOfferBlockers(candidate, now, allowVerifiedRange);
+export function editorialSelectionBlockers(candidate: Parameters<typeof editorialOfferBlockers>[0] & { evidenceFingerprint: string }, assessment: EditorialAssessment | null, now = new Date(), allowVerifiedRange = false, allowMissingImage = false): string[] {
+  const blockers = editorialOfferBlockers(candidate, now, allowVerifiedRange, allowMissingImage);
   if (!assessment) return [...blockers, "Avaliação do destaque ainda não registrada."];
   const validated = validateEditorialAssessment(assessment, true);
   if (!validated.ok) {

@@ -51,8 +51,15 @@ export class AICurationParseError extends Error {}
  */
 const TRANSIENT_HTTP_STATUS = new Set([408, 429, 500, 502, 503, 504]);
 
+export function isDailyQuotaExhaustedError(err: unknown): boolean {
+  const status = (err as { status?: unknown })?.status;
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return status === 429 && /PerDay|requests per day|quotaId.*PerDay/i.test(msg);
+}
+
 export function isTransientGeminiError(err: unknown): boolean {
   if (err instanceof AICurationParseError) return true;
+  if (isDailyQuotaExhaustedError(err)) return false;
   const status = (err as { status?: unknown })?.status;
   return typeof status === "number" && TRANSIENT_HTTP_STATUS.has(status);
 }
@@ -131,8 +138,8 @@ export function parseAICurationResponse(text: string): AICurationItemOutput[] {
   );
 }
 
-const SYSTEM_PROMPT = `Você é o curador especialista do canal de "Achadinhos" BizuMiner no Brasil.
-Sua missão é classificar produtos para garantir que apenas itens desejáveis, viáveis e seguros cheguem à vitrine.
+const SYSTEM_PROMPT = `Você é o curador especialista do canal de "Achadinhos" e Ofertas BizuMiner no Brasil.
+Sua missão é classificar produtos para garantir que apenas itens desejáveis, completos, viáveis e de real utilidade cheguem à vitrine e à pauta, cobrindo os 12 departamentos do catálogo: Casa, Eletrodomésticos, Eletrônicos, Informática, Ferramentas, Beleza, Esporte e Lazer, Auto e moto, Brinquedos, Iluminação, Papelaria e Moda.
 
 DIRETRIZES DE AVALIAÇÃO:
 1. Promessa enganosa / charlatanismo (hasMisleadingClaim):
@@ -140,20 +147,24 @@ DIRETRIZES DE AVALIAÇÃO:
 2. Segurança e Conteúdo Adulto (isAdultOrUnsafe):
    - Marque TRUE para sex shop, estimulantes, armas, réplicas perigosas, produtos falsificados ou itens ilegais.
 3. Desejabilidade (desirabilityScore de 1 a 5):
-   - NOTA 5: Gadgets inovadores, soluções inteligentes para o dia a dia, tecnologia prática e presentes criativos com alto fator de compra por impulso.
-   - NOTA 4: Bons achadinhos, úteis, com proposta de valor clara e apelo comercial.
-   - NOTA 3: Itens úteis, porém comuns (ex: garrafa térmica padrão, suporte de celular articulado comum, pano de microfibra simples).
-   - NOTA 1 ou 2: Peças de reposição técnica, insumos industriais, parafusos, ferramentas secas ou itens chatos sem apelo de vitrine.
+   - Avalie utilidade e custo-benefício em qualquer faixa de preço. Considere a faixa completa quando houver variações. Só afirme que houve queda de preço se houver referência de histórico comparável.
+   - NOTA 5: Produtos de destaque em seu departamento, gadgets inovadores, soluções inteligentes para o dia a dia, ferramentas elétricas desejadas, periféricos/eletrônicos completos, utilidades com forte proposta de valor e alta prova social (boas avaliações e vendas).
+   - NOTA 4: Bons produtos acabados, úteis e procurados pelo consumidor final (ex.: parafusadeira com bateria, airfryer, fone Bluetooth, scanner automotivo OBD2, kit de papelaria/escritório, brinquedo estruturado, organizador prático).
+   - NOTA 3: Itens úteis ou de rotina, porém comuns (ex.: garrafa térmica padrão, suporte simples de celular, pano de microfibra, jogo de chaves manuais básicas).
+   - NOTA 1 ou 2: Peças técnicas de reposição avulsas sem uso direto (parafusos soltos, engrenagens industriais, capacitores, cabos flat internos), anúncios incompreensíveis/lixo ou itens de qualidade duvidosa. Ferramentas e itens de auto NÃO são lixo se forem produtos completos para o consumidor!
 4. Categoria Editorial (editorialCategory):
-   - 'gadget_util': soluções práticas para casa, cozinha, setup ou rotina.
-   - 'novidade': produtos curiosos, virais, presentes ou gadgets divertidos.
-   - 'peca_chata': cabos genéricos sem diferencial, porcas, parafusos, mangueiras e peças de reposição.
+   - 'achadinho_impulso': novidades visuais, gadgets, itens curiosos e presentes criativos.
+   - 'utilidade_pratica': produtos que resolvem dores concretas do dia a dia (casa, cozinha, organização, escritório).
+   - 'destaque_departamento': produtos robustos de informática, ferramentas, eletro, auto, beleza, esportes ou brinquedos com alta utilidade ao usuário.
+   - 'peca_tecnica_avulsa': peças industriais soltas de reposição, parafusos, componentes avulsos sem apelo de vitrine.
    - 'outro': o que não se enquadrar nos anteriores.
-5. Preço promocional e referência verificada:
-   - Um preço atual muito baixo não torna o produto sem valor. Quando houver verifiedPriceReference, ela informa o menor preço ANTERIOR observado da mesma configuração, não um preço riscado declarado pelo vendedor.
-   - Avalie utilidade e custo-benefício em qualquer faixa de preço e considere a faixa completa quando houver variações. Só afirme que houve queda de preço se houver referência de histórico comparável.
-6. Justificativa (justification):
-   - Frase concisa e comercial (1 a 2 sentenças, máx 150 caracteres) sintetizando o apelo do produto para o curador.`;
+5. Categoria Canônica (catalogCategory):
+   - Classifique o produto pelo USO PRINCIPAL entre: 'Casa', 'Tecnologia', 'Ferramentas', 'Beleza', 'Fitness', 'Auto e moto', 'Brinquedos', 'Papelaria', 'Moda', 'Suplementos' ou 'Geral'.
+   - Exemplo: um boneco articulado encontrado na seção de Casa e Decoração deve ter catalogCategory = 'Brinquedos'.
+6. Benefício Público (publicBenefit):
+   - Frase factual curta e comercial (1 sentença, máx 120 caracteres) destacando o uso real e benefício para o consumidor, sem inventar dados ausentes no título.
+7. Justificativa Interna (justification):
+   - Frase concisa (1 sentença, máx 150 caracteres) explicando a nota e o apelo para o curador.`;
 
 export interface EvaluationOptions {
   apiKey?: string;
@@ -210,20 +221,22 @@ async function generateBatchWithFallback(
   prompt: string,
   modelChain: string[],
   retry: RetryConfig,
-): Promise<AICurationItemOutput[]> {
+): Promise<{ items: AICurationItemOutput[]; modelUsed: string }> {
   let lastError: unknown;
   for (const modelName of modelChain) {
     const model = buildModel(modelName);
     try {
-      return await withRetry(async () => {
+      const items = await withRetry(async () => {
         const response = await model.generateContent(prompt);
         return parseAICurationResponse(response.response.text());
       }, retry);
+      return { items, modelUsed: modelName };
     } catch (err) {
-      if (!isTransientGeminiError(err)) throw err;
+      const status = (err as { status?: unknown })?.status;
+      if (!isTransientGeminiError(err) && !isDailyQuotaExhaustedError(err) && status !== 404) throw err;
       lastError = err;
       console.warn(
-        `[ai-curation] Modelo ${modelName} esgotou retries (transitório): ${
+        `[ai-curation] Modelo ${modelName} indisponível (${status === 404 ? "não encontrado" : isDailyQuotaExhaustedError(err) ? "cota diária esgotada" : "transitório"}): ${
           err instanceof Error ? err.message : String(err)
         }. Tentando próximo da cadeia.`,
       );
@@ -251,7 +264,7 @@ export async function evaluateProductsBatch(
   const retry = options?.retry ?? DEFAULT_RETRY_CONFIG;
   const fallbacks =
     options?.modelFallbacks ?? parseFallbackModels(process.env.GEMINI_FALLBACK_MODELS) ?? DEFAULT_FALLBACK_MODELS;
-  const modelChain = buildModelChain(modelName, fallbacks);
+  let activeModelChain = buildModelChain(modelName, fallbacks);
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const buildModel = (name: string) =>
@@ -272,11 +285,14 @@ export async function evaluateProductsBatch(
     const batchNumber = Math.floor(i / batchSize) + 1;
     try {
       const prompt = `Avalie o seguinte lote de produtos candidatos a achadinhos:\n\n${JSON.stringify(chunk, null, 2)}`;
-      const parsed = await generateBatchWithFallback(buildModel, prompt, modelChain, retry);
+      const { items: parsed, modelUsed } = await generateBatchWithFallback(buildModel, prompt, activeModelChain, retry);
+      if (modelUsed !== activeModelChain[0]) {
+        activeModelChain = [modelUsed, ...activeModelChain.filter((m) => m !== modelUsed)];
+      }
       results.push(...parsed);
     } catch (err) {
       console.error(
-        `[ai-curation] Falha no processamento do lote ${batchNumber} após ${modelChain.length} modelo(s) e ${retry.maxAttempts} tentativas:`,
+        `[ai-curation] Falha no processamento do lote ${batchNumber} após ${activeModelChain.length} modelo(s) e ${retry.maxAttempts} tentativas:`,
         err,
       );
       // Fallback seguro: itens do lote não entram no resultado; o pipeline os

@@ -324,3 +324,76 @@ test("parseAICurationResponse: JSON inválido lança AICurationParseError (retry
   );
   assert.equal(mixed.length, 1);
 });
+
+test("Estágio 2: por padrão todas as variações da família avançam para triagem IA sem descarte pré-avaliação", async () => {
+  const products = [
+    { id: "var_1", marketplace: "shopee", title: "Teclado Mecânico RGB Switch Azul", priceCents: 15900, ratingStar: 4.8, salesCount: 500, familyKey: "teclado-mecanico", category: "Tecnologia" },
+    { id: "var_2", marketplace: "shopee", title: "Teclado Mecânico RGB Switch Vermelho", priceCents: 15900, ratingStar: 4.8, salesCount: 450, familyKey: "teclado-mecanico", category: "Tecnologia" },
+    { id: "var_3", marketplace: "aliexpress", title: "Teclado Mecânico RGB Switch Marrom", priceCents: 16200, ratingStar: 4.7, salesCount: 300, familyKey: "teclado-mecanico", category: "Tecnologia" },
+    { id: "var_4", marketplace: "aliexpress", title: "Teclado Mecânico RGB Switch Black", priceCents: 16500, ratingStar: 4.6, salesCount: 200, familyKey: "teclado-mecanico", category: "Tecnologia" },
+    { id: "var_5", marketplace: "shopee", title: "Teclado Mecânico RGB Versão Compacta 60%", priceCents: 14900, ratingStar: 4.9, salesCount: 800, familyKey: "teclado-mecanico", category: "Tecnologia" },
+  ];
+
+  const evaluatedIds = [];
+  const evaluatedPayloads = [];
+
+  const decisions = await processIngestionPipeline(products, {
+    evaluator: async (items) => {
+      for (const item of items) {
+        evaluatedIds.push(item.productId);
+        evaluatedPayloads.push(item);
+      }
+      return items.map((item) => ({
+        productId: item.productId,
+        desirabilityScore: 4,
+        hasMisleadingClaim: false,
+        isAdultOrUnsafe: false,
+        editorialCategory: "gadget_util",
+        justification: "Excelente teclado mecânico com switches variados.",
+      }));
+    },
+  });
+
+  // Todas as 5 variações da família avançaram para a IA (nenhuma descartada pré-IA)
+  assert.equal(evaluatedIds.length, 5);
+  assert.equal(decisions.length, 5);
+  assert.ok(decisions.every((d) => d.actorType === "llm"));
+});
+
+test("Estágio 3: formatação de faixa de preço e proveniência de departamento no payload da IA", async () => {
+  const products = [
+    {
+      id: "prod_range",
+      marketplace: "aliexpress",
+      title: "Parafusadeira e Furadeira de Impacto Sem Fio 12V / 21V",
+      priceCents: 8900,
+      priceMinCents: 8900,
+      priceMaxCents: 14900,
+      ratingStar: 4.7,
+      salesCount: 120,
+      familyKey: null,
+      category: "Ferramentas",
+      department: "Ferramentas & Construção",
+    },
+  ];
+
+  let capturedInput = null;
+
+  await processIngestionPipeline(products, {
+    evaluator: async (items) => {
+      capturedInput = items[0];
+      return items.map((item) => ({
+        productId: item.productId,
+        desirabilityScore: 4,
+        hasMisleadingClaim: false,
+        isAdultOrUnsafe: false,
+        editorialCategory: "utilidade_pratica",
+        justification: "Ferramenta útil para reformas.",
+      }));
+    },
+  });
+
+  assert.ok(capturedInput);
+  assert.equal(capturedInput.priceFormatted, "R$ 89.00 a R$ 149.00");
+  assert.equal(capturedInput.originDepartment, "Ferramentas & Construção");
+});

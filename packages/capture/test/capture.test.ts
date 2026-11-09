@@ -18,6 +18,7 @@ import { CaptureError } from "../src/errors.ts";
 import { mapProductNode, mapProductNodes } from "../src/adapters/shopee/mapper.ts";
 import { ShopeeClient } from "../src/adapters/shopee/client.ts";
 import { ShopeeAdapter } from "../src/adapters/shopee/index.ts";
+import { AliExpressAdapter } from "../src/adapters/aliexpress/index.ts";
 import type { CaptureContext, Credential } from "../src/types.ts";
 
 const ctx: CaptureContext = { runId: "test", log: () => {} };
@@ -397,40 +398,6 @@ describe("ShopeeAdapter", () => {
     await assert.rejects(adapter.fetchOffers(cred, {}, ctx), { kind: "malformed_response" });
   });
 
-  it("ShopeeClient repete e recupera em erro de sistema 10000", async () => {
-    let attempts = 0;
-    const adapter = new ShopeeAdapter({
-      ratePerSecond: 1000,
-      fetchImpl: (async () => {
-        attempts++;
-        if (attempts === 1) {
-          return new Response(
-            JSON.stringify({
-              errors: [{ message: "System Error", extensions: { code: 10000 } }],
-            }),
-            { status: 200, headers: { "content-type": "application/json" } },
-          );
-        }
-        return new Response(
-          JSON.stringify({
-            data: {
-              productOfferV2: {
-                nodes: [{ ...node, itemId: 200 }],
-                pageInfo: { hasNextPage: false },
-              },
-            },
-          }),
-          { status: 200, headers: { "content-type": "application/json" } },
-        );
-      }) as unknown as typeof fetch,
-    });
-
-    const page = await adapter.fetchOffers(cred, {}, ctx);
-    assert.equal(attempts, 2);
-    assert.equal(page.offers.length, 1);
-    assert.equal(page.offers[0]!.externalId, "200");
-  });
-
   it("aplica filtro de desconto mínimo", async () => {
     const adapter = new ShopeeAdapter({
       ratePerSecond: 1000,
@@ -487,5 +454,237 @@ describe("ShopeeAdapter", () => {
     }
 
     assert.deepEqual(seen, ["1", "2", "3"]);
+  });
+
+  it("ShopeeAdapter suporta consulta por departamento com ordenação sales e omite keyword", async () => {
+    let capturedBody: any;
+    const adapter = new ShopeeAdapter({
+      ratePerSecond: 1000,
+      fetchImpl: (async (_url: string, init: RequestInit) => {
+        capturedBody = JSON.parse(init.body as string);
+        return new Response(
+          JSON.stringify({
+            data: {
+              productOfferV2: {
+                nodes: [{ ...node, itemId: 100, productCatIds: [100636] }],
+                pageInfo: { hasNextPage: false },
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    const page = await adapter.fetchOffers(
+      cred,
+      {
+        sourceQuery: { kind: "department", categoryId: "100636", order: "sales" },
+      },
+      ctx,
+    );
+
+    assert.equal(page.offers.length, 1);
+    assert.equal(page.offers[0]!.externalId, "100");
+    assert.equal(capturedBody.variables.productCatId, 100636);
+    assert.equal(capturedBody.variables.listType, 0);
+    assert.equal(capturedBody.variables.sortType, 2);
+    assert.equal(capturedBody.variables.keyword, null);
+  });
+
+  it("ShopeeAdapter suporta consulta por departamento com ordenação default e discount", async () => {
+    let capturedBody: any;
+    const adapter = new ShopeeAdapter({
+      ratePerSecond: 1000,
+      fetchImpl: (async (_url: string, init: RequestInit) => {
+        capturedBody = JSON.parse(init.body as string);
+        return new Response(
+          JSON.stringify({
+            data: {
+              productOfferV2: {
+                nodes: [{ ...node, itemId: 101, productCatIds: [100636] }],
+                pageInfo: { hasNextPage: false },
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    await adapter.fetchOffers(
+      cred,
+      {
+        sourceQuery: { kind: "department", categoryId: "100636", order: "default" },
+      },
+      ctx,
+    );
+    assert.equal(capturedBody.variables.sortType, 0);
+
+    await adapter.fetchOffers(
+      cred,
+      {
+        sourceQuery: { kind: "department", categoryId: "100636", order: "discount" },
+      },
+      ctx,
+    );
+    assert.equal(capturedBody.variables.sortType, 1);
+  });
+
+  it("ShopeeClient repete e recupera em erro de sistema 10000", async () => {
+    let attempts = 0;
+    const adapter = new ShopeeAdapter({
+      ratePerSecond: 1000,
+      fetchImpl: (async () => {
+        attempts++;
+        if (attempts === 1) {
+          return new Response(
+            JSON.stringify({
+              errors: [{ message: "System Error", extensions: { code: 10000 } }],
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        return new Response(
+          JSON.stringify({
+            data: {
+              productOfferV2: {
+                nodes: [{ ...node, itemId: 200 }],
+                pageInfo: { hasNextPage: false },
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    const page = await adapter.fetchOffers(cred, {}, ctx);
+    assert.equal(attempts, 2);
+    assert.equal(page.offers.length, 1);
+    assert.equal(page.offers[0]!.externalId, "200");
+  });
+});
+
+describe("AliExpressAdapter — departamento e ordenação", () => {
+  const aliCred: Credential = {
+    marketplace: "aliexpress",
+    secret: { appKey: "KEY123", appSecret: "SECRET456", trackingId: "TRACK789" },
+  };
+
+  const aliProduct = {
+    product_id: 99999,
+    product_title: "Kit Ferramentas Completo",
+    product_detail_url: "https://pt.aliexpress.com/item/99999.html",
+    promotion_link: "https://s.click.aliexpress.com/e/abc",
+    target_sale_price: "89.90",
+    target_sale_price_currency: "BRL",
+    first_level_category_id: "1420",
+    first_level_category_name: "Ferramentas",
+  };
+
+  it("envia category_ids e sort LAST_VOLUME_DESC para ordenação sales sem keyword", async () => {
+    let requestBody: string = "";
+    const adapter = new AliExpressAdapter({
+      fetchImpl: (async (_url: string, init: RequestInit) => {
+        requestBody = String(init?.body ?? "");
+        return new Response(
+          JSON.stringify({
+            aliexpress_affiliate_product_query_response: {
+              resp_result: {
+                result: {
+                  products: { product: [aliProduct] },
+                  total_record_count: 1,
+                  current_record_count: 1,
+                },
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    const page = await adapter.fetchOffers(
+      aliCred,
+      {
+        sourceQuery: { kind: "department", categoryId: "1420", order: "sales" },
+      },
+      ctx,
+    );
+
+    assert.equal(page.offers.length, 1);
+    assert.equal(page.offers[0]!.externalId, "99999");
+    assert.ok(requestBody.includes("category_ids=1420"));
+    assert.ok(requestBody.includes("sort=LAST_VOLUME_DESC"));
+    assert.ok(!requestBody.includes("keywords="));
+  });
+
+  it("omite sort para ordenação default", async () => {
+    let requestBody: string = "";
+    const adapter = new AliExpressAdapter({
+      fetchImpl: (async (_url: string, init: RequestInit) => {
+        requestBody = String(init?.body ?? "");
+        return new Response(
+          JSON.stringify({
+            aliexpress_affiliate_product_query_response: {
+              resp_result: {
+                result: {
+                  products: { product: [aliProduct] },
+                  total_record_count: 1,
+                  current_record_count: 1,
+                },
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    await adapter.fetchOffers(
+      aliCred,
+      {
+        sourceQuery: { kind: "department", categoryId: "1420", order: "default" },
+      },
+      ctx,
+    );
+
+    assert.ok(requestBody.includes("category_ids=1420"));
+    assert.ok(!requestBody.includes("sort="));
+  });
+
+  it("envia sort DISCOUNT_DESC para ordenação discount", async () => {
+    let requestBody: string = "";
+    const adapter = new AliExpressAdapter({
+      fetchImpl: (async (_url: string, init: RequestInit) => {
+        requestBody = String(init?.body ?? "");
+        return new Response(
+          JSON.stringify({
+            aliexpress_affiliate_product_query_response: {
+              resp_result: {
+                result: {
+                  products: { product: [aliProduct] },
+                  total_record_count: 1,
+                  current_record_count: 1,
+                },
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    await adapter.fetchOffers(
+      aliCred,
+      {
+        sourceQuery: { kind: "department", categoryId: "1420", order: "discount" },
+      },
+      ctx,
+    );
+
+    assert.ok(requestBody.includes("category_ids=1420"));
+    assert.ok(requestBody.includes("sort=DISCOUNT_DESC"));
   });
 });

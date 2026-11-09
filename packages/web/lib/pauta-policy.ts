@@ -9,36 +9,43 @@ export const PAUTA_PRICE_WINDOW_MS = PRICE_CURRENT_WINDOW_HOURS * 3_600_000;
 
 export interface PautaCandidate extends EditorialCandidate {
   triageScore: number | null;
+  aiBenefit?: string;
   shareTarget: { kind: "site"; slug: string } | { kind: "pauta"; token: string } | null;
 }
 
-function verifiedShopeeRange(candidate: PautaCandidate): boolean {
+function declaredRange(candidate: PautaCandidate, browserPrice: boolean): boolean {
   const { priceMinCents: min, priceMaxCents: max } = candidate;
-  return candidate.marketplace === "shopee" && candidate.currency === "BRL" && candidate.priceType === "range"
+  return (candidate.marketplace === "shopee" || browserPrice) && candidate.currency === "BRL" && candidate.priceType === "range"
     && typeof min === "number" && typeof max === "number"
     && Number.isSafeInteger(min) && Number.isSafeInteger(max) && min > 0 && max > min;
 }
 
 export function pautaBlockers(candidate: PautaCandidate, now: Date): string[] {
   const assessment = candidate.assessment;
-  const range = verifiedShopeeRange(candidate);
+  const evidence = candidate.offerEvidence as { source?: { method?: string }; conditions?: Record<string, unknown>;
+    verification?: { method?: string } } | null;
+  const browserPrice = (candidate.marketplace === "aliexpress" || candidate.marketplace === "amazon")
+    && evidence?.source?.method === "browser" && candidate.currency === "BRL";
+  const range = declaredRange(candidate, browserPrice);
+  const from = browserPrice && candidate.priceType === "from";
   const reasons = assessment
-    ? editorialSelectionBlockers(range ? { ...candidate, priceCents: candidate.priceMaxCents! } : candidate, assessment, now, range)
-    : editorialOfferBlockers(candidate, now, range);
+    ? editorialSelectionBlockers(range ? { ...candidate, priceCents: candidate.priceMaxCents! } : candidate, assessment, now, range, browserPrice)
+    : editorialOfferBlockers(candidate, now, range, browserPrice);
   if (assessment?.presentation?.status === "withdrawn") reasons.push("A ficha foi retirada pela curadoria.");
   if (candidate.offerMaterialInvalid) reasons.push("As condições mudaram. Confira a opção novamente.");
-  const evidence = candidate.offerEvidence as { conditions?: Record<string, unknown>; verification?: { method?: string } } | null;
-  if (!range && (candidate.currency !== "BRL" || candidate.priceType !== "exact"
-      || candidate.marketplace === "aliexpress" && (!candidate.offerOptionKey || evidence?.verification?.method !== "editorial_confirmation"))) {
+  if (!range && !from && ((candidate.currency ?? "BRL") !== "BRL" || candidate.priceType !== "exact"
+      || candidate.marketplace === "aliexpress" && !browserPrice && (!candidate.offerOptionKey || evidence?.verification?.method !== "editorial_confirmation"))) {
     reasons.push(candidate.marketplace === "aliexpress"
       ? "Confirme manualmente o preço de uma opção em reais."
       : "Confirme o preço exato em reais.");
   }
   const conditions = evidence?.conditions;
-  if (!candidate.offerOptionKey && conditions && ["coupon", "payment", "region", "quantity"].some(key => conditions[key])) {
+  if (!browserPrice && !candidate.offerOptionKey && conditions && ["coupon", "payment", "region", "quantity"].some(key => conditions[key])) {
     reasons.push("Confira as condições desse preço antes de divulgar.");
   }
-  if (!candidate.shareTarget) reasons.push("Falta um link de afiliado válido para esta oferta.");
+  if (!candidate.shareTarget) reasons.push(candidate.marketplace === "amazon"
+    ? "Configure a tag de associado da Amazon para compartilhar esta oferta."
+    : "Falta um link de afiliado válido para esta oferta.");
   return reasons;
 }
 
@@ -74,7 +81,15 @@ export function composeLivePauta<T extends PautaCandidate>(
     const drop = candidate.priceType === "exact" && candidate.previousMinPriceCents && candidate.previousMinPriceCents > candidate.priceCents
       ? (1 - candidate.priceCents / candidate.previousMinPriceCents) * 100 : 0;
     const ageHours = Math.max(0, now.getTime() - observed) / 3_600_000;
-    const score = quality + Math.min(8, drop) + (candidate.priceType === "exact" && pautaHasHistoricalLow(candidate) ? 4 : 0) + (ageHours <= 24 ? 8 : 0);
+    const ratingBonus = typeof candidate.ratingStar === "number" && candidate.ratingStar >= 1 && candidate.ratingStar <= 5
+      ? (candidate.ratingStar - 1) * 0.75 : 0;
+    const salesBonus = typeof candidate.salesCount === "number" && candidate.salesCount > 0
+      ? Math.min(1.5, Math.log10(candidate.salesCount + 1) * 0.4) : 0;
+    const discountBonus = candidate.priceType === "exact" && typeof candidate.discountPercent === "number"
+      && candidate.discountPercent > 0 && candidate.discountPercent < 95
+      ? Math.min(1.5, candidate.discountPercent * 0.02) : 0;
+    const score = quality + Math.min(8, drop) + (candidate.priceType === "exact" && pautaHasHistoricalLow(candidate) ? 4 : 0)
+      + (ageHours <= 24 ? 8 : 0) + ratingBonus + salesBonus + discountBonus;
     ranked.push({ candidate, observed, score });
   }
   ranked.sort((a, b) => manualOrder
@@ -82,19 +97,54 @@ export function composeLivePauta<T extends PautaCandidate>(
     : b.score - a.score || b.observed - a.observed || a.candidate.id.localeCompare(b.candidate.id));
 
   const families = new Map<string, number>();
+  const categories = new Map<string, number>();
+  const stores = new Map<string, number>();
   const represented = new Set<string>();
   const chosen = new Set<string>();
-  const familyCount = (candidate: T) => families.get(homepageFamily(candidate)) ?? 0;
+  const orderedSelection: T[] = [];
+  const family = (candidate: T) => candidate.offerOptionKey
+    ? `${homepageFamily(candidate)}:${candidate.offerOptionKey}`
+    : homepageFamily(candidate);
+  const categoryKey = (candidate: T) => {
+    if (candidate.category && candidate.category !== "Geral") return candidate.category;
+    const fam = homepageFamily(candidate);
+    return fam.startsWith("product:") ? "sem_categoria" : fam;
+  };
+  const familyCount = (candidate: T) => families.get(family(candidate)) ?? 0;
+  const categoryCount = (candidate: T) => categories.get(categoryKey(candidate)) ?? 0;
+  const storeCount = (candidate: T) => stores.get(candidate.marketplace) ?? 0;
   const select = (candidate: T) => {
     chosen.add(candidate.id);
+    orderedSelection.push(candidate);
     represented.add(candidate.marketplace);
-    families.set(homepageFamily(candidate), familyCount(candidate) + 1);
+    families.set(family(candidate), familyCount(candidate) + 1);
+    categories.set(categoryKey(candidate), categoryCount(candidate) + 1);
+    stores.set(candidate.marketplace, storeCount(candidate) + 1);
   };
   if (!manualOrder) {
-    // Give each eligible shop a chance before filling the remaining slots by merit.
+    // Give each eligible shop a chance before filling the remaining slots by merit and diversity.
     for (const { candidate } of ranked) {
       if (chosen.size >= policy.limit) break;
       if (!represented.has(candidate.marketplace) && familyCount(candidate) < policy.familyLimit) select(candidate);
+    }
+    while (chosen.size < policy.limit) {
+      let best: typeof ranked[number] | null = null;
+      let bestEffectiveScore = -Infinity;
+      for (const entry of ranked) {
+        const { candidate } = entry;
+        if (chosen.has(candidate.id) || familyCount(candidate) >= policy.familyLimit) continue;
+        const effectiveScore = entry.score - storeCount(candidate) * 8 - categoryCount(candidate) * 12;
+        if (
+          !best ||
+          effectiveScore > bestEffectiveScore ||
+          (effectiveScore === bestEffectiveScore && (entry.observed > best.observed || (entry.observed === best.observed && candidate.id.localeCompare(best.candidate.id) < 0)))
+        ) {
+          best = entry;
+          bestEffectiveScore = effectiveScore;
+        }
+      }
+      if (!best) break;
+      select(best.candidate);
     }
   }
   for (const { candidate } of ranked) {
@@ -107,6 +157,8 @@ export function composeLivePauta<T extends PautaCandidate>(
       select(candidate);
     }
   }
-  const selected = ranked.flatMap(({ candidate }) => chosen.has(candidate.id) ? [candidate] : []);
+  const selected = manualOrder
+    ? ranked.flatMap(({ candidate }) => chosen.has(candidate.id) ? [candidate] : [])
+    : orderedSelection;
   return { selected, reasonsById };
 }

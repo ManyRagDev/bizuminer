@@ -1,5 +1,7 @@
 import {
   validateExtensionCapturePayload,
+  isExtensionMarketplace,
+  type SupportedExtensionMarketplace,
   type ExtensionCaptureProduct,
 } from "./extension-contract.ts";
 import { base64urlDecode, fnv1a32 } from "./manual-capture.ts";
@@ -12,9 +14,12 @@ export interface BrowserCaptureProduct extends ExtensionCaptureProduct {
 export interface BrowserCapturePayload {
   version: 1;
   requestId: string;
-  marketplace: "mercadolivre";
+  marketplace: SupportedExtensionMarketplace;
   clientCapturedAt: string;
-  page: { kind: "offers"; url: string };
+  page: {
+    kind: "offers" | "search" | "category" | "listing" | "product";
+    url: string;
+  };
   products: BrowserCaptureProduct[];
 }
 export const validBatchId = (id: unknown): id is string =>
@@ -25,6 +30,10 @@ export const validBatchId = (id: unknown): id is string =>
 export function validateBrowserCapture(raw: unknown): BrowserCapturePayload {
   if (!raw || typeof raw !== "object") throw new Error("invalid_payload");
   const p = raw as Record<string, unknown>;
+  const marketplace = p.marketplace;
+  if (!isExtensionMarketplace(marketplace)) throw new Error("marketplace_not_supported");
+  const hostPattern = marketplace === "mercadolivre" ? /(^|\.)mercadolivre\.com\.br$/
+    : marketplace === "amazon" ? /(^|\.)amazon\.com\.br$/ : /(^|\.)aliexpress\.com$/;
   if (
     !Array.isArray(p.products) ||
     p.products.length < 1 ||
@@ -46,11 +55,26 @@ export function validateBrowserCapture(raw: unknown): BrowserCapturePayload {
     throw new Error("offers_page_required");
   }
   const normalizedPath = pageUrl.pathname.replace(/\/+$/, "");
+  const allowedKinds = ["offers", "search", "category", "listing", "product"];
+  const blockedPaths = [
+    "/gz/",
+    "/login",
+    "/account-verification",
+    "/seguranca",
+    "/checkpoint",
+    "/ap/signin",
+    "/gp/cart",
+    "/p/trade",
+    "/checkout",
+  ];
+  const isBlocked = blockedPaths.some((prefix) =>
+    normalizedPath.includes(prefix),
+  );
   if (
-    page?.kind !== "offers" ||
+    !allowedKinds.includes(page?.kind ?? "") ||
     pageUrl.protocol !== "https:" ||
-    !/(^|\.)mercadolivre\.com\.br$/.test(pageUrl.hostname) ||
-    (!normalizedPath.startsWith("/ofertas") && normalizedPath !== "") ||
+    !hostPattern.test(pageUrl.hostname) ||
+    isBlocked ||
     pageUrl.username ||
     pageUrl.password
   )
@@ -63,32 +87,30 @@ export function validateBrowserCapture(raw: unknown): BrowserCapturePayload {
       const item = validateExtensionCapturePayload({
         ...p,
         product: rawProduct,
-      }).product;
+      }, true).product;
       const u = new URL(item.productUrl);
       if (
         u.protocol !== "https:" ||
-        !/(^|\.)mercadolivre\.com\.br$/.test(u.hostname) ||
+        !hostPattern.test(u.hostname) ||
         u.username ||
         u.password ||
         item.productUrl.length > 2048
       )
         throw new Error("product_url_invalid");
-      const identity =
-        u.searchParams.get("wid") ??
-        u.pathname.match(/MLB-?(\d{6,})/)?.[1]?.replace(/^(\d)/, "MLB$1");
-      if (
-        identity !== item.externalId ||
-        (u.pathname.includes("/p/") && !u.searchParams.get("wid"))
-      )
+      const wid = u.searchParams.get("wid");
+      const identity = marketplace === "mercadolivre"
+        ? wid ?? u.pathname.match(/MLB-?(\d{6,})/)?.[1]?.replace(/^(\d)/, "MLB$1")
+        : marketplace === "amazon"
+          ? /^\/dp\/([A-Z0-9]{10})\/?$/i.exec(u.pathname)?.[1]?.toUpperCase()
+          : /^\/item\/(\d{8,20})\.html$/.exec(u.pathname)?.[1];
+      if (identity !== item.externalId || (marketplace === "mercadolivre" && u.pathname.includes("/p/") && !wid))
         throw new Error("product_identity_invalid");
-      if (
-        item.imageUrl &&
-        (new URL(item.imageUrl).protocol !== "https:" ||
-          !/(^|\.)(mlstatic\.com|mercadolibre\.com|mercadolivre\.com\.br)$/.test(
-            new URL(item.imageUrl).hostname,
-          ))
-      )
-        throw new Error("image_url_invalid");
+      if (marketplace !== "mercadolivre" && (u.search || u.hash || u.port)) throw new Error("product_url_invalid");
+      if (item.imageUrl) {
+        const image = new URL(item.imageUrl);
+        if (image.protocol !== "https:" || image.username || image.password) throw new Error("image_url_invalid");
+        item.imageUrl = image.origin + image.pathname;
+      }
       const extra = rawProduct as Record<string, unknown>;
       const ratingStar =
         typeof extra.ratingStar === "number" &&
@@ -107,7 +129,6 @@ export function validateBrowserCapture(raw: unknown): BrowserCapturePayload {
       if (seen.has(item.externalId)) continue;
       seen.add(item.externalId);
       // Keep item identity on catalog URLs, discard marketing/session query values.
-      const wid = u.searchParams.get("wid");
       products.push({
         ...item,
         productUrl:
@@ -129,9 +150,18 @@ export function validateBrowserCapture(raw: unknown): BrowserCapturePayload {
   return {
     version: 1,
     requestId: String(p.requestId),
-    marketplace: "mercadolivre",
+    marketplace,
     clientCapturedAt: new Date(time).toISOString(),
-    page: { kind: "offers", url: pageUrl.origin + (normalizedPath || "/ofertas") },
+    page: {
+      kind:
+        (page?.kind as
+          | "offers"
+          | "search"
+          | "category"
+          | "listing"
+          | "product") ?? "offers",
+      url: pageUrl.origin + (normalizedPath || "/ofertas"),
+    },
     products,
   };
 }
@@ -149,5 +179,7 @@ export function decodeBrowserCaptureBlock(
     fnv1a32(payload).toString(16) !== checksum.toLowerCase()
   )
     throw new Error("invalid_capture_block");
-  return validateBrowserCapture(JSON.parse(base64urlDecode(payload)));
+  const capture = validateBrowserCapture(JSON.parse(base64urlDecode(payload)));
+  if (capture.marketplace !== "mercadolivre") throw new Error("invalid_capture_block");
+  return capture;
 }

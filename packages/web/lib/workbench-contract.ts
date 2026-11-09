@@ -45,6 +45,13 @@ export interface WorkbenchItem {
   readonly marketplace: string;
   readonly externalId: string;
   readonly currentPriceCents: number;
+  readonly priceMinCents?: number | null;
+  readonly priceMaxCents?: number | null;
+  readonly originalPriceCents?: number | null;
+  readonly ratingStar?: number | null;
+  readonly salesCount?: number | null;
+  readonly aiScore?: number | null;
+  readonly aiJustification?: string | null;
   readonly imageUrl: string | null;
   readonly category: string | null;
   readonly familyKey: string | null;

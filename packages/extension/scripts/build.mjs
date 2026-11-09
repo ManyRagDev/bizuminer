@@ -11,8 +11,9 @@ import path from "node:path";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const outdir = path.join(root, "dist");
-const dev = process.argv.includes("--dev");
-const apiBase = dev ? "http://localhost:3100" : "https://www.bizuminer.com.br";
+const prod = process.argv.includes("--prod");
+const dev = !prod;
+const apiBase = prod ? "https://www.bizuminer.com.br" : "http://localhost:3100";
 
 await rm(outdir, { recursive: true, force: true });
 await mkdir(path.join(outdir, "content"), { recursive: true });
@@ -36,6 +37,14 @@ await build({
   ...common,
   entryPoints: [path.join(root, "src/content/activate-catalog.ts")],
   outfile: path.join(outdir, "content/activate-catalog.js"),
+});
+
+await build({
+  ...common,
+  entryPoints: [path.join(root, "src/content/marketplace-page.ts")],
+  outfile: path.join(outdir, "content/marketplace-page.js"),
+  globalName: "bizuMarketplaceReader",
+  footer: { js: "bizuMarketplaceReader.collectMarketplacePage();" },
 });
 
 await build({

@@ -308,6 +308,8 @@ export async function runAutomatedTriageAction(
       const summary = await runPendingAutomatedTriage(scopedTenantId(), limit);
       await refreshHomepageAfterChange();
       revalidatePath("/");
+      revalidatePath("/pauta");
+      revalidatePath("/api/pauta");
       revalidatePath("/admin");
       revalidatePath("/admin/curadoria");
       return { ok: true, ...summary };

@@ -15,14 +15,14 @@ export interface CaptureProduct {
 }
 
 export interface CapturePage {
-  kind: "offers" | "search" | "category" | "product";
+  kind: "offers" | "search" | "category" | "product" | "listing";
   url: string;
 }
 
 export interface CapturePayload {
   version: 1;
   requestId: string;
-  marketplace: "mercadolivre";
+  marketplace: "mercadolivre" | "amazon";
   clientCapturedAt: string;
   page: CapturePage;
   product: CaptureProduct;
@@ -58,7 +58,7 @@ export function newRequestId(): string {
   });
 }
 
-/** Descobre o tipo de página de catálogo do ML a partir da URL. */
+/** Descobre o tipo de página de catálogo do ML ou Amazon a partir da URL. */
 export function pageKindFor(url: string): CapturePage["kind"] {
   let u: URL;
   try {
@@ -67,6 +67,14 @@ export function pageKindFor(url: string): CapturePage["kind"] {
     return "category";
   }
   const path = u.pathname;
+  // Amazon
+  if (/(^|\.)amazon\.com\.br$/.test(u.hostname)) {
+    if (/(?:dp|gp\/product)\/[A-Z0-9]{10}/i.test(path)) return "product";
+    if (/\/deals/i.test(path)) return "offers";
+    if (/\/b(?:\/|$)/i.test(path)) return "category";
+    return "search";
+  }
+  // Mercado Livre
   if (/\/ofertas/.test(path)) return "offers";
   if (/\/p\/MLB/.test(path) || /\/MLB-\d/.test(path)) return "product";
   if (u.hostname === "lista.mercadolivre.com.br") return "search";

@@ -44,7 +44,9 @@ export interface AliExpressProductNode {
   lastest_volume?: number | string;
   /** Percentual de avaliações positivas ("100.0%") — NÃO é nota de 0 a 5. */
   evaluate_rate?: string;
+  first_level_category_id?: number | string;
   first_level_category_name?: string;
+  second_level_category_id?: number | string;
   second_level_category_name?: string;
   shop_id?: number | string;
 }

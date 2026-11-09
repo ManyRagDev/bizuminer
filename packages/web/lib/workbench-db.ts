@@ -20,6 +20,13 @@ interface ProductBaseRow {
   marketplace: string;
   externalId: string;
   priceCents: number;
+  priceMinCents?: number | null;
+  priceMaxCents?: number | null;
+  originalPriceCents?: number | null;
+  ratingStar?: number | null;
+  salesCount?: number | null;
+  aiScore?: number | null;
+  aiJustification?: string | null;
   imageUrl: string | null;
   category: string | null;
   familyKey: string | null;
@@ -74,6 +81,13 @@ export async function getWorkbenchPage(
         reason_detail: string | null;
         actionable_since: string;
         observed_at: string | null;
+        rating_star: number | null;
+        sales_count: number | null;
+        price_min_cents: number | null;
+        price_max_cents: number | null;
+        original_price_cents: number | null;
+        ai_score: number | null;
+        ai_justification: string | null;
       }[]>`
         select
           p.id as product_id,
@@ -88,9 +102,28 @@ export async function getWorkbenchPage(
           pc.reason_code,
           pc.reason_detail,
           coalesce(pc.updated_at, pc.created_at, p.created_at)::text as actionable_since,
-          p.last_seen_at::text as observed_at
+          p.last_seen_at::text as observed_at,
+          latest_obs.rating_star,
+          latest_obs.sales_count,
+          (latest_obs.offer_evidence->>'priceMinCents')::int as price_min_cents,
+          (latest_obs.offer_evidence->>'priceMaxCents')::int as price_max_cents,
+          latest_obs.original_price_cents,
+          (last_event.metadata->'automation'->>'aiScore')::int as ai_score,
+          (last_event.metadata->'automation'->>'aiJustification')::text as ai_justification
         from garimpa.product p
         join garimpa.product_curation pc on pc.product_id = p.id and pc.tenant_id = p.tenant_id
+        left join lateral (
+          select rating_star, sales_count, offer_evidence, original_price_cents
+          from garimpa.price_observation o
+          where o.product_id = p.id and o.tenant_id = p.tenant_id
+          order by o.observed_at desc limit 1
+        ) latest_obs on true
+        left join lateral (
+          select metadata
+          from garimpa.curation_event e
+          where e.product_id = p.id and e.tenant_id = p.tenant_id and e.actor_type = 'llm'
+          order by e.id desc limit 1
+        ) last_event on true
         where p.tenant_id = ${context.tenantId}
           and (
             pc.status in ('pending', 'awaiting', 'held')
@@ -105,6 +138,13 @@ export async function getWorkbenchPage(
           marketplace: r.marketplace,
           externalId: r.external_id,
           priceCents: Number(r.last_price_cents) || 0,
+          priceMinCents: r.price_min_cents,
+          priceMaxCents: r.price_max_cents,
+          originalPriceCents: r.original_price_cents,
+          ratingStar: r.rating_star,
+          salesCount: r.sales_count,
+          aiScore: r.ai_score,
+          aiJustification: r.ai_justification,
           imageUrl: r.image_url,
           category: r.category,
           familyKey: r.family_key,
@@ -355,6 +395,13 @@ export async function getWorkbenchPage(
           marketplace: prod.marketplace,
           externalId: prod.externalId,
           currentPriceCents: prod.priceCents,
+          priceMinCents: prod.priceMinCents,
+          priceMaxCents: prod.priceMaxCents,
+          originalPriceCents: prod.originalPriceCents,
+          ratingStar: prod.ratingStar,
+          salesCount: prod.salesCount,
+          aiScore: prod.aiScore,
+          aiJustification: prod.aiJustification,
           imageUrl: prod.imageUrl,
           category: prod.category,
           familyKey: prod.familyKey,

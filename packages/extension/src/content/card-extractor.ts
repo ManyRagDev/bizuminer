@@ -19,6 +19,7 @@ export interface ExtractedCard {
   originalPriceCents?: number;
   currency: "BRL";
   priceType: "exact" | "from";
+  marketplace?: "mercadolivre" | "amazon";
 }
 
 
@@ -80,5 +81,6 @@ export function extractCard(html: string): ExtractedCard | null {
     currency: "BRL",
     priceType: /a\s+partir\s+de/i.test(currentLabel ?? "") ? "from" : "exact",
     originalPriceCents: originalPriceCents && originalPriceCents > priceCents ? originalPriceCents : undefined,
+    marketplace: "mercadolivre",
   };
 }

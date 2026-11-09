@@ -16,6 +16,11 @@ test("slug legado ml-<external_id> continua resolvendo mercadolivre (M-R4)", () 
   assert.deepEqual(parsed, { marketplace: "mercadolivre", externalId: "MLB1234567890" });
 });
 
+test("slug da Amazon amz-<asin> resolve para marketplace amazon", () => {
+  const parsed = parseProductSlug("amz-B08N5WRWNW");
+  assert.deepEqual(parsed, { marketplace: "amazon", externalId: "B08N5WRWNW" });
+});
+
 test("parseProductSlug devolve null para slug sem prefixo conhecido", () => {
   assert.equal(parseProductSlug("desconhecido-123"), null);
   assert.equal(parseProductSlug(""), null);
@@ -28,9 +33,11 @@ test("parseProductSlug devolve null quando o prefixo aparece sem id externo", ()
 test("isKnownMarketplace e marketplaceDef concordam com o registro", () => {
   assert.equal(isKnownMarketplace("mercadolivre"), true);
   assert.equal(isKnownMarketplace("shopee"), true);
-  assert.equal(isKnownMarketplace("amazon"), false);
+  assert.equal(isKnownMarketplace("amazon"), true);
+  assert.equal(isKnownMarketplace("magalu"), false);
   assert.equal(marketplaceDef("shopee")?.label, "Shopee");
-  assert.equal(marketplaceDef("amazon"), null);
+  assert.equal(marketplaceDef("amazon")?.label, "Amazon");
+  assert.equal(marketplaceDef("magalu"), null);
 });
 
 test("todo marketplace do registro declara evidenceLabel, ctaLabel e ratingLabel não vazios", () => {

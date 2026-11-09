@@ -16,7 +16,10 @@ const nextConfig: NextConfig = {
       // shard quebraria o card. Mesma lição do incidente com a Shopee, em que
       // o host ausente derrubou a vitrine inteira.
       { protocol: "https", hostname: "**.aliexpress-media.com" },
-      { protocol: "https", hostname: "ae-pic-a1.aliexpress-media.com" },
+      { protocol: "https", hostname: "**.alicdn.com" },
+      { protocol: "https", hostname: "**.media-amazon.com" },
+      { protocol: "https", hostname: "**.ssl-images-amazon.com" },
+      { protocol: "https", hostname: "**.images-amazon.com" },
     ],
   },
   experimental: {},

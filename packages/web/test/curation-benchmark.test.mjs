@@ -78,6 +78,7 @@ test("Benchmark: saturação de família retém excedentes mantendo até 3 repre
   };
 
   const decisions = await processIngestionPipeline(candidates, {
+    maxRepresentatives: 3,
     evaluator: mockEvaluator,
   });
 

@@ -43,7 +43,9 @@ test("mantém a URL curta no estado padrão e serializa apenas o que mudou", () 
 test("loja= aceita apenas marketplace conhecido; valor inválido vira 'todas' (não erro)", () => {
   const known = catalogStateFromSearchParams(new URLSearchParams("loja=shopee"));
   assert.equal(known.marketplace, "shopee");
-  const unknown = catalogStateFromSearchParams(new URLSearchParams("loja=amazon"));
+  const amazon = catalogStateFromSearchParams(new URLSearchParams("loja=amazon"));
+  assert.equal(amazon.marketplace, "amazon");
+  const unknown = catalogStateFromSearchParams(new URLSearchParams("loja=magalu"));
   assert.equal(unknown.marketplace, null);
 });
 
@@ -53,7 +55,8 @@ test("catalogStateToSearchParams inclui loja= só quando marketplace está defin
 });
 
 test("dealQueryFromSearchParams: marketplace desconhecido normaliza para null", () => {
-  assert.equal(dealQueryFromSearchParams(new URLSearchParams("marketplace=amazon")).marketplace, null);
+  assert.equal(dealQueryFromSearchParams(new URLSearchParams("marketplace=magalu")).marketplace, null);
+  assert.equal(dealQueryFromSearchParams(new URLSearchParams("marketplace=amazon")).marketplace, "amazon");
   assert.equal(dealQueryFromSearchParams(new URLSearchParams("marketplace=shopee")).marketplace, "shopee");
 });
 

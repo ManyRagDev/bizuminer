@@ -72,3 +72,33 @@ test("exige conferência manual para AliExpress mesmo se o anúncio informar um 
   assert.match(select([ali]).reasonsById.get("ali")[0], /Confirme manualmente/);
   assert.equal(select([{ ...ali, offerEvidence: { verification: { method: "editorial_confirmation" } } }]).selected.length, 1);
 });
+
+test("limita repetição de bolsas/câmeras e diversifica categorias e lojas na pauta de 12 itens", () => {
+  const fullPolicy = { limit: 6, familyLimit: 1, repeatHours: 72, improvementPercent: 5 };
+  const bags = Array.from({ length: 5 }, (_, i) => offer(`bag-${i}`, {
+    marketplace: "shopee",
+    title: `Bolsa Feminina Ombro Transversal ${i}`,
+    category: "Moda",
+    triageScore: 5,
+    evidenceObservedAt: observed(0.1),
+  }));
+  const cameras = Array.from({ length: 4 }, (_, i) => offer(`cam-${i}`, {
+    marketplace: "mercadolivre",
+    title: `Câmera Segurança Wifi Ip Externa ${i}`,
+    category: "Tecnologia",
+    triageScore: 5,
+    evidenceObservedAt: observed(0.2),
+  }));
+  const diverse = [
+    offer("tool-1", { marketplace: "shopee", title: "Parafusadeira Sem Fio 21V", category: "Ferramentas", triageScore: 5, evidenceObservedAt: observed(1) }),
+    offer("home-1", { marketplace: "shopee", title: "Jogo de Lençol Casal 400 Fios", category: "Casa", triageScore: 5, evidenceObservedAt: observed(1) }),
+    offer("beauty-1", { marketplace: "mercadolivre", title: "Secador de Cabelo Profissional", category: "Beleza", triageScore: 5, evidenceObservedAt: observed(1) }),
+    offer("toy-1", { marketplace: "shopee", title: "Blocos de Montar Educativos", category: "Brinquedos", triageScore: 5, evidenceObservedAt: observed(1) }),
+  ];
+  const result = composeLivePauta([...bags, ...cameras, ...diverse], fullPolicy, new Map(), now, null, new Set());
+  assert.equal(result.selected.length, 6);
+  const selectedBags = result.selected.filter(p => p.id.startsWith("bag-"));
+  const selectedCams = result.selected.filter(p => p.id.startsWith("cam-"));
+  assert.equal(selectedBags.length, 1, "Apenas 1 bolsa/mochila deve entrar quando familyLimit=1");
+  assert.equal(selectedCams.length, 1, "Apenas 1 câmera de segurança deve entrar quando familyLimit=1");
+});

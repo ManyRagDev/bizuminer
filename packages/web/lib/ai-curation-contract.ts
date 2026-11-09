@@ -7,6 +7,10 @@ export interface AICurationItemInput {
   title: string;
   category: string;
   priceFormatted: string;
+  ratingStar?: number | null;
+  salesCount?: number | null;
+  salesLabel?: string | null;
+  originDepartment?: string | null;
   /** Conservative minimum from verified prior observations of the same configuration. */
   verifiedPriceReference?: { source: "comparable_history"; minimumPriceFormatted: string; observationCount: number; historyDays: number };
 }
@@ -20,7 +24,15 @@ export type TriageInputVersion = {
   observedAt: string;
 };
 
-export type EditorialCategory = "gadget_util" | "novidade" | "peca_chata" | "outro";
+export type EditorialCategory =
+  | "achadinho_impulso"
+  | "utilidade_pratica"
+  | "destaque_departamento"
+  | "peca_tecnica_avulsa"
+  | "outro"
+  | "gadget_util"
+  | "novidade"
+  | "peca_chata";
 
 export interface AICurationItemOutput {
   productId: string;
@@ -28,6 +40,8 @@ export interface AICurationItemOutput {
   hasMisleadingClaim: boolean;
   isAdultOrUnsafe: boolean;
   editorialCategory: EditorialCategory;
+  catalogCategory?: string;
+  publicBenefit?: string;
   justification: string;
 }
 
@@ -57,8 +71,39 @@ export const curationResponseSchema: ResponseSchema = {
       editorialCategory: {
         type: SchemaType.STRING,
         format: "enum",
-        enum: ["gadget_util", "novidade", "peca_chata", "outro"],
+        enum: [
+          "achadinho_impulso",
+          "utilidade_pratica",
+          "destaque_departamento",
+          "peca_tecnica_avulsa",
+          "outro",
+          "gadget_util",
+          "novidade",
+          "peca_chata",
+        ],
         description: "Classificação editorial temática",
+      },
+      catalogCategory: {
+        type: SchemaType.STRING,
+        format: "enum",
+        enum: [
+          "Casa",
+          "Tecnologia",
+          "Ferramentas",
+          "Beleza",
+          "Fitness",
+          "Auto e moto",
+          "Brinquedos",
+          "Papelaria",
+          "Moda",
+          "Suplementos",
+          "Geral",
+        ],
+        description: "Classificação canônica pelo uso principal do produto para o consumidor final",
+      },
+      publicBenefit: {
+        type: SchemaType.STRING,
+        description: "Frase factual curta e comercial sintetizando o benefício real do produto (máx 120 caracteres)",
       },
       justification: {
         type: SchemaType.STRING,
@@ -79,6 +124,8 @@ export interface TriageDecision {
   aiScore?: number;
   aiJustification?: string;
   editorialCategory?: EditorialCategory;
+  catalogCategory?: string;
+  publicBenefit?: string;
   pricePolicy?: TriageValueDecision;
   inputVersion?: TriageInputVersion;
 }

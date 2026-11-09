@@ -19,6 +19,12 @@ export const PRODUCT_FAMILIES = {
   cuidados_pessoais: "Cuidados pessoais",
   ferramentas: "Ferramentas",
   cafeteiras: "Cafeteiras",
+  bolsas_mochilas: "Bolsas e mochilas",
+  cameras_seguranca: "Câmeras de segurança",
+  relogios_smartwatch: "Relógios e smartwatches",
+  garrafas_termicas: "Garrafas e copos térmicos",
+  calculadoras: "Calculadoras",
+  suplementos: "Suplementos e nutrição",
 } as const;
 
 export type ProductFamily = keyof typeof PRODUCT_FAMILIES;
@@ -29,7 +35,7 @@ export const FAMILY_METHOD = "title-keywords" as const;
  * Versão das regras. Subir SEMPRE que o dicionário mudar: a versão é gravada
  * no produto e distingue agrupamentos feitos com regras diferentes.
  */
-export const FAMILY_RULES_VERSION = "v2" as const;
+export const FAMILY_RULES_VERSION = "v3" as const;
 
 export interface ProductFamilyInfo {
   readonly key: ProductFamily;
@@ -88,6 +94,83 @@ const FAMILY_RULES: ReadonlyArray<readonly [ProductFamily, readonly string[], st
       "cafeteira monodose",
     ],
     "v2",
+  ],
+  [
+    "bolsas_mochilas",
+    [
+      "bolsa",
+      "mochila",
+      "pochete",
+      "necessaire",
+      "ecobag",
+      "mala de viagem",
+      "carteira feminina",
+      "carteira masculina",
+    ],
+    "v3",
+  ],
+  [
+    "cameras_seguranca",
+    [
+      "camera de seguranca",
+      "camera seguranca",
+      "camera wifi",
+      "camera ip",
+      "camera lampada",
+      "baba eletronica",
+    ],
+    "v3",
+  ],
+  [
+    "relogios_smartwatch",
+    [
+      "smartwatch",
+      "relogio inteligente",
+      "relogio digital",
+      "relogio masculino",
+      "relogio feminino",
+      "pulseira inteligente",
+    ],
+    "v3",
+  ],
+  [
+    "garrafas_termicas",
+    [
+      "garrafa termica",
+      "copo termico",
+      "squeeze termico",
+      "garrafa de agua",
+    ],
+    "v3",
+  ],
+  [
+    "calculadoras",
+    [
+      "calculadora cientifica",
+      "calculadora de mesa",
+      "calculadora financeira",
+      "calculadora escolar",
+      "calculadora eletronica",
+    ],
+    "v3",
+  ],
+  [
+    "suplementos",
+    [
+      "creatina",
+      "whey protein",
+      "whey",
+      "colageno",
+      "suplemento alimentar",
+      "hipercalorico",
+      "glutamina",
+      "bcaa",
+      "omega 3",
+      "multivitaminico",
+      "pre treino",
+      "pre-treino",
+    ],
+    "v3",
   ],
 ];
 

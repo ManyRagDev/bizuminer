@@ -12,7 +12,7 @@ import { bookmarkletCompiles, bookmarkletHref } from "../../lib/bookmarklet";
 import { captureEnabled } from "../../lib/platform-gates";
 import { marketplaceCounts } from "../../lib/db";
 import { MARKETPLACES } from "../../lib/marketplaces";
-import { curationSummary } from "../../lib/curation-db";
+import { curationSummary, automatedTriageAvailability } from "../../lib/curation-db";
 import { getAuditDesk, getEditorialGuideline } from "../../lib/editorial-compass";
 import { getPublishedEditorialSelection } from "../../lib/editorial-selection-db.ts";
 import { selectionWorkflowState } from "../../lib/curation-workflow.ts";
@@ -122,11 +122,12 @@ async function SafeSection({ label, load }: { label: string; load: () => Promise
 
 async function OverviewTab({ account: accountContext }: { account: AccountContext }) {
   return inAccountScope(accountContext, async () => {
-    const [overview, curation, auditDesk, editorialConfig, publishedSelection, workbenchPage] = await Promise.all([
+    const [overview, curation, auditDesk, editorialConfig, publishedSelection, workbenchPage, eligibleTriage] = await Promise.all([
       adminOverview(), curationSummary(accountContext.tenantId, undefined, accountContext),
       getAuditDesk(accountContext.tenantId), getEditorialGuideline(accountContext.tenantId),
       getPublishedEditorialSelection("all", accountContext.tenantId),
       getWorkbenchPage(accountContext, { limit: 15 }).catch(() => null),
+      automatedTriageAvailability(accountContext.tenantId).catch(() => 0),
     ]);
   const selectionState = selectionWorkflowState({ schemaReady: publishedSelection.schemaReady,
     mode: publishedSelection.mode, count: publishedSelection.products.length, validUntil: publishedSelection.validUntil });
@@ -139,6 +140,7 @@ async function OverviewTab({ account: accountContext }: { account: AccountContex
         captureDoneToday={saoPauloDay(overview.lastDiscoveryAt) === saoPauloDay(new Date())}
         triageDoneToday={overview.lastTriage?.status === "ok" && saoPauloDay(overview.lastTriage.finishedAt) === saoPauloDay(new Date())}
         approvedToday={saoPauloDay(overview.lastTriage?.finishedAt) === saoPauloDay(new Date()) ? overview.lastTriage?.approvedCount ?? 0 : 0}
+        eligibleTriage={eligibleTriage}
         selectionReady={selectionState.ready}
         selectionLabel={selectionState.label}
         awaiting={curation.awaiting}

@@ -16,7 +16,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { VitrineProduct } from "./deal-view";
 
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.6-flash";
+const MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 dia
 
 interface CachedResult {

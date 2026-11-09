@@ -10,6 +10,8 @@ import {
 } from "../../../lib/commercial-financial-contract.ts";
 import FinancialWorkspace from "../financeiro/workspace.tsx";
 import AdminLink from "../../_components/admin-link.tsx";
+import { getGA4DashboardData } from "../../../lib/ga4-reporting.ts";
+import GA4MetricsPanel from "./ga4-metrics-panel.tsx";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +79,7 @@ export default async function Page() {
       })) as CommissionEntry[]) ?? [];
 
   const commissions = calculateCommissionSummary(entries, "BRL");
+  const ga4Data = await getGA4DashboardData().catch(() => null);
 
   return (
     <div className="bm-workspace">
@@ -177,6 +180,9 @@ export default async function Page() {
           Os resultados comerciais estão sendo ativados para a sua conta.
         </p>
       )}
+
+      {/* GA4 Web Traffic & Audience */}
+      <GA4MetricsPanel initialData={ga4Data} />
 
       {/* Advanced Reconciliation (Accordion) */}
       {data && (

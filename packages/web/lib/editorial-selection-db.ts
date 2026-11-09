@@ -335,24 +335,36 @@ export async function editorialSelectionSchemaReady(sql: QueryClient): Promise<b
   return rows[0]?.ready === true;
 }
 
-export async function candidateRows(sql: QueryClient, tenantId: string, productIds?: string[],includePending=false, observedSince?: Date): Promise<CandidateRow[]> {
+export async function candidateRows(sql: QueryClient, tenantId: string, productIds?: string[],includePending=false, observedSince?: Date, preferAliBrowser = false): Promise<CandidateRow[]> {
   const rows = await sql.unsafe<CandidateRow[]>(`select f.*, obs.offer_evidence,obs.id as latest_observation_id,obs.id as observation_id,
+    obs.observed_at, obs.price_cents, obs.original_price_cents, obs.claimed_discount_rate,
     (obs.offer_evidence->>'variantKey' is not null and not exists (
       select 1 from garimpa.price_observation historical where historical.tenant_id=f.tenant_id
       and historical.product_id=f.id and not ${sameOfferConfigurationSql("obs", "historical")}
     )) as history_comparable
     from garimpa.curation_queue_facts f
-    join lateral (select id,offer_evidence from garimpa.price_observation o
-      where o.tenant_id=f.tenant_id and o.product_id=f.id
-      order by o.observed_at desc, o.id desc limit 1) obs on true
+    join lateral (select id,offer_evidence,observed_at,price_cents,original_price_cents,claimed_discount_rate
+      from garimpa.price_observation o where o.tenant_id=f.tenant_id and o.product_id=f.id
+      order by case when $5::boolean and f.marketplace='aliexpress'
+        and o.capture_source='extension' and o.offer_evidence#>>'{source,method}'='browser'
+        and o.observed_at>=$4 and o.observed_at<=now()+interval '1 minute' then 0 else 1 end,
+        o.observed_at desc, o.id desc limit 1) obs on true
     where f.tenant_id=$1 and ($2::text[] is null or f.id=any($2))
       and ($2::text[] is not null or ((f.status in ('approved','held') or ($3::boolean and f.status='pending')) and f.last_seen_at >= now()-interval '7 days'))
-      and ($4::timestamptz is null or f.observed_at >= $4)
-    order by f.observed_at desc, f.id limit case when $3::boolean then 300 else null end`, [tenantId, productIds ?? null,includePending,observedSince ?? null]);
+      and ($4::timestamptz is null or obs.observed_at >= $4)
+    order by f.observed_at desc, f.id limit case when $3::boolean then 300 else null end`, [tenantId, productIds ?? null,includePending,observedSince ?? null,preferAliBrowser]);
   const { selectedOptionFacts } = await import("./offer-option-db.ts");
   const options = await selectedOptionFacts(sql,tenantId,rows.map(row => row.id));
   return rows.map(row => options.has(row.id) ? { ...row, ...options.get(row.id),
     previous_min_price_cents: null, lowest_verified: false } : row);
+}
+
+function browserConditionLabel(evidence: Record<string, unknown>): string | undefined {
+  const source = evidence.source as { method?: string } | undefined;
+  if (source?.method !== "browser") return undefined;
+  const conditions = evidence.conditions as { coupon?: unknown; payment?: unknown; membership?: unknown } | undefined;
+  return [conditions?.coupon, conditions?.payment, conditions?.membership].filter((value): value is string =>
+    typeof value === "string" && value.length > 0).join(" · ") || undefined;
 }
 
 export function toCandidate(row: CandidateRow, assessment: EditorialAssessment | null, now = new Date()): EditorialCandidate {
@@ -363,11 +375,11 @@ export function toCandidate(row: CandidateRow, assessment: EditorialAssessment |
     tenantId:(row as any).tenant_id,offerMaterialInvalid:(row as any).option_material_invalid===true,
     latestObservationId: (row as any).latest_observation_id, evidenceObservationId:(row as any).observation_id,
     offerOptionKey: (row as any).option_key, offerOptionLabel: typeof evidence.variantLabel === "string" ? evidence.variantLabel : undefined,
-    offerConditions: (row as any).conditions_label, offerValidUntil: new Date(new Date(row.observed_at).getTime()+48*3_600_000).toISOString(),
+    offerConditions: (row as any).conditions_label ?? browserConditionLabel(evidence), offerValidUntil: new Date(new Date(row.observed_at).getTime()+48*3_600_000).toISOString(),
     id: row.id, slug: productSlug(row.marketplace, row.external_id), title: row.title,
     marketplace: row.marketplace, imageUrl: row.image_url, category: row.category,
     priceCents: row.price_cents, originalPriceCents: row.original_price_cents,
-    currency: typeof evidence.currency === "string" && /^[A-Z]{3}$/.test(evidence.currency) ? evidence.currency : undefined,
+    currency: (typeof evidence.currency === "string" && /^[A-Z]{3}$/.test(evidence.currency) ? evidence.currency : undefined) ?? "BRL",
     priceType: ["exact", "from", "range", "unknown"].includes(String(evidence.priceType)) ? evidence.priceType as EditorialCandidate["priceType"] : undefined,
     priceMinCents: typeof evidence.priceMinCents === "number" ? evidence.priceMinCents : undefined,
     priceMaxCents: typeof evidence.priceMaxCents === "number" ? evidence.priceMaxCents : undefined,

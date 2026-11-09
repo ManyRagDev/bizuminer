@@ -1,5 +1,11 @@
 # Aplicar migrations do Supabase
 
+## Ordenação por marketplace na vitrine — 09/11/2026
+
+A função `garimpa.public_catalog(text,jsonb)` foi atualizada no projeto `spbuwcwmxlycchuwhfir` pelo SQL Editor. A referência da aplicação é [20261109022751_balance_public_catalog_marketplaces.sql](../../packages/persistence/supabase/migrations/20261109022751_balance_public_catalog_marketplaces.sql). O editor executou somente esta migração, com transação, verificação da definição anterior e limite de espera de 5 segundos para locks. A aplicação preservou as permissões da função. O SQL Editor não registrou a versão no histórico de migrations da CLI.
+
+A home usa a projeção paginada a partir do commit `ca006cd`. A ordenação padrão intercala as lojas antes de paginar e mantém a ordem relativa dentro de cada loja. Ordenações explícitas e filtros por loja seguem o critério escolhido. A primeira página em produção retornou oito itens de cada uma das três lojas, num total de 328 ofertas no catálogo.
+
 O projeto possui `.mcp.json` com o MCP Supabase escopado ao projeto `spbuwcwmxlycchuwhfir` e somente aos grupos `database`, `docs` e `debugging`. A migration M1-A já foi aplicada e registrada remotamente como `20260818213323_marketplace_evidence`.
 
 Após recarregar a sessão do agente, use o MCP `execute_sql` com o conteúdo de:

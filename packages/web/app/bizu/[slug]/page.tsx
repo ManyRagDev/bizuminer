@@ -79,7 +79,7 @@ export default async function DealPage({ params, searchParams }: PageProps) {
   const related = relatedPage?.deals.filter((item) => item.id !== deal.id).slice(0, 4).map(toVitrineProduct) ?? [];
 
   return <main className="deal-page">
-    {direto === "1" && <RedirectBanner slug={deal.slug} campaignCode={c} />}
+    {direto === "1" && deal.marketplace !== "amazon" && <RedirectBanner slug={deal.slug} campaignCode={c} />}
     <DetailHeader
       actions={
         <>

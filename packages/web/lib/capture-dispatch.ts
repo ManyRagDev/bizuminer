@@ -51,15 +51,16 @@ export async function prepareAccountCapture(
 /** Keep the local child alive after the request, but await spawn/error before returning HTTP 202. */
 export async function dispatchCaptureBatch(id: string, context: AccountContext, factory: typeof db = db, transport?: (id:string, tenantId:string)=>Promise<void>): Promise<void> {
   const tenantId=context.tenantId;
-  const marketplaces=await withAccountDb(context,async tx=>{
-    const [batch]=await tx<{requested_marketplaces:string[]}[]>`select requested_marketplaces from garimpa.capture_batch where id=${id} and tenant_id=${tenantId} and status='running'`;
+  const batch=await withAccountDb(context,async tx=>{
+    const [batch]=await tx<{requested_marketplaces:string[]; metadata?: { execution?: { browser?: { marketplace?: string; captureRunId?: string } } }}[]>`select requested_marketplaces,metadata from garimpa.capture_batch where id=${id} and tenant_id=${tenantId} and status='running'`;
     if(!batch)throw new Error("capture_batch_not_found");
-    return batch.requested_marketplaces;
+    return batch;
   },factory);
   const client=factory();
   try {
-    for(const marketplace of marketplaces) {
-      if (marketplace !== "mercadolivre") {
+    const browser = batch.metadata?.execution?.browser;
+    for(const marketplace of batch.requested_marketplaces) {
+      if (marketplace !== "mercadolivre" && !(browser?.captureRunId && browser.marketplace === marketplace)) {
         await resolveWorkerCredential(client,tenantId,marketplace);
       }
     }

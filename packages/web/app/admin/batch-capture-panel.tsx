@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CaptureBatch as Batch } from "../../lib/capture-batch-db";
 import { browserCaptureBookmarklet } from "../../lib/browser-capture-bookmarklet";
+import type { MarketplaceSlug } from "../../lib/marketplaces.ts";
 
-type MarketplaceSlug = "mercadolivre" | "shopee" | "aliexpress";
 export interface CaptureMarketplaceOption {
   slug: MarketplaceSlug;
   label: string;
@@ -18,6 +18,7 @@ const DEFAULT_MARKETPLACES: CaptureMarketplaceOption[] = [
   { slug: "mercadolivre", label: "Mercado Livre", enabled: true },
   { slug: "shopee", label: "Shopee", enabled: true },
   { slug: "aliexpress", label: "AliExpress", enabled: true },
+  { slug: "amazon", label: "Amazon", enabled: true },
 ];
 
 const statusLabel: Record<string, string> = {
@@ -39,6 +40,9 @@ export default function BatchCapturePanel({
   const fetch = useAdminFetch();
   const router = useRouter();
   const [pages, setPages] = useAdminDraftState("batch-capture-panel.pages", 2);
+  const [planMode, setPlanMode] = useAdminDraftState<"departments" | "keywords">("batch-capture-panel.planMode", "departments");
+  const [sortOrder, setSortOrder] = useAdminDraftState<"sales" | "default" | "discount">("batch-capture-panel.sortOrder", "sales");
+  const [pageSize, setPageSize] = useAdminDraftState<number>("batch-capture-panel.pageSize", 20);
   const [selected, setSelected] = useAdminDraftState<Record<MarketplaceSlug, boolean>>("batch-capture-panel.selected", () => ({
       mercadolivre: false,
       shopee:
@@ -46,6 +50,7 @@ export default function BatchCapturePanel({
       aliexpress:
         marketplaces.find((item) => item.slug === "aliexpress")?.enabled ??
         false,
+      amazon: false,
     }));
   const [batch, setBatch] = useState<Batch | null>(null);
   const [skipped, setSkipped] = useState<
@@ -148,6 +153,9 @@ export default function BatchCapturePanel({
           pages,
           consent: selected.mercadolivre,
           marketplaces: selectedSlugs,
+          planMode,
+          sortOrder,
+          pageSize,
         }),
       });
       const data = (await res.json()) as {
@@ -238,18 +246,54 @@ export default function BatchCapturePanel({
             direto no seu navegador.
           </p>
         </div>
-        <label className="daily-pages-control">
-          Páginas por loja
-          <select
-            value={pages}
-            disabled={busy}
-            onChange={(event) => setPages(Number(event.target.value))}
-          >
-            <option value={1}>1 página</option>
-            <option value={2}>2 páginas</option>
-            <option value={3}>3 páginas</option>
-          </select>
-        </label>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          <label className="daily-pages-control">
+            Estratégia
+            <select
+              value={planMode}
+              disabled={busy}
+              onChange={(event) => setPlanMode(event.target.value as "departments" | "keywords")}
+            >
+              <option value="departments">12 Departamentos (Recomendado)</option>
+              <option value="keywords">Palavras-chave legadas</option>
+            </select>
+          </label>
+          <label className="daily-pages-control">
+            Ordenação
+            <select
+              value={sortOrder}
+              disabled={busy}
+              onChange={(event) => setSortOrder(event.target.value as "sales" | "default" | "discount")}
+            >
+              <option value="sales">Mais vendidos</option>
+              <option value="default">Relevância / Padrão</option>
+              <option value="discount">Maior desconto</option>
+            </select>
+          </label>
+          <label className="daily-pages-control">
+            Itens / depto
+            <select
+              value={pageSize}
+              disabled={busy}
+              onChange={(event) => setPageSize(Number(event.target.value))}
+            >
+              <option value={20}>20 itens</option>
+              <option value={50}>50 itens</option>
+            </select>
+          </label>
+          <label className="daily-pages-control">
+            Páginas
+            <select
+              value={pages}
+              disabled={busy}
+              onChange={(event) => setPages(Number(event.target.value))}
+            >
+              <option value={1}>1 página</option>
+              <option value={2}>2 páginas</option>
+              <option value={3}>3 páginas</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       <div
@@ -585,8 +629,9 @@ export default function BatchCapturePanel({
       )}
       {batch?.status === "partial" && !batch.error && (
         <p className="admin-message admin-message--notice" role="alert">
-          Algumas consultas falharam. A triagem avaliou os produtos disponíveis
-          deste lote.
+          {batch.marketplaces.some(store => store.error === "affiliate_links_pending")
+            ? "As ofertas foram salvas. Alguns links de afiliado do AliExpress ficaram pendentes. Capture a página novamente para tentar os links que faltam."
+            : "Algumas consultas falharam. A triagem avaliou os produtos disponíveis deste lote."}
         </p>
       )}
     </section>

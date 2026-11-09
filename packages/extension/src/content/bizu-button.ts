@@ -5,6 +5,7 @@
  */
 
 import { extractCard } from "./card-extractor.ts";
+import { extractAmazonCardFromElement, extractAmazonProductFromDoc } from "./amazon-extractor.ts";
 import { newRequestId } from "../lib/contracts.ts";
 
 export type CaptureResponse = {
@@ -64,11 +65,19 @@ export function decorateCard(card: Element): boolean {
 }
 
 async function handleClick(card: Element, setState: (label: string, bg: string) => void): Promise<void> {
-  const extracted = extractCard(card.outerHTML);
+  const isAmazon = /(^|\.)amazon\.com\.br$/.test(window.location.hostname);
+  let extracted = isAmazon
+    ? (card.hasAttribute("data-asin")
+        ? extractAmazonCardFromElement(card)
+        : extractAmazonProductFromDoc(document, window.location.href))
+    : extractCard(card.outerHTML);
+
   if (!extracted) {
     // Card incompleto: fallback PDP (nunca capturar vazio em silêncio).
     setState("Abrir produto para completar", COLORS.error);
-    window.open(extractProductLink(card.outerHTML) ?? window.location.href, "_blank", "noopener");
+    if (!isAmazon) {
+      window.open(extractProductLink(card.outerHTML) ?? window.location.href, "_blank", "noopener");
+    }
     return;
   }
 

@@ -1160,10 +1160,20 @@ export async function applyAutomatedTriageDecisions(
             aiScore: d.aiScore,
             aiJustification: d.aiJustification,
             editorialCategory: d.editorialCategory,
+            catalogCategory: d.catalogCategory,
+            publicBenefit: d.publicBenefit,
             pricePolicy: d.pricePolicy,
             inputVersion: d.inputVersion,
           },
         };
+
+        if (d.catalogCategory && d.catalogCategory !== "Geral") {
+          await tx`
+            update garimpa.product
+            set category = ${d.catalogCategory}
+            where tenant_id = ${tenantId} and id = ${d.productId}
+          `;
+        }
 
         if (d.status !== "pending" || current.status !== "pending") {
           await tx`
@@ -1249,6 +1259,7 @@ export async function runPendingAutomatedTriage(
     autoPublish: options?.autoPublish ?? guidelineConfig.autoPublish,
     minScoreAutoPublish: options?.minScoreAutoPublish ?? guidelineConfig.minScoreAutoPublish,
     fewShotExamples: options?.fewShotExamples ?? goldenExamples,
+    autoDismissScore3: options?.autoDismissScore3 ?? true,
   };
 
   let triageRunId: string | undefined;

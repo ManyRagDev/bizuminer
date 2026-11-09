@@ -12,7 +12,8 @@ assert.equal(varied.state,'variable');assert.equal(varied.min,900);assert.equal(
 assert.ok(varied.coordinates[1].x < 15,'x reflects elapsed time, not observation index');
 assert.equal(priceHistoryView([{price_cents:0,observed_at:'invalid'}]).min,null);
 assert.match(offerPriceLabel({priceCents:1000,priceType:'from'}),/^a partir de/);
-assert.match(offerPriceLabel({priceCents:1000,priceType:'range',priceMinCents:1000,priceMaxCents:3000}),/10/);
+assert.match(offerPriceLabel({priceCents:1000,priceType:'range',priceMinCents:1000,priceMaxCents:3000}),/10.*a.*30/);
+assert.equal(offerPriceNote({priceCents:1000,priceType:'range'}),"O preço varia conforme a opção escolhida.");
 assert.match(offerPriceNote({priceCents:1000,currency:'BRL'}),/Confirme a versão/);
 assert.match(formatOfferMoney(1000),/R\$/,'generic legacy formatter retains its explicit default');
 assert.match(offerPriceLabel({priceCents:1099}),/10,99/);

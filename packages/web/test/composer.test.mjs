@@ -155,9 +155,11 @@ test("marketplace ausente OMITE a loja — nunca imprime 'undefined'", () => {
 });
 
 test("marketplace fora do registro usa o próprio slug, sem quebrar", () => {
-  const message = composeSingle({ ...verified, marketplace: "amazon" }, BASE);
-  assert.match(message, /· amazon/);
+  const message = composeSingle({ ...verified, marketplace: "magalu" }, BASE);
+  assert.match(message, /· magalu/);
   assert.doesNotMatch(message, /undefined/);
+  const amzMessage = composeSingle({ ...verified, marketplace: "amazon" }, BASE);
+  assert.match(amzMessage, /· Amazon/);
 });
 
 test("desconto declarado NÃO entra na mensagem compartilhada", () => {

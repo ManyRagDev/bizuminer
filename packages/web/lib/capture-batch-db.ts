@@ -28,8 +28,12 @@ export interface BatchExecution {
   deadline: string;
   workerId?: string;
   error?: string;
+  planMode?: "departments" | "keywords";
+  sortOrder?: "sales" | "default" | "discount";
+  pageSize?: number;
   browser?: {
     ownerAppUserId: string;
+    marketplace?: "mercadolivre" | "amazon" | "aliexpress";
     requestId?: string;
     fingerprint?: string;
     captureRunId?: string;
@@ -48,6 +52,9 @@ export interface CaptureBatch {
   started_at: Date | string;
   finished_at: Date | string | null;
   phase: CapturePhase;
+  planMode?: "departments" | "keywords";
+  sortOrder?: "sales" | "default" | "discount";
+  pageSize?: number;
   error?: string;
   triage?: BatchTriageSummary;
   browser?: {
@@ -127,25 +134,37 @@ export class CaptureBatchStore {
     executor: BatchExecution["executor"],
     mlConsent: boolean,
     browserOwnerAppUserId?: string,
+    options?: {
+      planMode?: "departments" | "keywords";
+      sortOrder?: "sales" | "default" | "discount";
+      pageSize?: number;
+    },
   ): Promise<StoredCaptureBatch> {
     await this.expire(tenantId);
     return this.query(tenantId, async (sql) => {
-      const execution: BatchExecution = {
-        version: 1,
-        phase: "queued",
-        executor,
-        mlConsent,
-        browser:
-          mlConsent &&
-          marketplaces.includes("mercadolivre") &&
-          browserOwnerAppUserId
-            ? { ownerAppUserId: browserOwnerAppUserId }
-            : undefined,
-        deadline: new Date(Date.now() + 15 * 60_000).toISOString(),
-        stores: Object.fromEntries(
-          marketplaces.map((m) => [m, { status: "waiting" as const }]),
-        ),
-      };
+        const timeoutMinutes =
+          (options?.planMode ?? "departments") === "departments"
+            ? (marketplaces.length > 1 ? 45 : 30)
+            : 20;
+        const execution: BatchExecution = {
+          version: 1,
+          phase: "queued",
+          executor,
+          mlConsent,
+          planMode: options?.planMode ?? "departments",
+          sortOrder: options?.sortOrder ?? "sales",
+          pageSize: options?.pageSize ?? 20,
+          browser:
+            mlConsent &&
+            marketplaces.includes("mercadolivre") &&
+            browserOwnerAppUserId
+              ? { ownerAppUserId: browserOwnerAppUserId }
+              : undefined,
+          deadline: new Date(Date.now() + timeoutMinutes * 60_000).toISOString(),
+          stores: Object.fromEntries(
+            marketplaces.map((m) => [m, { status: "waiting" as const }]),
+          ),
+        };
       const [batch] = await sql<StoredCaptureBatch[]>`
         insert into garimpa.capture_batch(tenant_id,requested_marketplaces,pages,metadata)
         values(${tenantId},${marketplaces},${pages},${sql.json({ execution: { ...execution, triage: execution.triage ? { ...execution.triage } : undefined } })}) returning *
@@ -194,6 +213,9 @@ export class CaptureBatchStore {
           batch.status === "running"
             ? (execution?.phase ?? "capturing")
             : "finished",
+        planMode: execution?.planMode,
+        sortOrder: execution?.sortOrder,
+        pageSize: execution?.pageSize,
         error: execution?.error,
         triage: execution?.triage,
         browser: execution?.browser

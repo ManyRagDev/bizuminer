@@ -23,7 +23,7 @@ type SearchProduct = Partial<ProductPresentation> & {
 type Destination = "whatsapp" | "telegram";
 
 function signalLabel(product: SearchProduct): string | null {
-  if (product.priceType !== "exact" || product.currency !== "BRL") return null;
+  if (product.priceType !== "exact" || (product.currency && product.currency !== "BRL")) return null;
   const highlight = priceHighlight({
     priceCents: product.priceCents,
     previousMinPriceCents: product.previousMinPriceCents,

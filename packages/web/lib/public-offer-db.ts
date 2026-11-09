@@ -108,7 +108,7 @@ export async function publicMonetizedTarget(slug: string, sqlFactory: typeof db 
     const [row] = await tx<{ url: string; publication_id: string; tenant_id: string }[]>`select * from garimpa.public_monetized_target(${slug})`;
     if (!row) return null;
     const url = new URL(row.url);
-    const allowed = ["mercadolivre.com.br", "shopee.com.br", "shope.ee", "aliexpress.com"];
+    const allowed = ["mercadolivre.com.br", "shopee.com.br", "shope.ee", "aliexpress.com", "amazon.com.br"];
     if (url.protocol !== "https:" || url.username || url.password || !allowed.some(host => url.hostname === host || url.hostname.endsWith(`.${host}`))) return null;
     return row;
   }, sqlFactory);

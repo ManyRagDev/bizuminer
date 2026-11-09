@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         ...product, slug, copyKey, detailUrl,
         previewUrl: `${host}${productPreview({ ...product, slug }).path}`,
         shopUrl: `/go/${encodeURIComponent(slug)}${query}`,
-        shareUrl: shortCode ? `${host}/p/${shortCode}${query}` : `${host}${detailUrl}`,
+        shareUrl: shortCode && product.marketplace !== "amazon" ? `${host}/p/${shortCode}${query}` : `${host}${detailUrl}`,
         storyUrl: `/api/story/${encodeURIComponent(slug)}${query}`,
         bioCode: shortCode ? `#${shortCode.slice(-3).toUpperCase()}` : undefined,
       };

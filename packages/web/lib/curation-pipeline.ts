@@ -21,10 +21,12 @@ export interface CandidateProduct {
   inputVersion?: TriageInputVersion;
   priceMinCents?: number | null;
   priceMaxCents?: number | null;
+  department?: string | null;
 }
 
 export interface PipelineOptions {
   maxRepresentatives?: number;
+  autoDismissScore3?: boolean;
   evaluator?: (
     items: AICurationItemInput[],
     options?: {
@@ -52,7 +54,7 @@ export interface PipelineOptions {
   }>;
 }
 
-export const MAX_REPRESENTATIVES_DEFAULT = Number.POSITIVE_INFINITY;
+export const MAX_REPRESENTATIVES_DEFAULT = Number.POSITIVE_INFINITY; // Por padrão, triagem IA não descarta variações pré-avaliação.
 
 export const ADULT_TERMS_RE =
   /\b(erotico|erotica|sexy|vibrador|anabolizante|replica|lingerie sensual|masturbador|dildo|plug anal|fantasia sensual)\b/i;
@@ -129,59 +131,66 @@ export async function processIngestionPipeline(
   }
 
   // ----------------------------------------------------
-  // Estágio 2: Anti-Saturação por Família
+  // Estágio 2: Anti-Saturação por Família (se explicitamente delimitado)
   // ----------------------------------------------------
   const survivorsStage2: CandidateProduct[] = [];
-  const byFamily = new Map<string, CandidateProduct[]>();
 
-  for (const p of survivorsStage1) {
-    if (!p.familyKey) {
-      survivorsStage2.push(p);
-      continue;
-    }
-    const bucket = byFamily.get(p.familyKey) ?? [];
-    bucket.push(p);
-    byFamily.set(p.familyKey, bucket);
-  }
+  if (!Number.isFinite(maxRepresentatives)) {
+    // Por padrão (pipeline multidepartamento aberto), todos os candidatos válidos
+    // avançam para a triagem IA. Variações legítimas não são descartadas por regra pré-IA.
+    survivorsStage2.push(...survivorsStage1);
+  } else {
+    const byFamily = new Map<string, CandidateProduct[]>();
 
-  for (const [familyKey, familyProducts] of byFamily.entries()) {
-    if (familyProducts.length <= 1) {
-      survivorsStage2.push(familyProducts[0]!);
-      continue;
-    }
-
-    const representativeIds = new Set(
-      selectRepresentatives(
-        familyProducts.map((p): GroupMemberProduct => ({
-          tenantId: "local",
-          productId: p.id,
-          marketplace: p.marketplace,
-          family: { key: familyKey, method: "pipeline", version: "v1" },
-          status: "pending",
-          observedAt: new Date().toISOString(),
-          priceCents: p.priceCents,
-          ratingStar: p.ratingStar,
-          salesLabel: null,
-          salesCount: p.salesCount,
-          observationCount: 1,
-          lowestVerified: false,
-        })),
-        maxRepresentatives,
-      ),
-    );
-
-    for (const p of familyProducts) {
-      if (representativeIds.has(p.id)) {
+    for (const p of survivorsStage1) {
+      if (!p.familyKey) {
         survivorsStage2.push(p);
-      } else {
-        decisions.push({
-          productId: p.id,
-          status: "pending",
-          reasonCode: null,
-          reasonDetail: null,
-          rationale: `Excedente de apresentação da família ${familyKey}; aguarda exame humano`,
-          actorType: "rule",
-        });
+        continue;
+      }
+      const bucket = byFamily.get(p.familyKey) ?? [];
+      bucket.push(p);
+      byFamily.set(p.familyKey, bucket);
+    }
+
+    for (const [familyKey, familyProducts] of byFamily.entries()) {
+      if (familyProducts.length <= 1) {
+        survivorsStage2.push(familyProducts[0]!);
+        continue;
+      }
+
+      const representativeIds = new Set(
+        selectRepresentatives(
+          familyProducts.map((p): GroupMemberProduct => ({
+            tenantId: "local",
+            productId: p.id,
+            marketplace: p.marketplace,
+            family: { key: familyKey, method: "pipeline", version: "v1" },
+            status: "pending",
+            observedAt: new Date().toISOString(),
+            priceCents: p.priceCents,
+            ratingStar: p.ratingStar,
+            salesLabel: null,
+            salesCount: p.salesCount,
+            observationCount: 1,
+            lowestVerified: false,
+          })),
+          maxRepresentatives,
+        ),
+      );
+
+      for (const p of familyProducts) {
+        if (representativeIds.has(p.id)) {
+          survivorsStage2.push(p);
+        } else {
+          decisions.push({
+            productId: p.id,
+            status: "pending",
+            reasonCode: null,
+            reasonDetail: null,
+            rationale: `Excedente de apresentação da família ${familyKey}; aguarda exame humano`,
+            actorType: "rule",
+          });
+        }
       }
     }
   }
@@ -190,19 +199,30 @@ export async function processIngestionPipeline(
   // Estágio 3 & 4: Triagem Semântica com Gemini e Roteamento
   // ----------------------------------------------------
   if (survivorsStage2.length > 0) {
-    const aiPayload: AICurationItemInput[] = survivorsStage2.map((p) => ({
-      productId: p.id,
-      title: p.title,
-      category: p.category ?? "Geral",
-      priceFormatted: p.priceMinCents != null && p.priceMaxCents != null && p.priceMinCents < p.priceMaxCents
-        ? `R$ ${(p.priceMinCents / 100).toFixed(2)} a R$ ${(p.priceMaxCents / 100).toFixed(2)}`
-        : `R$ ${(p.priceCents / 100).toFixed(2)}`,
-      ...(pricePolicies.get(p.id)!.outcome === "verified_discount" ? {
-        verifiedPriceReference: { source: "comparable_history" as const,
-          minimumPriceFormatted: `R$ ${(p.comparablePriceHistory!.referencePriceCents! / 100).toFixed(2)}`,
-          observationCount: p.comparablePriceHistory!.observationCount, historyDays: p.comparablePriceHistory!.historyDays },
-      } : {}),
-    }));
+    const aiPayload: AICurationItemInput[] = survivorsStage2.map((p) => {
+      const isRange = p.priceMinCents != null && p.priceMaxCents != null && p.priceMinCents < p.priceMaxCents;
+      const priceFormatted = isRange
+        ? `R$ ${(p.priceMinCents! / 100).toFixed(2)} a R$ ${(p.priceMaxCents! / 100).toFixed(2)}`
+        : `R$ ${(p.priceCents / 100).toFixed(2)}`;
+
+      return {
+        productId: p.id,
+        title: p.title,
+        category: p.category ?? "Geral",
+        priceFormatted,
+        ratingStar: p.ratingStar,
+        salesCount: p.salesCount,
+        originDepartment: p.department ?? p.category ?? p.marketplace,
+        ...(pricePolicies.get(p.id)!.outcome === "verified_discount" ? {
+          verifiedPriceReference: {
+            source: "comparable_history" as const,
+            minimumPriceFormatted: `R$ ${(p.comparablePriceHistory!.referencePriceCents! / 100).toFixed(2)}`,
+            observationCount: p.comparablePriceHistory!.observationCount,
+            historyDays: p.comparablePriceHistory!.historyDays,
+          },
+        } : {}),
+      };
+    });
 
     const aiResults = await evaluator(aiPayload, {
       editorialGuideline: options?.editorialGuideline,
@@ -229,6 +249,8 @@ export async function processIngestionPipeline(
           aiScore: evaluation.desirabilityScore,
           aiJustification: evaluation.justification,
           editorialCategory: evaluation.editorialCategory,
+          catalogCategory: evaluation.catalogCategory,
+          publicBenefit: evaluation.publicBenefit,
         });
       } else if (evaluation.isAdultOrUnsafe) {
         decisions.push({
@@ -241,8 +263,14 @@ export async function processIngestionPipeline(
           aiScore: evaluation.desirabilityScore,
           aiJustification: evaluation.justification,
           editorialCategory: evaluation.editorialCategory,
+          catalogCategory: evaluation.catalogCategory,
+          publicBenefit: evaluation.publicBenefit,
         });
-      } else if (evaluation.desirabilityScore <= 2 || evaluation.editorialCategory === "peca_chata") {
+      } else if (
+        evaluation.desirabilityScore <= (options?.autoDismissScore3 ? 3 : 2) ||
+        evaluation.editorialCategory === "peca_chata" ||
+        evaluation.editorialCategory === "peca_tecnica_avulsa"
+      ) {
         decisions.push({
           productId: p.id,
           status: "rejected",
@@ -253,9 +281,11 @@ export async function processIngestionPipeline(
           aiScore: evaluation.desirabilityScore,
           aiJustification: evaluation.justification,
           editorialCategory: evaluation.editorialCategory,
+          catalogCategory: evaluation.catalogCategory,
+          publicBenefit: evaluation.publicBenefit,
         });
       } else {
-        // Score >= 3:
+        // Score >= 4:
         const shouldAutoPublish =
           Boolean(options?.autoPublish) &&
           evaluation.desirabilityScore >= (options?.minScoreAutoPublish ?? 4);
@@ -270,6 +300,8 @@ export async function processIngestionPipeline(
           aiScore: evaluation.desirabilityScore,
           aiJustification: evaluation.justification,
           editorialCategory: evaluation.editorialCategory,
+          catalogCategory: evaluation.catalogCategory,
+          publicBenefit: evaluation.publicBenefit,
         });
       }
     }

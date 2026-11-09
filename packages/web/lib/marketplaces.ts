@@ -12,7 +12,7 @@
  * (WhatsApp, Telegram, `/bizu/[slug]`) dependem do prefixo permanecer estável.
  */
 
-export type MarketplaceSlug = "mercadolivre" | "shopee" | "aliexpress";
+export type MarketplaceSlug = "mercadolivre" | "shopee" | "aliexpress" | "amazon";
 
 export interface MarketplaceDef {
   readonly slug: MarketplaceSlug;
@@ -128,6 +128,18 @@ export const MARKETPLACES: readonly MarketplaceDef[] = [
     },
     captureMode: "api",
     linkStrategy: "pregenerated",
+  },
+  {
+    slug: "amazon",
+    label: "Amazon",
+    slugPrefix: "amz-",
+    evidenceLabel: "dados da Amazon",
+    ctaLabel: "ver na Amazon",
+    ratingLabel: "avaliação na Amazon",
+    stampLabel: "Amazon",
+    stampStyle: "filled",
+    captureMode: "manual",
+    linkStrategy: "minted",
   },
 ];
 

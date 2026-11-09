@@ -37,6 +37,14 @@ export const INITIAL_DEPARTMENTS: readonly DepartmentDefinition[] = [
     note: "O recorte testado na Shopee é de áudio.",
   },
   {
+    id: "bolsas",
+    name: "Bolsas",
+    category: "Moda",
+    shopeeCatId: "100016",
+    aliexpressCatId: "1524",
+    note: "Manter tamanho e configuração quando relevantes.",
+  },
+  {
     id: "informatica",
     name: "Informática",
     category: "Tecnologia",
@@ -99,14 +107,6 @@ export const INITIAL_DEPARTMENTS: readonly DepartmentDefinition[] = [
     shopeeCatId: "100638",
     aliexpressCatId: "21",
     note: "Material escolar e escritório.",
-  },
-  {
-    id: "bolsas",
-    name: "Bolsas",
-    category: "Moda",
-    shopeeCatId: "100016",
-    aliexpressCatId: "1524",
-    note: "Manter tamanho e configuração quando relevantes.",
   },
 ];
 

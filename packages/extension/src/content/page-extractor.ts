@@ -9,13 +9,24 @@ export function collectBrowserOffers() {
       : undefined;
   }
   const page = new URL(location.href);
+  const normalizedPath = page.pathname.replace(/\/+$/, "");
+  const blockedPaths = [
+    "/gz/",
+    "/login",
+    "/account-verification",
+    "/seguranca",
+    "/checkpoint",
+  ];
+  const isBlocked = blockedPaths.some((prefix) =>
+    normalizedPath.includes(prefix),
+  );
   if (
     page.protocol !== "https:" ||
-    !page.hostname.endsWith("mercadolivre.com.br") ||
-    !page.pathname.startsWith("/ofertas")
+    !/(^|\.)mercadolivre\.com\.br$/.test(page.hostname) ||
+    isBlocked
   )
     throw new Error(
-      "Abra a página de ofertas do Mercado Livre e conclua o acesso, se solicitado.",
+      "Abra uma página de anúncios do Mercado Livre e conclua o acesso, se solicitado.",
     );
   const products: Array<{
     externalId: string;
@@ -32,12 +43,17 @@ export function collectBrowserOffers() {
   }> = [];
   const seen = new Set<string>();
   const cards = Array.from(
-    document.querySelectorAll<HTMLElement>(".poly-card"),
+    document.querySelectorAll<HTMLElement>(
+      ".poly-card, .ui-search-layout__item, .ui-search-result",
+    ),
   );
   for (const card of cards.slice(0, 200)) {
-    const anchor = card.querySelector<HTMLAnchorElement>(
-      "a.poly-component__title",
-    );
+    const anchor =
+      card.querySelector<HTMLAnchorElement>("a.poly-component__title") ||
+      card.querySelector<HTMLAnchorElement>("a.ui-search-link") ||
+      card.querySelector<HTMLAnchorElement>(
+        "a.ui-search-item__group__element",
+      );
     if (!anchor) continue;
     const url = new URL(anchor.href);
     if (
@@ -59,14 +75,15 @@ export function collectBrowserOffers() {
       (filtered ? filtered[1] : "") ||
       (direct ? "MLB" + direct[1] : "");
     const title = (anchor.textContent || "").replace(/\s+/gu, " ").trim();
-    const priceLabel = card
-      .querySelector('.poly-price__current [aria-label*="reais"]')
-      ?.getAttribute("aria-label") || "";
-    const priceCents = money(
-      card
-        .querySelector('.poly-price__current [aria-label*="reais"]')
-        ?.getAttribute("aria-label") || null,
-    );
+    const priceEl =
+      card.querySelector('.poly-price__current [aria-label*="reais"]') ||
+      card.querySelector(
+        '.ui-search-price__second-line [aria-label*="reais"]',
+      ) ||
+      card.querySelector('.price-tag [aria-label*="reais"]') ||
+      card.querySelector('[aria-label*="reais"]');
+    const priceLabel = priceEl?.getAttribute("aria-label") || "";
+    const priceCents = money(priceLabel || null);
     if (
       !/^MLB\d{6,}$/.test(externalId) ||
       !title || title.length > 2000 || /\b(?:faixa|entre)\b/i.test(priceLabel) ||
@@ -74,11 +91,13 @@ export function collectBrowserOffers() {
       seen.has(externalId)
     )
       continue;
-    const original = money(
-      card
-        .querySelector('[aria-label^="Antes:"]')
-        ?.getAttribute("aria-label") || null,
-    );
+    const originalEl =
+      card.querySelector('[aria-label^="Antes:"]') ||
+      card.querySelector('.poly-price__original [aria-label*="reais"]') ||
+      card.querySelector(
+        '.ui-search-price__original-value [aria-label*="reais"]',
+      );
+    const original = money(originalEl?.getAttribute("aria-label") || null);
     let text = card.textContent || "";
     for (const element of Array.from(card.querySelectorAll("[aria-label]")))
       text += " " + element.getAttribute("aria-label");
@@ -89,7 +108,7 @@ export function collectBrowserOffers() {
         text,
       );
     const img = card.querySelector<HTMLImageElement>(
-      'img[src^="https://http2.mlstatic.com/"], img[src*=".mlstatic.com/"]',
+      'img[src^="https://http2.mlstatic.com/"], img[src*=".mlstatic.com/"], img[data-src*=".mlstatic.com/"]',
     );
     const product: (typeof products)[number] = {
       externalId,
@@ -104,7 +123,13 @@ export function collectBrowserOffers() {
     };
     if (original && original > priceCents)
       product.originalPriceCents = original;
-    if (img && img.src.startsWith("https://")) product.imageUrl = img.src;
+    if (img) {
+      const src =
+        img.src && img.src.startsWith("https://")
+          ? img.src
+          : img.getAttribute("data-src");
+      if (src && src.startsWith("https://")) product.imageUrl = src;
+    }
     if (rating && Number(rating[1]!.replace(",", ".")) > 0)
       product.ratingStar = Number(rating[1]!.replace(",", "."));
     if (sales) {
@@ -121,13 +146,22 @@ export function collectBrowserOffers() {
     throw new Error(
       "Nenhuma oferta completa encontrada. Confira se a listagem carregou.",
     );
-  const pagePath = page.pathname.replace(/\/+$/, "") || "/ofertas";
+  const pageKind: "offers" | "search" | "category" | "listing" =
+    normalizedPath.startsWith("/ofertas")
+      ? "offers"
+      : page.hostname.startsWith("lista.") || normalizedPath.includes("/busca/")
+        ? "search"
+        : normalizedPath.startsWith("/c/")
+          ? "category"
+          : "listing";
+
+  const pagePath = normalizedPath || "/ofertas";
   return {
     version: 1 as const,
     requestId: crypto.randomUUID(),
     marketplace: "mercadolivre" as const,
     clientCapturedAt: new Date().toISOString(),
-    page: { kind: "offers" as const, url: page.origin + pagePath },
+    page: { kind: pageKind, url: page.origin + pagePath },
     products,
     ignoredCards: cards.length - products.length,
   };
