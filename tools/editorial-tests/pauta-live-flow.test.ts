@@ -5,7 +5,8 @@ import { commercialFixture } from "./commercial-fixture.ts";
 import type { AccountContext } from "../../packages/web/lib/tenant-db.ts";
 
 const require = createRequire(import.meta.url);
-const { readLivePauta, confirmPautaExposure } = require("../../packages/web/lib/pauta-db.ts");
+const { readLivePauta, confirmPautaExposure, readPautaAvailability } = require("../../packages/web/lib/pauta-db.ts");
+const { readTodayOperations } = require("../../packages/web/lib/today-operation-db.ts");
 const { readPublicPautaLink, redirectPublicPautaLink } = require("../../packages/web/lib/pauta-link-db.ts");
 const { defaultChannelPolicy } = require("../../packages/web/lib/recommendation-policy.ts");
 process.env.DATABASE_URL = "postgresql://isolated-fixture-unused";
@@ -83,6 +84,7 @@ try {
   await pg.exec("update garimpa.product_curation set status='approved' where tenant_id='a' and product_id='p_a'");
   const approved = (await read()).products[0];
   assert.equal(approved.id, "p_a");
+  assert.deepEqual(await readPautaAvailability(a, "whatsapp", factory), { active: true, count: 1 });
   assert.equal(approved.shareTarget.kind, "pauta");
   assert.ok(!JSON.stringify(approved).includes("fixture-a"));
   const otherOffer = (await read(b)).products[0];
@@ -118,6 +120,8 @@ try {
   assert.equal(await confirmPautaExposure(a, "whatsapp", updated.confirmationId, "p_a", factory), true);
   assert.equal((await pg.query("select * from garimpa.recommendation_exposure")).rows.length, 1);
   assert.equal((await read()).products.length, 0);
+  assert.deepEqual(await readPautaAvailability(a, "whatsapp", factory), { active: true, count: 0 });
+  assert.deepEqual(await readPautaAvailability(a, "stories", factory), { active: true, count: 1 });
   assert.match((await read()).recent[0].reasons.join(" "), /recentemente neste canal/);
   assert.equal((await read(a, "stories")).products.length, 1);
   await pg.exec("update garimpa.affiliate_marketplace_config set status='suspended' where affiliate_id='aff_a'");
@@ -159,6 +163,37 @@ try {
   assert.deepEqual(cappedHistory.captureActions, { review: 0, triage: 0, retry: 1 });
   assert.deepEqual((await read(b)).captureActions, { review: 0, triage: 0, retry: 0 });
   console.log("PASS distingue decisão humana, triagem interrompida, revisão adiada e retenção antiga acima do limite do histórico");
+
+  const batchId = "10000000-0000-4000-8000-000000000002";
+  await pg.query(`insert into garimpa.capture_batch(id,tenant_id,requested_marketplaces,pages,status,metadata)
+    values($1,'a',array['mercadolivre','shopee'],1,'running',
+      jsonb_build_object('execution',jsonb_build_object('version',1,'phase','awaiting_browser','deadline',now()+interval '10 minutes')))`, [batchId]);
+  await pg.exec(`
+    insert into garimpa.capture_run(id,tenant_id,marketplace,started_at,status,parameters)
+    values ('monitoring-today','a','aliexpress',now(),'running','{"captureMode":"monitoring"}'),
+           ('capture-stale','a','shopee',now()-interval '3 hours','running','{}');
+  `);
+  assert.deepEqual(await readTodayOperations(a, factory), {
+    activities: [
+      { kind: "browser", marketplaces: ["mercadolivre", "shopee"] },
+      { kind: "monitoring", marketplaces: ["aliexpress"] },
+    ],
+    issues: [],
+  });
+  assert.deepEqual(await readTodayOperations(b, factory), { activities: [], issues: [] });
+  await assert.rejects(() => readTodayOperations({ ...a, tenantId: "b", affiliateId: "aff_b" }, factory), /forbidden/);
+  await pg.query(`update garimpa.capture_batch set metadata=jsonb_set(metadata,'{execution,phase}','"triaging"') where id=$1`, [batchId]);
+  await pg.query(`insert into garimpa.triage_run(tenant_id,status,metadata) values('a','running',jsonb_build_object('captureBatchId',$1::text))`, [batchId]);
+  assert.deepEqual((await readTodayOperations(a, factory)).activities.map(step => step.kind), ["triage", "monitoring"]);
+  await pg.query(`update garimpa.capture_batch set metadata=jsonb_set(metadata,'{execution,deadline}',to_jsonb(now()-interval '1 minute')) where id=$1`, [batchId]);
+  assert.deepEqual((await readTodayOperations(a, factory)).issues, ["A captura excedeu o prazo."]);
+  await pg.exec(`
+    update garimpa.capture_run set status='ok' where id='monitoring-today';
+    update garimpa.triage_run set status='ok' where tenant_id='a';
+    insert into garimpa.triage_run(tenant_id,status) values('a','running');
+  `);
+  assert.deepEqual((await readTodayOperations(a, factory)).activities.map(step => step.kind), ["triage"]);
+  console.log("PASS operação de Hoje distingue lote, navegador, triagem e monitoramento por conta");
 } finally {
   await pg.close();
 }

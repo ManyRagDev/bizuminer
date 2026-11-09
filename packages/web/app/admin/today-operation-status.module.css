@@ -1,0 +1,16 @@
+.banner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px 24px;
+  max-width: 1240px;
+  margin: 18px auto;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--blue);
+  border-radius: 10px;
+}
+.banner p { margin: 4px 0; }
+.title { display: block; margin: 6px 0; font-size: 1.15rem; }
+.channel { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.banner a { display: inline-flex; align-items: center; min-height: 44px; color: var(--blue-text); text-decoration: underline; }

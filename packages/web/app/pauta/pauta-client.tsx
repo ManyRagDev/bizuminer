@@ -82,15 +82,17 @@ function writeDoneId(id: string,scope:string) {
 export default function PautaClient({
   qrBundle,
   accountKey="",userKey="",
+  initialChannel = "whatsapp",
   mobileUrl = "",
   qrDataUrl = "",
 }: {
   qrBundle?: PautaQrBundle;
   accountKey?:string;userKey?:string;
+  initialChannel?: "whatsapp" | "stories";
   mobileUrl?: string;
   qrDataUrl?: string;
 }) {
-  const [channel,setChannel]=useState<"whatsapp"|"stories">("whatsapp");
+  const [channel,setChannel]=useState(initialChannel);
   const scope=`${userKey}:${accountKey}:${channel}`;
   const [exposureMessage,setExposureMessage]=useState("");
   const [products, setProducts] = useState<PautaProduct[]>([]);

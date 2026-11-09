@@ -26,6 +26,7 @@ import Affiliates from "./affiliates";
 import Devices from "./devices";
 import BatchCapturePanel from "./batch-capture-panel";
 import TodayCommandCenter from "./today-command-center";
+import TodayOperationStatus from "./today-operation-status";
 import GithubMonitoringPanel from "./github-monitoring-panel";
 import { githubMonitoringRuns } from "../../lib/github-monitoring";
 import MonitoringPolicyPanel from "./monitoring-policy-panel";
@@ -366,7 +367,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   if (params.aba === "curadoria") redirect("/admin/curadoria?aba=excecoes");
   const account = await pageAccount(params.conta);
   if (!account) return <section><p>Nenhuma conta autorizada disponível.</p></section>;
-  if(!params.aba && await affiliateWorkspaceEnabled(account))return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId??''}><WorkspaceToday account={account}/></AdminDraftScope>;
+  if (!params.aba && await affiliateWorkspaceEnabled(account)) {
+    return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId ?? ""}>
+      <TodayOperationStatus key={account.tenantId} tenantId={account.tenantId} />
+      <WorkspaceToday account={account} />
+    </AdminDraftScope>;
+  }
   const tab = normalizeAdminTab(params.aba);
   const load = () => {
     switch (tab) {
@@ -379,6 +385,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   };
   return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId ?? ""}>
     <AdminTabs activeTab={tab}>
+      {tab === "visao-geral" && <TodayOperationStatus key={account.tenantId} tenantId={account.tenantId} />}
       <Suspense key={`${account.tenantId}:${tab}`} fallback={<SectionLoading label="a aba" />}>
         <SafeSection label="a aba" load={load} />
       </Suspense>

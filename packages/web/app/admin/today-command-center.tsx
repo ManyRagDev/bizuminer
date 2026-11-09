@@ -25,7 +25,7 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
           <p className="eyebrow">Operação de hoje</p>
           <h1 id="today-title">
             {props.selectionReady
-              ? "Seleção disponível para preparar a pauta"
+              ? "Seleção de destaques disponível"
               : pending
                 ? "Resolva as pendências ou capture novas ofertas"
                 : "Capture ofertas para ampliar a seleção"}
@@ -87,19 +87,13 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
         <li className={props.selectionReady ? "done" : ""}>
           <span className="workflow-step-mark">4</span>
           <div>
-            <strong>Seleção e pauta</strong>
+            <strong>Seleção de destaques</strong>
             <small>{props.selectionLabel}</small>
           </div>
         </li>
       </ol>
       <div className="today-primary-action">
-        <a
-          href={
-            props.selectionReady ? "/pauta" : "/admin/curadoria?aba=selecao"
-          }
-        >
-          {props.selectionReady ? "Preparar pauta" : "Abrir curadoria"} →
-        </a>
+        <a href="/admin/curadoria?aba=selecao">Abrir curadoria →</a>
         <a href="#captura-hoje">Capturar ofertas</a>
         {pending > 0 && (
           <a href="#bancada-hoje" style={{ background: "transparent", color: "var(--accent, #0070f3)", border: "1px solid var(--accent, #0070f3)" }}>

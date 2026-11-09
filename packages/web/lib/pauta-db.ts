@@ -233,6 +233,13 @@ export async function previewLivePauta(context: AccountContext, channel: PautaCh
   }, sqlFactory);
 }
 
+export async function readPautaAvailability(context: AccountContext, channel: PautaChannel, sqlFactory: typeof db = db) {
+  return readSnapshot(context, async (tx, now) => {
+    const { config, selected } = await selectOffers(tx, context, channel, now);
+    return { active: config !== null, count: selected.length };
+  }, sqlFactory);
+}
+
 export async function readLivePauta(context: AccountContext, channel: PautaChannel, marketplace: string | null,
   sqlFactory: typeof db = db) {
   return readSnapshot(context, async (tx, now) => {

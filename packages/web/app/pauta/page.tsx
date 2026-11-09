@@ -8,7 +8,7 @@ import PautaClient from "./pauta-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function PautaPage() {
+export default async function PautaPage({ searchParams }: { searchParams: Promise<{ conta?: string; canal?: string }> }) {
   const user = await getPageAuth();
   if (!user) redirect("/entrar?next=/pauta");
   const isAuthorized = await isAffiliate(user);
@@ -30,14 +30,18 @@ export default async function PautaPage() {
     );
   }
 
-  const account=await pageAccount();
+  const { conta, canal } = await searchParams;
+  const account = await pageAccount(conta);
+  if (!account) return <AdminShell><p>Nenhuma conta autorizada disponível.</p></AdminShell>;
+  const initialChannel = canal === "stories" ? "stories" : "whatsapp";
   const headerList = await headers();
   const host = headerList.get("host");
   const qrBundle = await getPautaQrBundle(host);
 
   return (
     <AdminShell>
-      <PautaClient qrBundle={qrBundle} accountKey={account?.tenantId ?? ""} userKey={user.id}/>
+      <PautaClient key={`${account.tenantId}:${initialChannel}`} qrBundle={qrBundle}
+        accountKey={account.tenantId} userKey={user.id} initialChannel={initialChannel} />
     </AdminShell>
   );
 }
