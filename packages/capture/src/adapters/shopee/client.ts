@@ -21,6 +21,8 @@ export const MARKETPLACE = "shopee";
 
 /** Código que a Shopee usa para sinalizar excesso de requisições. */
 export const RATE_LIMIT_CODE = 10030;
+/** Código que a Shopee usa para falha temporária de sistema (ex: instabilidade transitória). */
+export const SYSTEM_ERROR_CODE = 10000;
 
 export interface ShopeeCredentialFields {
   readonly appId: string;
@@ -200,6 +202,15 @@ export class ShopeeClient {
           marketplace: MARKETPLACE,
           message: "limite de requisições atingido (código 10030)",
           vendorCode: RATE_LIMIT_CODE,
+        });
+      }
+
+      if (Number(code) === SYSTEM_ERROR_CODE) {
+        throw new CaptureError({
+          kind: "transport",
+          marketplace: MARKETPLACE,
+          message: first?.message ?? "erro temporário de sistema retornado pela Shopee (código 10000)",
+          vendorCode: SYSTEM_ERROR_CODE,
         });
       }
 

@@ -370,6 +370,40 @@ describe("ShopeeAdapter", () => {
     assert.equal(page.nextCursor, "page:2");
   });
 
+  it("ShopeeClient repete e recupera em erro de sistema 10000", async () => {
+    let attempts = 0;
+    const adapter = new ShopeeAdapter({
+      ratePerSecond: 1000,
+      fetchImpl: (async () => {
+        attempts++;
+        if (attempts === 1) {
+          return new Response(
+            JSON.stringify({
+              errors: [{ message: "System Error", extensions: { code: 10000 } }],
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        return new Response(
+          JSON.stringify({
+            data: {
+              productOfferV2: {
+                nodes: [{ ...node, itemId: 200 }],
+                pageInfo: { hasNextPage: false },
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    const page = await adapter.fetchOffers(cred, {}, ctx);
+    assert.equal(attempts, 2);
+    assert.equal(page.offers.length, 1);
+    assert.equal(page.offers[0]!.externalId, "200");
+  });
+
   it("aplica filtro de desconto mínimo", async () => {
     const adapter = new ShopeeAdapter({
       ratePerSecond: 1000,
