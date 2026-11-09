@@ -139,3 +139,11 @@ Você pode considerar o expediente de curadoria encerrado quando cumprir este ch
 - [ ] **IA calibrada:** 3 a 5 produtos auditados no Spot-Check com *Concordo/Discordo*.
 - [ ] **Frescor garantido:** Ofertas desatualizadas foram pausadas ou revalidadas pela nova rodagem.
 - [ ] **Destaques compartilhados:** 1 a 3 ofertas publicadas nos canais de comunicação com a audiência.
+
+### Descoberta ampliada da Shopee
+
+A Shopee usa por padrão 12 departamentos, até duas páginas de 20 anúncios por departamento (480 posições de consulta, antes de repetições, páginas incompletas e falhas da fonte). `--keyword` mantém a consulta manual, e `--plan keywords` seleciona explicitamente o plano anterior. A ingestão preserva faixas de preço, gera links afiliados por conta e mantém os produtos existentes por ID. Os limites de descoberta são 50 novos por departamento e 25 por família por consulta; cortes são contados em `itemsSkippedByPolicy`.
+
+O workflow `discover-shopee.yml` executa a descoberta da conta da casa às 09:25 e 21:25 UTC (06:25 e 18:25 em Brasília), separadamente de `monitor-prices.yml`, que acompanha preços por ID. Exige as flags já existentes `MONITORING_ENABLED` e `SHOPEE_CAPTURE_ENABLED`, respeita a pausa da Shopee no painel e pula a rodada se outro lote estiver ativo. Cada execução registra um `capture_batch` e passa pelo mesmo worker de captura, links, triagem e atualização da vitrine. Não envia mensagens ao WhatsApp.
+
+A triagem em lote percorre os candidatos em ciclos de até 200; o teto de três representantes por família não é aplicado antes da IA por padrão. Ofertas avaliadas com nota 3 continuam sinalizadas para decisão editorial quando a nota mínima de publicação automática é 4. Isso é diferente de um produto ainda não avaliado. Falhas em páginas posteriores preservam tanto os produtos já gravados quanto seus contadores no resumo, mantendo a consulta marcada como falha.

@@ -201,9 +201,26 @@ export interface OfferPage {
   readonly nextCursor?: string;
 }
 
+export type SourceQueryOrder = "sales" | "default" | "discount";
+
+export type SourceQuery =
+  | {
+      readonly kind: "department";
+      readonly categoryId: string;
+      readonly order?: SourceQueryOrder;
+    }
+  | {
+      readonly kind: "campaign";
+      readonly name: string;
+      readonly categoryId?: string;
+      readonly order?: SourceQueryOrder;
+    };
+
 export interface FetchParams {
   /** Termo de busca, quando o adapter suportar. */
   readonly keyword?: string;
+  /** Consulta estruturada de origem (departamento ou campanha). */
+  readonly sourceQuery?: SourceQuery;
   /** Restringe a uma loja específica. */
   readonly shopId?: string;
   /** Desconto mínimo declarado, fração 0..1. Filtro na origem quando possível. */

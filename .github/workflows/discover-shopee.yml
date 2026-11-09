@@ -1,0 +1,50 @@
+name: Descobrir ofertas Shopee por departamentos
+
+on:
+  schedule:
+    - cron: '25 9,21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discover-shopee-local
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    if: vars.MONITORING_ENABLED == 'true' && vars.SHOPEE_CAPTURE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      NODE_ENV: production
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      AFFILIATE_SECRETS_MASTER_KEY: ${{ secrets.AFFILIATE_SECRETS_MASTER_KEY }}
+      SHOPEE_CAPTURE_ENABLED: ${{ vars.SHOPEE_CAPTURE_ENABLED }}
+      SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
+      SHOPEE_APP_SECRET: ${{ secrets.SHOPEE_APP_SECRET }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            packages/persistence/package-lock.json
+            packages/web/package-lock.json
+      - run: npm ci --prefix packages/persistence
+      - run: npm ci --prefix packages/web
+      - name: Registrar lote respeitando a pausa do cron
+        id: queue
+        run: node --experimental-strip-types packages/web/bin/queue-shopee-discovery.ts --execute
+      - name: Capturar, gerar links e triar o lote
+        if: steps.queue.outputs.batch_id != ''
+        env:
+          CAPTURE_BATCH_ID: ${{ steps.queue.outputs.batch_id }}
+        run: node --experimental-strip-types packages/web/bin/run-capture-batch.ts --batch "$CAPTURE_BATCH_ID" --tenant local
+      - name: Atualizar vitrine
+        if: always() && !cancelled() && steps.queue.outputs.batch_id != ''
+        run: node --experimental-strip-types packages/web/bin/refresh-homepage.ts --tenant local --execute

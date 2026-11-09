@@ -51,6 +51,16 @@ export interface SweepSummary {
   readonly durationMs: number;
 }
 
+/** A later page can fail after earlier pages have already been committed. */
+export class SweepError extends Error {
+  readonly summary: SweepSummary;
+  constructor(summary: SweepSummary, cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause), { cause });
+    this.name = "SweepError";
+    this.summary = summary;
+  }
+}
+
 function dominantFamily(
   counts: ReadonlyMap<ProductFamily, number>,
   totalCandidates: number,
@@ -96,6 +106,7 @@ export async function sweep(
     collectorRunId: ctx.runId,
     parameters: {
       keyword: params.keyword,
+      sourceQuery: params.sourceQuery,
       shopId: params.shopId,
       minClaimedDiscount: params.minClaimedDiscount,
       pageSize: params.pageSize,
@@ -124,6 +135,7 @@ export async function sweep(
   let saturationDetected = false;
   let saturatedFamily: ProductFamily | undefined;
   let errorMessage: string | undefined;
+  let failure: unknown;
   const acceptedExternalIds = new Set<string>();
   const skippedExternalIds = new Set<string>();
   const acceptedByFamily = new Map<ProductFamily, number>();
@@ -210,7 +222,7 @@ export async function sweep(
     }
   } catch (err) {
     errorMessage = err instanceof Error ? err.message : String(err);
-    throw err;
+    failure = err;
   } finally {
     await store.finishCaptureRun(runId, {
       tenantId: opts.tenantId,
@@ -236,7 +248,7 @@ export async function sweep(
     data: { marketplace: adapter.marketplace, itemsSeen, itemsCaptured, itemsNew, priceChanges, itemsSkippedByPolicy, saturationDetected },
   });
 
-  return {
+  const summary: SweepSummary = {
     runId,
     marketplace: adapter.marketplace,
     itemsSeen,
@@ -249,4 +261,6 @@ export async function sweep(
     dominantFamily: saturatedFamily,
     durationMs: Date.now() - startedMs,
   };
+  if (errorMessage !== undefined) throw new SweepError(summary, failure);
+  return summary;
 }

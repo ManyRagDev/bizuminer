@@ -1,5 +1,5 @@
-import type { CaptureAdapter, CaptureContext, Credential } from "../../capture/src/types.ts";
-import { sweep, type DiscoveryPolicy, type SweepSummary } from "./ingest.ts";
+import type { CaptureAdapter, CaptureContext, Credential, SourceQuery } from "../../capture/src/types.ts";
+import { sweep, SweepError, type DiscoveryPolicy, type SweepSummary } from "./ingest.ts";
 import type { OfferStore } from "./store.ts";
 import type { ProductFamily } from "./product-family.ts";
 
@@ -10,7 +10,8 @@ export interface CapturePlanEntry {
   readonly mode: CapturePlanMode;
   readonly category: string;
   readonly family?: ProductFamily;
-  readonly keyword: string;
+  readonly keyword?: string;
+  readonly sourceQuery?: SourceQuery;
 }
 
 export interface CapturePlan {
@@ -45,6 +46,7 @@ export interface CapturePlanRunOptions {
   readonly mode?: CapturePlanMode | "all";
   readonly maxPagesPerQuery?: number;
   readonly minClaimedDiscount?: number;
+  readonly pageSize?: number;
   readonly policy?: Partial<Omit<DiscoveryPolicy, "planId" | "queryId" | "mode" | "targetCategory" | "targetFamily">>;
   readonly operationBatchId?: string;
 }
@@ -79,8 +81,8 @@ export async function runCapturePlan(
   ctx: CaptureContext,
 ): Promise<CapturePlanSummary> {
   const startedMs = Date.now();
-  if (!adapter.capabilities.search) {
-    throw new Error(`marketplace ${adapter.marketplace} não suporta plano por palavra-chave`);
+  if (!adapter.capabilities.search && !adapter.capabilities.offerFeed) {
+    throw new Error(`marketplace ${adapter.marketplace} não suporta plano de captura`);
   }
 
   const plan = opts.plan ?? CATEGORY_FIRST_PLAN;
@@ -97,11 +99,11 @@ export async function runCapturePlan(
       mode: entry.mode,
       targetCategory: entry.category,
       targetFamily: entry.family,
-      maxNewItems: opts.policy?.maxNewItems ?? 8,
-      maxNewPerFamily: opts.policy?.maxNewPerFamily ?? 5,
-      saturationThreshold: opts.policy?.saturationThreshold ?? 0.6,
+      maxNewItems: opts.policy?.maxNewItems ?? (plan.id.startsWith("departments-") ? 50 : 8),
+      maxNewPerFamily: opts.policy?.maxNewPerFamily ?? (plan.id.startsWith("departments-") ? 25 : 5),
+      saturationThreshold: opts.policy?.saturationThreshold ?? (plan.id.startsWith("departments-") ? 0.9 : 0.6),
       minCandidatesForSaturation: opts.policy?.minCandidatesForSaturation ?? 10,
-      stopOnSaturation: opts.policy?.stopOnSaturation ?? true,
+      stopOnSaturation: opts.policy?.stopOnSaturation ?? (plan.id.startsWith("departments-") ? false : true),
     };
 
     try {
@@ -111,7 +113,12 @@ export async function runCapturePlan(
         store,
         {
           tenantId: opts.tenantId,
-          params: { keyword: entry.keyword, minClaimedDiscount: opts.minClaimedDiscount },
+          params: {
+            keyword: entry.keyword,
+            sourceQuery: entry.sourceQuery,
+            minClaimedDiscount: opts.minClaimedDiscount,
+            pageSize: opts.pageSize,
+          },
           maxPages: opts.maxPagesPerQuery ?? 1,
           discovery,
           operationBatchId: opts.operationBatchId,
@@ -123,6 +130,7 @@ export async function runCapturePlan(
       else queriesCompleted++;
     } catch (error) {
       queriesFailed++;
+      if (error instanceof SweepError) runs.push(error.summary);
       ctx.log({
         level: "error",
         msg: "consulta do plano falhou; próximas consultas serão tentadas",

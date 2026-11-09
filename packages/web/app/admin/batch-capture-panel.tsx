@@ -38,7 +38,7 @@ export default function BatchCapturePanel({
 }) {
   const fetch = useAdminFetch();
   const router = useRouter();
-  const [pages, setPages] = useAdminDraftState("batch-capture-panel.pages", 1);
+  const [pages, setPages] = useAdminDraftState("batch-capture-panel.pages", 2);
   const [selected, setSelected] = useAdminDraftState<Record<MarketplaceSlug, boolean>>("batch-capture-panel.selected", () => ({
       mercadolivre: false,
       shopee:

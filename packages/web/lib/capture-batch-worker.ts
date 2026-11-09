@@ -108,6 +108,10 @@ export async function executeCaptureBatch(
       return true;
     }
     execution.phase = "triaging";
+    const minTriageDeadline = Date.now() + 30 * 60_000;
+    if (!execution.deadline || new Date(execution.deadline).getTime() < minTriageDeadline) {
+      execution.deadline = new Date(minTriageDeadline).toISOString();
+    }
     await store.update(id, workerId, execution, "running", tenantId);
     const result = await runStep({
       kind: "triage",

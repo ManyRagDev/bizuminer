@@ -93,6 +93,7 @@ export function mapProductNode(
     offerEvidence: {
       version: 2,
       source: { marketplace: MARKETPLACE, method: "official_api", url: productUrl, capturedAt: capturedAt.toISOString() },
+      currency: "BRL",
       priceType,
       sellerId: shopId,
       variantIdentity: { state: "unknown" },

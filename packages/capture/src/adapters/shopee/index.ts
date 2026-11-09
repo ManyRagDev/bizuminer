@@ -74,16 +74,41 @@ export class ShopeeAdapter implements CaptureAdapter {
     const { page, limit: cursorLimit } = readPageCursor(params.cursor);
     const requestedLimit = Math.min(params.pageSize ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     let limit = cursorLimit ?? requestedLimit;
+    let keyword: string | null = params.keyword ?? null;
+    let productCatId: number | null = null;
+    let listType: number | null = null;
+    // 2 = ordenação por comissão/vendas
+    let sortType = 2;
+
+    if (params.sourceQuery?.kind === "department") {
+      const parsedCatId = Number(params.sourceQuery.categoryId);
+      if (Number.isInteger(parsedCatId) && parsedCatId > 0) {
+        productCatId = parsedCatId;
+        listType = 0;
+      }
+      if (!params.keyword) {
+        keyword = null;
+      }
+      if (params.sourceQuery.order === "default") {
+        sortType = 0;
+      } else if (params.sourceQuery.order === "sales") {
+        sortType = 2;
+      } else if (params.sourceQuery.order === "discount") {
+        sortType = 1;
+      }
+    }
+
     const request = (limit: number, maxAttempts?: number) => this.client.request<ShopeeProductOfferResponse>(
       fields,
       PRODUCT_OFFER_QUERY,
       {
-        keyword: params.keyword ?? null,
+        keyword,
         shopId: params.shopId ? Number(params.shopId) : null,
+        productCatId,
+        listType,
         page,
         limit,
-        // Keep the ordering and search scope when recovering a query.
-        sortType: 2,
+        sortType,
       },
       ctx,
       maxAttempts,
@@ -108,6 +133,24 @@ export class ShopeeAdapter implements CaptureAdapter {
     }
     const capturedAt = new Date();
     const { offers, skipped } = mapProductNodes(nodes, capturedAt);
+
+    if (params.sourceQuery?.kind === "department") {
+      const requestedCatId = params.sourceQuery.categoryId;
+      const matched = nodes.filter((n) =>
+        n.productCatIds?.some((id) => String(id) === requestedCatId),
+      ).length;
+      ctx.log({
+        level: "info",
+        msg: "consulta Shopee por departamento executada",
+        data: {
+          categoryId: requestedCatId,
+          order: params.sourceQuery.order ?? "sales",
+          received: nodes.length,
+          matchedCategory: matched,
+          page,
+        },
+      });
+    }
 
     if (skipped > 0) {
       ctx.log({

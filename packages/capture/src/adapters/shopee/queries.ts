@@ -16,6 +16,8 @@ export const PRODUCT_OFFER_QUERY = /* GraphQL */ `
   query ProductOffer(
     $keyword: String
     $shopId: Int64
+    $productCatId: Int
+    $listType: Int
     $page: Int
     $limit: Int
     $sortType: Int
@@ -23,6 +25,8 @@ export const PRODUCT_OFFER_QUERY = /* GraphQL */ `
     productOfferV2(
       keyword: $keyword
       shopId: $shopId
+      productCatId: $productCatId
+      listType: $listType
       page: $page
       limit: $limit
       sortType: $sortType

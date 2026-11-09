@@ -52,7 +52,7 @@ export interface PipelineOptions {
   }>;
 }
 
-export const MAX_REPRESENTATIVES_DEFAULT = 3;
+export const MAX_REPRESENTATIVES_DEFAULT = Number.POSITIVE_INFINITY;
 
 export const ADULT_TERMS_RE =
   /\b(erotico|erotica|sexy|vibrador|anabolizante|replica|lingerie sensual|masturbador|dildo|plug anal|fantasia sensual)\b/i;

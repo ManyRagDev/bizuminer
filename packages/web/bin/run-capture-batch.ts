@@ -37,7 +37,7 @@ const runStep: BatchStepRunner = async (step) => {
     {
       cwd: persistenceDir,
       env,
-      timeoutMs: step.kind === "triage" ? 10 * 60_000 : 12 * 60_000,
+      timeoutMs: step.kind === "triage" ? 30 * 60_000 : 12 * 60_000,
     },
   );
   if (!result.ok) return {

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       { status: 403 },
     );
   }
-  let pages = 1;
+  let pages = 2;
   let consent = false;
   let requestedMarketplaces: string[] | undefined;
   try {
