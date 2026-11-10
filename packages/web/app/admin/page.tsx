@@ -26,6 +26,7 @@ import Affiliates from "./affiliates";
 import Devices from "./devices";
 import BatchCapturePanel from "./batch-capture-panel";
 import TodayCommandCenter from "./today-command-center";
+import { readStoresHealth } from "../../lib/today-operation-db.ts";
 import TodayOperationStatus from "./today-operation-status";
 import GithubMonitoringPanel from "./github-monitoring-panel";
 import { githubMonitoringRuns } from "../../lib/github-monitoring";
@@ -122,12 +123,13 @@ async function SafeSection({ label, load }: { label: string; load: () => Promise
 
 async function OverviewTab({ account: accountContext }: { account: AccountContext }) {
   return inAccountScope(accountContext, async () => {
-    const [overview, curation, auditDesk, editorialConfig, publishedSelection, workbenchPage, eligibleTriage] = await Promise.all([
+    const [overview, curation, auditDesk, editorialConfig, publishedSelection, workbenchPage, eligibleTriage, storesHealth] = await Promise.all([
       adminOverview(), curationSummary(accountContext.tenantId, undefined, accountContext),
       getAuditDesk(accountContext.tenantId), getEditorialGuideline(accountContext.tenantId),
       getPublishedEditorialSelection("all", accountContext.tenantId),
       getWorkbenchPage(accountContext, { limit: 15 }).catch(() => null),
       automatedTriageAvailability(accountContext.tenantId).catch(() => 0),
+      readStoresHealth(accountContext).catch(() => []),
     ]);
   const selectionState = selectionWorkflowState({ schemaReady: publishedSelection.schemaReady,
     mode: publishedSelection.mode, count: publishedSelection.products.length, validUntil: publishedSelection.validUntil });
@@ -148,6 +150,7 @@ async function OverviewTab({ account: accountContext }: { account: AccountContex
         deferred={curation.deferred}
         auditRemaining={auditDesk.progress.remaining}
         workbenchPage={workbenchPage}
+        storesHealth={storesHealth}
       />
       <div id="captura-hoje">
         <BatchCapturePanel

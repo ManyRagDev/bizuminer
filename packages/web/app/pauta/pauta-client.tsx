@@ -9,7 +9,7 @@ import { copyToClipboard } from "../../lib/clipboard";
 import { createPreviewWarmer } from "../../lib/product-preview-warmup";
 import { offerPriceLabel, offerPriceNote } from "../../lib/offer-price";
 import type { PautaCapture, PautaCaptureActions } from "../../lib/pauta-db";
-import { freshnessLabel, MINIMUM_HISTORY } from "../../lib/deal-signal";
+import { evaluateFreshnessStatus, freshnessLabel, MINIMUM_HISTORY } from "../../lib/deal-signal";
 import {
   extractPautaCopyData,
   generateOfferCopy,
@@ -479,10 +479,11 @@ export default function PautaClient({
           {pending.map((product, index) => {
             const mp = marketplaceDef(product.marketplace);
             const isNext = index === 0;
+            const freshness = evaluateFreshnessStatus(product.evidenceObservedAt);
             return (
               <article
                 key={product.id}
-                className={`pauta-card${isNext ? " pauta-card-next" : ""}`}
+                className={`pauta-card pauta-card-freshness-${freshness.level}${isNext ? " pauta-card-next" : ""}`}
               >
                 <div className="pauta-card-body">
                   {product.imageUrl && (
@@ -497,9 +498,18 @@ export default function PautaClient({
                     </a>
                   )}
                   <div className="pauta-card-info">
-                {isNext && (
-                      <span className="pauta-card-signal">PRÓXIMO</span>
-                    )}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                      {isNext ? (
+                        <span className="pauta-card-signal">PRÓXIMO</span>
+                      ) : <span />}
+                      <span
+                        className={`pauta-freshness-badge pauta-freshness-${freshness.level}`}
+                        title={product.evidenceObservedAt ? `Coletado em: ${new Date(product.evidenceObservedAt).toLocaleString("pt-BR")} (idade: ~${Math.round(freshness.ageHours)}h)` : "Sem data"}
+                      >
+                        <span className="pauta-freshness-dot" />
+                        {freshness.badgeLabel} · {freshness.label}
+                      </span>
+                    </div>
                     <h3><a href={product.detailUrl ?? `/bizu/${product.slug}`}>{product.displayTitle ?? product.title}</a></h3>
                     {(product.benefit || product.editorialRationale) && <p className="pauta-editorial-rationale">{product.benefit || product.editorialRationale}</p>}
                     {product.purchaseContents && <p className="pauta-editorial-contents"><b>O que vem:</b> {product.purchaseContents}</p>}

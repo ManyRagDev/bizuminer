@@ -111,3 +111,82 @@ export function seenAgo(value: Date | string | null, now = new Date()): string |
   const days = Math.round(hours / 24);
   return `há ${days} dia${days === 1 ? "" : "s"}`;
 }
+
+export type FreshnessStatusLevel = "fresh" | "warm" | "stale";
+
+export interface FreshnessStatus {
+  level: FreshnessStatusLevel;
+  label: string;
+  badgeLabel: string;
+  ageHours: number;
+}
+
+/**
+ * Avalia o nível de frescor do preço/evidência de uma oferta para a pauta.
+ * - fresh: coletado há menos de 3h e no mesmo dia (São Paulo) -> verde
+ * - warm: coletado entre 3h e 10h e no mesmo dia -> amarelo
+ * - stale: coletado há mais de 10h OU virou o dia (meia-noite) -> vermelho/laranja
+ */
+export function evaluateFreshnessStatus(
+  value: Date | string | null,
+  now = new Date()
+): FreshnessStatus {
+  if (!value) {
+    return {
+      level: "stale",
+      label: "sem data",
+      badgeLabel: "Expirando (>10h)",
+      ageHours: Infinity,
+    };
+  }
+
+  const date = new Date(value);
+  const diffMs = Math.max(0, now.getTime() - date.getTime());
+  const ageHours = diffMs / 3_600_000;
+  const minutes = Math.floor(diffMs / 60_000);
+
+  // Cruzou virada do dia em horário de Brasília (America/Sao_Paulo)?
+  const isDifferentDay =
+    date.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) !==
+    now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+  let timeText = "";
+  if (minutes < 2) {
+    timeText = "agora";
+  } else if (minutes < 60) {
+    timeText = `há ${minutes} min`;
+  } else {
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      timeText = `há ${hours} h`;
+    } else {
+      const days = Math.floor(hours / 24);
+      timeText = `há ${days} dia${days === 1 ? "" : "s"}`;
+    }
+  }
+
+  if (isDifferentDay || ageHours > 10) {
+    return {
+      level: "stale",
+      label: isDifferentDay && ageHours <= 24 ? `coletado ontem (${timeText})` : `coletado ${timeText}`,
+      badgeLabel: isDifferentDay ? "Virou o dia" : "Expirando (>10h)",
+      ageHours,
+    };
+  }
+
+  if (ageHours < 3) {
+    return {
+      level: "fresh",
+      label: `coletado ${timeText}`,
+      badgeLabel: "Fresco (<3h)",
+      ageHours,
+    };
+  }
+
+  return {
+    level: "warm",
+    label: `coletado ${timeText}`,
+    badgeLabel: "Atenção (3-10h)",
+    ageHours,
+  };
+}

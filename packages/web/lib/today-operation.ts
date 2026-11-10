@@ -10,7 +10,129 @@ export type TodayActivity = {
 };
 export type TodayOperations = { activities: TodayActivity[]; issues: string[] };
 type PautaChannelStatus = { active: boolean; count: number } | null;
-export type TodayStatus = TodayOperations & { pauta: Record<"whatsapp" | "stories", PautaChannelStatus> };
+
+export type StoreHealth = {
+  marketplace: string;
+  name: string;
+  lastCaptureAt: string | null;
+  lastCaptureAgo: string;
+  freshCount: number;
+  freshApprovedCount: number;
+  status: "fresh" | "warm" | "stale";
+  statusLabel: string;
+  actionUrl: string;
+  actionLabel: string;
+  isAutomated: boolean;
+};
+
+export type TodayStatus = TodayOperations & {
+  pauta: Record<"whatsapp" | "stories", PautaChannelStatus>;
+  storesHealth?: StoreHealth[];
+};
+
+export function evaluateStoreHealth(
+  marketplace: string,
+  lastCaptureAt: Date | string | null,
+  freshCount: number,
+  freshApprovedCount: number,
+  now = new Date()
+): StoreHealth {
+  const names: Record<string, string> = {
+    mercadolivre: "Mercado Livre",
+    shopee: "Shopee",
+    amazon: "Amazon",
+    aliexpress: "AliExpress",
+  };
+
+  const actionMap: Record<string, { url: string; label: string; isAutomated: boolean }> = {
+    mercadolivre: {
+      url: "https://www.mercadolivre.com.br/ofertas",
+      label: "Capturar no ML ↗",
+      isAutomated: false,
+    },
+    amazon: {
+      url: "https://www.amazon.com.br/deals",
+      label: "Capturar na Amazon ↗",
+      isAutomated: false,
+    },
+    shopee: {
+      url: "/admin#captura-hoje",
+      label: "Rodar lote Shopee",
+      isAutomated: true,
+    },
+    aliexpress: {
+      url: "https://pt.aliexpress.com",
+      label: "Abrir AliExpress ↗",
+      isAutomated: false,
+    },
+  };
+
+  const name = names[marketplace] ?? marketplace;
+  const action = actionMap[marketplace] ?? {
+    url: "/admin#captura-hoje",
+    label: "Rodar lote",
+    isAutomated: true,
+  };
+
+  if (!lastCaptureAt) {
+    return {
+      marketplace,
+      name,
+      lastCaptureAt: null,
+      lastCaptureAgo: "nunca",
+      freshCount,
+      freshApprovedCount,
+      status: "stale",
+      statusLabel: "Sem rodagens",
+      actionUrl: action.url,
+      actionLabel: action.label,
+      isAutomated: action.isAutomated,
+    };
+  }
+
+  const date = new Date(lastCaptureAt);
+  const diffMs = Math.max(0, now.getTime() - date.getTime());
+  const ageHours = diffMs / 3_600_000;
+  const minutes = Math.floor(diffMs / 60_000);
+
+  let agoText = "";
+  if (minutes < 2) agoText = "agora";
+  else if (minutes < 60) agoText = `há ${minutes} min`;
+  else if (ageHours < 24) agoText = `há ${Math.floor(ageHours)} h`;
+  else agoText = `há ${Math.floor(ageHours / 24)} d`;
+
+  const isDifferentDay =
+    date.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) !==
+    now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+  let status: "fresh" | "warm" | "stale" = "stale";
+  let statusLabel = "";
+
+  if (!isDifferentDay && ageHours < 3 && freshApprovedCount >= 1) {
+    status = "fresh";
+    statusLabel = `Em dia (${freshApprovedCount} ofertas <3h)`;
+  } else if (!isDifferentDay && ageHours < 8 && freshCount > 0) {
+    status = "warm";
+    statusLabel = `Atenção (${agoText})`;
+  } else {
+    status = "stale";
+    statusLabel = isDifferentDay ? `Exige rodagem (virou o dia)` : `Exige rodagem (${agoText})`;
+  }
+
+  return {
+    marketplace,
+    name,
+    lastCaptureAt: date.toISOString(),
+    lastCaptureAgo: agoText,
+    freshCount,
+    freshApprovedCount,
+    status,
+    statusLabel,
+    actionUrl: action.url,
+    actionLabel: action.label,
+    isAutomated: action.isAutomated,
+  };
+}
 
 const recentMs = 24 * 60 * 60_000;
 const triageTimeoutMs = 30 * 60_000;

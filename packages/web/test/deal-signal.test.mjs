@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { historyWindow, priceHighlight, priceNarrative, priceSignal } from "../lib/deal-signal.ts";
+import { evaluateFreshnessStatus, historyWindow, priceHighlight, priceNarrative, priceSignal } from "../lib/deal-signal.ts";
 
 test("selo do card cala quando o preço não se moveu", () => {
   const parado = { priceCents: 10000, previousMinPriceCents: 10000, observationCount: 4, historyDays: 0, lowestVerified: false };
@@ -51,4 +51,45 @@ test("expõe quantidade e período sem usar estado metafórico", () => {
   const input = { priceCents: 10000, previousMinPriceCents: 10000, observationCount: 4, historyDays: 2, lowestVerified: false };
   assert.equal(priceSignal(input).label, "4 registros · 2 dias");
   assert.equal(priceNarrative(input, (value) => `R$ ${value / 100}`), "Preço igual ao menor registro anterior (R$ 100).");
+});
+
+test("evaluateFreshnessStatus classifica corretamente itens frescos (<3h no mesmo dia)", () => {
+  const now = new Date("2026-11-10T14:00:00-03:00");
+  const fortyFiveMinAgo = new Date("2026-11-10T13:15:00-03:00");
+  const freshStatus = evaluateFreshnessStatus(fortyFiveMinAgo, now);
+
+  assert.equal(freshStatus.level, "fresh");
+  assert.equal(freshStatus.label, "coletado há 45 min");
+  assert.equal(freshStatus.badgeLabel, "Fresco (<3h)");
+  assert.ok(freshStatus.ageHours < 3);
+});
+
+test("evaluateFreshnessStatus classifica itens em observação (3-10h no mesmo dia)", () => {
+  const now = new Date("2026-11-10T18:00:00-03:00");
+  const fiveHoursAgo = new Date("2026-11-10T13:00:00-03:00");
+  const warmStatus = evaluateFreshnessStatus(fiveHoursAgo, now);
+
+  assert.equal(warmStatus.level, "warm");
+  assert.equal(warmStatus.label, "coletado há 5 h");
+  assert.equal(warmStatus.badgeLabel, "Atenção (3-10h)");
+});
+
+test("evaluateFreshnessStatus classifica itens expirando (>10h ou virada de dia)", () => {
+  const now = new Date("2026-11-10T10:00:00-03:00");
+  // Virou o dia (ontem às 22h, há 12h)
+  const yesterdayNight = new Date("2026-11-09T22:00:00-03:00");
+  const staleDay = evaluateFreshnessStatus(yesterdayNight, now);
+  assert.equal(staleDay.level, "stale");
+  assert.equal(staleDay.badgeLabel, "Virou o dia");
+
+  // Mesmo dia mas > 10h (hoje às 01:00 vs 14:00 = 13h)
+  const todayEarly = new Date("2026-11-10T01:00:00-03:00");
+  const todayAfternoon = new Date("2026-11-10T14:00:00-03:00");
+  const staleHours = evaluateFreshnessStatus(todayEarly, todayAfternoon);
+  assert.equal(staleHours.level, "stale");
+  assert.equal(staleHours.badgeLabel, "Expirando (>10h)");
+
+  // Sem data
+  const noDate = evaluateFreshnessStatus(null, now);
+  assert.equal(noDate.level, "stale");
 });

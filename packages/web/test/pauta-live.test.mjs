@@ -102,3 +102,42 @@ test("limita repetição de bolsas/câmeras e diversifica categorias e lojas na 
   assert.equal(selectedBags.length, 1, "Apenas 1 bolsa/mochila deve entrar quando familyLimit=1");
   assert.equal(selectedCams.length, 1, "Apenas 1 câmera de segurança deve entrar quando familyLimit=1");
 });
+
+test("teto por loja impede que rodagem recente de um marketplace monopolize a pauta inteira", () => {
+  const pauta12Policy = { limit: 12, familyLimit: 1, repeatHours: 72, improvementPercent: 5 };
+  // Shopee acabou de rodar: 15 itens fresquíssimos (há 5 minutos) com nota 5
+  const freshShopee = Array.from({ length: 15 }, (_, i) => offer(`shp-${i}`, {
+    marketplace: "shopee",
+    title: `Produto Shopee Exclusivo ${i}`,
+    category: `CatShopee${i}`,
+    triageScore: 5,
+    evidenceObservedAt: observed(0.08), // 5 min atrás
+  }));
+  // Amazon tem 6 itens capturados há 2 horas
+  const amazonItems = Array.from({ length: 6 }, (_, i) => offer(`amz-${i}`, {
+    marketplace: "amazon",
+    title: `Produto Amazon Prime ${i}`,
+    category: `CatAmz${i}`,
+    triageScore: 4,
+    evidenceObservedAt: observed(2),
+  }));
+  // Mercado Livre tem 6 itens capturados há 3 horas
+  const mlItems = Array.from({ length: 6 }, (_, i) => offer(`ml-${i}`, {
+    marketplace: "mercadolivre",
+    title: `Produto Mercado Livre Full ${i}`,
+    category: `CatML${i}`,
+    triageScore: 4,
+    evidenceObservedAt: observed(3),
+  }));
+
+  const result = composeLivePauta([...freshShopee, ...amazonItems, ...mlItems], pauta12Policy, new Map(), now, null, new Set());
+  assert.equal(result.selected.length, 12);
+  const shopeeCount = result.selected.filter(p => p.marketplace === "shopee").length;
+  const amazonCount = result.selected.filter(p => p.marketplace === "amazon").length;
+  const mlCount = result.selected.filter(p => p.marketplace === "mercadolivre").length;
+
+  // Com 3 lojas ativas em 12 vagas, a Shopee não pode canibalizar e pegar mais de 5 vagas
+  assert.ok(shopeeCount <= 5, `Shopee pegou ${shopeeCount}, mas deveria ter teto de no máximo 5`);
+  assert.ok(amazonCount >= 3, `Amazon precisa ter pelo menos 3 vagas (teve ${amazonCount})`);
+  assert.ok(mlCount >= 3, `Mercado Livre precisa ter pelo menos 3 vagas (teve ${mlCount})`);
+});

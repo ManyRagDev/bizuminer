@@ -88,8 +88,9 @@ export function composeLivePauta<T extends PautaCandidate>(
     const discountBonus = candidate.priceType === "exact" && typeof candidate.discountPercent === "number"
       && candidate.discountPercent > 0 && candidate.discountPercent < 95
       ? Math.min(1.5, candidate.discountPercent * 0.02) : 0;
+    const freshnessBonus = Math.max(0, 10 * Math.exp(-ageHours / 5));
     const score = quality + Math.min(8, drop) + (candidate.priceType === "exact" && pautaHasHistoricalLow(candidate) ? 4 : 0)
-      + (ageHours <= 24 ? 8 : 0) + ratingBonus + salesBonus + discountBonus;
+      + freshnessBonus + ratingBonus + salesBonus + discountBonus;
     ranked.push({ candidate, observed, score });
   }
   ranked.sort((a, b) => manualOrder
@@ -122,11 +123,36 @@ export function composeLivePauta<T extends PautaCandidate>(
     stores.set(candidate.marketplace, storeCount(candidate) + 1);
   };
   if (!manualOrder) {
+    const eligibleStores = new Set(ranked.map(r => r.candidate.marketplace));
+    const storeCeiling = Math.max(2, Math.floor(policy.limit / Math.max(1, eligibleStores.size)) + 1);
+
     // Give each eligible shop a chance before filling the remaining slots by merit and diversity.
     for (const { candidate } of ranked) {
       if (chosen.size >= policy.limit) break;
       if (!represented.has(candidate.marketplace) && familyCount(candidate) < policy.familyLimit) select(candidate);
     }
+    // Balanced selection pass: respects store ceiling so no single marketplace monopolizes the slots
+    while (chosen.size < policy.limit) {
+      let best: typeof ranked[number] | null = null;
+      let bestEffectiveScore = -Infinity;
+      for (const entry of ranked) {
+        const { candidate } = entry;
+        if (chosen.has(candidate.id) || familyCount(candidate) >= policy.familyLimit) continue;
+        if (storeCount(candidate) >= storeCeiling) continue;
+        const effectiveScore = entry.score - storeCount(candidate) * 8 - categoryCount(candidate) * 12;
+        if (
+          !best ||
+          effectiveScore > bestEffectiveScore ||
+          (effectiveScore === bestEffectiveScore && (entry.observed > best.observed || (entry.observed === best.observed && candidate.id.localeCompare(best.candidate.id) < 0)))
+        ) {
+          best = entry;
+          bestEffectiveScore = effectiveScore;
+        }
+      }
+      if (!best) break;
+      select(best.candidate);
+    }
+    // Fill remaining slots if any store lacked enough candidates to reach its ceiling
     while (chosen.size < policy.limit) {
       let best: typeof ranked[number] | null = null;
       let bestEffectiveScore = -Infinity;
