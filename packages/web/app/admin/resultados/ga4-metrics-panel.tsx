@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { GA4DashboardData } from "../../../lib/ga4-reporting.ts";
+import type { GA4DashboardResult } from "../../../lib/ga4-reporting.ts";
 
 interface Props {
-  initialData: GA4DashboardData | null;
+  initialResult: GA4DashboardResult;
 }
 
 function formatDuration(sec: number): string {
@@ -26,54 +26,57 @@ function formatPagePath(path: string): { label: string; isBizu: boolean } {
   return { label: path, isBizu: false };
 }
 
-export default function GA4MetricsPanel({ initialData }: Props) {
-  const [data, setData] = useState<GA4DashboardData | null>(initialData);
+export default function GA4MetricsPanel({ initialResult }: Props) {
+  const [result, setResult] = useState<GA4DashboardResult | null>(initialResult);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleRefresh = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const res = await fetch("/api/admin/analytics?refresh=1");
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const json = await res.json();
-      if (json.ok && json.data) {
-        setData(json.data);
-      } else {
-        throw new Error(json.error || "Falha ao atualizar dados");
+      const res = await fetch("/api/admin/analytics?refresh=1", { cache: "no-store" });
+      if (res.status === 401 || res.status === 403) {
+        setResult(null);
+        return;
       }
-    } catch (err: any) {
-      setError(err?.message || "Não foi possível atualizar agora.");
+      if (!res.ok) throw new Error("Falha ao consultar o GA4");
+      setResult(await res.json() as GA4DashboardResult);
+    } catch {
+      setResult({ status: "unavailable" });
     } finally {
       setLoading(false);
     }
   };
 
-  if (!data) {
+  if (!result) return null;
+
+  if (result.status !== "ready") {
+    const unavailable = result.status === "unavailable";
     return (
       <section className="bm-card" style={{ marginTop: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h2>📊 Audiência e Tráfego do Site</h2>
-            <p className="bm-muted" style={{ margin: "4px 0 0" }}>
-              As credenciais do Google Analytics 4 (GA4) ainda não foram vinculadas ou estão pendentes de leitura.
+            <p className="bm-muted" role="status" style={{ margin: "4px 0 0" }}>
+              {unavailable
+                ? "Não foi possível consultar o Google Analytics agora. Tente novamente."
+                : "O Google Analytics ainda não está configurado para este painel."}
             </p>
           </div>
           <button
+            type="button"
             onClick={handleRefresh}
             disabled={loading}
             className="bm-button secondary"
             style={{ fontSize: "13px", padding: "8px 14px" }}
           >
-            {loading ? "Testando..." : "Testar Conexão"}
+            {loading ? "Consultando..." : unavailable ? "Tentar novamente" : "Testar conexão"}
           </button>
         </div>
       </section>
     );
   }
 
-  const { overview, topPages, trafficSources, events, fetchedAt, propertyId } = data;
+  const { overview, topPages, trafficSources, events, fetchedAt, propertyId } = result.data;
   const l30 = overview.last30Days;
   const l7 = overview.last7Days;
   const today = overview.today;
@@ -130,8 +133,8 @@ export default function GA4MetricsPanel({ initialData }: Props) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {error && <span style={{ color: "#b91c1c", fontSize: "12px" }}>{error}</span>}
           <button
+            type="button"
             onClick={handleRefresh}
             disabled={loading}
             className="bm-button secondary"

@@ -38,7 +38,6 @@ export interface GA4EventCount {
 }
 
 export interface GA4DashboardData {
-  configured: boolean;
   propertyId: string;
   fetchedAt: string;
   overview: GA4Overview;
@@ -47,6 +46,11 @@ export interface GA4DashboardData {
   events: GA4EventCount[];
 }
 
+export type GA4DashboardResult =
+  | { status: "ready"; data: GA4DashboardData }
+  | { status: "unconfigured" }
+  | { status: "unavailable" };
+
 interface CachedToken {
   accessToken: string;
   expiresAt: number;
@@ -54,6 +58,7 @@ interface CachedToken {
 
 let cachedToken: CachedToken | null = null;
 let cachedReport: { data: GA4DashboardData; expiresAt: number } | null = null;
+const requestTimeoutMs = 10_000;
 
 function base64UrlEncode(str: string): string {
   return Buffer.from(str)
@@ -64,27 +69,10 @@ function base64UrlEncode(str: string): string {
 }
 
 function getCredentials() {
-  const propertyId = process.env.GA4_PROPERTY_ID || "563123737";
-  const clientEmail =
-    process.env.GA4_CLIENT_EMAIL ||
-    "reune-analytics@reune-514115.iam.gserviceaccount.com";
-  let privateKey = process.env.GA4_PRIVATE_KEY || "";
-
-  if (privateKey) {
-    // Corrige quebras de linha escapadas comuns em variáveis de ambiente
-    privateKey = privateKey.replace(/\\n/g, "\n");
-  }
-
-  return {
-    propertyId,
-    clientEmail,
-    privateKey,
-    isConfigured: Boolean(propertyId && clientEmail && privateKey),
-  };
-}
-
-export function isGA4Configured(): boolean {
-  return getCredentials().isConfigured;
+  const propertyId = process.env.GA4_PROPERTY_ID?.trim();
+  const clientEmail = process.env.GA4_CLIENT_EMAIL?.trim();
+  const privateKey = process.env.GA4_PRIVATE_KEY?.replace(/\\n/g, "\n").trim();
+  return propertyId && clientEmail && privateKey ? { propertyId, clientEmail, privateKey } : null;
 }
 
 async function getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
@@ -121,6 +109,7 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    signal: AbortSignal.timeout(requestTimeoutMs),
     body: new URLSearchParams({
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: jwt,
@@ -128,8 +117,7 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
   });
 
   if (!res.ok) {
-    const errorBody = await res.text();
-    throw new Error(`Falha ao obter token OAuth2 do Google: ${res.status} ${errorBody}`);
+    throw new Error(`Falha ao obter token OAuth2 do Google (HTTP ${res.status})`);
   }
 
   const data = (await res.json()) as { access_token: string; expires_in: number };
@@ -154,13 +142,13 @@ async function runGA4Report(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(requestTimeoutMs),
       body: JSON.stringify(body),
     }
   );
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`GA4 runReport error: ${res.status} ${errText}`);
+    throw new Error(`GA4 runReport (HTTP ${res.status})`);
   }
 
   return res.json();
@@ -175,6 +163,7 @@ async function runGA4RealtimeReport(token: string, propertyId: string): Promise<
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(requestTimeoutMs),
       body: JSON.stringify({
         metrics: [{ name: "activeUsers" }],
       }),
@@ -182,26 +171,23 @@ async function runGA4RealtimeReport(token: string, propertyId: string): Promise<
   );
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`GA4 runRealtimeReport error: ${res.status} ${errText}`);
+    throw new Error(`GA4 runRealtimeReport (HTTP ${res.status})`);
   }
 
   return res.json();
 }
 
 /**
- * Consulta as métricas consolidadas do GA4 com cache em memória de 5 minutos.
- * Retorna null se não estiver configurado ou se a consulta falhar (evita derrubar a tela).
+ * Guarda em cache por cinco minutos apenas relatórios que carregaram por completo.
  */
-export async function getGA4DashboardData(forceRefresh = false): Promise<GA4DashboardData | null> {
-  const { propertyId, clientEmail, privateKey, isConfigured } = getCredentials();
-  if (!isConfigured) {
-    return null;
-  }
+export async function getGA4DashboardData(forceRefresh = false): Promise<GA4DashboardResult> {
+  const credentials = getCredentials();
+  if (!credentials) return { status: "unconfigured" };
 
+  const { propertyId, clientEmail, privateKey } = credentials;
   const now = Date.now();
   if (!forceRefresh && cachedReport && cachedReport.expiresAt > now) {
-    return cachedReport.data;
+    return { status: "ready", data: cachedReport.data };
   }
 
   try {
@@ -216,7 +202,7 @@ export async function getGA4DashboardData(forceRefresh = false): Promise<GA4Dash
       sourcesRes,
       eventsRes,
     ] = await Promise.all([
-      runGA4RealtimeReport(token, propertyId).catch(() => null),
+      runGA4RealtimeReport(token, propertyId),
       runGA4Report(token, propertyId, {
         dateRanges: [{ startDate: "today", endDate: "today" }],
         metrics: [
@@ -224,7 +210,7 @@ export async function getGA4DashboardData(forceRefresh = false): Promise<GA4Dash
           { name: "screenPageViews" },
           { name: "sessions" },
         ],
-      }).catch(() => null),
+      }),
       runGA4Report(token, propertyId, {
         dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
         metrics: [
@@ -232,7 +218,7 @@ export async function getGA4DashboardData(forceRefresh = false): Promise<GA4Dash
           { name: "screenPageViews" },
           { name: "sessions" },
         ],
-      }).catch(() => null),
+      }),
       runGA4Report(token, propertyId, {
         dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
         metrics: [
@@ -242,14 +228,14 @@ export async function getGA4DashboardData(forceRefresh = false): Promise<GA4Dash
           { name: "averageSessionDuration" },
           { name: "bounceRate" },
         ],
-      }).catch(() => null),
+      }),
       runGA4Report(token, propertyId, {
         dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
         dimensions: [{ name: "pagePath" }],
         metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }],
         orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
         limit: 8,
-      }).catch(() => null),
+      }),
       runGA4Report(token, propertyId, {
         dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
         dimensions: [
@@ -259,14 +245,14 @@ export async function getGA4DashboardData(forceRefresh = false): Promise<GA4Dash
         metrics: [{ name: "sessions" }, { name: "activeUsers" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: 6,
-      }).catch(() => null),
+      }),
       runGA4Report(token, propertyId, {
         dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
         dimensions: [{ name: "eventName" }],
         metrics: [{ name: "eventCount" }],
         orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
         limit: 8,
-      }).catch(() => null),
+      }),
     ]);
 
     const realtimeUsers = Number(realtimeRes?.rows?.[0]?.metricValues?.[0]?.value || 0);
@@ -311,7 +297,6 @@ export async function getGA4DashboardData(forceRefresh = false): Promise<GA4Dash
     }));
 
     const result: GA4DashboardData = {
-      configured: true,
       propertyId,
       fetchedAt: new Date().toISOString(),
       overview: {
@@ -330,9 +315,9 @@ export async function getGA4DashboardData(forceRefresh = false): Promise<GA4Dash
       expiresAt: now + 5 * 60 * 1000, // 5 minutos de cache
     };
 
-    return result;
+    return { status: "ready", data: result };
   } catch (err) {
     console.warn("[ga4-reporting] Erro ao carregar métricas do GA4:", err);
-    return null;
+    return { status: "unavailable" };
   }
 }

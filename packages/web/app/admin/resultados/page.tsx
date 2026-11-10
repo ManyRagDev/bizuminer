@@ -3,7 +3,7 @@ import { withAccountDb } from "../../../lib/tenant-db.ts";
 import { commercialRolloutReady } from "../../../lib/commercial-rollout.ts";
 import { getCommercialResults } from "../../../lib/commercial-financial-db.ts";
 import { getUserMemberships } from "../../../lib/account-context.ts";
-import { getPageAuth } from "../../../lib/auth.ts";
+import { getPageAuth, roleAccess } from "../../../lib/auth.ts";
 import {
   calculateCommissionSummary,
   type CommissionEntry,
@@ -79,7 +79,9 @@ export default async function Page() {
       })) as CommissionEntry[]) ?? [];
 
   const commissions = calculateCommissionSummary(entries, "BRL");
-  const ga4Data = await getGA4DashboardData().catch(() => null);
+  const ga4Result = (await roleAccess(user.id, "platform_admin"))
+    ? await getGA4DashboardData()
+    : null;
 
   return (
     <div className="bm-workspace">
@@ -181,8 +183,7 @@ export default async function Page() {
         </p>
       )}
 
-      {/* GA4 Web Traffic & Audience */}
-      <GA4MetricsPanel initialData={ga4Data} />
+      {ga4Result && <GA4MetricsPanel initialResult={ga4Result} />}
 
       {/* Advanced Reconciliation (Accordion) */}
       {data && (

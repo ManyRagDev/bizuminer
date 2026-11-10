@@ -1,24 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { checkAffiliateUser } from "../../../../lib/api-auth.ts";
-import { getGA4DashboardData, isGA4Configured } from "../../../../lib/ga4-reporting.ts";
+import type { NextRequest } from "next/server";
+import { sinkJson } from "../../../../lib/api-auth.ts";
+import { getRouteAuth, roleAccess } from "../../../../lib/auth.ts";
+import { getGA4DashboardData } from "../../../../lib/ga4-reporting.ts";
+import { createCookieSink } from "../../../../lib/supabase.ts";
 
 export const dynamic = "force-dynamic";
 
+const headers = { "Cache-Control": "private, no-store" };
+
 export async function GET(request: NextRequest) {
-  const check = await checkAffiliateUser(request);
-  if (check.kind === "no_session") {
-    return NextResponse.json({ ok: false, error: "no_session" }, { status: 401 });
+  const sink = createCookieSink();
+  const user = await getRouteAuth(request, sink);
+  if (!user) {
+    return sinkJson(sink, { ok: false, error: "no_session" }, { status: 401, headers });
   }
-  if (check.kind === "forbidden") {
-    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+  if (!(await roleAccess(user.id, "platform_admin"))) {
+    return sinkJson(sink, { ok: false, error: "forbidden" }, { status: 403, headers });
   }
 
   const force = request.nextUrl.searchParams.get("refresh") === "1";
-  const data = await getGA4DashboardData(force);
-
-  return NextResponse.json({
-    ok: true,
-    configured: isGA4Configured(),
-    data,
+  const result = await getGA4DashboardData(force);
+  return sinkJson(sink, result, {
+    status: result.status === "unavailable" ? 503 : 200,
+    headers,
   });
 }
