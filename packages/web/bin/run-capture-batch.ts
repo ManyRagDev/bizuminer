@@ -76,9 +76,10 @@ try {
   const executed = await executeCaptureBatch(id, runStep, captureBatches, tenantId);
   const batch = executed ? await captureBatches.read(id, tenantId) : null;
   console.log(JSON.stringify({ batchId: id, executed, status: batch?.status }));
+  // Apenas status 'error' falha o processo. Status 'partial' representa sucesso parcial legítimo com itens capturados e triados.
   if (
     executed &&
-    batch?.status !== "ok" &&
+    batch?.status === "error" &&
     batch?.metadata.execution?.phase !== "awaiting_browser"
   )
     process.exitCode = 1;

@@ -108,7 +108,7 @@ export function evaluateStoreHealth(
   let status: "fresh" | "warm" | "stale" = "stale";
   let statusLabel = "";
 
-  if (!isDifferentDay && ageHours < 3 && freshApprovedCount >= 1) {
+  if (ageHours < 3 && freshApprovedCount >= 1) {
     status = "fresh";
     statusLabel = `Em dia (${freshApprovedCount} ofertas <3h)`;
   } else if (!isDifferentDay && ageHours < 8 && freshCount > 0) {

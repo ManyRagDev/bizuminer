@@ -165,20 +165,22 @@ export function evaluateFreshnessStatus(
     }
   }
 
-  if (isDifferentDay || ageHours > 10) {
-    return {
-      level: "stale",
-      label: isDifferentDay && ageHours <= 24 ? `coletado ontem (${timeText})` : `coletado ${timeText}`,
-      badgeLabel: isDifferentDay ? "Virou o dia" : "Expirando (>10h)",
-      ageHours,
-    };
-  }
-
+  // Menos de 3 horas é sempre fresco (mesmo que tenha acabado de cruzar a meia-noite)
   if (ageHours < 3) {
     return {
       level: "fresh",
       label: `coletado ${timeText}`,
       badgeLabel: "Fresco (<3h)",
+      ageHours,
+    };
+  }
+
+  // Se cruzou a virada do dia ou tem mais de 10h -> stale
+  if (isDifferentDay || ageHours > 10) {
+    return {
+      level: "stale",
+      label: isDifferentDay && ageHours <= 24 ? `coletado ontem (${timeText})` : `coletado ${timeText}`,
+      badgeLabel: isDifferentDay ? "Virou o dia" : "Expirando (>10h)",
       ageHours,
     };
   }

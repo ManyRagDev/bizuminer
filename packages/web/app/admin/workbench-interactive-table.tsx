@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useTransition, useMemo } from "react";
 import type { WorkbenchItem, WorkbenchPage } from "../../lib/workbench-contract.ts";
 import { submitCurationDecision } from "./curadoria/actions.ts";
@@ -12,6 +13,44 @@ const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
+
+function ProductThumbnail({ imageUrl }: { imageUrl: string | null }) {
+  const [failedImage, setFailedImage] = useState<string | null>(null);
+
+  return (
+    <div
+      style={{
+        width: "72px",
+        height: "72px",
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        border: "1px solid var(--line, #e4e4e7)",
+        borderRadius: "8px",
+        background: "var(--photo-bg, #fff)",
+      }}
+    >
+      {imageUrl && imageUrl !== failedImage ? (
+        <Image
+          src={imageUrl}
+          alt=""
+          width={72}
+          height={72}
+          unoptimized
+          loading="lazy"
+          onError={() => setFailedImage(imageUrl)}
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        />
+      ) : (
+        <span style={{ color: "#71717a", fontSize: "0.6875rem", textAlign: "center" }}>
+          Sem foto
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function WorkbenchInteractiveTable({ initialPage }: Props) {
   const [items, setItems] = useState<WorkbenchItem[]>([...initialPage.items]);
@@ -400,46 +439,51 @@ export default function WorkbenchInteractiveTable({ initialPage }: Props) {
                         aria-label={`Selecionar ${item.title}`}
                       />
                     </td>
-                    <td style={{ padding: "12px", maxWidth: "260px" }}>
-                      <div
-                        style={{
-                          fontWeight: 600,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                        title={item.title}
-                      >
-                        {item.title}
-                      </div>
-                      <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "2px", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "0.75rem", color: "var(--ink-muted, #71717a)" }}>
-                          ID: {item.externalId}
-                        </span>
-                        {item.category && (
-                          <span
+                    <td style={{ padding: "12px", minWidth: "260px", maxWidth: "340px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <ProductThumbnail imageUrl={item.imageUrl} />
+                        <div style={{ minWidth: 0 }}>
+                          <div
                             style={{
-                              fontSize: "0.6875rem",
-                              background: "var(--surface-elevated, #f4f4f5)",
-                              padding: "1px 6px",
-                              borderRadius: "4px",
-                              color: "var(--ink, #18181b)",
+                              fontWeight: 600,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
                             }}
+                            title={item.title}
                           >
-                            {item.category}
-                          </span>
-                        )}
-                        {item.ratingStar !== null && item.ratingStar !== undefined && (
-                          <span style={{ fontSize: "0.6875rem", color: "#d97706", fontWeight: 600 }}>
-                            ★ {item.ratingStar} {item.salesCount ? `(${item.salesCount} vendas)` : ""}
-                          </span>
-                        )}
-                      </div>
-                      {errorMap[item.productId] && (
-                        <div style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: "2px" }}>
-                          ⚠️ {errorMap[item.productId]}
+                            {item.title}
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "2px", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: "0.75rem", color: "var(--ink-muted, #71717a)" }}>
+                              ID: {item.externalId}
+                            </span>
+                            {item.category && (
+                              <span
+                                style={{
+                                  fontSize: "0.6875rem",
+                                  background: "var(--surface-elevated, #f4f4f5)",
+                                  padding: "1px 6px",
+                                  borderRadius: "4px",
+                                  color: "var(--ink, #18181b)",
+                                }}
+                              >
+                                {item.category}
+                              </span>
+                            )}
+                            {item.ratingStar !== null && item.ratingStar !== undefined && (
+                              <span style={{ fontSize: "0.6875rem", color: "#d97706", fontWeight: 600 }}>
+                                ★ {item.ratingStar} {item.salesCount ? `(${item.salesCount} vendas)` : ""}
+                              </span>
+                            )}
+                          </div>
+                          {errorMap[item.productId] && (
+                            <div style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: "2px" }}>
+                              ⚠️ {errorMap[item.productId]}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </td>
                     <td style={{ padding: "12px", textTransform: "capitalize" }}>
                       {item.marketplace}

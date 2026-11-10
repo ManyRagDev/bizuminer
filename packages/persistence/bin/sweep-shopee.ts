@@ -157,7 +157,9 @@ console.log(`recentes (últimos 14d): ${activity.recente}`);
 console.log(`dormentes (histórico):  ${activity.dormente}`);
 
 await store.close();
-if (summary.queriesFailed > 0) process.exitCode = 1;
+// Falha o processo apenas se NENHUMA consulta teve sucesso.
+// Falhas parciais em categorias pontuais continuam o fluxo para triar e aproveitar os produtos capturados.
+if (summary.queriesCompleted === 0) process.exitCode = 1;
 
 // M3: gera e persiste o link de saída (fora do redirect do /go, ver
 // shopee-links.ts). Idempotente — só processa publications sem affiliate_url.

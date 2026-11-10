@@ -93,3 +93,14 @@ test("evaluateFreshnessStatus classifica itens expirando (>10h ou virada de dia)
   const noDate = evaluateFreshnessStatus(null, now);
   assert.equal(noDate.level, "stale");
 });
+
+test("evaluateFreshnessStatus preserva fresh para coletas <3h mesmo que tenham acabado de cruzar a meia-noite", () => {
+  // Coletado às 23:30 de ontem, agora são 00:20 de hoje (50 minutos de idade)
+  const yesterdayNight = new Date("2026-11-09T23:30:00-03:00");
+  const todayAfterMidnight = new Date("2026-11-10T00:20:00-03:00");
+  const status = evaluateFreshnessStatus(yesterdayNight, todayAfterMidnight);
+
+  assert.equal(status.level, "fresh");
+  assert.equal(status.badgeLabel, "Fresco (<3h)");
+  assert.equal(status.label, "coletado há 50 min");
+});
