@@ -15,13 +15,50 @@ const offer = (id, fields = {}) => ({
 const select = (items, exposures = new Map(), manual = null) =>
   composeLivePauta(items, policy, exposures, now, manual, new Set());
 
-test("seleciona oferta sem publicação e equilibra mérito e recência", () => {
+test("prioriza preço recém-observado antes de oferta mais antiga com nota superior", () => {
   const better = offer("melhor-ontem", { triageScore: 5, evidenceObservedAt: observed(30) });
   const recent = offer("recente");
   const older = offer("bom-ontem", { evidenceObservedAt: observed(30), discountPercent: 98 });
   const result = select([older, recent, better]);
-  assert.deepEqual(result.selected.map(p => p.id), ["melhor-ontem", "recente"]);
+  assert.deepEqual(result.selected.map(p => p.id), ["recente", "melhor-ontem"]);
   assert.match(result.reasonsById.get(older.id)[0], /abaixo do corte/);
+});
+
+test("capturas recentes das quatro lojas renovam as 12 vagas antes das ofertas envelhecidas", () => {
+  const stores = ["shopee", "mercadolivre", "amazon", "aliexpress"];
+  const items = stores.flatMap((marketplace, store) => Array.from({ length: 3 }, (_, index) => {
+    const base = { marketplace, title: `Oferta ${store} ${index}`, category: `categoria-${store}-${index}`,
+      offerEvidence: marketplace === "aliexpress" ? { source: { method: "browser" } } : {} };
+    return [offer(`antiga-${store}-${index}`, { ...base, triageScore: 5, evidenceObservedAt: observed(5) }),
+      offer(`nova-${store}-${index}`, { ...base, title: `Novo ${store} ${index}`, triageScore: 4, evidenceObservedAt: observed(1) })];
+  })).flat();
+  const result = composeLivePauta(items, { ...policy, limit: 12 }, new Map(), now, null, new Set());
+  assert.equal(result.selected.length, 12);
+  assert.ok(result.selected.every(item => item.id.startsWith("nova-")));
+  assert.deepEqual(new Set(result.selected.map(item => item.marketplace)), new Set(stores));
+});
+
+test("prioriza ofertas recentes mesmo quando outra loja só tem ofertas envelhecidas", () => {
+  const recent = ["mercadolivre", "amazon"].flatMap((marketplace, store) =>
+    Array.from({ length: 3 }, (_, index) => offer(`nova-${store}-${index}`, {
+      marketplace, title: `Produto recente ${store} ${index}`, category: `categoria-${store}-${index}`,
+      triageScore: 4, evidenceObservedAt: observed(1),
+    })));
+  const staleStore = offer("antiga-shopee", { marketplace: "shopee", triageScore: 5,
+    evidenceObservedAt: observed(16), lastSeenAt: observed(0.25) });
+  const result = composeLivePauta([...recent, staleStore], { ...policy, limit: 6 }, new Map(), now, null, new Set());
+  assert.equal(result.selected.length, 6);
+  assert.ok(result.selected.every(item => item.id.startsWith("nova-")));
+});
+
+test("completa a pauta com ofertas antigas válidas quando faltam recentes elegíveis", () => {
+  const result = select([
+    offer("nova", { triageScore: 4, evidenceObservedAt: observed(1) }),
+    offer("sem-link", { triageScore: 5, evidenceObservedAt: observed(1), shareTarget: null }),
+    offer("antiga", { triageScore: 5, evidenceObservedAt: observed(16) }),
+  ]);
+  assert.deepEqual(result.selected.map(item => item.id), ["nova", "antiga"]);
+  assert.match(result.reasonsById.get("sem-link")[0], /link de afiliado/);
 });
 
 test("recusa oferta vencida, pendente, sem link ou com condição de preço sem confirmação", () => {
@@ -121,13 +158,13 @@ test("teto por loja impede que rodagem recente de um marketplace monopolize a pa
     triageScore: 4,
     evidenceObservedAt: observed(2),
   }));
-  // Mercado Livre tem 6 itens capturados há 3 horas
+  // Mercado Livre tem 6 itens capturados há 2 horas e meia
   const mlItems = Array.from({ length: 6 }, (_, i) => offer(`ml-${i}`, {
     marketplace: "mercadolivre",
     title: `Produto Mercado Livre Full ${i}`,
     category: `CatML${i}`,
     triageScore: 4,
-    evidenceObservedAt: observed(3),
+    evidenceObservedAt: observed(2.5),
   }));
 
   const result = composeLivePauta([...freshShopee, ...amazonItems, ...mlItems], pauta12Policy, new Map(), now, null, new Set());

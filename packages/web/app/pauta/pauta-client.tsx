@@ -305,7 +305,7 @@ export default function PautaClient({
           </span>
         </div>
         <p className="pauta-selection-note">
-          Ofertas aprovadas pelo Bizu, em ordem de qualidade e atualidade. Copiar um link não registra a divulgação.
+          A pauta se atualiza após as capturas e a triagem e prioriza ofertas aprovadas com preços recentes. Copiar um link não registra a divulgação.
         </p>
         {updatedAt && <p className="pauta-selection-note">Última consulta às {captureTime.format(new Date(updatedAt))}.</p>}
         <div className="pauta-card-actions">

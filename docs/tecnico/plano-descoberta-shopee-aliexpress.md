@@ -187,6 +187,8 @@ O aumento de volume e variedade dos 12 departamentos exige que a captura, a tria
 
 ### Faixas, ofertas recentes e pauta
 
+A pauta dinâmica prioriza ofertas aprovadas pela idade da evidência de preço: primeiro as observadas há menos de três horas, depois as do dia com até dez horas e, por último, as mais antigas ainda válidas. A diversidade por loja e família é aplicada dentro de cada grupo; uma lista manual continua prevalecendo. Quando há ofertas recentes suficientes, elas substituem as envelhecidas automaticamente após captura e triagem. A prioridade usa a data da observação que sustenta a oferta, inclusive quando há uma opção confirmada: reencontrar o anúncio não renova por si só o preço ou as condições de uma opção.
+
 Na Shopee, quando `priceMax > priceMin`, exiba os dois limites e a nota **“O preço varia conforme a opção escolhida.”** A escolha da opção acontece na loja. Hoje `offerPriceNote` informa a variação, mas `offerPriceLabel` retorna só o mínimo para `range`. Atualize o helper compartilhado e confira a vitrine e o detalhe. Preserve `from` quando só houver mínimo e o formato de preço exato quando for aplicável. [Formatação atual](../../packages/web/lib/offer-price.ts)
 
 No AliExpress, a API de afiliados devolveu um `sku_id` e um preço por anúncio no teste. O envio experimental de `sku_id` na consulta de detalhes manteve o retorno do controle. Preserve o preço como evidência do anúncio, com a classificação apropriada. Exija identificação e condições comparáveis antes de alimentar o histórico de uma opção. [API de detalhes](https://open.alitrip.com/docs/api.htm?apiId=48595) · [Histórico comparável](../../packages/web/lib/offer-history.ts)
