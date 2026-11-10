@@ -56,6 +56,24 @@ async function refreshStatus(): Promise<void> {
     pendingEl.textContent =
       n > 0 ? `${n} captura${n === 1 ? "" : "s"} aguardando envio` : "";
   }
+
+  const batchState = (await chrome.runtime.sendMessage({ type: "GET_BATCH_STATE" })) as {
+    ok?: boolean;
+    hasBatch?: boolean;
+    queued?: boolean;
+    count?: number;
+    marketplace?: string;
+    attempts?: number;
+    queuedAt?: number;
+  };
+  if (batchState?.hasBatch && batchState.queued && batchResult && batchImport) {
+    batchResult.className = "hint batch-queued-notice";
+    batchResult.textContent = `📥 ${batchState.count} ofertas enfileiradas. O painel está processando outra captura. O envio ocorrerá automaticamente em segundo plano assim que liberar.`;
+    batchImport.hidden = false;
+    batchImport.textContent = batchState.attempts && batchState.attempts > 0
+      ? `Tentar enviar agora (${batchState.attempts}ª tentativa)`
+      : "Tentar enviar agora";
+  }
 }
 
 envSelect?.addEventListener("change", async () => {
@@ -146,32 +164,41 @@ const batchErrors: Record<string, string> = {
 };
 batchPrepare?.addEventListener("click", async () => {
   batchPrepare.disabled = true;
+  if (batchResult) batchResult.className = "hint";
   try {
     const result = await chrome.runtime.sendMessage({ type: "PREPARE_BATCH" });
     if (batchResult) {
-      const summary = result.ok
-        ? `${result.count} ofertas prontas${result.ignored && !result.diagnostics ? ` · ${result.ignored} cards incompletos ignorados` : ""}.`
-        : batchErrors[result.error] ?? "Não foi possível ler a página de ofertas.";
-      const d = result.diagnostics;
-      const details = d ? [
-        `${d.products} anúncios identificados`,
-        d.noPrice && `${d.noPrice} sem preço detectado${d.visibleNoPrice ? ` (${d.visibleNoPrice} visíveis na tela)` : ""}`,
-        d.uncertainPrice && `${d.uncertainPrice} com preço indefinido`,
-        d.noTitle && `${d.noTitle} sem nome`,
-      ].filter(Boolean).join(" · ") : "";
-      const sample = result.sample;
-      const money = (cents: number) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const samplePrice = sample?.priceType === "range" && sample.priceMaxCents
-        ? `${money(sample.priceCents)} a ${money(sample.priceMaxCents)}`
-        : sample ? `${sample.priceType === "from" ? "a partir de " : ""}${money(sample.priceCents)}` : "";
-      batchResult.textContent = summary + (details ? ` Detectados: ${details}.` : "")
-        + (sample ? ` Exemplo: ${sample.title.slice(0, 85)} — ${samplePrice}.` : "");
+      if (result.queued) {
+        batchResult.className = "hint batch-queued-notice";
+        batchResult.textContent = `📥 Existem ${result.count} ofertas enfileiradas aguardando liberação do painel.`;
+      } else {
+        batchResult.className = "hint";
+        const summary = result.ok
+          ? `${result.count} ofertas prontas${result.ignored && !result.diagnostics ? ` · ${result.ignored} cards incompletos ignorados` : ""}.`
+          : batchErrors[result.error] ?? "Não foi possível ler a página de ofertas.";
+        const d = result.diagnostics;
+        const details = d ? [
+          `${d.products} anúncios identificados`,
+          d.noPrice && `${d.noPrice} sem preço detectado${d.visibleNoPrice ? ` (${d.visibleNoPrice} visíveis na tela)` : ""}`,
+          d.uncertainPrice && `${d.uncertainPrice} com preço indefinido`,
+          d.noTitle && `${d.noTitle} sem nome`,
+        ].filter(Boolean).join(" · ") : "";
+        const sample = result.sample;
+        const money = (cents: number) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const samplePrice = sample?.priceType === "range" && sample.priceMaxCents
+          ? `${money(sample.priceCents)} a ${money(sample.priceMaxCents)}`
+          : sample ? `${sample.priceType === "from" ? "a partir de " : ""}${money(sample.priceCents)}` : "";
+        batchResult.textContent = summary + (details ? ` Detectados: ${details}.` : "")
+          + (sample ? ` Exemplo: ${sample.title.slice(0, 85)} — ${samplePrice}.` : "");
+      }
     }
     if (batchImport) {
       batchImport.hidden = !result.ok;
-      batchImport.textContent = result.retry
-        ? "Retomar importação anterior"
-        : `Importar ${result.count} ofertas e continuar`;
+      batchImport.textContent = result.queued
+        ? "Tentar enviar ofertas enfileiradas"
+        : result.retry
+          ? "Retomar importação anterior"
+          : `Importar ${result.count} ofertas e continuar`;
     }
   } finally {
     batchPrepare.disabled = false;
@@ -179,19 +206,36 @@ batchPrepare?.addEventListener("click", async () => {
 });
 batchImport?.addEventListener("click", async () => {
   batchImport.disabled = true;
+  if (batchResult) {
+    batchResult.className = "hint";
+    batchResult.textContent = "Tentando enviar ofertas ao painel...";
+  }
   try {
     const result = (await chrome.runtime.sendMessage({
       type: "IMPORT_BATCH",
     })) as {
       ok: boolean;
+      queued?: boolean;
       importedCount?: number;
+      count?: number;
+      attempts?: number;
       error?: string;
       details?: string;
     };
     if (batchResult) {
-      if (result.ok) {
-        batchResult.textContent = `${result.importedCount} ofertas salvas. Volte ao painel para acompanhar a triagem.`;
+      if (result.ok && result.queued) {
+        batchResult.className = "hint batch-queued-notice";
+        batchResult.textContent = `📥 ${result.count ?? ""} ofertas enfileiradas com sucesso! O painel está processando outra captura. O envio ocorrerá automaticamente em segundo plano assim que liberar.`;
+        batchImport.hidden = false;
+        batchImport.textContent = result.attempts && result.attempts > 0
+          ? `Tentar enviar agora (${result.attempts}ª tentativa)`
+          : "Tentar enviar agora";
+      } else if (result.ok) {
+        batchResult.className = "hint batch-success-notice";
+        batchResult.textContent = `${result.importedCount} ofertas salvas com sucesso no painel!`;
+        batchImport.hidden = true;
       } else {
+        batchResult.className = "hint";
         const base =
           batchErrors[result.error ?? ""] ??
           "Não foi possível importar. Confira o painel e tente novamente.";
@@ -200,7 +244,6 @@ batchImport?.addEventListener("click", async () => {
           : base;
       }
     }
-    if (result.ok) batchImport.hidden = true;
   } finally {
     batchImport.disabled = false;
   }

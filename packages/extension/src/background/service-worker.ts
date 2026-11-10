@@ -22,6 +22,14 @@ import {
   dueForRetry,
   type OutboxEntry,
 } from "../lib/outbox.ts";
+import {
+  BROWSER_BATCH_KEY,
+  BATCH_QUEUE_ALARM,
+  markBatchQueued,
+  isBatchExpired,
+  shouldRetryBatch,
+  type StoredBrowserBatch,
+} from "../lib/batch-queue.ts";
 import { pageKindFor, type CapturePayload } from "../lib/contracts.ts";
 import type { ExtractedCard } from "../content/card-extractor.ts";
 import { collectBrowserOffers } from "../content/page-extractor.ts";
@@ -84,15 +92,53 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === RETRY_ALARM) void processDueOutbox();
+  if (alarm.name === BATCH_QUEUE_ALARM) void processQueuedBatch();
 });
 
 async function updateBadge(): Promise<void> {
   const outbox = await readOutbox();
   const pending = outbox.length;
-  await chrome.action.setBadgeText({
-    text: pending > 0 ? String(pending) : "",
-  });
-  await chrome.action.setBadgeBackgroundColor({ color: "#a52a24" });
+  if (pending > 0) {
+    await chrome.action.setBadgeText({
+      text: String(pending),
+    });
+    await chrome.action.setBadgeBackgroundColor({ color: "#a52a24" });
+    return;
+  }
+
+  const batchData = await chromeStorage().get(BROWSER_BATCH_KEY);
+  const saved = batchData[BROWSER_BATCH_KEY] as StoredBrowserBatch | undefined;
+  if (saved?.queued) {
+    await chrome.action.setBadgeText({ text: "⏳" });
+    await chrome.action.setBadgeBackgroundColor({ color: "#f59e0b" });
+    return;
+  }
+
+  await chrome.action.setBadgeText({ text: "" });
+}
+
+async function processQueuedBatch(): Promise<void> {
+  const data = await chromeStorage().get(BROWSER_BATCH_KEY);
+  const saved = data[BROWSER_BATCH_KEY] as StoredBrowserBatch | undefined;
+  if (!shouldRetryBatch(saved)) {
+    await chrome.alarms.clear(BATCH_QUEUE_ALARM);
+    if (saved?.queued && isBatchExpired(saved)) {
+      console.warn("[BizuMiner] Lote enfileirado expirou sem liberação do servidor.");
+      await chromeStorage().set({ [BROWSER_BATCH_KEY]: null });
+      await updateBadge();
+    }
+    return;
+  }
+
+  const result = await importBrowserBatch();
+  if (result.ok && !result.queued) {
+    await chrome.alarms.clear(BATCH_QUEUE_ALARM);
+    await chrome.action.setBadgeText({ text: "✓" });
+    await chrome.action.setBadgeBackgroundColor({ color: "#10b981" });
+    setTimeout(() => {
+      void updateBadge();
+    }, 15_000);
+  }
 }
 
 async function processDueOutbox(): Promise<void> {
@@ -142,6 +188,26 @@ async function handleMessage(message: unknown): Promise<unknown> {
 
   if (msg.type === "PREPARE_BATCH") return prepareBrowserBatch();
   if (msg.type === "IMPORT_BATCH") return importBrowserBatch();
+  if (msg.type === "GET_BATCH_STATE") {
+    const data = await chromeStorage().get(BROWSER_BATCH_KEY);
+    const saved = data[BROWSER_BATCH_KEY] as StoredBrowserBatch | undefined;
+    if (!saved?.payload) return { ok: true, hasBatch: false };
+    return {
+      ok: true,
+      hasBatch: true,
+      queued: Boolean(saved.queued),
+      count: saved.payload.products.length,
+      marketplace: saved.payload.marketplace,
+      attempts: saved.attempts ?? 0,
+      queuedAt: saved.queuedAt,
+    };
+  }
+  if (msg.type === "CANCEL_BATCH") {
+    await chrome.alarms.clear(BATCH_QUEUE_ALARM);
+    await chromeStorage().set({ [BROWSER_BATCH_KEY]: null });
+    await updateBadge();
+    return { ok: true };
+  }
 
   if (msg.type === "CAPTURE") {
     return handleCapture(msg);
@@ -174,24 +240,22 @@ async function handleMessage(message: unknown): Promise<unknown> {
   return { ok: false, error: "unknown_message" };
 }
 
-const BROWSER_BATCH_KEY = "bm_browser_batch";
 async function prepareBrowserBatch() {
   // Preserve a prior uncertain POST so a retry keeps its idempotency key.
   const saved = (await chromeStorage().get(BROWSER_BATCH_KEY))[
     BROWSER_BATCH_KEY
-  ] as
-    | {
-        batchId?: string;
-        payload?: ReturnType<typeof collectBrowserOffers> | NonNullable<ReturnType<typeof collectMarketplacePage>>;
-        sent?: boolean;
-      }
-    | undefined;
+  ] as StoredBrowserBatch | undefined;
   if (
     saved?.sent &&
     saved.payload &&
     Date.parse(saved.payload.clientCapturedAt) > Date.now() - 30 * 60_000
   )
-    return { ok: true, count: saved.payload.products.length, retry: true };
+    return {
+      ok: true,
+      count: saved.payload.products.length,
+      retry: true,
+      queued: Boolean(saved.queued),
+    };
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url ? new URL(tab.url) : null;
   const host = url?.hostname ?? "";
@@ -216,7 +280,7 @@ async function prepareBrowserBatch() {
     diagnostics: payload && "diagnostics" in payload ? payload.diagnostics : undefined };
 
   await chromeStorage().set({
-    [BROWSER_BATCH_KEY]: { payload, sent: false },
+    [BROWSER_BATCH_KEY]: { payload, sent: false, queued: false },
   });
   return {
     ok: true,
@@ -227,23 +291,27 @@ async function prepareBrowserBatch() {
   };
 }
 
-async function importBrowserBatch() {
+async function importBrowserBatch(): Promise<{
+  ok: boolean;
+  queued?: boolean;
+  importedCount?: number;
+  count?: number;
+  attempts?: number;
+  error?: string;
+  details?: string;
+  duplicate?: boolean;
+}> {
   const token = await getToken(chromeStorage());
   if (!token) return { ok: false, error: "not_paired" };
-  const saved = (await chromeStorage().get(BROWSER_BATCH_KEY))[
+  let saved = (await chromeStorage().get(BROWSER_BATCH_KEY))[
     BROWSER_BATCH_KEY
-  ] as
-    | {
-        batchId?: string;
-        payload?: ReturnType<typeof collectBrowserOffers> | NonNullable<ReturnType<typeof collectMarketplacePage>>;
-        sent?: boolean;
-      }
-    | undefined;
+  ] as StoredBrowserBatch | undefined;
   if (!saved?.payload) return { ok: false, error: "prepare_first" };
+  const batchPayload = saved.payload;
   const baseUrl = await getActiveApiBase();
   let response: Response;
   try {
-    const marketplace = saved.payload.marketplace;
+    const marketplace = batchPayload.marketplace;
     if (marketplace !== "mercadolivre") {
       const capabilities = await fetch(`${baseUrl}/api/extension/capture-batches`, {
         method: "OPTIONS", signal: AbortSignal.timeout(8_000),
@@ -260,7 +328,19 @@ async function importBrowserBatch() {
       });
       const job = await prepared.json();
       if (!prepared.ok) return { ok: false, error: job.error ?? "network" };
-      if (!job.batchId) return { ok: false, error: "no_waiting_batch" };
+      if (!job.batchId) {
+        // Servidor ocupado com outro lote -> enfileirar localmente com auto-retry
+        saved = markBatchQueued(saved, "no_waiting_batch");
+        await chromeStorage().set({ [BROWSER_BATCH_KEY]: saved });
+        await chrome.alarms.create(BATCH_QUEUE_ALARM, { delayInMinutes: 0.5, periodInMinutes: 0.5 });
+        await updateBadge();
+        return {
+          ok: true,
+          queued: true,
+          count: batchPayload.products.length,
+          attempts: saved.attempts,
+        };
+      }
       saved.batchId = job.batchId;
     }
     saved.sent = true;
@@ -274,22 +354,48 @@ async function importBrowserBatch() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ batchId: saved.batchId, payload: saved.payload }),
+        body: JSON.stringify({ batchId: saved.batchId, payload: batchPayload }),
       },
     );
   } catch (err) {
     console.error("Falha de rede em importBrowserBatch:", err);
+    if (saved?.queued) {
+      saved = markBatchQueued(saved, "network");
+      await chromeStorage().set({ [BROWSER_BATCH_KEY]: saved });
+      return {
+        ok: true,
+        queued: true,
+        count: batchPayload.products.length,
+        attempts: saved.attempts,
+      };
+    }
     return { ok: false, error: "network" };
   }
   const result = await response.json();
-  if (response.ok && result.ok)
+  if (response.ok && result.ok) {
+    await chrome.alarms.clear(BATCH_QUEUE_ALARM);
     await chromeStorage().set({ [BROWSER_BATCH_KEY]: null });
-  else if (
+    await updateBadge();
+  } else if (response.status === 429) {
+    saved = markBatchQueued(saved, "rate_limited");
+    await chromeStorage().set({ [BROWSER_BATCH_KEY]: saved });
+    await chrome.alarms.create(BATCH_QUEUE_ALARM, { delayInMinutes: 0.5, periodInMinutes: 0.5 });
+    await updateBadge();
+    return {
+      ok: true,
+      queued: true,
+      count: batchPayload.products.length,
+      attempts: saved.attempts,
+    };
+  } else if (
     response.status >= 400 &&
     response.status < 500 &&
     response.status !== 429
-  )
+  ) {
+    await chrome.alarms.clear(BATCH_QUEUE_ALARM);
     await chromeStorage().set({ [BROWSER_BATCH_KEY]: null });
+    await updateBadge();
+  }
   return result;
 }
 

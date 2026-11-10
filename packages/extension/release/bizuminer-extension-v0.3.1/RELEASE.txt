@@ -1,0 +1,11 @@
+BizuMiner extension release v0.3.1
+generated: 2026-11-10T10:32:35.455Z
+files: 7
+
+c5b9b1308596ba066b46db4550781c45d72c07c3ef27eaade574a21dc2965577  14379  content/activate-catalog.js
+90abbebbab58a3030a74f102ac9ce40a3dc1b70449661ab5f0e098dfb9581d21  20492  content/marketplace-page.js
+792f5c64d34ae251122f7928733d99ce1b9ddc432de89d91995e653479a86f45  717  manifest.json
+e1b6b1b45e9375844ab30bf053063e4e3f63a0807df7b0569a0e4f34c0b93a30  2156  popup/index.html
+80b55f4fd2c91eaff627fb7c25dca7ceb8206672dd37bae8121158262b9edc6d  2910  popup/popup.css
+8b097858aa6d011f85c74bc7190b4fd5eb2a5f2cde6e65ff1a08609e0ec2be18  9926  popup/popup.js
+f5c4f0bddd145d68ab99891dc932d87f1367dcdb2690742267a68d804816ee19  26730  service-worker.js

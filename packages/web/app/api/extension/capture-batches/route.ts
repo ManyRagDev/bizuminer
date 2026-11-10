@@ -55,8 +55,9 @@ export async function GET(request: NextRequest) {
     return Response.json({ ok: false, error: "marketplace_not_supported" }, { status: 400, headers: cors(request) });
   if (!extensionBatchMarketplaceEnabled(marketplace))
     return Response.json({ ok: false, error: "marketplace_capture_unavailable" }, { status: 403, headers: cors(request) });
+  const batchId = await browserCaptures.pending(access, marketplace);
   return Response.json(
-    { ok: true, batchId: await browserCaptures.pending(access, marketplace) },
+    { ok: true, batchId, busy: batchId === null },
     { headers: cors(request) },
   );
 }

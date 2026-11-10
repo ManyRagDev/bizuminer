@@ -136,3 +136,25 @@ footer { display: flex; justify-content: flex-end; }
   color: var(--ink);
   cursor: pointer;
 }
+
+.batch-queued-notice {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+.batch-success-notice {
+  background: #ecfdf5;
+  border: 1px solid #10b981;
+  color: #065f46;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 6px;
+}
