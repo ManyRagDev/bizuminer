@@ -15,7 +15,10 @@ const root = new URL('../../', import.meta.url);
 /** Creates its own disposable localhost server. Never accepts a DATABASE_URL.
  * Native PostgreSQL must be supplied explicitly; no download/install occurs here.
  * This is not Supabase staging: Auth, Storage and Supavisor are not emulated. */
-export async function nativePostgresFixture() {
+export async function nativePostgresFixture(options: {
+  /** Alternative baseline loader, still confined to this disposable local server. */
+  initialize?: (pg: {exec(query:string):Promise<unknown>;query(query:string,values?:any[]):Promise<{rows:any}>}) => Promise<void>;
+} = {}) {
   const bin = process.env.BIZUMINER_TEST_PG_BIN;
   if (!bin) throw new Error('BIZUMINER_TEST_PG_BIN is required (directory containing PostgreSQL binaries)');
   const directory = await mkdtemp(join(tmpdir(), 'bizuminer-native-pg-'));
@@ -46,11 +49,18 @@ export async function nativePostgresFixture() {
       clients.push(sql);return sql;
     }
     const admin = connect('postgres');
-    const pg = {
-      exec: async (query:string) => {await admin.unsafe(query);},
-      query: async (query:string, values:any[] = []) => ({rows: await admin.unsafe(query,values)})
-    };
-    await installObservedBaseline(pg);
+    const rawPg=(client:any):any=>({
+      exec:async(query:string)=>{await client.unsafe(query);},
+      query:async(query:string,values:any[]=[])=>({rows:Array.from(await client.unsafe(query,values.map(value=>{
+        // Raw pg/PGlite accept encoded JSON; postgres.js infers jsonb and
+        // serializes objects itself. Decode here to avoid encoding it twice.
+        if(typeof value==='string'&&/^[{[]/.test(value)){try{return JSON.parse(value);}catch{}}
+        return value;
+      })))}),
+      transaction:async(work:(tx:any)=>Promise<any>)=>client.begin((tx:any)=>work(rawPg(tx))),
+    });
+    const pg=rawPg(admin);
+    await (options.initialize ?? installObservedBaseline)(pg);
     // Only this disposable server uses trust on loopback; runtime still has no superuser/BYPASSRLS.
     await admin`alter role garimpa_app login`;
     const clientA=connect('garimpa_app'),clientB=connect('garimpa_app');

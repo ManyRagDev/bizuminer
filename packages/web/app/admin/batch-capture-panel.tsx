@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CaptureBatch as Batch } from "../../lib/capture-batch-db";
 import { browserCaptureBookmarklet } from "../../lib/browser-capture-bookmarklet";
+import { captureTriggerFailureMessage } from "../../lib/capture-trigger-feedback.ts";
 import type { MarketplaceSlug } from "../../lib/marketplaces.ts";
 
 export interface CaptureMarketplaceOption {
@@ -28,6 +29,11 @@ const statusLabel: Record<string, string> = {
   partial: "parcial",
   error: "erro",
   awaiting_browser: "aguardando Mercado Livre no navegador",
+  retry_wait: "aguardando nova tentativa",
+  awaiting_authorization: "aguardando credencial ou quota",
+  awaiting_reconciliation: "aguardando conferência da execução",
+  publishing: "publicando captura validada",
+  affiliating: "preparando links de afiliado",
 };
 const serverCaptureNotice =
   "Captura automática solicitada. O andamento e a triagem deste lote ficam salvos.";
@@ -61,6 +67,7 @@ export default function BatchCapturePanel({
   const [browserBlock, setBrowserBlock] = useAdminDraftState("batch-capture-panel.browserBlock", "");
   const [browserBusy, setBrowserBusy] = useAdminDraftState("batch-capture-panel.browserBusy", false);
   const [copiedBookmarklet, setCopiedBookmarklet] = useState(false);
+  const [requestId, setRequestId] = useAdminDraftState<string | null>("batch-capture-panel.requestId", null);
   useResumeAfterOperation(requesting || browserBusy, async () => {
     try {
       const response = await fetch("/api/admin/rodagem/lote", { cache: "no-store" });
@@ -86,7 +93,7 @@ export default function BatchCapturePanel({
   }, [fetch]);
 
   useEffect(() => {
-    if (!batch || batch.status !== "running") return;
+    if (!batch || batch.status !== "running" || ["awaiting_browser", "awaiting_authorization", "awaiting_reconciliation"].includes(batch.phase)) return;
     const controller = new AbortController();
     let inFlight = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -101,7 +108,7 @@ export default function BatchCapturePanel({
         const data = (await res.json()) as { ok: boolean; batch?: Batch };
         if (!controller.signal.aborted && data.ok && data.batch) {
           setBatch(data.batch);
-          if (data.batch.status !== "running") router.refresh();
+          if (data.batch.status !== "running") { router.refresh(); window.dispatchEvent(new CustomEvent("bm:operation-changed", {detail:{tenantId:data.batch?.tenant_id}})); }
         } else if (!controller.signal.aborted)
           setBatch((current) => (current ? { ...current } : null));
       } catch {
@@ -113,7 +120,10 @@ export default function BatchCapturePanel({
         }
       } finally { inFlight = false; }
     };
-    if (document.visibilityState !== "hidden") timer = setTimeout(() => void poll(), 5000);
+    const retryAt=batch.nextAttemptAt ? Date.parse(batch.nextAttemptAt) : NaN;
+    if (document.visibilityState !== "hidden") timer = setTimeout(() => void poll(), batch.phase==='retry_wait'
+      ? Math.max(60_000,Number.isFinite(retryAt) ? retryAt-Date.now() : 60_000)
+      : Number.isFinite(retryAt) ? Math.max(1000,retryAt-Date.now()) : 5000);
     const resume = () => { clearTimeout(timer); void poll(); };
     document.addEventListener("visibilitychange", resume);
     return () => {
@@ -145,10 +155,12 @@ export default function BatchCapturePanel({
     setMessage("");
     setSkipped([]);
     setBatch(null);
+    const captureRequestId = requestId ?? crypto.randomUUID();
+    setRequestId(captureRequestId);
     try {
       const res = await fetch("/api/admin/rodagem/lote", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": captureRequestId },
         body: JSON.stringify({
           pages,
           consent: selected.mercadolivre,
@@ -158,26 +170,20 @@ export default function BatchCapturePanel({
           pageSize,
         }),
       });
-      const data = (await res.json()) as {
+      const data = (await res.json().catch(() => ({ ok: false }))) as {
         ok: boolean;
         batch?: Batch;
         error?: string;
+        message?: string;
         skipped?: Array<{ marketplace: string; reason: string }>;
       };
-      if (!data.ok) {
+      if (data.ok || data.batch || res.status < 500) setRequestId(null);
+      if (data.ok) window.dispatchEvent(new CustomEvent("bm:operation-changed", {detail:{tenantId:data.batch?.tenant_id}}));
+      if (!res.ok || !data.ok) {
         if (data.batch) setBatch(data.batch);
         setMessage(
-          data.error === "batch_in_progress"
-            ? "Já há uma captura em andamento."
-            : data.error === "github_token_not_configured"
-              ? "O executor de captura precisa ser configurado no servidor. Nenhum lote foi iniciado."
-              : data.error === "dispatch_failed"
-                ? "O executor não confirmou o início. O lote foi encerrado; confira a configuração antes de tentar novamente."
-                : data.error === "no_marketplace_selected"
-                  ? "Selecione pelo menos uma loja."
-                  : data.error === "manual_capture_only"
-                    ? "A captura do Mercado Livre é exclusivamente manual. Utilize a extensão ou o bookmarklet no navegador."
-                    : "Não foi possível iniciar a captura. Confira abaixo a disponibilidade das lojas.",
+          captureTriggerFailureMessage(res.status, data) ??
+            "Não foi possível iniciar a captura. Confira abaixo a disponibilidade das lojas.",
         );
         return;
       }
@@ -189,6 +195,20 @@ export default function BatchCapturePanel({
     } finally {
       setRequesting(false);
     }
+  }
+
+  async function resolveWait(action:"retry"|"cancel") {
+    if(!batch || requesting)return;
+    setRequesting(true);
+    try {
+      const response=await fetch("/api/admin/rodagem/lote",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action,batchId:batch.id})});
+      const result=await response.json();
+      if(!result.ok)throw new Error("wait_resolution_failed");
+      setBatch(result.batch);
+      window.dispatchEvent(new CustomEvent("bm:operation-changed",{detail:{tenantId:batch.tenant_id}}));
+    } catch {setMessage("Não foi possível atualizar a espera. Confira o lote antes de tentar novamente.");}
+    finally {setRequesting(false);}
   }
 
   async function continueBrowser(action: "import" | "skip" | "resume") {
@@ -214,6 +234,7 @@ export default function BatchCapturePanel({
         return;
       }
       setBatch(data.batch);
+      window.dispatchEvent(new CustomEvent("bm:operation-changed", {detail:{tenantId:data.batch?.tenant_id}}));
       setBrowserBlock("");
       setMessage(
         data.continuationPending
@@ -389,7 +410,7 @@ export default function BatchCapturePanel({
       {message && (
         <p className="admin-message" role="status">
           {batch?.status === "ok" && batch.browser?.importedCount
-            ? `${batch.browser.importedCount} ${batch.browser.importedCount === 1 ? "oferta do Mercado Livre salva" : "ofertas do Mercado Livre salvas"} neste lote. Triagem concluída.`
+            ? `${batch.browser.importedCount} ${batch.browser.importedCount === 1 ? "oferta do Mercado Livre salva" : "ofertas do Mercado Livre salvas"} neste lote. Avaliações necessárias foram encaminhadas.`
             : batch?.phase === "awaiting_browser" &&
                 message === serverCaptureNotice
               ? "Aguardando importação manual do Mercado Livre. Confira as instruções abaixo."
@@ -416,20 +437,28 @@ export default function BatchCapturePanel({
             .join(" · ")}
         </p>
       )}
+      {batch?.marketplaces.some(store => store.affiliateError) && (
+        <p className="admin-message admin-message--notice" role="status">
+          Alguns links de afiliado ficaram pendentes. Confira as lojas afetadas antes de repetir a operação: {batch.marketplaces
+            .filter(store => store.affiliateError)
+            .map(store => marketplaces.find(option => option.slug === store.marketplace)?.label ?? store.marketplace)
+            .join(", ")}.
+        </p>
+      )}
       {batch?.status === "running" && (
         <div className="workflow-live-state" role="status">
-          {batch.phase !== "awaiting_browser" && (
+          {!["awaiting_browser","awaiting_authorization","awaiting_reconciliation","retry_wait"].includes(batch.phase) && (
             <span className="triage-spinner" aria-hidden="true" />
           )}
           <div>
             <strong>
               {batch.phase === "triaging"
-                ? "A IA está fazendo a triagem deste lote."
+                ? "Preparando a fila de avaliação deste lote."
                 : batch.phase === "queued"
                   ? "Aguardando o executor iniciar a captura."
                   : batch.phase === "awaiting_browser"
                     ? "Aguardando importação manual do Mercado Livre."
-                    : "Buscando ofertas nas lojas selecionadas."}
+                    : statusLabel[batch.phase] ?? "Buscando ofertas nas lojas selecionadas."}
             </strong>
             <small>
               {batch.phase === "awaiting_browser"
@@ -437,6 +466,13 @@ export default function BatchCapturePanel({
                 : "O andamento fica salvo. Reabrir o painel retoma o acompanhamento."}
             </small>
           </div>
+        </div>
+      )}
+      {batch?.status === "running" && ["awaiting_authorization","awaiting_reconciliation","retry_wait"].includes(batch.phase) && (
+        <div>
+          {batch.phase !== "awaiting_reconciliation" && <button type="button" disabled={requesting} onClick={() => void resolveWait("retry")}>Tentar após corrigir a disponibilidade</button>}
+          <button type="button" disabled={requesting} onClick={() => void resolveWait("cancel")}>Encerrar este lote</button>
+          {batch.phase === "awaiting_reconciliation" && <p>Uma etapa terminou sem resultado confirmado. Confira a execução antes de iniciar outra tentativa.</p>}
         </div>
       )}
       {batch?.browser?.canContinue && (
@@ -604,13 +640,10 @@ export default function BatchCapturePanel({
         <div className="workflow-result" role="status">
           <div>
             <strong>
-              Triagem deste lote: {triage.processed}{" "}
-              {triage.processed === 1 ? "avaliado" : "avaliados"}
+              {triage.mode === "attribute_queue" ? `Avaliação: ${triage.processed} encaminhado${triage.processed === 1 ? "" : "s"}` : `Triagem deste lote: ${triage.processed} ${triage.processed === 1 ? "avaliado" : "avaliados"}`}
             </strong>
             <span>
-              {triage.approved} aprovados no catálogo · {triage.held} retidos ·{" "}
-              {triage.rejected} rejeitados · {triage.annotatedPending} para
-              revisão
+              {triage.mode === "attribute_queue" ? "A fila ainda depende de avaliação e das verificações da oferta." : `${triage.approved} aprovados no catálogo · ${triage.held} retidos · ${triage.rejected} rejeitados · ${triage.annotatedPending} para revisão`}
             </span>
           </div>
           <a href="/admin/curadoria?aba=selecao">
@@ -622,6 +655,8 @@ export default function BatchCapturePanel({
         <p className="admin-message admin-message--notice" role="alert">
           {batch.error === "execution_timeout"
             ? "A última operação excedeu o prazo e foi encerrada. Os produtos já capturados foram preservados. Você pode iniciar uma nova captura."
+            : batch.error === "affiliate_links_pending"
+              ? "A captura foi salva, mas há links de afiliado pendentes de conferência."
             : batch.error === "gemini_key_not_configured"
               ? "A captura terminou, mas a chave da IA está ausente no executor. Configure-a antes de triar."
               : "A operação terminou com falha. Consulte o histórico; produtos já capturados ficam disponíveis em Pendências e na triagem manual."}
@@ -631,7 +666,7 @@ export default function BatchCapturePanel({
         <p className="admin-message admin-message--notice" role="alert">
           {batch.marketplaces.some(store => store.error === "affiliate_links_pending")
             ? "As ofertas foram salvas. Alguns links de afiliado do AliExpress ficaram pendentes. Capture a página novamente para tentar os links que faltam."
-            : "Algumas consultas falharam. A triagem avaliou os produtos disponíveis deste lote."}
+            : "Algumas consultas falharam. Os fatos das fontes concluídas foram preservados; avaliações podem estar pendentes."}
         </p>
       )}
     </section>

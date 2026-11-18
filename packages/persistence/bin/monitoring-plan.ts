@@ -28,10 +28,10 @@ try {
   const candidates = await withMonitoringDb(sql,tenantId,tx=>loadMonitoringCandidates(tx,tenantId));
   const policies=await withMonitoringDb(sql,tenantId,async tx=>new Map(await Promise.all(['shopee','aliexpress'].map(async marketplace=>
     [marketplace,await loadDiscoveryPolicy(tx,tenantId,marketplace)] as const))));
-  const suppression=await withMonitoringDb(sql,tenantId,async tx=>new Map(await Promise.all((['mercadolivre','shopee','aliexpress'] as const).map(async marketplace=>
+  const marketplaces: MonitorMarketplace[] = ["mercadolivre", "shopee", "aliexpress", "amazon"];
+  const suppression=await withMonitoringDb(sql,tenantId,async tx=>new Map(await Promise.all(marketplaces.map(async marketplace=>
     [marketplace,await suppressedMonitoringIds(tx,tenantId,marketplace,candidates)] as const))));
   const now = new Date();
-  const marketplaces: MonitorMarketplace[] = ["mercadolivre", "shopee", "aliexpress"];
   const report = {
     generatedAt: now.toISOString(),
     tenantId,
@@ -46,7 +46,7 @@ try {
       const queue = monitoringQueue(available, marketplace, capacity.monitoring, now);
       return {
         marketplace,
-        lane: marketplace === "mercadolivre" ? "human" : "api",
+        lane: marketplace === "shopee" ? "api" : "human",
         catalog: decisions.length,suppressed:suppression.get(marketplace)?.size ?? 0,discoverySlots:capacity.discovery,
         tracked: decisions.filter((d) => d.targetHours !== null).length,
         due: decisions.filter((d) => d.due).length,

@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-  // packages/capture/src/title.ts
+  // ../capture/src/title.ts
   var MAX_SOURCE_TITLE_LENGTH = 2e3;
   function normalizeSourceTitle(value) {
     const named = { amp: "&", quot: '"', apos: "'", lt: "<", gt: ">", nbsp: " " };
@@ -11,7 +11,7 @@
     }).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").replace(/\s+/gu, " ").trim();
   }
 
-  // packages/extension/src/content/card-extractor.ts
+  // src/content/card-extractor.ts
   function parseMoneyAria(label) {
     const m = /(\d[\d.]*)\s*reais(?:\s+com\s+(\d{1,2})\s*centavos)?/.exec(label);
     if (!m) return null;
@@ -33,9 +33,10 @@
     }
     if (url.protocol !== "https:" || !/(^|\.)mercadolivre\.com\.br$/.test(url.hostname)) return null;
     const fragment = new URLSearchParams(url.hash.slice(1));
-    const externalId = url.searchParams.get("wid") ?? fragment.get("wid") ?? url.searchParams.get("pdp_filters")?.match(/item_id:(MLB\d{6,})/)?.[1] ?? (!url.pathname.includes("/p/") ? url.pathname.match(/MLB-?(\d{6,})/)?.[1]?.replace(/^(\d)/, "MLB$1") : void 0);
+    const listingId = url.searchParams.get("wid") ?? fragment.get("wid") ?? url.searchParams.get("pdp_filters")?.match(/item_id:(MLB\d{6,})/)?.[1];
+    const externalId = listingId ?? (!url.pathname.includes("/p/") ? url.pathname.match(/MLB-?(\d{6,})/)?.[1]?.replace(/^(\d)/, "MLB$1") : void 0);
     if (!externalId || !/^MLB\d{6,}$/.test(externalId)) return null;
-    const productUrl = `${url.origin}${url.pathname}${url.pathname.includes("/p/") ? `?wid=${externalId}` : ""}`;
+    const productUrl = `${url.origin}${url.pathname}${listingId || url.pathname.includes("/p/") ? `?wid=${externalId}` : ""}`;
     const currentSection = html.slice(html.indexOf("poly-price__current"));
     const currentLabel = /aria-label="(?!Antes:)([^"]*?reais[^"]*?)"/.exec(currentSection)?.[1];
     if (currentLabel && /\b(?:faixa|entre)\b/i.test(currentLabel)) return null;
@@ -60,7 +61,7 @@
     };
   }
 
-  // packages/extension/src/content/amazon-extractor.ts
+  // src/content/amazon-extractor.ts
   var ASIN_REGEX = /^[A-Z0-9]{10}$/;
   function parseAmazonPrice(label) {
     if (!label) return null;
@@ -160,7 +161,7 @@
     };
   }
 
-  // packages/extension/src/lib/contracts.ts
+  // src/lib/contracts.ts
   function newRequestId() {
     if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
       return crypto.randomUUID();
@@ -172,7 +173,7 @@
     });
   }
 
-  // packages/extension/src/content/bizu-button.ts
+  // src/content/bizu-button.ts
   var BTN = {
     idle: "Adicionar ao BizuMiner",
     saving: "Salvando\u2026",
@@ -213,10 +214,11 @@
   }
   async function handleClick(card, setState) {
     const isAmazon = /(^|\.)amazon\.com\.br$/.test(window.location.hostname);
-    let extracted = isAmazon ? card.hasAttribute("data-asin") ? extractAmazonCardFromElement(card) : extractAmazonProductFromDoc(document, window.location.href) : extractCard(card.outerHTML);
+    const isMlPdp = !isAmazon && !card.classList.contains("poly-card") && Boolean(document.querySelector("h1.ui-pdp-title"));
+    let extracted = isAmazon ? card.hasAttribute("data-asin") ? extractAmazonCardFromElement(card) : extractAmazonProductFromDoc(document, window.location.href) : isMlPdp ? extractMlProductFromDoc(document, window.location.href) : extractCard(card.outerHTML) ?? extractMlProductFromDoc(document, window.location.href);
     if (!extracted) {
       setState("Abrir produto para completar", COLORS.error);
-      if (!isAmazon) {
+      if (!isAmazon && !isMlPdp) {
         window.open(extractProductLink(card.outerHTML) ?? window.location.href, "_blank", "noopener");
       }
       return;
@@ -229,7 +231,7 @@
         type: "CAPTURE",
         requestId,
         card: extracted,
-        pageUrl: window.location.href
+        pageUrl: isMlPdp ? extracted.productUrl : window.location.href
       });
     } catch {
       setState(BTN.error, COLORS.bg);
@@ -263,8 +265,75 @@
       return null;
     }
   }
+  function extractMlProductFromDoc(doc, pageHref) {
+    let page;
+    try {
+      page = new URL(pageHref);
+    } catch {
+      return null;
+    }
+    if (page.protocol !== "https:" || !/(^|\.)mercadolivre\.com\.br$/i.test(page.hostname)) return null;
+    const normalizedPath = page.pathname.replace(/\/+$/, "");
+    const title = (doc.querySelector("h1.ui-pdp-title")?.textContent || "").replace(/\s+/gu, " ").trim();
+    if (!title || title.length < 3 || title.length > 2e3) return null;
+    const pageFragment = new URLSearchParams(page.hash.slice(1));
+    const pageFiltered = (page.searchParams.get("pdp_filters") || pageFragment.get("pdp_filters") || "").match(/item_id:(MLB\d{6,})/i);
+    const pageDirect = !normalizedPath.includes("/p/") ? normalizedPath.match(/\/MLB-?(\d{6,})/i) : null;
+    const domItemInput = doc.querySelector('input[name="item_id"], input[name="itemId"]')?.value || "";
+    const domMetaApp = doc.querySelector('meta[name="twitter:app:url:iphone"], meta[property="al:ios:url"], meta[property="al:android:url"]')?.getAttribute("content") || "";
+    const domMetaMatch = domMetaApp.match(/id=(MLB\d{6,})/i);
+    const domActionLink = doc.querySelector('.ui-pdp-container a[href*="wid=MLB"], .ui-pdp-container a[href*="item_id:MLB"], .ui-pdp-container a[href*="item_id=MLB"]')?.href || "";
+    const domActionMatch = domActionLink.match(/(?:wid=|item_id[:=])(MLB\d{6,})/i);
+    let scriptItemId = "";
+    for (const s of Array.from(doc.querySelectorAll("script"))) {
+      const m = /"item_id"\s*:\s*"(MLB\d{6,})"/i.exec(s.textContent || "");
+      if (m) {
+        scriptItemId = m[1].toUpperCase();
+        break;
+      }
+    }
+    const listingId = (page.searchParams.get("wid") || pageFragment.get("wid") || (pageFiltered ? pageFiltered[1] : "") || (/^MLB\d{6,}$/i.test(domItemInput) ? domItemInput : "") || (domMetaMatch ? domMetaMatch[1] : "") || (domActionMatch ? domActionMatch[1] : "") || scriptItemId).toUpperCase();
+    const externalId = listingId || (pageDirect ? "MLB" + pageDirect[1] : "");
+    if (!/^MLB\d{6,}$/.test(externalId)) return null;
+    const money = (label) => {
+      const m = /(\d[\d.]*)\s*reais(?:\s+com\s+(\d{1,2})\s*centavos)?/i.exec(label || "");
+      return m ? Number(m[1].replace(/\./g, "")) * 100 + Number(m[2] || 0) : void 0;
+    };
+    const priceRoot = doc.querySelector(".ui-pdp-price__second-line") || doc.querySelector(".ui-pdp-price__main-container") || doc.querySelector(".ui-pdp-price");
+    const priceEl = doc.querySelector('.ui-pdp-price__second-line [aria-label*="reais" i]') || doc.querySelector('.ui-pdp-price__second-line[aria-label*="reais" i]') || priceRoot?.querySelector('.andes-money-amount:not(.andes-money-amount--previous)[aria-label*="reais" i]') || priceRoot?.querySelector('.andes-money-amount:not(.andes-money-amount--previous) [aria-label*="reais" i]') || priceRoot?.querySelector('[aria-label*="reais" i]:not([aria-label^="Antes:" i])');
+    const priceLabel = priceEl?.getAttribute("aria-label") || "";
+    if (/\b(?:faixa|entre)\b/i.test(priceLabel)) return null;
+    let priceCents = money(priceLabel || null);
+    if (!priceCents && priceRoot) {
+      const amountBox = priceRoot.querySelector(".andes-money-amount:not(.andes-money-amount--previous)") || priceRoot;
+      const frac = (amountBox.querySelector(".andes-money-amount__fraction")?.textContent || "").replace(/\./g, "").trim();
+      const cents = (amountBox.querySelector(".andes-money-amount__cents")?.textContent || "").trim();
+      if (/^\d+$/.test(frac)) {
+        priceCents = Number(frac) * 100 + (/^\d{1,2}$/.test(cents) ? Number(cents.padEnd(2, "0")) : 0);
+      }
+    }
+    if (!priceCents || priceCents <= 0) return null;
+    const originalEl = doc.querySelector('.ui-pdp-price__original-value [aria-label*="reais" i]') || doc.querySelector('.ui-pdp-price__original-value[aria-label*="reais" i]') || doc.querySelector('.ui-pdp-price__main-container .andes-money-amount--previous[aria-label*="reais" i]') || doc.querySelector('.ui-pdp-price__main-container .andes-money-amount--previous [aria-label*="reais" i]') || doc.querySelector('.ui-pdp-price [aria-label^="Antes:" i]');
+    const originalPriceCents = money(originalEl?.getAttribute("aria-label") || null);
+    const img = doc.querySelector(
+      'img.ui-pdp-image[src^="https://"], img[data-zoom][src*=".mlstatic.com/"], .ui-pdp-gallery img[src*=".mlstatic.com/"]'
+    );
+    const imageUrl = img?.src?.startsWith("https://") ? img.src : img?.getAttribute("data-src") || void 0;
+    const productUrl = page.origin + normalizedPath + (listingId || normalizedPath.includes("/p/") ? `?wid=${externalId}` : "");
+    return {
+      externalId,
+      title,
+      productUrl,
+      ...imageUrl?.startsWith("https://") ? { imageUrl } : {},
+      priceCents,
+      currency: "BRL",
+      priceType: /a\s+partir\s+de/i.test(priceLabel) ? "from" : "exact",
+      ...originalPriceCents && originalPriceCents > priceCents ? { originalPriceCents } : {},
+      marketplace: "mercadolivre"
+    };
+  }
 
-  // packages/extension/src/content/catalog-observer.ts
+  // src/content/catalog-observer.ts
   function isAmazonPage() {
     return typeof window !== "undefined" && /(^|\.)amazon\.com\.br$/.test(window.location.hostname);
   }
@@ -279,6 +348,11 @@
       );
       if (amazonCards.length > 0) return amazonCards;
       return [];
+    }
+    const mlPdpTitle = document.querySelector("h1.ui-pdp-title");
+    if (mlPdpTitle) {
+      const mlPdpContainer = document.querySelector(".ui-pdp-header") || document.querySelector(".ui-pdp-container__col--main") || document.querySelector(".ui-pdp-main") || mlPdpTitle.parentElement || mlPdpTitle;
+      return [mlPdpContainer, ...Array.from(document.querySelectorAll(".poly-card"))];
     }
     return Array.from(document.querySelectorAll(".poly-card"));
   }
@@ -312,7 +386,7 @@
     return observer;
   }
 
-  // packages/extension/src/content/activate-catalog.ts
+  // src/content/activate-catalog.ts
   function activate() {
     const cards = findCards();
     for (const card of cards) decorateCard(card);

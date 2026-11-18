@@ -3,6 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:egress": "node --import tsx pauta-live-flow.test.ts && node --import tsx browser-marketplace-pauta-flow.test.ts",
+    "test:pauta-cache-native": "node --import tsx pauta-cache-native.test.ts",
+    "test:operational-curation": "node --import tsx operational-curation-flow.test.ts",
+    "test:capture-activity": "node --import tsx capture-activity-flow.test.ts",
+    "test:operation-progress": "node --import tsx operation-progress-flow.test.ts",
+    "test:operation-journey-http": "node --import tsx operation-journey-http.test.ts",
+    "test:operation-native": "BIZUMINER_TEST_NATIVE=true node --import tsx operation-progress-flow.test.ts",
     "test:affiliate-workspace-native": "node --import tsx affiliate-workspace-native.test.ts",
     "test:recommendations": "node --import tsx recommendation-flow.test.ts",
     "test:homepage": "node --import tsx homepage-flow.test.ts",
@@ -38,7 +45,17 @@
     "test:price-history": "node --import tsx price-history-flow.test.ts",
     "test:capture-facts": "node --import tsx capture-facts-flow.test.ts",
     "test:product-presentation": "node --import tsx product-presentation-flow.test.ts",
-    "test:loading-recovery": "node --import tsx loading-recovery-native.test.ts"
+    "test:loading-recovery": "node --import tsx loading-recovery-native.test.ts",
+    "test:capture-publication-native": "node --import tsx capture-publication-native.test.ts",
+    "test:capture-journey-native": "node --import tsx capture-publication-journey-native.test.ts",
+    "test:capture-execution-native": "node --import tsx capture-execution-native.test.ts",
+    "test:shared-link-archive-native": "node --import tsx shared-link-archive-native.test.ts",
+    "test:shared-link-archive-journey-native": "node --import tsx shared-link-archive-journey-native.test.ts",
+    "test:vps-baseline-capture-native": "node --import tsx vps-baseline-capture-native.test.ts",
+    "test:password-session-http": "node --import tsx password-session-http.test.ts",
+    "test:extension-manual-http": "node --import tsx extension-manual-http.test.ts",
+    "test:extension-manual-native": "node --import tsx extension-manual-native.test.ts",
+    "test:extension-import-identity": "node --import tsx extension-import-identity.test.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

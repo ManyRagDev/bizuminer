@@ -1,0 +1,16 @@
+BizuMiner extension v0.3.6
+mode: production
+API: https://www.bizuminer.com.br
+Chromium / Vivaldi: extract the ZIP and use Load unpacked with the folder containing manifest.json.
+For an existing unpacked install, update its files and reload it manually in the browser extensions page.
+A different folder can change the extension ID. Check the actual browser ID before changing the server allowlist.
+This package contains no identity key and does not update the browser or server automatically.
+Imports require human confirmation and remain pending editorial review. No automatic AI triage.
+
+95a34ddc4d91cff34a1f53446937a5d84a90c5a4088e32c728664d3ebee41f30  14425  content/activate-catalog.js
+1e708e29b8d2cab6c8db94d3c473aa2b913c9eae861d036bd0d10fb0132c58a3  24688  content/marketplace-page.js
+fc7f5f978987f6f1324215a6d11d6ff1b12354c0eb3e3e57183ac67dc5eff836  693  manifest.json
+848796987c794bc1fc691af5b5339d89623c00b94d1b83f44574ea6802eafa1f  3085  popup/index.html
+bdc2ac4a5eec9f8ed217595442bf0e967dcf1ebc235900c76e36c2d53000e2ff  3699  popup/popup.css
+b0298c30e2221198463500c2451cd63c61cd4a045b375283617525f6202247c7  24928  popup/popup.js
+82a2218d1273ed1881c10d44039c01adb971d5ea6191a190bc2b9a9f64658c11  34995  service-worker.js

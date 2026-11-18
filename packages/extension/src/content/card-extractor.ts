@@ -49,13 +49,13 @@ export function extractCard(html: string): ExtractedCard | null {
 
   if (url.protocol !== "https:" || !/(^|\.)mercadolivre\.com\.br$/.test(url.hostname)) return null;
   const fragment = new URLSearchParams(url.hash.slice(1));
-  const externalId = url.searchParams.get("wid") ?? fragment.get("wid")
-    ?? url.searchParams.get("pdp_filters")?.match(/item_id:(MLB\d{6,})/)?.[1]
-    ?? (!url.pathname.includes("/p/") ? url.pathname.match(/MLB-?(\d{6,})/)?.[1]?.replace(/^(\d)/, "MLB$1") : undefined);
+  const listingId = url.searchParams.get("wid") ?? fragment.get("wid")
+    ?? url.searchParams.get("pdp_filters")?.match(/item_id:(MLB\d{6,})/)?.[1];
+  const externalId = listingId ?? (!url.pathname.includes("/p/") ? url.pathname.match(/MLB-?(\d{6,})/)?.[1]?.replace(/^(\d)/, "MLB$1") : undefined);
   if (!externalId || !/^MLB\d{6,}$/.test(externalId)) return null;
 
   // href REAL, limpo de query/fragment de tracking (a afiliação entra no servidor).
-  const productUrl = `${url.origin}${url.pathname}${url.pathname.includes("/p/") ? `?wid=${externalId}` : ""}`;
+  const productUrl = `${url.origin}${url.pathname}${listingId || url.pathname.includes("/p/") ? `?wid=${externalId}` : ""}`;
 
   const currentSection = html.slice(html.indexOf("poly-price__current"));
   const currentLabel = /aria-label="(?!Antes:)([^"]*?reais[^"]*?)"/.exec(currentSection)?.[1];

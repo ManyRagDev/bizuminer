@@ -10,6 +10,7 @@ import { listAffiliateAccounts } from "../../lib/affiliate-db";
 import { shareBaseUrl } from "../../lib/site-url";
 import { bookmarkletCompiles, bookmarkletHref } from "../../lib/bookmarklet";
 import { captureEnabled } from "../../lib/platform-gates";
+import { captureTrialForTenant } from "../../lib/capture-batch-db.ts";
 import { marketplaceCounts } from "../../lib/db";
 import { MARKETPLACES } from "../../lib/marketplaces";
 import { curationSummary, automatedTriageAvailability } from "../../lib/curation-db";
@@ -26,8 +27,11 @@ import Affiliates from "./affiliates";
 import Devices from "./devices";
 import BatchCapturePanel from "./batch-capture-panel";
 import TodayCommandCenter from "./today-command-center";
+import { readCurationAutomation } from "../../lib/curation-automation.ts";
+import RecentActivities from "./capturas/recent-activities.tsx";
 import { readStoresHealth } from "../../lib/today-operation-db.ts";
 import TodayOperationStatus from "./today-operation-status";
+import OperationalToday from "./operational-today";
 import GithubMonitoringPanel from "./github-monitoring-panel";
 import { githubMonitoringRuns } from "../../lib/github-monitoring";
 import MonitoringPolicyPanel from "./monitoring-policy-panel";
@@ -83,9 +87,9 @@ const RUN_PANELS: Record<string, { triggerPath: string; disabledNotice: ReactNod
     triggerPath: "/api/admin/rodagem/shopee",
     disabledNotice: (
       <>
-        A captura da Shopee está <b>desligada</b> — falta credencial (<code>SHOPEE_APP_ID</code>/<code>SHOPEE_APP_SECRET</code>)
-        ou a flag <code>SHOPEE_CAPTURE_ENABLED</code> no ambiente do servidor. Diferente do Mercado Livre, a Shopee
-        usa API oficial de afiliados — não é scraping.
+        A captura automática da Shopee está <b>desligada neste ambiente</b>.
+        Salvar e testar a conexão da sua conta não ativa as rodagens.
+        A ativação depende do responsável pelo sistema. Suas credenciais são usadas da conexão salva em Configurações → Lojas.
       </>
     ),
   },
@@ -93,11 +97,9 @@ const RUN_PANELS: Record<string, { triggerPath: string; disabledNotice: ReactNod
     triggerPath: "/api/admin/rodagem/aliexpress",
     disabledNotice: (
       <>
-        A captura da AliExpress está <b>desligada</b>. Exige <code>ALIEXPRESS_CAPTURE_ENABLED=true</code> mais
-        <code> ALIEXPRESS_APP_KEY</code>, <code>ALIEXPRESS_APP_SECRET</code> e <code>ALIEXPRESS_TRACKING_ID</code>.
-        O <b>tracking id é obrigatório</b> aqui, diferente das outras: sem ele a API responde normalmente, mas os
-        links vêm sem atribuição e o clique <b>não gera comissão</b> — a rodagem pareceria bem-sucedida e encheria
-        o catálogo de links que não pagam nada.
+        A captura automática da AliExpress está <b>desligada neste ambiente</b>.
+        Salvar e testar a conexão da sua conta não ativa as rodagens.
+        A ativação depende do responsável pelo sistema. Configure suas credenciais e o tracking ID em Configurações → Lojas.
       </>
     ),
   },
@@ -123,13 +125,14 @@ async function SafeSection({ label, load }: { label: string; load: () => Promise
 
 async function OverviewTab({ account: accountContext }: { account: AccountContext }) {
   return inAccountScope(accountContext, async () => {
-    const [overview, curation, auditDesk, editorialConfig, publishedSelection, workbenchPage, eligibleTriage, storesHealth] = await Promise.all([
+    const [overview, curation, auditDesk, editorialConfig, publishedSelection, workbenchPage, eligibleTriage, storesHealth, automation] = await Promise.all([
       adminOverview(), curationSummary(accountContext.tenantId, undefined, accountContext),
       getAuditDesk(accountContext.tenantId), getEditorialGuideline(accountContext.tenantId),
       getPublishedEditorialSelection("all", accountContext.tenantId),
       getWorkbenchPage(accountContext, { limit: 15 }).catch(() => null),
       automatedTriageAvailability(accountContext.tenantId).catch(() => 0),
       readStoresHealth(accountContext).catch(() => []),
+      readCurationAutomation(accountContext),
     ]);
   const selectionState = selectionWorkflowState({ schemaReady: publishedSelection.schemaReady,
     mode: publishedSelection.mode, count: publishedSelection.products.length, validUntil: publishedSelection.validUntil });
@@ -137,6 +140,8 @@ async function OverviewTab({ account: accountContext }: { account: AccountContex
     return (
     <>
       <TodayCommandCenter
+        automation={automation}
+        tenantId={accountContext.tenantId}
         autoPublish={editorialConfig.autoPublish}
         minScore={editorialConfig.minScoreAutoPublish}
         captureDoneToday={saoPauloDay(overview.lastDiscoveryAt) === saoPauloDay(new Date())}
@@ -152,6 +157,9 @@ async function OverviewTab({ account: accountContext }: { account: AccountContex
         workbenchPage={workbenchPage}
         storesHealth={storesHealth}
       />
+      <Suspense fallback={<SectionLoading label="as capturas recentes" />}>
+        <SafeSection label="as capturas recentes" load={() => RecentActivities({account:accountContext})}/>
+      </Suspense>
       <div id="captura-hoje">
         <BatchCapturePanel
           marketplaces={MARKETPLACES.map((def) => ({
@@ -241,6 +249,7 @@ async function GithubSection({ account }: { account: AccountContext }) {
 
 async function RodagensTab({ account: accountContext }: { account: AccountContext }) {
   return inAccountScope(accountContext, async () => {
+    const trial = captureTrialForTenant(accountContext.tenantId);
     const [runsByMarketplace, monitoringPolicies, monitoringPolicyEvents] = await Promise.all([
       Promise.all(MARKETPLACES.map(async def => {
         const [runs, running] = await Promise.all([
@@ -253,10 +262,13 @@ async function RodagensTab({ account: accountContext }: { account: AccountContex
     return (
     <>
       <nav className="section-local-nav" aria-label="Operação">
+        <AdminLink href={`/admin/capturas?conta=${encodeURIComponent(accountContext.tenantId)}`}>Histórico unificado de capturas</AdminLink>
         <AdminLink className="active" href="/admin?aba=rodagens">Capturas e histórico</AdminLink>
         <AdminLink href="/admin?aba=captura-manual">Captura manual</AdminLink>
         <AdminLink href="/admin/curadoria?aba=pipeline">Execuções da IA</AdminLink>
       </nav>
+      <p id="iniciar-captura">Os controles abaixo conservam o histórico técnico anterior. Para localizar importações manuais e lotes completos, use o histórico unificado.</p>
+      {trial && <p role="status">Ensaio limitado da Shopee: uma consulta, uma página e até um produto por rodagem, com revisão humana antes de qualquer divulgação.</p>}
       <Suspense fallback={<SectionLoading label="o monitoramento" />}>
         <SafeSection label="o monitoramento" load={() => GithubSection({ account: accountContext })} />
       </Suspense>
@@ -276,6 +288,7 @@ async function RodagensTab({ account: accountContext }: { account: AccountContex
             enabled={captureEnabled(def.slug)}
             disabledNotice={panel.disabledNotice}
             requiresConsent={def.slug === "mercadolivre"}
+            trialSingleProduct={Boolean(trial && def.slug === "shopee")}
           />
         );
       })}
@@ -369,16 +382,21 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const authUser = await getPageAuth();
   const access = authUser ? await roleAccess(authUser.id, "afiliado") : null;
   if (!authUser || !access) redirect("/entrar?next=/admin");
-  if (params.aba === "curadoria") redirect("/admin/curadoria?aba=excecoes");
+  if (params.aba === "curadoria") redirect(`/admin/curadoria?aba=excecoes${params.conta?`&conta=${encodeURIComponent(params.conta)}`:""}`);
   const account = await pageAccount(params.conta);
   if (!account) return <section><p>Nenhuma conta autorizada disponível.</p></section>;
   if (!params.aba && await affiliateWorkspaceEnabled(account)) {
     return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId ?? ""}>
       <TodayOperationStatus key={account.tenantId} tenantId={account.tenantId} />
-      <WorkspaceToday account={account} />
+      <Suspense key={`${account.tenantId}:workspace`} fallback={<SectionLoading label="as ofertas de hoje" />}>
+        <SafeSection label="as ofertas de hoje" load={() => WorkspaceToday({ account })} />
+      </Suspense>
     </AdminDraftScope>;
   }
   const tab = normalizeAdminTab(params.aba);
+  if (tab === "visao-geral") return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId ?? ""}>
+    <OperationalToday key={account.tenantId} tenantId={account.tenantId}/>
+  </AdminDraftScope>;
   const load = () => {
     switch (tab) {
       case "rodagens": return RodagensTab({ account });
@@ -390,7 +408,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   };
   return <AdminDraftScope account={account.tenantId} actor={account.actorAppUserId ?? ""}>
     <AdminTabs activeTab={tab}>
-      {tab === "visao-geral" && <TodayOperationStatus key={account.tenantId} tenantId={account.tenantId} />}
       <Suspense key={`${account.tenantId}:${tab}`} fallback={<SectionLoading label="a aba" />}>
         <SafeSection label="a aba" load={load} />
       </Suspense>

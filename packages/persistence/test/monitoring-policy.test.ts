@@ -32,20 +32,22 @@ test("fila respeita orçamento, loja e faixa antes do atraso", () => {
   const queue = monitoringQueue([
     candidate("old-pending", { lastObservedAt: new Date("2026-09-14T00:00:00Z") }),
     candidate("watched", { activeWatches: 1 }),
-    candidate("approved", { curationStatus: "approved" }),
+    candidate("edition", { curationStatus: "approved", inCurrentEdition: true }),
+    candidate("approved-idle", { curationStatus: "approved", inCurrentEdition: false }),
     candidate("ali", { marketplace: "aliexpress", activeWatches: 1 }),
   ], "shopee", 2, now);
-  assert.deepEqual(queue.map((item) => item.productId), ["watched", "approved"]);
+  assert.deepEqual(queue.map((item) => item.productId), ["watched", "edition"]);
 });
 
-test("reserva parte do orçamento para formar histórico de candidatos", () => {
-  const approved = Array.from({ length: 20 }, (_, i) => candidate(`approved-${i}`, { curationStatus: "approved" }));
-  const queue = monitoringQueue([...approved,
-    candidate("candidate-a", { lastObservedAt: new Date("2026-09-14T00:00:00Z") }),
+test("acompanhamentos mantêm prioridade sobre edição vigente e candidatos sem interesse não consomem cota", () => {
+  const editionItems = Array.from({ length: 20 }, (_, i) => candidate(`edition-${i}`, { curationStatus: "approved", inCurrentEdition: true }));
+  const queue = monitoringQueue([...editionItems,
+    candidate("watched-a", { activeWatches: 1, lastObservedAt: new Date("2026-09-14T00:00:00Z") }),
     candidate("candidate-b", { lastObservedAt: new Date("2026-09-14T00:00:00Z") }),
   ], "shopee", 10, now);
   assert.equal(queue.length, 10);
-  assert.equal(queue.filter((entry) => entry.tier === "candidate").length, 1);
+  assert.equal(queue.filter((entry) => entry.tier === "watch").length, 1);
+  assert.equal(queue.some((entry) => entry.productId === "candidate-b"), false);
 });
 
 test("candidato sem aprovação sai da fila após duas semanas sem captura", () => {

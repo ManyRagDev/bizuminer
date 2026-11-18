@@ -1,56 +1,27 @@
-/**
- * Verifica o manifest.json (E5): MV3, permissões mínimas documentadas, sem
- * host_permissions permanentes sobre o ML, sem código remoto. Lê o manifest da
- * raiz do pacote (fonte) — o dist/ é gerado pelo build.
- */
-
-import { readFileSync } from "node:fs";
+/** Check source and built manifests separately, with exact allowed origins. */
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-
+import { buildMode, manifestFailures } from "./build-config.mjs";
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const manifest = JSON.parse(readFileSync(path.join(root, "manifest.json"), "utf8"));
-
+const args = process.argv.slice(2);
+const sourceOnly = args.includes("--source-only");
+const mode = buildMode(args.filter(value => value !== "--source-only"));
+if (args.filter(value => value === "--source-only").length > 1) throw new Error("Duplicate source-only flag");
+const pkg = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+const targets = [["manifest.json", "prod"]];
+if (!sourceOnly) targets.push(["dist/manifest.json", mode]);
 let failures = 0;
-const check = (ok, label) => {
-  console.log(`${ok ? "PASS" : "FAIL"}  ${label}`);
-  if (!ok) failures += 1;
-};
-
-check(manifest.manifest_version === 3, "manifest_version é 3");
-
-const allowed = new Set(["activeTab", "scripting", "storage", "alarms"]);
-const permissions = manifest.permissions ?? [];
-check(permissions.every((p) => allowed.has(p)), `permissions ⊆ {activeTab, scripting, storage, alarms} (atual: ${permissions.join(", ") || "—"})`);
-
-const hostPermissions = manifest.host_permissions ?? [];
-check(
-  hostPermissions.length > 0 && hostPermissions.every((h) => h.includes("bizuminer.com.br") || h.includes("localhost")),
-  `host_permissions só para a API BizuMiner (atual: ${hostPermissions.join(", ") || "—"})`,
-);
-
-check(
-  hostPermissions.every((h) => !h.includes("mercadolivre")),
-  "sem host_permission permanente sobre o Mercado Livre",
-);
-
-check(Array.isArray(manifest.content_scripts) && manifest.content_scripts.length === 0, "sem content script permanente (injeção via scripting)");
-
-check(
-  manifest.background?.service_worker === "service-worker.js",
-  "service worker apontado",
-);
-
-const csp = manifest.content_security_policy?.extension_pages ?? "";
-check(
-  !/unsafe-eval/.test(csp) && /script-src\s+'self'/.test(csp),
-  "CSP sem unsafe-eval e sem código remoto",
-);
-
-check(
-  !JSON.stringify(manifest).match(/ML_TRACKING_ID|ML_TOOL_ID|tracking_id|tool_id/i),
-  "manifesto não contém segredo/config ML",
-);
-
-console.log(failures === 0 ? "\nManifesto OK." : `\n${failures} check(s) FALHARAM.`);
-process.exit(failures === 0 ? 0 : 1);
+for (const [file, expectedMode] of targets) {
+  try {
+    const manifest = JSON.parse(await readFile(path.join(root, file), "utf8"));
+    const errors = manifestFailures(manifest, expectedMode, pkg.version);
+    for (const error of errors) console.error(`FAIL ${file}: ${error}`);
+    failures += errors.length;
+    if (!errors.length) console.log(`PASS ${file}: v${pkg.version}, ${expectedMode}, exact permissions and origin`);
+  } catch {
+    console.error(`FAIL ${file}: missing or invalid JSON; build the requested mode first`);
+    failures++;
+  }
+}
+process.exitCode = failures ? 1 : 0;

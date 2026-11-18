@@ -173,7 +173,7 @@ describe("sweep", () => {
     assert.equal(run.parameters.maxPages, undefined);
   });
 
-  it("mantém uma observação por produto dentro da mesma execução", async () => {
+  it("mantém uma observação imutável por produto/opção dentro da mesma execução", async () => {
     const store = new InMemoryStore();
     await sweep(fakeAdapter([[
       offer({ externalId: "MLB1", priceCents: 10000 }),
@@ -183,7 +183,7 @@ describe("sweep", () => {
     const product = store.allProducts[0]!;
     const range = await store.priceRange(product.id);
     assert.equal(range?.observations, 1);
-    assert.equal(range?.minCents, 9500);
+    assert.equal(range?.minCents, 10000);
     assert.equal(product.lastCaptureRunId, store.allRuns[0]!.id);
   });
 
@@ -360,12 +360,15 @@ it('stable sampling preserves each material change at same price and A → B →
  const {product}=await store.upsertProductWithObservation({...input,offerEvidence:evidence});let run=1;
  const write=async(e:any,delta=60_000)=>store.upsertProductWithObservation({...input,captureRunId:'r'+(++run),observedAt:new Date(at.getTime()+run*delta),offerEvidence:e});
  await write({...evidence,source:{...evidence.source,capturedAt:new Date(at.getTime()+60_000).toISOString()}});
- assert.equal((await store.priceRange(product.id))?.observations,1);
+ assert.equal((await store.priceRange(product.id))?.observations,2);
+ // Replay in the same run is idempotent and does not add a duplicate observation.
+ await store.upsertProductWithObservation({...input,captureRunId:'r2',observedAt:new Date(at.getTime()+120_000),offerEvidence:{...evidence,source:{...evidence.source,capturedAt:new Date(at.getTime()+120_000).toISOString()}}});
+ assert.equal((await store.priceRange(product.id))?.observations,2);
  for(const patch of [{currency:'USD'},{variantIdentity:{state:'source_verified',key:'lightning'}},{packageContents:['1 unidade']},{conditions:{coupon:'X'}},{originalPriceKind:'derived_from_claim'},{priceType:'from'}]) {
   const before=(await store.priceRange(product.id))!.observations;await write({...evidence,...patch});await write(evidence);
   assert.equal((await store.priceRange(product.id))?.observations,before+2);
  }
- await write(evidence,21*60*60_000);assert.equal((await store.priceRange(product.id))?.observations,14);
+ await write(evidence,21*60*60_000);assert.equal((await store.priceRange(product.id))?.observations,15);
  assert.equal((await store.latestObservation(product.id))?.titleSnapshot,'Kit USB-C & 2 unidades');assert.equal(store.allProducts[0]!.title,'Kit USB-C & 2 unidades');
  await store.upsertProductWithObservation({...input,tenantId:'tenant_b',offerEvidence:evidence});assert.equal(store.allProducts.length,2);assert.notEqual(store.allProducts[0]!.id,store.allProducts[1]!.id);
 });

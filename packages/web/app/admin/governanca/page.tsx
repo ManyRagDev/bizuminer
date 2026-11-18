@@ -1,4 +1,4 @@
-import { verifiedWorkflowsReady } from "../../../lib/workflow-readiness.ts";
+import { verifiedWorkflowsStatus } from "../../../lib/workflow-readiness.ts";
 import { pageAccount } from "../../../lib/page-account.ts";
 import { withAccountDb } from "../../../lib/tenant-db.ts";
 import GovernanceWorkspace from "./workspace.tsx";
@@ -7,11 +7,14 @@ export default async function Page() {
   const c = await pageAccount();
   if (!c || c.membershipRole !== "owner")
     return <p>Aprovação restrita ao responsável da conta.</p>;
-  if (!(await verifiedWorkflowsReady()))
+  const workflowStatus = await verifiedWorkflowsStatus();
+  if (workflowStatus !== "ready")
     return (
       <p>
-        Esta capacidade aguarda a migration de workflows verificados no ambiente
-        autorizado. A operação atual permanece disponível.
+        {workflowStatus === "schema_missing"
+          ? "A estrutura necessária para os fluxos de aprovação ainda não está instalada neste ambiente."
+          : "Os fluxos de aprovação estão instalados, mas a ativação comercial está desligada neste ambiente."}
+        {" "}A operação atual permanece disponível.
       </p>
     );
   const evidence = await withAccountDb(c, async (tx) => ({

@@ -1,6 +1,8 @@
+import { sharedLinkArchive } from "../../../lib/shared-link-archive-db.ts";
+import { archivePageResponse } from "../../../lib/shared-link-archive.ts";
 import { confirmedOfferDetail } from "../../../lib/confirmed-offer-db.ts";
 import { optionDetailPath } from "../../../lib/offer-option.ts";
-import { publicProjectionReady } from "../../../lib/public-offer-db";
+import { publicOfferHistory, publicProjectionReady } from "../../../lib/public-offer-db";
 import { publicLinkPage } from "../../../lib/public-link-page";
 import { slugForShortCode } from "../../../lib/short-link-db";
 import { isCampaignLinkCode } from "../../../lib/commerce-contract";
@@ -28,12 +30,18 @@ export const preferredRegion = "gru1";
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
+  const archive = await sharedLinkArchive("alias", code);
+  if (archive) return archivePageResponse(archive, new URL(_req.url).searchParams);
   if(await publicProjectionReady()) {
     const response=await publicLinkPage(code);
     const option=new URL(_req.url).searchParams.get("opcao");
     if (!option || isCampaignLinkCode(code) || response.status!==302) return response;
     const target=new URL(response.headers.get("Location")!,_req.url),slug=decodeURIComponent(target.pathname.slice("/bizu/".length));
-    if(!await confirmedOfferDetail(slug,option)) return new Response("Esta opção precisa de nova conferência",{status:404});
+    if(!await confirmedOfferDetail(slug,option)) {
+      if (/^[a-f0-9]{32}$/.test(option) && await publicOfferHistory(slug))
+        return new Response(null,{status:302,headers:{Location:optionDetailPath(slug,option),"Cache-Control":"no-store"}});
+      return new Response("Esta opção precisa de nova conferência",{status:404,headers:{"Cache-Control":"no-store"}});
+    }
     return new Response(null,{status:302,headers:{Location:optionDetailPath(slug,option)+target.search,"Cache-Control":"no-store"}});
   }
 

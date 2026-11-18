@@ -7,3 +7,7 @@ Planeje consequências relevantes na interface, persistência, isolamento entre 
 Na implementação autorizada, siga até integrar e verificar a capacidade, sem pedir confirmação a cada arquivo ou etapa. Para um bloqueio real, peça a informação específica e continue onde for independente.
 
 Ao entregar, explique o que o aplicativo agora permite fazer, como conferiu e quais condições ou limitações permanecem. Atualize documentação permanente apenas quando houver conhecimento duradouro relevante, aproveitando o documento existente.
+
+## Agendamentos suspensos por decisão do dono — 15/11/2026
+
+Os crons deste projeto devem permanecer desativados até que o dono solicite explicitamente a reativação. Isso inclui descoberta Shopee, acompanhamento de preços e qualquer outro cron. Não reativar workflows no GitHub, restaurar gatilhos `schedule` nem habilitar agendamentos equivalentes em outro executor como parte de correções, migrações ou deploys. Os três workflows do repositório `ManyRagDev/bizuminer` foram conferidos no GitHub como `disabled_manually`, sem execuções pendentes ou em andamento.

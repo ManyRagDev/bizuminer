@@ -1,3 +1,4 @@
+import { adminMutationOrigin } from "../../../../../lib/admin-request-origin.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
 import { captureBatches } from "../../../../../lib/capture-batch-db";
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
       { ok: false, error: check.kind },
       { status: check.kind === "no_session" ? 401 : 403 },
     );
-  if (request.headers.get("origin") !== request.nextUrl.origin)
+  if (!adminMutationOrigin(request))
     return sinkJson(
       check.sink,
       { ok: false, error: "invalid_origin" },

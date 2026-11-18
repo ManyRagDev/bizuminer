@@ -1271,9 +1271,9 @@ export async function runPendingAutomatedTriage(
           ${tenantId},
           'running',
           ${candidates.length},
-          ${process.env.GEMINI_MODEL ?? "gemini-2.5-flash"},
+          ${process.env.AI_CURATION_PROVIDER === "openrouter" ? process.env.AI_CURATION_MODEL ?? "unconfigured" : process.env.GEMINI_MODEL ?? "gemini-2.5-flash"},
           'curation-pipeline-v4',
-          ${sqlRun.json({ captureBatchId: options?.captureBatch?.id ?? null })}
+          ${sqlRun.json({ captureBatchId: options?.captureBatch?.id ?? null, provider: process.env.AI_CURATION_PROVIDER ?? "gemini" })}
         )
         returning id
       `;

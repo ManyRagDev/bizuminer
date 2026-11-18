@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evaluateStoreHealth } from "../lib/today-operation.ts";
+import { describeTodayOperations, evaluateStoreHealth } from "../lib/today-operation.ts";
 
 test("evaluateStoreHealth marca fresh quando captura <3h e tem produtos aprovados", () => {
   const now = new Date("2026-11-10T14:00:00-03:00");
@@ -41,4 +41,14 @@ test("evaluateStoreHealth lida com lojas sem nenhuma captura", () => {
   assert.equal(health.status, "stale");
   assert.equal(health.statusLabel, "Sem rodagens");
   assert.equal(health.lastCaptureAgo, "nunca");
+});
+
+
+test("esperas duráveis continuam explícitas depois do prazo original", () => {
+  const now = new Date("2026-11-11T14:00:00Z");
+  for (const [phase, kind] of [["retry_wait", "retry"], ["awaiting_authorization", "authorization"], ["awaiting_reconciliation", "reconciliation"]]) {
+    const result = describeTodayOperations({ status: "running", started_at: "2026-11-11T10:00:00Z", finished_at: null,
+      requested_marketplaces: ["shopee"], metadata: { execution: { version: 1, phase, deadline: "2026-11-11T11:00:00Z" } } }, null, [], now);
+    assert.deepEqual(result, { activities: [{ kind, marketplaces: ["shopee"] }], issues: [] });
+  }
 });

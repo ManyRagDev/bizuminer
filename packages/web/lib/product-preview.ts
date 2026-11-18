@@ -14,19 +14,25 @@ export function productPreview(product: VitrineProduct, now = new Date()) {
   const badge = product.offerOptionKey || stale || imprecise || product.currency !== "BRL" || highlight?.tone === "unproven" ? null : highlight;
   const observedAt = product.evidenceObservedAt ? new Date(product.evidenceObservedAt).toISOString() : null;
   const ageLabel = stale ? seenAgo(product.evidenceObservedAt, now) : null;
-  const optionRevision=product.offerOptionKey ? ["confirmed-offer-preview-v2",product.slug,product.offerOptionKey,
-    product.sourceTitle ?? product.title,product.offerOptionLabel,product.marketplace,product.imageUrl,
-    product.priceCents,product.currency,observedAt,stale,ageLabel] : null;
+  const optionRevision=product.offerOptionKey ? ["confirmed-offer-preview-v4",product.slug,product.offerOptionKey,
+    product.sourceTitle ?? product.title,product.displayTitle ?? product.title,product.offerOptionLabel,product.marketplace,product.imageUrl,
+    product.priceCents,product.priceType,product.currency,product.priceMinCents,product.priceMaxCents,
+    product.originalPriceCents,product.originalPriceKind,product.purchaseContents,product.offerConditions,
+    observedAt,product.offerValidUntil,stale,ageLabel] : null;
   const version = createHash("sha256").update(JSON.stringify(optionRevision ?? [
-    "product-preview-v3", product.slug,product.offerOptionKey,product.offerOptionLabel,product.offerConditions, product.displayTitle ?? product.title, product.marketplace, product.imageUrl,
+    "product-preview-v4", product.slug,product.offerOptionKey,product.offerOptionLabel,product.offerConditions, product.displayTitle ?? product.title, product.marketplace, product.imageUrl,
     product.editorialRevisionId, product.benefit, product.caveat, product.purchaseContents,
     product.priceCents, product.priceType, product.currency, product.priceMinCents, product.priceMaxCents,
-    product.originalPriceCents, product.originalPriceKind, observedAt, stale, ageLabel, badge,
+    product.originalPriceCents, product.originalPriceKind, observedAt, product.offerValidUntil, stale, ageLabel, badge,
   ])).digest("hex").slice(0, 24);
-  // Never keep a "current" price across the existing 48-hour freshness boundary.
+  // Bound the server cache by the public offer's factual deadline as well as
+  // the legacy freshness boundary when a projection supplies that deadline.
   const currentUntil = observedAt ? Date.parse(observedAt) + PRICE_CURRENT_WINDOW_HOURS * 3_600_000 : 0;
-  const cacheSeconds = stale ? CACHE_SECONDS : Math.max(0, Math.min(CACHE_SECONDS,
-    Math.floor((currentUntil - now.getTime()) / 1000)));
+  const offerDeadline = product.offerValidUntil ? Date.parse(product.offerValidUntil) : NaN;
+  // Without an explicit factual deadline, a price-bearing image cannot be
+  // safely cached even if its public projection was eligible at read time.
+  const deadline = Number.isFinite(offerDeadline) ? Math.min(stale ? Infinity : currentUntil,offerDeadline) : 0;
+  const cacheSeconds = Math.max(0, Math.min(CACHE_SECONDS, Math.floor((deadline - now.getTime()) / 1000)));
   return {
     version, stale, badge, ageLabel, cacheSeconds,
     path: `${optionDetailPath(product.slug,product.offerOptionKey)}/opengraph-image?v=${version}`,

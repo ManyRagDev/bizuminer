@@ -21,6 +21,8 @@ export const MARKETPLACE = "shopee";
 
 /** Código que a Shopee usa para sinalizar excesso de requisições. */
 export const RATE_LIMIT_CODE = 10030;
+/** Código que a Shopee usa para assinatura ou credencial inválida (Invalid Signature). */
+export const INVALID_SIGNATURE_CODE = 10020;
 /** Código que a Shopee usa para falha temporária de sistema (ex: instabilidade transitória). */
 export const SYSTEM_ERROR_CODE = 10000;
 
@@ -37,6 +39,8 @@ export interface ShopeeClientOptions {
    */
   readonly ratePerSecond?: number;
   readonly timeoutMs?: number;
+  /** Trial callers use one attempt; normal captures retain the existing retry policy. */
+  readonly maxAttempts?: number;
   /** Injetável para teste. */
   readonly fetchImpl?: typeof fetch;
   readonly now?: () => number;
@@ -50,18 +54,38 @@ interface GraphQLResponse<T> {
   }>;
 }
 
+const DETERMINISTIC_GRAPHQL_CODES = new Set([
+  "GRAPHQL_PARSE", "GRAPHQL_PARSE_FAILED", "GRAPHQL_VALIDATION", "GRAPHQL_VALIDATION_FAILED",
+]);
+
+function validateFiniteNumbers(value: unknown): void {
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    throw new CaptureError({
+      kind: "marketplace_error", marketplace: MARKETPLACE,
+      message: "variáveis GraphQL contêm número inválido",
+    });
+  }
+  if (value !== null && typeof value === "object") {
+    for (const nested of Object.values(value)) validateFiniteNumbers(nested);
+  }
+}
+
 export class ShopeeClient {
   private readonly endpoint: string;
   private readonly bucket: TokenBucket;
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
   private readonly now: () => number;
+  private readonly maxAttempts: number;
 
   constructor(opts: ShopeeClientOptions = {}) {
     this.endpoint = opts.endpoint ?? SHOPEE_ENDPOINT;
     this.timeoutMs = opts.timeoutMs ?? 15_000;
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.now = opts.now ?? Date.now;
+    this.maxAttempts = opts.maxAttempts ?? 5;
+    if (!Number.isInteger(this.maxAttempts) || this.maxAttempts < 1 || this.maxAttempts > 5)
+      throw new Error("invalid_shopee_max_attempts");
     this.bucket = new TokenBucket(opts.ratePerSecond ?? 1, undefined, this.now);
   }
 
@@ -84,11 +108,13 @@ export class ShopeeClient {
     query: string,
     variables: Record<string, unknown>,
     ctx: CaptureContext,
-    maxAttempts = 5,
+    maxAttempts = this.maxAttempts,
   ): Promise<T> {
+    // JSON.stringify would silently turn NaN/Infinity into null. Reject before signing or sending.
+    validateFiniteNumbers(variables);
     return withRetry(() => this.requestOnce<T>(cred, query, variables, ctx), {
       signal: ctx.signal,
-      maxAttempts,
+      maxAttempts: Math.min(maxAttempts, this.maxAttempts),
       onRetry: ({ attempt, delayMs, error }) => {
         ctx.log({
           level: "warn",
@@ -194,8 +220,30 @@ export class ShopeeClient {
 
     // GraphQL devolve 200 mesmo em erro — o status HTTP não basta.
     if (body.errors?.length) {
+      const deterministic = body.errors.find((error) =>
+        error != null && ((typeof error.message === "string" && error.message.trim() === "graphql: got null for non-null")
+        || (typeof error.extensions?.code === "string" && DETERMINISTIC_GRAPHQL_CODES.has(error.extensions.code))),
+      );
+      if (deterministic) {
+        throw new CaptureError({
+          kind: "marketplace_error", marketplace: MARKETPLACE,
+          message: "graphql_contract_error",
+          vendorCode: (typeof deterministic.extensions?.code === "string" && DETERMINISTIC_GRAPHQL_CODES.has(deterministic.extensions.code))
+            || (typeof deterministic.extensions?.code === "number" && Number.isFinite(deterministic.extensions.code))
+            ? deterministic.extensions.code : undefined,
+        });
+      }
       const first = body.errors[0];
       const code = first?.extensions?.code;
+
+      if (Number(code) === INVALID_SIGNATURE_CODE) {
+        throw new CaptureError({
+          kind: "auth",
+          marketplace: MARKETPLACE,
+          message: first?.message ?? "assinatura ou credencial da Shopee rejeitada (código 10020)",
+          vendorCode: INVALID_SIGNATURE_CODE,
+        });
+      }
 
       if (Number(code) === RATE_LIMIT_CODE) {
         throw new CaptureError({

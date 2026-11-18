@@ -1,3 +1,4 @@
+import { databaseSsl } from "../../persistence/src/database-ssl.ts";
 import { appendFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import postgres from "postgres";
@@ -13,7 +14,7 @@ if (!process.argv.includes("--execute")) {
   console.log(JSON.stringify({ mode: "dry-run", tenantId, marketplace: "shopee", plan: "departments", pages: 2, pageSize: 20, departments: 12 }));
 } else {
   const sql = postgres(process.env.DATABASE_URL!, { prepare: false, max: 1,
-    ssl: process.env.DATABASE_URL!.includes("localhost") ? false : { rejectUnauthorized: false } });
+    ssl: databaseSsl(process.env.DATABASE_URL!) });
   try {
     const decision = await withMonitoringDb(sql, tenantId, tx =>
       monitoringScheduleDecision(tx, tenantId, "shopee", process.env.GITHUB_EVENT_NAME));

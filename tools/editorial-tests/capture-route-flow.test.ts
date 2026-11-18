@@ -11,9 +11,12 @@ const {prepareAccountCapture,dispatchCaptureBatch}=require('../../packages/web/l
 const {CaptureBatchStore}=require('../../packages/web/lib/capture-batch-db.ts');
 const {storeAffiliateSecret}=require('../../packages/web/lib/affiliate-secret.ts');
 const {withCommercialDb}=require('../../packages/web/lib/commercial-rollout.ts');
+const {adminMutationOrigin}=require('../../packages/web/lib/admin-request-origin.ts');
+const {aiCurationReadiness}=require('../../packages/web/lib/ai-curation-provider.ts');
 const {pg,factory}=await commercialFixture();
 const ctx=(t:string)=>({tenantId:t,affiliateId:'aff_'+t,actor:'human',actorAppUserId:'u_'+t,authenticatedAuthUserId:'auth_'+t,membershipRole:'owner',requestId:'route-'+t});
 let context=ctx('a'),creates=0,transports=0;
+let aiEnvironment:Record<string,string|undefined>={AI_CURATION_PROVIDER:'gemini',GEMINI_API_KEY:'fixture-gemini-key'};
 const batches=new CaptureBatchStore(factory);
 process.env.AFFILIATE_SECRETS_MASTER_KEY='01234567890123456789012345678901';
 process.env.SHOPEE_CAPTURE_ENABLED='true';process.env.ALIEXPRESS_CAPTURE_ENABLED='true';
@@ -22,6 +25,8 @@ const modules:Record<string,unknown>={
  'next/server':{},
  '../../../../../lib/account-scope.ts':{inAccountScope},
  '../../../../lib/account-scope.ts':{inAccountScope},
+ '../../../../../lib/admin-request-origin.ts':{adminMutationOrigin:(r:any)=>adminMutationOrigin(r,{NODE_ENV:'production',NEXT_PUBLIC_SITE_URL:'https://fixture.invalid'})},
+ '../../../../../lib/ai-curation-provider.ts':{aiCurationReadiness:()=>aiCurationReadiness(aiEnvironment)},
  '../../../../../lib/api-auth':{checkAffiliateUser:async()=>({kind:'ok',context,appUserId:context.actorAppUserId,sink:{}}),sinkJson:(_sink:any,body:any,opts:any)=>Response.json(body,opts)},
  '../../../../lib/api-auth':{checkAffiliateUser:async()=>({kind:'ok',context,appUserId:context.actorAppUserId,sink:{}}),sinkJson:(_sink:any,body:any,opts:any)=>Response.json(body,opts)},
  '../../../../../lib/batch-capture-plan':{batchCapturePlan},
@@ -64,6 +69,10 @@ try {
  assert.equal(creates,2);assert.equal(transports,2);
  console.log('PASS real POST→preflight SQL/RLS→batch→dispatch A/B202 with own secrets and no house env; body tenant cannot redirect authority');
  context=ctx('a');
+ aiEnvironment={AI_CURATION_PROVIDER:'gemini'};
+ const unconfigured=await denied(503,{marketplaces:['shopee']});assert.equal(unconfigured.body.error,'gemini_key_missing');
+ aiEnvironment={AI_CURATION_PROVIDER:'gemini',GEMINI_API_KEY:'fixture-gemini-key'};
+ console.log('PASS local AI readiness denies missing key before creating or dispatching a capture batch');
  process.env.SHOPEE_CAPTURE_ENABLED='false';
  let result=await denied(409,{marketplaces:['shopee']});assert.equal(result.body.skipped[0].reason,'capture_disabled');
  process.env.SHOPEE_CAPTURE_ENABLED='true';

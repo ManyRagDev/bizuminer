@@ -1,3 +1,5 @@
+import { databaseSsl } from "../src/database-ssl.ts";
+import { classifyCaptureFailure, captureFailureLine } from "../src/capture-failure.ts";
 import postgres from "postgres";
 import { resolveWorkerCredential, accountCaptureAdapter } from "../src/account-credentials.ts";
 /**
@@ -89,7 +91,15 @@ if (dryRun) {
   process.exit(0);
 }
 
+// Captura de ofertas da AliExpress só pode acontecer no navegador do operador.
+// Manter o preview acima não faz chamadas externas nem grava dados.
+function rejectLegacyCapture(): void {
+  throw new Error("A captura da AliExpress por API foi desativada; use a extensão no navegador.");
+}
+rejectLegacyCapture();
+
 if (process.env.ALIEXPRESS_CAPTURE_ENABLED !== "true") {
+  console.log(captureFailureLine("aliexpress", { kind: "credential" }));
   console.error(
     "[bloqueado] A captura da AliExpress está desligada.\n" +
       "Nenhuma requisição foi feita e nenhuma rodagem foi registrada.\n\n" +
@@ -108,7 +118,7 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const credentialSql=postgres(process.env.DATABASE_URL!,{prepare:false,max:1,ssl:process.env.DATABASE_URL!.includes("localhost")?false:{rejectUnauthorized:false}});
+const credentialSql=postgres(process.env.DATABASE_URL!,{prepare:false,max:1,ssl:databaseSsl(process.env.DATABASE_URL!)});
 try {
 const ctx: CaptureContext = {
   runId: `sweep-aliexpress-${Date.now()}`,
@@ -138,10 +148,13 @@ const summary = await runCapturePlan(
     pageSize,
     minClaimedDiscount: minDiscount,
     operationBatchId,
+    operationWorkerId: flag("worker"),
   },
   ctx,
 );
 
+if (summary.failure) console.log(captureFailureLine("aliexpress", summary.failure));
+if (operationBatchId && summary.queriesFailed > 0) process.exitCode = 1;
 console.log("\n=== Resumo do plano ===");
 console.log(`consultas:      ${summary.queriesCompleted}/${summary.queriesPlanned}`);
 console.log(`falhas:         ${summary.queriesFailed}`);
@@ -165,6 +178,7 @@ if (summary.queriesFailed > 0) process.exitCode = 1;
 // devolve `promotion_link` atribuído ao tracking_id. Mas a `publication`
 // ainda precisa existir — `click_event` referencia ela, e sem a linha o /go
 // devolve 404 e o produto vira link morto (bug real, 28/08/2026).
+if (!operationBatchId) {
 console.log("\n=== Publicações e link de saída ===");
 const links = await ensureAliExpressPublications(
   { connectionString: process.env.DATABASE_URL, tenantId },
@@ -174,7 +188,9 @@ console.log(`candidatos:      ${links.candidates}`);
 console.log(`publicados:      ${links.linked}`);
 console.log(`sem atribuição:  ${links.skippedWithoutLink}`);
 
-if (args.includes("--trigger-triage")) {
+}
+
+if (!operationBatchId && args.includes("--trigger-triage")) {
   console.log("\n=== Loop Fechado: Disparando Triagem Editorial Automatizada (--trigger-triage) ===");
   const triageScript = path.resolve(import.meta.dirname, "../../web/bin/run-triage.ts");
   const child = spawn(
@@ -194,4 +210,7 @@ if (args.includes("--trigger-triage")) {
   });
 }
 
+} catch (error) {
+  console.log(captureFailureLine("aliexpress", classifyCaptureFailure(error)));
+  process.exitCode = 1;
 } finally {await credentialSql.end();}

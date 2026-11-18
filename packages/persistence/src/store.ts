@@ -83,6 +83,7 @@ export interface FinishCaptureRunInput {
 }
 
 export interface OfferStore {
+  captureRunCheckpoint?(runId: string, tenantId: string): Promise<import("./ingest.ts").SweepSummary | null>;
   /**
    * Consulta em lote quais anúncios já pertencem ao catálogo.
    * O gate de descoberta usa isto para nunca bloquear a reobservação de preço
@@ -164,6 +165,11 @@ export class InMemoryStore implements OfferStore {
     input = { ...input, title: normalizeSourceTitle(input.title) };
     const key = `${input.tenantId}|${input.marketplace}|${input.externalId}`;
     const existing = this.products.get(key);
+    if (existing) {
+      const replay = (this.observations.get(existing.id) ?? []).find(item => item.captureRunId === input.captureRunId
+        && observationOptionIdentity(item.offerEvidence) === observationOptionIdentity(input.offerEvidence));
+      if (replay) return { product: existing, isNew: false, previousPriceCents: replay.priceCents };
+    }
 
     let product: ProductRecord;
     let previousPriceCents: number | undefined;
@@ -171,7 +177,9 @@ export class InMemoryStore implements OfferStore {
     if (existing) {
       previousPriceCents = (this.observations.get(existing.id) ?? []).filter(o=>observationOptionIdentity(o.offerEvidence)===observationOptionIdentity(input.offerEvidence))
         .sort((a,b)=>b.observedAt.getTime()-a.observedAt.getTime())[0]?.priceCents;
-      product = {
+      product = input.observedAt.getTime() < existing.lastSeenAt.getTime() ? {
+        ...existing, firstSeenAt: input.observedAt < existing.firstSeenAt ? input.observedAt : existing.firstSeenAt,
+      } : {
         ...existing,
         title: input.title,
         productUrl: input.productUrl,
@@ -226,37 +234,9 @@ export class InMemoryStore implements OfferStore {
         && observationMaterialKey({...item,offerEvidence:undefined})===observationMaterialKey({...observation,offerEvidence:undefined}));
       if(matches.length===1)duplicate=matches[0]!.index;
     }
-    if (duplicate >= 0) {
-      const previous = observations[duplicate]!;
-      // Uma repetição incompleta da mesma oferta não apaga a evidência.
-      // Oferta alterada não herda configuração nem pacote de outra captura.
-      const updated = {
-        ...observation,
-        offerEvidence: observation.offerEvidence ?? (
-          previous.titleSnapshot === observation.titleSnapshot &&
-          previous.productUrlSnapshot === observation.productUrlSnapshot &&
-          previous.imageUrlSnapshot === observation.imageUrlSnapshot &&
-          previous.categorySnapshot === observation.categorySnapshot &&
-          previous.priceCents === observation.priceCents &&
-          previous.originalPriceCents === observation.originalPriceCents &&
-          previous.claimedDiscountRate === observation.claimedDiscountRate &&
-          previous.ratingStar === observation.ratingStar &&
-          previous.salesLabel === observation.salesLabel &&
-          previous.salesCount === observation.salesCount
-            ? previous.offerEvidence
-            : undefined
-        ),
-      };
-      observations.splice(duplicate,1);observations.push(updated);
-    }
-    else {
-      const latest = observations.filter(o=>observationOptionIdentity(o.offerEvidence)===observationOptionIdentity(input.offerEvidence)).sort((a,b)=>b.observedAt.getTime()-a.observedAt.getTime())[0];
-      // Stable samples are intentionally limited to one per 20h. Compare only
-      // the latest sample: an A → B → A transition is material both times.
-      if (observationOptionIdentity(observations.at(-1)?.offerEvidence)!==observationOptionIdentity(input.offerEvidence)
-        || !latest || input.observedAt.getTime() - latest.observedAt.getTime() >= 20 * 60 * 60_000
-        || observationMaterialKey(latest) !== observationMaterialKey(observation)) observations.push(observation);
-    }
+    // A retry never rewrites a fact. A distinct run is an independent
+    // observation even if its price and conditions are unchanged.
+    if (duplicate < 0) observations.push(observation);
     this.observations.set(product.id, observations);
 
     return {

@@ -102,7 +102,9 @@ export function createMiddlewareSupabase(request: NextRequest) {
       },
     },
   });
-  return { supabase, supabaseResponse };
+  // setAll can replace the response during getClaims/getUser. Read it only
+  // after the awaited Auth call, rather than returning the initial snapshot.
+  return { supabase, get supabaseResponse() { return supabaseResponse; } };
 }
 
 /** Sink estável para rotas que ainda não sabem qual resposta vão devolver. */
@@ -123,6 +125,13 @@ export function attachSink(sink: NextResponse, response: NextResponse): NextResp
       domain: cookie.domain,
     });
   }
-  for (const [key, value] of sink.headers.entries()) response.headers.set(key, value);
+  // Cookies were transferred above. Re-setting their headers would overwrite
+  // every previous chunk, leaving only the last Set-Cookie in Node's Headers.
+  for (const [key, value] of sink.headers.entries()) {
+    // Middleware request overrides belong only to its original passthrough
+    // response; forwarding them would turn a redirect into NextResponse.next.
+    const name = key.toLowerCase();
+    if (name !== "set-cookie" && !name.startsWith("x-middleware-")) response.headers.set(key, value);
+  }
   return response;
 }

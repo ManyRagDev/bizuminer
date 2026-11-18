@@ -6,11 +6,23 @@ import vm from "node:vm";
 const preload = readFileSync(new URL("../scripts/dev-version-check.cjs", import.meta.url), "utf8");
 const versionUrl = "https://registry.npmjs.org/-/package/next/dist-tags";
 
-function load(fetch) {
-  const sandbox = { fetch, URL, Request, AbortSignal };
+function load(fetch, env = {}) {
+  const sandbox = { fetch, URL, Request, AbortSignal, process: { env } };
   vm.runInNewContext(preload, sandbox);
   return sandbox.fetch;
 }
+
+test("development uses a separate output directory from production builds", () => {
+  const env = {};
+  load(() => Promise.resolve(new Response()), env);
+  assert.equal(env.BIZUMINER_DIST_DIR, ".next-dev");
+});
+
+test("an explicitly chosen development directory remains configured", () => {
+  const env = { BIZUMINER_DIST_DIR: ".next-custom-development" };
+  load(() => Promise.resolve(new Response()), env);
+  assert.equal(env.BIZUMINER_DIST_DIR, ".next-custom-development");
+});
 
 test("unavailable version registry cannot block development startup indefinitely", { timeout: 5000 }, async () => {
   const devFetch = load((_input, { signal }) => new Promise((_resolve, reject) => {

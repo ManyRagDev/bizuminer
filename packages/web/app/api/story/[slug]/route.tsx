@@ -82,7 +82,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const detail = await dealDetail(slug);
     if (detail) product = toVitrineProduct(detail.deal);
   }
-  if (!product) return new ImageResponse(<Fallback />, { ...SIZE, fonts: await ogFonts() });
+  if (!product) return new ImageResponse(<Fallback />, { ...SIZE, fonts: await ogFonts(),headers:{"Cache-Control":"no-store"} });
   const stale = priceFreshness(product.evidenceObservedAt) === "stale";
   const title = product.displayTitle ?? product.title;
   const facts=offerArtworkFacts(product);
@@ -95,6 +95,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // negativo numa peça de divulgação só ocupa espaço. Silêncio é o padrão.
   const badge = stale || product.priceType !== "exact" || (product.currency && product.currency !== "BRL") || highlight?.tone === "unproven" ? null : highlight;
   const [photo, fonts] = await Promise.all([fetchProductImage(product.imageUrl), ogFonts()]);
+  if (product.offerValidUntil && !(Date.parse(product.offerValidUntil)>Date.now()))
+    return new Response("Oferta expirada",{status:410,headers:noStore});
+  // Image assets may take long enough for facts, eligibility or channel
+  // configuration to change. Re-read before returning the prepared artwork.
+  let current:typeof product | undefined;
+  if(privateArtwork) {
+    const check=await checkAffiliateUser(request);
+    if(check.kind!=="ok") return new Response("Sessão indisponível",{status:403,headers:noStore});
+    current=(await readLivePauta(check.context,"stories",null)).products.find(p=>p.id===slug && p.shareTarget.kind==="pauta");
+  } else if(option) current=(await confirmedOfferDetail(slug,option))?.product;
+  else {
+    const detail=await dealDetail(slug);
+    current=detail ? toVitrineProduct(detail.deal) : undefined;
+  }
+  const artworkFacts=(item:NonNullable<typeof product>)=>JSON.stringify([
+    item.id,item.title,item.displayTitle,item.marketplace,item.imageUrl,item.priceCents,item.priceType,item.currency,
+    item.priceMinCents,item.priceMaxCents,item.originalPriceCents,item.originalPriceKind,item.offerOptionKey,
+    item.purchaseContents,item.offerConditions,item.evidenceObservedAt,item.offerValidUntil,item.lowestVerified,
+    item.historyDays,item.observationCount,item.previousMinPriceCents,
+  ]);
+  if(!current || artworkFacts(current)!==artworkFacts(product)
+    || current.offerValidUntil && !(Date.parse(current.offerValidUntil)>Date.now()))
+    return new Response("Oferta precisa de nova conferência",{status:410,headers:noStore});
   const marketplace = marketplaceDef(product.marketplace);
   const stamp = marketplace
     ? { label: marketplace.stampLabel, style: marketplace.stampStyle }
@@ -251,7 +274,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         </div>
       </div>
     ),
-    { ...SIZE, fonts, ...(privateArtwork ? { headers: noStore } : {}) },
+    { ...SIZE, fonts, headers:privateArtwork ? noStore : {"Cache-Control":"no-store"} },
   );
 }
 

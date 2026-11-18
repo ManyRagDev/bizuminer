@@ -87,7 +87,9 @@ export default function SpotCheckView({
 
       if (res.ok) {
         setRubricFeedback(
-          res.agreement
+          !res.hasShadow
+            ? "✓ Revisão gravada. Não há avaliação comparável da IA para esta evidência."
+            : res.agreement
             ? "✓ Revisão gravada! Em total concordância com o shadow de IA."
             : `✓ Revisão gravada! Registrado desacordo em ${res.disagreementCount} dimensões.`,
         );

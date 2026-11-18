@@ -7,6 +7,8 @@ import {
 import { evaluateProductsBatch } from "./ai-curation-service.ts";
 import { selectRepresentatives, type GroupMemberProduct } from "./editorial-groups.ts";
 import { evaluateTriageValue, type ComparablePriceHistory } from "./triage-value-policy.ts";
+import { hasRestrictedTitle } from "./curation-safety-terms.ts";
+export { ADULT_TERMS_RE } from "./curation-safety-terms.ts";
 
 export interface CandidateProduct {
   id: string;
@@ -56,9 +58,6 @@ export interface PipelineOptions {
 
 export const MAX_REPRESENTATIVES_DEFAULT = Number.POSITIVE_INFINITY; // Por padrão, triagem IA não descarta variações pré-avaliação.
 
-export const ADULT_TERMS_RE =
-  /\b(erotico|erotica|sexy|vibrador|anabolizante|replica|lingerie sensual|masturbador|dildo|plug anal|fantasia sensual)\b/i;
-
 export const LOW_UTILITY_TERMS_RE =
   /\b(parafuso|porca sextavada|arruela|cabo extensor generico|engrenagem|rolamento|conector engate rapido|bico injetor|bomba hidr[aá]ulica)\b/i;
 
@@ -91,7 +90,7 @@ export async function processIngestionPipeline(
       continue;
     }
 
-    if (ADULT_TERMS_RE.test(p.title)) {
+    if (hasRestrictedTitle(p.title)) {
       decisions.push({
         productId: p.id,
         status: "rejected",
@@ -103,30 +102,8 @@ export async function processIngestionPipeline(
       continue;
     }
 
-    if (LOW_UTILITY_TERMS_RE.test(p.title)) {
-      decisions.push({
-        productId: p.id,
-        status: "rejected",
-        reasonCode: "low_utility",
-        reasonDetail: null,
-        rationale: "Blacklist de peças industriais/chatas",
-        actorType: "rule",
-      });
-      continue;
-    }
-
-    if (p.ratingStar !== null && p.ratingStar > 0 && p.ratingStar < 4.0) {
-      decisions.push({
-        productId: p.id,
-        status: "rejected",
-        reasonCode: "low_quality_listing",
-        reasonDetail: null,
-        rationale: `Avaliação ${p.ratingStar} abaixo da nota mínima 4.0`,
-        actorType: "rule",
-      });
-      continue;
-    }
-
+    // Low appeal and a rating without a reliable sample are signals, not
+    // permanent editorial vetoes. Keep them available for assessment.
     survivorsStage1.push(p);
   }
 
@@ -228,6 +205,17 @@ export async function processIngestionPipeline(
       editorialGuideline: options?.editorialGuideline,
       fewShotExamples: options?.fewShotExamples,
     });
+    const expectedIds = new Set(aiPayload.map(item => item.productId));
+    const categories = new Set(["achadinho_impulso", "utilidade_pratica", "destaque_departamento", "peca_tecnica_avulsa", "outro", "gadget_util", "novidade", "peca_chata"]);
+    if (expectedIds.size !== aiPayload.length || aiResults.length !== aiPayload.length) throw new Error("ai_curation_batch_incomplete");
+    for (const result of aiResults) {
+      if (!expectedIds.delete(result.productId) || !Number.isInteger(result.desirabilityScore)
+        || result.desirabilityScore < 1 || result.desirabilityScore > 5
+        || typeof result.hasMisleadingClaim !== "boolean" || typeof result.isAdultOrUnsafe !== "boolean"
+        || !categories.has(result.editorialCategory) || typeof result.justification !== "string" || !result.justification.trim()) {
+        throw new Error("ai_curation_batch_invalid");
+      }
+    }
     const aiMap = new Map(aiResults.map((r) => [r.productId, r]));
 
     for (const p of survivorsStage2) {
@@ -273,8 +261,8 @@ export async function processIngestionPipeline(
       ) {
         decisions.push({
           productId: p.id,
-          status: "rejected",
-          reasonCode: "low_utility",
+          status: "pending",
+          reasonCode: null,
           reasonDetail: null,
           rationale: evaluation.justification,
           actorType: "llm",
@@ -286,13 +274,10 @@ export async function processIngestionPipeline(
         });
       } else {
         // Score >= 4:
-        const shouldAutoPublish =
-          Boolean(options?.autoPublish) &&
-          evaluation.desirabilityScore >= (options?.minScoreAutoPublish ?? 4);
-
         decisions.push({
           productId: p.id,
-          status: shouldAutoPublish ? "approved" : "pending",
+          // Legacy 1–5 scores cannot be converted into v2 eligibility.
+          status: "pending",
           reasonCode: null,
           reasonDetail: null,
           rationale: evaluation.justification,

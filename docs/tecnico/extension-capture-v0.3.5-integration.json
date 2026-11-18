@@ -1,0 +1,227 @@
+{
+  "version": "0.3.5",
+  "apiOrigin": "https://www.bizuminer.com.br",
+  "captureMode": "manual",
+  "newMigrations": [],
+  "runtimeFiles": [
+    {
+      "path": "packages/extension/src/background/service-worker.ts",
+      "bytes": 19027,
+      "sha256": "5ea4af84eb69cad49d4370da62e4272167dba735a78473be74f9a291743ad64b"
+    },
+    {
+      "path": "packages/extension/src/content/activate-catalog.ts",
+      "bytes": 542,
+      "sha256": "9acee994aef0a57a7b63ecee7fae1440602288bc96e0eb02a589913c0e21182e"
+    },
+    {
+      "path": "packages/extension/src/content/amazon-extractor.ts",
+      "bytes": 10322,
+      "sha256": "415e5133f89f5cb6b955806f9a8578d02672fc75be0c3ab5296be88dcb00fbff"
+    },
+    {
+      "path": "packages/extension/src/content/bizu-button.ts",
+      "bytes": 3938,
+      "sha256": "72bb3db4c5f5a408d1123304a294195bcbd87e931fd74de46855a08b8f5bf522"
+    },
+    {
+      "path": "packages/extension/src/content/card-extractor.ts",
+      "bytes": 3763,
+      "sha256": "eb4f2d9b16f6ec8e3672c80d99895f465470a385267a41c704fb91509fdd8940"
+    },
+    {
+      "path": "packages/extension/src/content/catalog-observer.ts",
+      "bytes": 2173,
+      "sha256": "cb1c64371afccb17b865b5edb599ddee4e22b87be91f29f1c4045f92a5235cf9"
+    },
+    {
+      "path": "packages/extension/src/content/marketplace-page.ts",
+      "bytes": 19125,
+      "sha256": "06b53de66525f198ad9453e255c807348cfec538710a211176f3a86fc3155546"
+    },
+    {
+      "path": "packages/extension/src/content/page-extractor.ts",
+      "bytes": 6172,
+      "sha256": "d93ebd61e0ac41fe0cd10a21cfd3f585b4ff1f4df2437a66c2ba4e54094bb690"
+    },
+    {
+      "path": "packages/extension/src/lib/api.ts",
+      "bytes": 4022,
+      "sha256": "cf083da2dc1334a324f3e6c186e06e9d1d5ffe8c9bf6e69932f41b4ef91c9e56"
+    },
+    {
+      "path": "packages/extension/src/lib/batch-queue.ts",
+      "bytes": 1976,
+      "sha256": "74b54fa6ee9b2c3a827b0a0f1736c2448bf59ec5d6edcc35d43f318b20e5f401"
+    },
+    {
+      "path": "packages/extension/src/lib/contracts.ts",
+      "bytes": 2255,
+      "sha256": "c1e07b22ecb38d6a3e7e32e6ee35f26d1cb7302a578ce3c039c6b2578fe11836"
+    },
+    {
+      "path": "packages/extension/src/lib/import-report.ts",
+      "bytes": 6941,
+      "sha256": "299e6a93ef1e8ec15b346693f3181519b08b340b5407af29d83be3372f216fa0"
+    },
+    {
+      "path": "packages/extension/src/lib/outbox.ts",
+      "bytes": 2606,
+      "sha256": "ea69822f92206be30143b317717d26e166351b7c0b428f7e30324e69ca7599fb"
+    },
+    {
+      "path": "packages/extension/src/lib/storage.ts",
+      "bytes": 2464,
+      "sha256": "4fbb1d986d8273a1fa929b9304bc8b2e725a00262538388f3b263769e28b65a0"
+    },
+    {
+      "path": "packages/extension/src/popup/index.html",
+      "bytes": 2872,
+      "sha256": "c1e51aefdc0695ff6f0f171216139821c0dccc8ed0156eb15c0f8542cc17df1c"
+    },
+    {
+      "path": "packages/extension/src/popup/popup.css",
+      "bytes": 3652,
+      "sha256": "4de7ac4d394b98e59b26170c8b38862cd6f05c64a350f523c64c72a709841fac"
+    },
+    {
+      "path": "packages/extension/src/popup/popup.ts",
+      "bytes": 14369,
+      "sha256": "e2b539bcbb06ca7555eabe042836b4fdd71e4e96d08a399047c989483e884317"
+    },
+    {
+      "path": "packages/extension/scripts/build-config.mjs",
+      "bytes": 2762,
+      "sha256": "6e6da29a3ef96c57d0d93fd7dad752462c2157032613e857fe1f88b14bc14e1d"
+    },
+    {
+      "path": "packages/extension/scripts/build.mjs",
+      "bytes": 2759,
+      "sha256": "87b44422fcb5a3cf8b630deccde5365467ac6317342b21816db40421c3f127ee"
+    },
+    {
+      "path": "packages/extension/scripts/package.mjs",
+      "bytes": 4446,
+      "sha256": "9ac7983df29b31d90182d5ff86736b3d2b831bf569f7561964fe5e01fbfb951b"
+    },
+    {
+      "path": "packages/extension/scripts/verify-manifest.mjs",
+      "bytes": 1404,
+      "sha256": "a278931851e47911aa651d37acaed12b0e049cef935db8cf40c9a4a287a5f4d7"
+    },
+    {
+      "path": "packages/extension/manifest.json",
+      "bytes": 673,
+      "sha256": "d89f62c17de76db0763d48037d380b492f65658a9b74208a977c095ced9d1574"
+    },
+    {
+      "path": "packages/extension/package.json",
+      "bytes": 711,
+      "sha256": "d663d0a556ba04612ad36716cc748ac4a27d1743fef617384d5c4e6e1e58370a"
+    },
+    {
+      "path": "packages/extension/package-lock.json",
+      "bytes": 17311,
+      "sha256": "a42114c7d7f1fac46e96c695967ba24bdc2439d76a36ff9409e6117ea454a9f3"
+    },
+    {
+      "path": "packages/web/lib/extension-db.ts",
+      "bytes": 16863,
+      "sha256": "4766e81e9c680690b7df10ec8fc307f124f38a8f3b0d4ca8bdf0637e74262003"
+    },
+    {
+      "path": "packages/web/lib/flags.ts",
+      "bytes": 1779,
+      "sha256": "219bb03f942c6da37c2cec8ccfc34394eeb3b2d7ab4408678ff2c3db1d583c09"
+    },
+    {
+      "path": "packages/web/lib/extension-request.ts",
+      "bytes": 1312,
+      "sha256": "4fd7b9bbf0f21765dc4ad842d758cd1ad0d44e0260081c81e4a0aa7bef6149d6"
+    },
+    {
+      "path": "packages/web/lib/extension-cors.ts",
+      "bytes": 1714,
+      "sha256": "5f4793870f5fc7e9e24c2ab436f69906a6d01f28436a12f53d7263f2923f1dc5"
+    },
+    {
+      "path": "packages/web/app/api/extension/captures/route.ts",
+      "bytes": 3744,
+      "sha256": "408e82cb29a56211375786e3f87ccf882f9188cfe3ebeae7fb234e093c43269f"
+    },
+    {
+      "path": "packages/web/app/api/extension/capture-batches/route.ts",
+      "bytes": 6104,
+      "sha256": "aa3c77910d575edc54d789c680045302b37019d83307eece9d6b843c58c99bc0"
+    },
+    {
+      "path": "packages/web/app/api/extension/pair/exchange/route.ts",
+      "bytes": 3129,
+      "sha256": "3b10cc1afdb2ffe808cd42bc8156f7c8b8a750959239d26434cea6a86ec435de"
+    },
+    {
+      "path": "packages/web/app/api/extension/pairing-codes/route.ts",
+      "bytes": 3695,
+      "sha256": "52681d250b551d5711cbbdf898bece97d246b376fa5912b47c7b1ff339d4a163"
+    },
+    {
+      "path": "packages/web/lib/browser-capture-contract.ts",
+      "bytes": 9776,
+      "sha256": "26a3b937d37a7ae10d93b4392cfc23d3c3d1505cb81a363be3a7d641f65159e0"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "tools/editorial-tests/extension-manual-http.test.ts",
+      "bytes": 13460,
+      "sha256": "957fa22d301f36236b955696910142187e08b3930199f3ee053a033f14d924bb"
+    },
+    {
+      "path": "tools/editorial-tests/extension-import-identity.test.ts",
+      "bytes": 3649,
+      "sha256": "cd62696478737f7a72848672a0eb35f18ae93dce18f57661f1b1a422dd76ce12"
+    },
+    {
+      "path": "tools/editorial-tests/extension-manual-native.test.ts",
+      "bytes": 11298,
+      "sha256": "90919eb791c85c742328069ad01508525d43f175daedff5ce312bded726fd3ed"
+    },
+    {
+      "path": "tools/editorial-tests/real-garimpa-baseline-fixture.ts",
+      "bytes": 2844,
+      "sha256": "acb5a41c29083a5c4eacfefe43443691c5c46e6c43168ef37af87bbabf59a376"
+    },
+    {
+      "path": "tools/editorial-tests/package.json",
+      "bytes": 4115,
+      "sha256": "b64abb94395993626df2f41b47fff6f63de600997b905500a11b54c0b398a6ff"
+    },
+    {
+      "path": "packages/web/test/browser-capture-diagnostics.test.mjs",
+      "bytes": 4615,
+      "sha256": "fcc23017ad3bcc7c526abbde79fb00b201b8760614d34b52db2a64a62a673e18"
+    },
+    {
+      "path": "packages/extension/test/service-worker.test.ts",
+      "bytes": 18829,
+      "sha256": "1783a34a2acf09de495fc1b355f946d7cd8024a2efcd39fda81cc11152101d0c"
+    },
+    {
+      "path": "packages/extension/test/import-report.test.ts",
+      "bytes": 6863,
+      "sha256": "b9be0832e7be053bc69b3fdff38db280f79169e0ca7884e793180a64fa55887a"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/extension/release/bizuminer-extension-v0.3.5.zip",
+      "bytes": 31196,
+      "sha256": "cdef99d2f472f04604bf970c50028e9ecf500a93abe11ca397ed0bb486021231"
+    },
+    {
+      "path": "packages/extension/release/bizuminer-extension-v0.3.5/release-manifest.json",
+      "bytes": 1184,
+      "sha256": "cbec0a292ccd4d7a02556baeadcfd1632db3bd4ab9175942f42f6400bafe395d"
+    }
+  ]
+}

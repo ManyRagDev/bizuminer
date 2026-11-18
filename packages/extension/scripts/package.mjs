@@ -1,67 +1,73 @@
-/**
- * Empacotamento reproduzível (E8): gera `release/bizuminer-extension-v<versão>/`
- * com o conteúdo de `dist/` e um `RELEASE.txt` com a lista de arquivos e hashes
- * SHA-256 (evidência derivada por máquina, não montada à mão). O ZIP final
- * pode ser criado a partir desta pasta com `Compress-Archive` (Windows) ou
- * `zip -r` (unix) — a pasta já é carregável como "unpacked" no Chrome.
- */
-
-import { build } from "esbuild";
-import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+/** Production-only artifact. Existing releases are never overwritten or removed. */
+import { cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-
+import { buildExtension } from "./build.mjs";
+import { PRODUCTION_ORIGIN, manifestFailures } from "./build-config.mjs";
+if (process.argv.length > 2) throw new Error("Package is production-only and accepts no mode flags");
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const pkg = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 const version = pkg.version;
-const distDir = path.join(root, "dist");
-const releaseDir = path.join(root, "release", `bizuminer-extension-v${version}`);
-
-await rm(releaseDir, { recursive: true, force: true });
-await mkdir(releaseDir, { recursive: true });
-
-// Rebuild garantido (idempotente).
-await import("./build.mjs");
-
-async function copyTree(src, dest) {
-  const entries = await readdir(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const from = path.join(src, entry.name);
-    const to = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      await mkdir(to, { recursive: true });
-      await copyTree(from, to);
-    } else {
-      await cp(from, to);
+if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("Invalid release version");
+const name = `bizuminer-extension-v${version}`;
+const releaseRoot = path.join(root, "release");
+const releaseDir = path.join(releaseRoot, name);
+const zipPath = `${releaseDir}.zip`;
+const staging = path.join(releaseRoot, `.${name}-${process.pid}.tmp`);
+const temporaryZip = `${staging}.zip`;
+for (const destination of [releaseDir, zipPath, `${zipPath}.sha256`]) {
+  try { await stat(destination); throw new Error(`Release already exists: ${path.basename(destination)}; use a new version`); }
+  catch (error) { if (error?.code !== "ENOENT") throw error; }
+}
+const hasZip = spawnSync("zip", ["-v"], { stdio: "ignore" }).status === 0;
+const built = await buildExtension("prod");
+const manifest = JSON.parse(await readFile(path.join(built.outdir, "manifest.json"), "utf8"));
+const failures = manifestFailures(manifest, "prod", version);
+if (failures.length) throw new Error(failures.join("; "));
+await mkdir(releaseRoot, { recursive: true });
+async function listFiles(directory, prefix = "") {
+  const result = [];
+  for (const entry of (await readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isSymbolicLink()) throw new Error("Release may not contain symlinks");
+    if (entry.isDirectory()) result.push(...await listFiles(path.join(directory, entry.name), rel));
+    else {
+      const bytes = await readFile(path.join(directory, entry.name));
+      result.push({ path: rel, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") });
     }
   }
+  return result;
 }
-await copyTree(distDir, releaseDir);
-
-async function listFiles(dir, base = "") {
-  const out = [];
-  const entries = (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name));
-  for (const entry of entries) {
-    const rel = base ? `${base}/${entry.name}` : entry.name;
-    if (entry.isDirectory()) {
-      out.push(...(await listFiles(path.join(dir, entry.name), rel)));
-    } else {
-      const bytes = await readFile(path.join(dir, entry.name));
-      out.push({ rel, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") });
-    }
+try {
+  await cp(built.outdir, staging, { recursive: true, force: false, errorOnExist: true });
+  const files = await listFiles(staging);
+  await writeFile(path.join(staging, "release-manifest.json"), JSON.stringify({ version, mode: "prod", apiOrigin: PRODUCTION_ORIGIN, files }, null, 2) + "\n");
+  await writeFile(path.join(staging, "RELEASE.txt"), [
+    `BizuMiner extension v${version}`, `mode: production`, `API: ${PRODUCTION_ORIGIN}`,
+    "Chromium / Vivaldi: extract the ZIP and use Load unpacked with the folder containing manifest.json.",
+    "For an existing unpacked install, update its files and reload it manually in the browser extensions page.",
+    "A different folder can change the extension ID. Check the actual browser ID before changing the server allowlist.",
+    "This package contains no identity key and does not update the browser or server automatically.",
+    "Imports require human confirmation and remain pending editorial review. No automatic AI triage.", "",
+    ...files.map(file => `${file.sha256}  ${file.bytes}  ${file.path}`), "",
+  ].join("\n"));
+  if (hasZip) {
+    const zipFiles = (await listFiles(staging)).map(file => file.path);
+    const result = spawnSync("zip", ["-X", "-q", temporaryZip, ...zipFiles], { cwd: staging, stdio: "pipe" });
+    if (result.status !== 0) throw new Error("ZIP creation failed");
   }
-  return out;
+  await rename(staging, releaseDir);
+  if (hasZip) {
+    await rename(temporaryZip, zipPath);
+    const digest = createHash("sha256").update(await readFile(zipPath)).digest("hex");
+    await writeFile(`${zipPath}.sha256`, `${digest}  ${path.basename(zipPath)}\n`);
+  }
+  console.log(`Production release: release/${name}/ (${files.length} payload files, SHA-256 manifest)`);
+  console.log(hasZip ? `ZIP: release/${name}.zip (+ .sha256)` : "ZIP unavailable: install the zip utility; unpacked production folder is ready.");
+} catch (error) {
+  await rm(staging, { recursive: true, force: true });
+  await rm(temporaryZip, { force: true });
+  throw error;
 }
-
-const files = await listFiles(releaseDir);
-const lines = [
-  `BizuMiner extension release v${version}`,
-  `generated: ${new Date().toISOString()}`,
-  `files: ${files.length}`,
-  "",
-  ...files.map((f) => `${f.sha256}  ${f.bytes}  ${f.rel}`),
-];
-await writeFile(path.join(releaseDir, "RELEASE.txt"), lines.join("\n") + "\n");
-
-console.log(`release em release/bizuminer-extension-v${version}/ (${files.length} arquivos + RELEASE.txt)`);

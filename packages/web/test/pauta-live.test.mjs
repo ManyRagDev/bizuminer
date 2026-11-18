@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { composeLivePauta } from "../lib/pauta-policy.ts";
+import { composeLivePauta, calculateNominalSavingsCents, classifyPautaShelf } from "../lib/pauta-policy.ts";
 
 const now = new Date("2026-11-08T15:00:00Z");
 const observed = hours => new Date(+now - hours * 3_600_000).toISOString();
@@ -177,4 +177,81 @@ test("teto por loja impede que rodagem recente de um marketplace monopolize a pa
   assert.ok(shopeeCount <= 5, `Shopee pegou ${shopeeCount}, mas deveria ter teto de no máximo 5`);
   assert.ok(amazonCount >= 3, `Amazon precisa ter pelo menos 3 vagas (teve ${amazonCount})`);
   assert.ok(mlCount >= 3, `Mercado Livre precisa ter pelo menos 3 vagas (teve ${mlCount})`);
+});
+
+test("classifica corretamente Dupla Régua: Alto Impacto (PS5/TV) vs Giro Diário (tampas de pote) vs Demanda", () => {
+  const ps5 = offer("ps5", {
+    title: "Console PlayStation 5 Slim 1TB",
+    priceCents: 280000,
+    previousMinPriceCents: 314000,
+    discountPercent: 11,
+    triageScore: 4,
+    evidenceObservedAt: observed(1),
+  });
+  const potTops = offer("tampas", {
+    title: "Conjunto 6 Tampas de Silicone",
+    priceCents: 1900,
+    previousMinPriceCents: 3800,
+    discountPercent: 50,
+    triageScore: 4,
+    evidenceObservedAt: observed(1),
+  });
+  const demandItem = offer("desejo", {
+    title: "Airfryer Mondial 4L",
+    priceCents: 24900,
+    watchersCount: 3,
+    triageScore: 4,
+    evidenceObservedAt: observed(1),
+  });
+
+  assert.equal(classifyPautaShelf(ps5), "impact");
+  assert.equal(calculateNominalSavingsCents(ps5), 34000);
+  assert.equal(classifyPautaShelf(potTops), "daily");
+  assert.equal(classifyPautaShelf(demandItem), "demand");
+
+  const result = composeLivePauta([ps5, potTops, demandItem], { ...policy, limit: 3 }, new Map(), now, null, new Set());
+  assert.equal(result.selected.length, 3);
+  const selectedPs5 = result.selected.find(p => p.id === "ps5");
+  assert.equal(selectedPs5.shelf, "impact");
+  assert.equal(selectedPs5.nominalSavingsCents, 34000);
+});
+
+test("não bloqueia ofertas de ticket alto na Pauta V2 mesmo quando impulseLimitCents estiver definido", () => {
+  const tv = offer("tv-oled", {
+    title: "Smart TV 55 LG OLED 4K",
+    priceCents: 250000,
+    pautaScore: 90,
+    evidenceObservedAt: observed(1),
+  });
+  const v2 = {
+    repeatHours: 72,
+    impulseLimitCents: 15000, // R$ 150 - antigo teto de impulso que bloqueava produtos caros
+    allowPriceImprovement: true,
+    improvementPercent: 5,
+    categoryExposureCounts: new Map(),
+  };
+  const result = composeLivePauta([tv], { ...policy, limit: 1 }, new Map(), now, null, new Set(), v2);
+  assert.equal(result.selected.length, 1);
+  assert.equal(result.selected[0].id, "tv-oled");
+});
+
+test("permite ofertas entre 48h e 7 dias quando allowCatalogWindow=true marcando needsPriceRefresh=true", () => {
+  const olderGem = offer("joia-antiga", {
+    title: "Perfume Lancôme Idôle 100ml",
+    priceCents: 45000,
+    previousMinPriceCents: 60000,
+    discountPercent: 25,
+    triageScore: 5,
+    evidenceObservedAt: observed(72), // 72 horas atrás (> 48h, dentro de 7 dias)
+  });
+  // Sem allowCatalogWindow, cai pelo corte de 48h
+  const blockedResult = composeLivePauta([olderGem], { ...policy, limit: 1 }, new Map(), now, null, new Set());
+  assert.equal(blockedResult.selected.length, 0);
+  assert.match(blockedResult.reasonsById.get(olderGem.id)[0], /48 horas/);
+
+  // Com allowCatalogWindow=true, entra na Pauta com needsPriceRefresh=true
+  const allowedResult = composeLivePauta([olderGem], { ...policy, limit: 1 }, new Map(), now, null, new Set(), undefined, { allowCatalogWindow: true });
+  assert.equal(allowedResult.selected.length, 1);
+  assert.equal(allowedResult.selected[0].id, "joia-antiga");
+  assert.equal(allowedResult.selected[0].needsPriceRefresh, true);
 });

@@ -37,16 +37,19 @@ describe("outbox", () => {
     assert.deepEqual(box.map((e) => e.requestId), ["r2"]);
   });
 
-  it("pruneExpired remove itens além do TTL", () => {
+  it("pruneExpired retém falha expirada para inspeção", () => {
     let box = enqueue([], payload("old"), 0);
     box = enqueue(box, payload("new"), OUTBOX_TTL_MS + 1);
     const pruned = pruneExpired(box, OUTBOX_TTL_MS + 2);
-    assert.deepEqual(pruned.map((e) => e.requestId), ["new"]);
+    assert.deepEqual(pruned.map((e) => e.requestId), ["old", "new"]);
+    assert.equal(pruned[0]!.stopped, true);
+    assert.equal(pruned[0]!.lastError, "capture_expired");
   });
 
   it("limita a fila a OUTBOX_MAX_ITEMS", () => {
     let box: ReturnType<typeof enqueue> = [];
-    for (let i = 0; i < OUTBOX_MAX_ITEMS + 10; i++) box = enqueue(box, payload(`r${i}`), 0);
+    for (let i = 0; i < OUTBOX_MAX_ITEMS; i++) box = enqueue(box, payload(`r${i}`), 0);
+    assert.throws(() => enqueue(box, payload("overflow")), /queue_full/);
     assert.equal(box.length, OUTBOX_MAX_ITEMS);
   });
 

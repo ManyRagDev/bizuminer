@@ -1,0 +1,42 @@
+{
+  "version": "0.3.5",
+  "mode": "prod",
+  "apiOrigin": "https://www.bizuminer.com.br",
+  "files": [
+    {
+      "path": "content/activate-catalog.js",
+      "bytes": 14425,
+      "sha256": "95a34ddc4d91cff34a1f53446937a5d84a90c5a4088e32c728664d3ebee41f30"
+    },
+    {
+      "path": "content/marketplace-page.js",
+      "bytes": 24688,
+      "sha256": "1e708e29b8d2cab6c8db94d3c473aa2b913c9eae861d036bd0d10fb0132c58a3"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 693,
+      "sha256": "17fde679d18b1d6c4e7eac82f2dc83fac31af5a91bb3ab9c0f9bf31f9b235290"
+    },
+    {
+      "path": "popup/index.html",
+      "bytes": 2872,
+      "sha256": "c1e51aefdc0695ff6f0f171216139821c0dccc8ed0156eb15c0f8542cc17df1c"
+    },
+    {
+      "path": "popup/popup.css",
+      "bytes": 3652,
+      "sha256": "4de7ac4d394b98e59b26170c8b38862cd6f05c64a350f523c64c72a709841fac"
+    },
+    {
+      "path": "popup/popup.js",
+      "bytes": 21131,
+      "sha256": "11915456a6d78b57c03353a19d2a3d9a8e3a514463d13f9ff59e2b1a9081e0c7"
+    },
+    {
+      "path": "service-worker.js",
+      "bytes": 33166,
+      "sha256": "80e015c3f099dcbdd0cc13985080497c8051db6e2070f5e61d4fdbe874d50fed"
+    }
+  ]
+}

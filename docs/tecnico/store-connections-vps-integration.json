@@ -1,0 +1,71 @@
+{
+  "scope": "existing-account-store-connections",
+  "serverOnly": true,
+  "apiContract": "additive secretStorageReady boolean; no secret values returned",
+  "route": "/admin/onboarding",
+  "newMigrations": [],
+  "newEnvironmentVariables": [],
+  "requiredExistingEnvironment": [
+    "AFFILIATE_SECRETS_MASTER_KEY or AFFILIATE_SECRETS_KEY_V1 for new encrypted credential storage"
+  ],
+  "automationEnabled": false,
+  "runtimeFiles": [
+    {
+      "path": "packages/web/lib/account-connections.ts",
+      "bytes": 8139,
+      "sha256": "218586abbad4c3cb7c7e7390180c1a40e70490b58a90654a7c18c34ea3dad63f"
+    },
+    {
+      "path": "packages/web/lib/workflow-readiness.ts",
+      "bytes": 1186,
+      "sha256": "fc61637fe68a2fc19fe085864f846aa922d38c51c14a86a6b25095c572f15b89"
+    },
+    {
+      "path": "packages/web/lib/affiliate-workspace-contract.ts",
+      "bytes": 10557,
+      "sha256": "ccde495d222a6f9dec3fa880236d74201504443a5e8f0b1504d1c07c6a7ee814"
+    },
+    {
+      "path": "packages/web/app/admin/onboarding/page.tsx",
+      "bytes": 906,
+      "sha256": "8692d0a62075e0f9384d5f075eaeb11b7128e4154c12a149d524fbead31dadf7"
+    },
+    {
+      "path": "packages/web/app/admin/onboarding/workspace.tsx",
+      "bytes": 11377,
+      "sha256": "fed6c39087f270aef64885ae0bd1a4928fd5763983846ee8e89b18ed4f565cd8"
+    },
+    {
+      "path": "packages/web/app/admin/governanca/page.tsx",
+      "bytes": 1949,
+      "sha256": "20bc24cf7992362b7d5cdd64071a061885976cd6240d10b1f1fd833e339170ea"
+    },
+    {
+      "path": "packages/web/app/admin/experimentos/page.tsx",
+      "bytes": 1734,
+      "sha256": "6bfa3ab959ce7b4bd4ff1558986018d72cafe97d2dc305cba8a54d3a6cc69ce1"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "packages/web/test/account-connections-page.test.mjs",
+      "bytes": 11824,
+      "sha256": "215e6d93c954ac3ec7b129c5b75ce8effd6690e0c75005160c20ea1cc888b36d"
+    },
+    {
+      "path": "packages/web/test/workflow-readiness.test.mjs",
+      "bytes": 2612,
+      "sha256": "64f7729515696f4aef84fd66aa6da3bec4d7f2abf04dadc158fdbe2556611eac"
+    },
+    {
+      "path": "tools/editorial-tests/account-connections-native.test.ts",
+      "bytes": 12601,
+      "sha256": "bfb37f28ba5442421f7cb1125f8d0d6e684b5e70708fbd95f1940eb8c7a4f488"
+    },
+    {
+      "path": "tools/editorial-tests/affiliate-workspace-native.test.ts",
+      "bytes": 24033,
+      "sha256": "0655b3895f495a7f0a555a0c02391da5dca1c875fd053142ec505c4341a31c96"
+    }
+  ]
+}

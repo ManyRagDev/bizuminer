@@ -1,3 +1,4 @@
+import { adminMutationOrigin } from "../../../../../lib/admin-request-origin.ts";
 import { inAccountScope } from "../../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../../lib/api-auth";
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
   if (check.kind === "no_session") return Response.json({ ok: false, error: "no_session" }, { status: 401 });
   if (check.kind === "forbidden") return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
  return inAccountScope(check.context, async () => {
-  if (request.headers.get("origin") !== request.nextUrl.origin) {
+  if (!adminMutationOrigin(request)) {
     return sinkJson(check.sink, { ok: false, error: "invalid_origin" }, { status: 403 });
   }
   let body: { marketplace?: unknown; enabled?: unknown };

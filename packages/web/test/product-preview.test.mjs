@@ -27,8 +27,10 @@ test("same offer yields one URL; visible changes, evidence and freshness change 
     { title: "Outro título" }, { lowestVerified: false }, { evidenceObservedAt: "2026-10-23T11:00:00Z" },
   ]) assert.notEqual(productPreview({ ...product, ...patch }, now).path, first.path);
   const boundary = new Date(Date.parse(product.evidenceObservedAt) + 48 * 3_600_000);
-  assert.equal(productPreview(product, new Date(boundary.getTime() - 10_000)).cacheSeconds, 10);
-  assert.equal(productPreview(product, boundary).cacheSeconds, 0);
+  const withDeadline = { ...product, offerValidUntil: boundary.toISOString() };
+  assert.equal(productPreview(product, new Date(boundary.getTime() - 10_000)).cacheSeconds, 0);
+  assert.equal(productPreview(withDeadline, new Date(boundary.getTime() - 10_000)).cacheSeconds, 10);
+  assert.equal(productPreview(withDeadline, boundary).cacheSeconds, 0);
   assert.equal(productPreview(product, boundary).stale, false);
   assert.equal(productPreview(product, new Date(boundary.getTime() + 1)).stale, true);
   assert.notEqual(productPreview(product, new Date(boundary.getTime() + 1)).path, first.path);
@@ -63,7 +65,9 @@ test("legacy URLs and private selection hints resolve to the current public imag
   assert.equal(reads, 4); assert.equal(renders, 0);
   const result = await serveProductPreview(new Request(`https://www.bizuminer.com.br${expected}`), product.slug, deps, now);
   assert.equal(result.status, 200); assert.equal(renders, 1);
-  assert.equal(result.headers.get("vercel-cdn-cache-control"), "public, s-maxage=300");
+  assert.equal(result.headers.get("cache-control"), "no-store");
+  assert.equal(result.headers.get("vercel-cdn-cache-control"), null);
+  assert.equal(result.headers.get("X-BizuMiner-Preview-Ttl"), "0");
   assert.equal(result.headers.get("access-control-allow-origin"), "*");
 });
 
@@ -77,7 +81,7 @@ test("revocation, suspension or expiry returning no public product cannot reuse 
   assert.equal(result.headers.get("vercel-cdn-cache-control"), null);
 });
 
-test("photo failure does not cache an incomplete card; freshness deadline limits the CDN TTL", async () => {
+test("photo failure does not cache an incomplete card; freshness deadline and expiry fence response", async () => {
   const url = `https://www.bizuminer.com.br${productPreview(product, now).path}`;
   const response = await serveProductPreview(new Request(url), product.slug, {
     loadProduct: async () => product,
@@ -89,7 +93,18 @@ test("photo failure does not cache an incomplete card; freshness deadline limits
   const fresh = await serveProductPreview(new Request(url), product.slug, {
     loadProduct: async () => product, render: async () => ready(),
   }, justBefore);
-  assert.equal(fresh.headers.get("vercel-cdn-cache-control"), "public, s-maxage=7");
+  assert.equal(fresh.status, 200);
+  assert.equal(fresh.headers.get("cache-control"), "no-store");
+  assert.equal(fresh.headers.get("vercel-cdn-cache-control"), null);
+  assert.equal(fresh.headers.get("X-BizuMiner-Preview-Ttl"), "0");
+  const expiredOffer = { ...product, offerValidUntil: justBefore.toISOString() };
+  const expiredRes = await serveProductPreview(
+    new Request(`https://www.bizuminer.com.br${productPreview(expiredOffer, justBefore).path}`),
+    product.slug,
+    { loadProduct: async () => expiredOffer, render: async () => ready() },
+    justBefore,
+  );
+  assert.equal(expiredRes.status, 410);
 });
 
 test("warmup bounds concurrency, deduplicates repeated polling and prioritizes the selected product", async () => {

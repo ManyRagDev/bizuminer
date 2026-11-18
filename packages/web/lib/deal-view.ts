@@ -15,7 +15,8 @@ export type VitrineProduct = Partial<ProductPresentation> & {
 
 export function toVitrineProduct(deal: DealRow): VitrineProduct {
   return {
-    offerOptionKey:deal.offerOptionKey,offerOptionLabel:deal.offerOptionLabel,offerConditions:deal.offerConditions,offerValidUntil:deal.offerValidUntil,
+    offerOptionKey:deal.offerOptionKey,offerOptionLabel:deal.offerOptionLabel,offerConditions:deal.offerConditions,
+    offerValidUntil:deal.offerValidUntil ? new Date(deal.offerValidUntil).toISOString() : undefined,
     id: deal.id, slug: deal.slug, title: deal.displayTitle ?? deal.title, priceCents: deal.price_cents,
     displayTitle: deal.displayTitle, sourceTitle: deal.sourceTitle ?? deal.title, titleOrigin: deal.titleOrigin,
     editorialRevisionId: deal.editorialRevisionId, editorialReviewedAt: deal.editorialReviewedAt,

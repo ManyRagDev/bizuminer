@@ -69,7 +69,7 @@ test("Estágio 1: produto com termo sexual é rejeitado como adult_sexual", asyn
   assert.equal(decisions[0].actorType, "rule");
 });
 
-test("Estágio 1: peças industriais ou de reposição são rejeitadas como low_utility", async () => {
+test("Estágio 1: peça avulsa e nota baixa (< 4.0) chegam à avaliação sem rejeição determinística", async () => {
   const products = [
     {
       id: "prod_screw",
@@ -81,22 +81,6 @@ test("Estágio 1: peças industriais ou de reposição são rejeitadas como low_
       familyKey: null,
       category: "Ferramentas",
     },
-  ];
-
-  const decisions = await processIngestionPipeline(products, {
-    evaluator: async () => [],
-  });
-
-  assert.equal(decisions.length, 1);
-  assert.equal(decisions[0].productId, "prod_screw");
-  assert.equal(decisions[0].status, "rejected");
-  assert.equal(decisions[0].reasonCode, "low_utility");
-  assert.equal(decisions[0].reasonDetail, null);
-  assert.equal(decisions[0].actorType, "rule");
-});
-
-test("Estágio 1: produto com avaliação comprovadamente ruim (< 4.0) é rejeitado como low_quality_listing", async () => {
-  const products = [
     {
       id: "prod_bad_rating",
       marketplace: "shopee",
@@ -109,15 +93,24 @@ test("Estágio 1: produto com avaliação comprovadamente ruim (< 4.0) é rejeit
     },
   ];
 
+  const seenIds = [];
   const decisions = await processIngestionPipeline(products, {
-    evaluator: async () => [],
+    evaluator: async (items) => {
+      seenIds.push(...items.map((item) => item.productId));
+      return items.map((item) => ({
+        productId: item.productId,
+        desirabilityScore: 2,
+        hasMisleadingClaim: false,
+        isAdultOrUnsafe: false,
+        editorialCategory: "peca_chata",
+        justification: "Avaliação registrada sem bloqueio automático.",
+      }));
+    },
   });
 
-  assert.equal(decisions.length, 1);
-  assert.equal(decisions[0].productId, "prod_bad_rating");
-  assert.equal(decisions[0].status, "rejected");
-  assert.equal(decisions[0].reasonCode, "low_quality_listing");
-  assert.equal(decisions[0].reasonDetail, null);
+  assert.deepEqual(seenIds, ["prod_screw", "prod_bad_rating"]);
+  assert.equal(decisions.length, 2);
+  assert.ok(decisions.every((d) => d.status === "pending" && d.reasonCode === null && d.actorType === "llm"));
 });
 
 test("Estágio 2: anti-saturação preserva até 3 representantes para IA e mantém excedentes pendentes para exame humano", async () => {

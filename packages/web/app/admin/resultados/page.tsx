@@ -9,9 +9,10 @@ import {
   type CommissionEntry,
 } from "../../../lib/commercial-financial-contract.ts";
 import FinancialWorkspace from "../financeiro/workspace.tsx";
-import AdminLink from "../../_components/admin-link.tsx";
 import { getGA4DashboardData } from "../../../lib/ga4-reporting.ts";
+import { readMarketplacePerformance } from "../../../lib/marketplace-performance-db.ts";
 import GA4MetricsPanel from "./ga4-metrics-panel.tsx";
+import MarketplaceResults from "./marketplace-results.tsx";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +30,20 @@ export default async function Page() {
     const ready = await commercialRolloutReady(tx);
     if (!ready) return null;
 
-    const [summary] = await tx<any[]>`
+    const [summary] = await tx<{ clicks: number; sales: number }[]>`
       select 
         (select count(*)::int from garimpa.click_event where tenant_id=${c.tenantId}) as clicks,
-        (select count(*)::int from garimpa.conversion where tenant_id=${c.tenantId}) as sales,
-        (select count(*)::int from garimpa.commission_entry where tenant_id=${c.tenantId}) as entries
+        (select count(*)::int from garimpa.conversion where tenant_id=${c.tenantId}) as sales
+    `;
+
+    const clicksByMarketplace = await tx<{ marketplace: string; clicks: number }[]>`
+      select p.marketplace, count(*)::int as clicks
+      from garimpa.click_event c
+      join garimpa.publication pub on pub.id = c.publication_id and pub.tenant_id = c.tenant_id
+      join garimpa.product p on p.id = pub.product_id and p.tenant_id = pub.tenant_id
+      where c.tenant_id = ${c.tenantId}
+      group by p.marketplace
+      order by clicks desc, p.marketplace
     `;
 
     const topProducts = await tx<any[]>`
@@ -54,7 +64,8 @@ export default async function Page() {
       limit 5
     `.catch(() => []);
 
-    return { summary, topProducts };
+    const reports = await readMarketplacePerformance(tx, c.tenantId);
+    return { summary, topProducts, clicksByMarketplace, reports };
   });
 
   const summary = resultData?.summary;
@@ -89,27 +100,34 @@ export default async function Page() {
         <p className="bm-eyebrow">Retorno comercial</p>
         <h1>Desempenho das suas divulgações</h1>
         <p>
-          Acompanhe o interesse gerado (cliques) e as comissões registradas a partir dos seus links.
+          Acompanhe cliques, vendas e comissões das suas divulgações em um só lugar.
         </p>
       </header>
 
-      {summary ? (
+      {resultData && summary ? (
         <>
           {/* Main 3 KPIs */}
           <div className="bm-stats">
             <div>
               <strong>{summary.clicks ?? 0}</strong>
-              <span>cliques totais nos seus links</span>
+              <span>cliques medidos pelo BizuMiner</span>
             </div>
             <div>
-              <strong>{summary.sales || "0"}</strong>
-              <span>vendas confirmadas pelas lojas</span>
+              <strong>{summary.sales}</strong>
+              <span>conversões registradas no financeiro</span>
             </div>
             <div>
               <strong>{money(commissions.confirmedCents + commissions.receivedCashCents)}</strong>
               <span>comissão confirmada / recebida</span>
             </div>
           </div>
+
+          <MarketplaceResults
+            clicks={resultData.clicksByMarketplace}
+            reports={resultData.reports}
+            tenantId={c.tenantId}
+            canEdit={c.membershipRole === "owner"}
+          />
 
           {/* Top Converting / Clicked Products */}
           <section className="bm-card" style={{ marginTop: "24px" }}>

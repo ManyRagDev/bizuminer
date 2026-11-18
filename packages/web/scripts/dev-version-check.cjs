@@ -3,6 +3,10 @@
 // hold local development at "Starting..." for the network's full timeout.
 // This preload is used exclusively by `npm run dev` and inherited by Next's
 // worker process. Builds and the production server use their normal fetch.
+// Keep dev chunks separate: `next build` clears its output directory and must
+// not remove the JavaScript being served by a running localhost instance.
+process.env.BIZUMINER_DIST_DIR ||= ".next-dev";
+
 const fetch = globalThis.fetch;
 const versionCheckUrl = "https://registry.npmjs.org/-/package/next/dist-tags";
 

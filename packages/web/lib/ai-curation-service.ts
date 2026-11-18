@@ -11,9 +11,17 @@ import {
   validateRubricAssessment,
 } from "./rubric-contract.ts";
 import { calculateRubricInputDigest } from "./rubric-db.ts";
+import {
+  aiCurationProvider,
+  aiCurationReadiness,
+  AICurationProviderError,
+  evaluateOpenRouterBatch,
+  OPENROUTER_CURATION_MAX_BATCH,
+  type OpenRouterCurationOptions,
+} from "./ai-curation-provider.ts";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
-export const AI_CURATION_BATCH_SIZE = 25;
+export const AI_CURATION_BATCH_SIZE = 20;
 
 /**
  * Modelos tentados em sequência quando o primário está saturado. O erro 503
@@ -167,6 +175,8 @@ DIRETRIZES DE AVALIAÇÃO:
    - Frase concisa (1 sentença, máx 150 caracteres) explicando a nota e o apelo para o curador.`;
 
 export interface EvaluationOptions {
+  /** Explicit environment/transport injection for provider contract tests. */
+  providerOptions?: OpenRouterCurationOptions;
   apiKey?: string;
   modelName?: string;
   batchSize?: number;
@@ -236,9 +246,7 @@ async function generateBatchWithFallback(
       if (!isTransientGeminiError(err) && !isDailyQuotaExhaustedError(err) && status !== 404) throw err;
       lastError = err;
       console.warn(
-        `[ai-curation] Modelo ${modelName} indisponível (${status === 404 ? "não encontrado" : isDailyQuotaExhaustedError(err) ? "cota diária esgotada" : "transitório"}): ${
-          err instanceof Error ? err.message : String(err)
-        }. Tentando próximo da cadeia.`,
+        `[ai-curation] Modelo indisponível (${status === 404 ? "não encontrado" : isDailyQuotaExhaustedError(err) ? "cota diária esgotada" : "transitório"}). Tentando próximo da cadeia.`,
       );
     }
   }
@@ -249,6 +257,25 @@ export async function evaluateProductsBatch(
   items: AICurationItemInput[],
   options?: EvaluationOptions,
 ): Promise<AICurationItemOutput[]> {
+  const providerEnv = options?.providerOptions?.env ?? process.env;
+  if (aiCurationProvider(providerEnv) === "openrouter") {
+    const readiness = aiCurationReadiness(providerEnv);
+    if (!readiness.ready) throw new AICurationProviderError(
+      readiness.error ?? "ai_curation_configuration_invalid",
+      readiness.error === "openrouter_key_missing_or_invalid" ? "credential" : "permanent",
+    );
+    const batchSize = options?.batchSize ?? AI_CURATION_BATCH_SIZE;
+    if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > OPENROUTER_CURATION_MAX_BATCH) {
+      throw new AICurationProviderError("openrouter_batch_invalid");
+    }
+    const results: AICurationItemOutput[] = [];
+    for (let i = 0; i < items.length; i += batchSize) {
+      const output = await evaluateOpenRouterBatch(items.slice(i, i + batchSize), buildDynamicSystemPrompt(options), options?.providerOptions);
+      // The provider validates the complete strict schema first; retain the shared parser contract.
+      results.push(...parseAICurationResponse(JSON.stringify(output)));
+    }
+    return results;
+  }
   const apiKey = options?.apiKey ?? process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.warn("[ai-curation] GEMINI_API_KEY ausente; pulando triagem semântica.");
@@ -260,6 +287,7 @@ export async function evaluateProductsBatch(
 
   const modelName = options?.modelName ?? process.env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL;
   const batchSize = options?.batchSize ?? AI_CURATION_BATCH_SIZE;
+  if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > AI_CURATION_BATCH_SIZE) throw new AICurationParseError("Tamanho de lote inválido");
   const dynamicInstruction = buildDynamicSystemPrompt(options);
   const retry = options?.retry ?? DEFAULT_RETRY_CONFIG;
   const fallbacks =
@@ -273,7 +301,7 @@ export async function evaluateProductsBatch(
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: curationResponseSchema,
-        temperature: 0.1,
+        temperature: 0,
       },
       systemInstruction: dynamicInstruction,
     });
@@ -293,7 +321,7 @@ export async function evaluateProductsBatch(
     } catch (err) {
       console.error(
         `[ai-curation] Falha no processamento do lote ${batchNumber} após ${activeModelChain.length} modelo(s) e ${retry.maxAttempts} tentativas:`,
-        err,
+        err instanceof AICurationParseError ? "invalid_response" : "provider_failed",
       );
       // Fallback seguro: itens do lote não entram no resultado; o pipeline os
       // mantém como `pending` na fila humana, sem anotação de IA.

@@ -1,5 +1,5 @@
 import { pageAccount, platformPageContext } from "../../../lib/page-account.ts";
-import { workspaceSettings } from "../../../lib/affiliate-workspace-db.ts";
+import { affiliateWorkspaceEnabled, workspaceSettings } from "../../../lib/affiliate-workspace-db.ts";
 import { withAccountDb } from "../../../lib/tenant-db.ts";
 import AdminLink from "../../_components/admin-link.tsx";
 import Settings from "./workspace.tsx";
@@ -12,6 +12,24 @@ const marketplaceLabels: Record<string, string> = {
 export default async function Page() {
   const c = await pageAccount();
   if (!c) return null;
+  const href=(path:string)=>path+(path.includes('?')?'&':'?')+new URLSearchParams({conta:c.tenantId});
+  if (!await affiliateWorkspaceEnabled(c)) {
+    return <div className="bm-workspace">
+      <header className="bm-page-heading"><p className="bm-eyebrow">Configurações</p><h1>Ajustes da operação</h1>
+        <p>Configure as lojas, os critérios de indicação e os canais desta conta.</p></header>
+      <section className="bm-card"><h2>Lojas e extensão</h2><p>Conexões, vínculos afiliados, pareamento e recebimento manual nas lojas suportadas.</p>
+        <AdminLink href={href('/admin/onboarding')}>Conferir lojas e extensão →</AdminLink></section>
+      <section className="bm-card"><h2>Critérios e canais</h2><p>Público, critérios editoriais e regras de seleção. Aprovação e seleção para cada canal são etapas diferentes.</p>
+        <AdminLink href={href('/admin/curadoria?aba=bussola')}>Ajustar critérios e canais →</AdminLink></section>
+      {c.membershipRole==='owner'?<section className="bm-card"><h2>Equipe e conta</h2><AdminLink href={href('/admin?aba=afiliados')}>Gerenciar equipe e conta →</AdminLink></section>
+        :<p>Alterações de conexão e administração da conta dependem do dono.</p>}
+      <details className="bm-card"><summary>Ferramentas avançadas</summary><div className="bm-actions">
+        <AdminLink href={href('/admin?aba=rodagens')}>Comandos de captura</AdminLink>
+        <AdminLink href={href('/admin/governanca')}>Evidências e aprovações</AdminLink>
+        <AdminLink href={href('/admin/experimentos')}>Experimentos</AdminLink>
+      </div></details>
+    </div>;
+  }
   const [settings, platform, entitlements] = await Promise.all([
     workspaceSettings(c),
     platformPageContext(),
@@ -33,7 +51,7 @@ export default async function Page() {
         <p>Escolha para quem você indica e mantenha suas lojas conectadas.</p>
       </header>
       <div className="bm-actions">
-        <AdminLink className="bm-button" href="/admin/onboarding">
+        <AdminLink className="bm-button" href={href('/admin/onboarding')}>
           Conectar ou conferir minhas lojas →
         </AdminLink>
       </div>
@@ -89,20 +107,20 @@ export default async function Page() {
           Use quando precisar ajustar a operação ou revisar as regras da conta.
         </p>
         <div className="bm-actions">
-          <AdminLink href="/admin?aba=rodagens">
+          <AdminLink href={href('/admin?aba=rodagens')}>
             Recebimento de ofertas
           </AdminLink>
-          <AdminLink href="/admin/curadoria?aba=excecoes">
+          <AdminLink href={href('/admin/curadoria?aba=excecoes')}>
             Fila de revisão
           </AdminLink>
-          <AdminLink href="/admin/curadoria?aba=bussola">
+          <AdminLink href={href('/admin/curadoria?aba=bussola')}>
             Critérios editoriais
           </AdminLink>
-          <AdminLink href="/admin/governanca">
+          <AdminLink href={href('/admin/governanca')}>
             Evidências e aprovações
           </AdminLink>
-          <AdminLink href="/admin/experimentos">Experimentos</AdminLink>
-          <AdminLink href="/admin?aba=afiliados">Equipe e conta</AdminLink>
+          <AdminLink href={href('/admin/experimentos')}>Experimentos</AdminLink>
+          <AdminLink href={href('/admin?aba=afiliados')}>Equipe e conta</AdminLink>
           {platform && (
             <AdminLink href="/plataforma">
               Administração da plataforma →

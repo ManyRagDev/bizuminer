@@ -1,3 +1,4 @@
+import { adminMutationOrigin } from "../../../../lib/admin-request-origin.ts";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth.ts";
 import {
@@ -30,7 +31,7 @@ async function handle(req: NextRequest, write = false) {
       },
       404,
     );
-  if (write && req.headers.get("origin") !== req.nextUrl.origin)
+  if (write && !adminMutationOrigin(req))
     return reply({ error: "Origem inválida." }, 403);
   try {
     if (!write) {

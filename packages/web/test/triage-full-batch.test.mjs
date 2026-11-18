@@ -19,5 +19,5 @@ test("triagem padrão avalia todos os anúncios da família, inclusive faixas, a
     },
   });
   assert.equal(decisions.length, products.length);
-  assert.ok(decisions.every(decision => decision.status === "approved"));
+  assert.ok(decisions.every(decision => decision.status === "pending" && decision.aiScore === 4 && decision.actorType === "llm"));
 });

@@ -258,27 +258,33 @@ export async function persistManualCapture(
           last_price_cents = excluded.last_price_cents,
           last_seen_at = excluded.last_seen_at,
           updated_at = now()
+        where excluded.last_seen_at > p.last_seen_at
         returning id, (xmax = 0) as is_new
-      ), ins as (
-        insert into garimpa.price_observation
-          (id, tenant_id, product_id, price_cents, original_price_cents,
-           claimed_discount_rate, observed_at,
-           title_snapshot, product_url_snapshot, image_url_snapshot, offer_evidence, capture_source, source_page_url, client_captured_at, client_request_id)
-        select gen_random_uuid()::text, ${tenantId}, id, ${payload.p},
-               ${originalPriceCents}, ${claimedDiscountRate}, ${capturedAt},
-               ${payload.t}, ${payload.u}, ${payload.img ?? null},
-               ${sql.json({ ...browserOfferEvidence({ currency: payload.currency, priceType: payload.priceType, originalPriceCents: originalPriceCents ?? undefined }, payload.u, capturedAt.toISOString()) } as any)},
-               'bookmarklet', ${payload.u}, ${capturedAt}, ${requestId}::uuid
-        from up
-        where not exists (select 1 from garimpa.price_observation prior where prior.tenant_id=${tenantId}
-          and prior.product_id=up.id and prior.capture_source='bookmarklet' and prior.client_request_id=${requestId}::uuid)
       )
       select up.id, up.is_new, prev.last_price_cents as previous_price_cents
       from up left join prev on true
     `;
-
-    const row = rows[0];
+    const row = rows[0] ?? (await sql<{ id: string; is_new: boolean; previous_price_cents: number | null }[]>`
+      select p.id,false as is_new,p.last_price_cents as previous_price_cents from garimpa.product p
+      where p.tenant_id=${tenantId} and p.marketplace='mercadolivre' and p.external_id=${payload.i}
+        and exists(select 1 from garimpa.affiliate_membership m
+          join garimpa.affiliate_account a on a.id=m.affiliate_id and a.status='active'
+          join garimpa.app_user_role r on r.app_user_id=m.app_user_id and r.role='afiliado' and r.revoked_at is null
+          where m.app_user_id=${appUserId} and m.revoked_at is null and a.tenant_id=${tenantId})`)[0];
     if (!row) throw new Error("affiliate_access_required");
+    await sql`
+        insert into garimpa.price_observation
+          (id, tenant_id, product_id, price_cents, original_price_cents,
+           claimed_discount_rate, observed_at,
+           title_snapshot, product_url_snapshot, image_url_snapshot, offer_evidence, capture_source, source_page_url, client_captured_at, client_request_id)
+        select gen_random_uuid()::text, ${tenantId}, ${row.id}, ${payload.p},
+               ${originalPriceCents}, ${claimedDiscountRate}, ${capturedAt},
+               ${payload.t}, ${payload.u}, ${payload.img ?? null},
+               ${sql.json({ ...browserOfferEvidence({ currency: payload.currency, priceType: payload.priceType, originalPriceCents: originalPriceCents ?? undefined }, payload.u, capturedAt.toISOString()) } as any)},
+               'bookmarklet', ${payload.u}, ${capturedAt}, ${requestId}::uuid
+        where not exists (select 1 from garimpa.price_observation prior where prior.tenant_id=${tenantId}
+          and prior.product_id=${row.id} and prior.capture_source='bookmarklet' and prior.client_request_id=${requestId}::uuid)
+    `;
     return {
       productId: row.id,
       externalId: payload.i,

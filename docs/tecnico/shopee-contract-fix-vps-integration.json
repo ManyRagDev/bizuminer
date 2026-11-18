@@ -1,0 +1,181 @@
+{
+  "scope": "shopee-graphql-contract-and-trial-diagnostics",
+  "baseIntegrationManifest": {
+    "path": "docs/tecnico/shopee-capture-vps-integration.json",
+    "bytes": 5518,
+    "sha256": "e17cc6cb4d8d23eb894e44b42dc7ea7fa586d98069ef49bf7dbc0b2dd81c0ee8"
+  },
+  "baseRuntimeContext": "20261112T204728.485625Z",
+  "baseImagePrefixes": {
+    "web": "88b72792",
+    "executor": "3423e578"
+  },
+  "newMigrations": [],
+  "newGrants": [],
+  "newDependencies": [],
+  "runtimeFiles": [
+    {
+      "path": "packages/capture/src/adapters/shopee/queries.ts",
+      "bytes": 5990,
+      "sha256": "9bfd286fdd6a38a414b9d06fa2130abf59886c062ff048fc01d4e530a24a7c6a"
+    },
+    {
+      "path": "packages/capture/src/adapters/shopee/index.ts",
+      "bytes": 9124,
+      "sha256": "eb82fd5cb7ac04c63db92d61f1f0b05061290956f34ed73e66711c48f4958076"
+    },
+    {
+      "path": "packages/capture/src/adapters/shopee/client.ts",
+      "bytes": 9317,
+      "sha256": "c74b0917a9941b2fc54c3ef38693f200ee04d90505009aff7deef497b0b297f1"
+    },
+    {
+      "path": "packages/persistence/src/capture-diagnostic.ts",
+      "bytes": 3904,
+      "sha256": "f096f16f7f50e9985542445f599ffb32699b52278f7743bf1d7fbf5c816d6612"
+    },
+    {
+      "path": "packages/persistence/src/capture-plan.ts",
+      "bytes": 8546,
+      "sha256": "361b14a60016a39cb3337abce01258c185aa85ba48f8e45eb9cd1585449c20a8"
+    },
+    {
+      "path": "packages/persistence/bin/sweep-shopee.ts",
+      "bytes": 9465,
+      "sha256": "b3b5d8569701fc63b2be357b79b2e54b3d4ba7db6d72cf8061987afc26ac9872"
+    },
+    {
+      "path": "packages/web/lib/capture-process.ts",
+      "bytes": 6429,
+      "sha256": "03fb85e86bcc72f3dfcd37f8a4ecbd067aaff35d6877b7ca42640577086807c6"
+    },
+    {
+      "path": "packages/web/lib/capture-batch-db.ts",
+      "bytes": 21236,
+      "sha256": "013b3f605791f884b7ebb3390e50a127888f1b4081ff0b8fd919260627c1e471"
+    },
+    {
+      "path": "packages/web/lib/capture-batch-worker.ts",
+      "bytes": 14713,
+      "sha256": "6aca5fc3d1e1d187f99bbeef8f437eab8618b054dc8f0d5748859e002c5bbef9"
+    },
+    {
+      "path": "packages/web/bin/run-capture-batch.ts",
+      "bytes": 5540,
+      "sha256": "5150e832f34b739b05e19d397e732c13d4391138debcf8ca031ffccc612d2f37"
+    },
+    {
+      "path": "packages/web/bin/run-triage.ts",
+      "bytes": 3690,
+      "sha256": "5008dd997ec952bd454805f563c17efca1adedf9e1f468f7d49a18817ae00eed"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "packages/capture/test/capture.test.ts",
+      "bytes": 28301,
+      "sha256": "9f1970be311844d4b013fd9545616ca603217e50a3b97c4e9ee69729e5a50308"
+    },
+    {
+      "path": "packages/capture/test/shopee-query.test.ts",
+      "bytes": 4877,
+      "sha256": "e2e171adf6e307204344712bb43bd755f97c3ba18a496958943b2075d2a33a23"
+    },
+    {
+      "path": "packages/capture/test/shopee-trial.test.ts",
+      "bytes": 1392,
+      "sha256": "fb431e03a716093af338ffc81f4a12a60d3f7d180d9ffc0a54bba3a54e16fc0e"
+    },
+    {
+      "path": "packages/capture/test/source-facts.test.ts",
+      "bytes": 2533,
+      "sha256": "68039043e9fb44cfc8cb369326be3756fd5211c30867d7f7a792e76924890551"
+    },
+    {
+      "path": "packages/persistence/test/capture-diagnostic.test.ts",
+      "bytes": 5551,
+      "sha256": "1baff5408f3fbeb72b66b07f8f026db95e48b971d82f967d90333d7c1236a089"
+    },
+    {
+      "path": "packages/persistence/test/capture-trial.test.ts",
+      "bytes": 3393,
+      "sha256": "d9422c72dfe2adb7f52d79b459a3dfd0f5e7f47c3e905eeded05d9b1016ea5f1"
+    },
+    {
+      "path": "packages/web/test/capture-process.test.mjs",
+      "bytes": 8743,
+      "sha256": "78734d63baa969edb022276ca587896414f429c72bd6513aa3cd690478b1eef8"
+    },
+    {
+      "path": "packages/web/test/triage-trial-cli.test.mjs",
+      "bytes": 8025,
+      "sha256": "445eafa82fb3379465d468161f55dc0326f7d884b254ac39d1d69dc7da9c0a40"
+    },
+    {
+      "path": "packages/web/test/capture-affiliate-trial.test.mjs",
+      "bytes": 2744,
+      "sha256": "70c3e1bd3a09070aa8b555c2c09f675193f04115907fc5fd8d1a9ad7d993b4a1"
+    },
+    {
+      "path": "tools/editorial-tests/capture-trial-native.test.ts",
+      "bytes": 10940,
+      "sha256": "1aaf48b50e18af7f6ac58f7f3d295d0f105cfca035eb2cee1abf40ed206d8ba1"
+    }
+  ],
+  "preservedFiles": [
+    {
+      "path": "packages/capture/src/adapters/shopee/mapper.ts",
+      "bytes": 5048,
+      "sha256": "6ee690d7e1a4825514ef2713153a9640a7f7319efcff8647d3060523c3afcef0"
+    },
+    {
+      "path": "packages/capture/src/money.ts",
+      "bytes": 3281,
+      "sha256": "a32d348c65c33e1ab0314e59ffa6429df19fe2ab9829a7abf568801593e07fe6"
+    },
+    {
+      "path": "packages/extension/release/bizuminer-extension-v0.3.6.zip",
+      "bytes": 32570,
+      "sha256": "fb70fbba04991619bb86f0efc0cee13d0559d4e032835fda8e0ef3afbb546f87"
+    }
+  ],
+  "trial": {
+    "tenantAllowlist": [
+      "local"
+    ],
+    "marketplace": "shopee",
+    "mode": "single_product",
+    "queryId": "single-product-casa-v1",
+    "pages": 1,
+    "requestLimit": 10,
+    "productsMax": 1,
+    "captureRequestsMax": 1,
+    "affiliateRequestsMax": 1,
+    "aiRequestsMax": 1,
+    "automaticRetries": false,
+    "autoPublish": false,
+    "hardBudgetUsd": 1,
+    "budgetEnforcement": "existing shared capped OpenRouter key, provisioned privately by infrastructure"
+  },
+  "environmentNames": [
+    "SHOPEE_CAPTURE_ENABLED",
+    "AFFILIATE_SECRETS_MASTER_KEY",
+    "AI_CURATION_PROVIDER",
+    "OPENROUTER_API_KEY",
+    "AI_CURATION_MODEL",
+    "AI_CURATION_MAX_OUTPUT_TOKENS",
+    "CAPTURE_EXECUTOR",
+    "CAPTURE_WORKER_TENANTS",
+    "CAPTURE_TRIAL_MODE",
+    "CAPTURE_TRIAL_TENANTS"
+  ],
+  "contract": "docs/tecnico/contrato-integracao-supabase-vps.md#26-correcao-do-contrato-graphql-shopee-e-retomada-do-ensaio",
+  "acceptance": [
+    "Owner-authorized cancellation of original failed batch preserves capture_run and attempted markers.",
+    "One new stable requestId; complete nodes response; at most one persisted product/observation.",
+    "Affiliate link and triage verified independently; pending review is not automatic public eligibility.",
+    "Replay preserves batch identity and causes no new external calls.",
+    "No unrequested backlog, scheduled routines, global rollout or archived-link import.",
+    "Idle worker returns to LISTEN; verify no repeated work queries or provider calls."
+  ]
+}

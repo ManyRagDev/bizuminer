@@ -1,5 +1,4 @@
 import { shopeeCaptureEnabled } from "./shopee-capture.ts";
-import { aliexpressCaptureEnabled } from "./aliexpress-capture.ts";
 
 /**
  * Registro das plataformas disparáveis pela rota genérica
@@ -29,9 +28,9 @@ export const CAPTURE_TRIGGERS: readonly CaptureTrigger[] = [
   {
     marketplace: "aliexpress",
     cliRelativePath: "bin/sweep-aliexpress.ts",
-    enabled: () => aliexpressCaptureEnabled(),
+    enabled: () => false,
     disabledMessage:
-      "A captura da AliExpress está desligada. Exige ALIEXPRESS_CAPTURE_ENABLED=true, ALIEXPRESS_APP_KEY, ALIEXPRESS_APP_SECRET e ALIEXPRESS_TRACKING_ID. O tracking id é obrigatório: sem ele a API responde normalmente, mas os links não geram comissão.",
+      "A captura da AliExpress é feita pela extensão no navegador.",
   },
 ];
 

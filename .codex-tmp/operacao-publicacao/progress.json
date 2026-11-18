@@ -1,0 +1,117 @@
+[
+  {
+    "stage": "preflight",
+    "at": "2026-11-17T03:19:09.156302+00:00",
+    "images": {
+      "garimpa-web": "sha256:d85eb0a15580d61da75149b55fc70f573def27233b49fba4be865fea397fff00",
+      "garimpa-capture-executor": "sha256:cd3c538c0438b40dfb4aea8dbaf728cc2156ca95c60e143345632ad35c67b0c9"
+    },
+    "otherServicesProtected": 14
+  },
+  {
+    "stage": "backup",
+    "at": "2026-11-17T03:19:11.726818+00:00",
+    "bytes": 13853456,
+    "sha256": "6ccd877a37f97a78dbcf4ede4cb0fd08e738648284800486981822536329624d"
+  },
+  {
+    "stage": "migration-rehearsal",
+    "at": "2026-11-17T03:19:17.668678+00:00",
+    "dataPreserved": true,
+    "objects": {
+      "history": true,
+      "identity": true,
+      "diagnostic": true,
+      "limit": true,
+      "reader": true
+    }
+  },
+  {
+    "stage": "candidate-images",
+    "at": "2026-11-17T03:19:37.529292+00:00",
+    "images": {
+      "garimpa-web": "sha256:1ca978603a82aaa5d6f5879ac887dd2f84ebeda07800212658241a7d5f5ab246",
+      "garimpa-capture-executor": "sha256:e3a2d26a4f5c1bd00e918b74f0026ff9549b8cbee2f8b5672e9d4e61cfec3cb5"
+    },
+    "clone": {
+      "ok": true,
+      "mode": "v2",
+      "counts": {
+        "queued": 189,
+        "waiting": 0,
+        "running": 20,
+        "uncertain": 33,
+        "captures": 100,
+        "batchSearches": 12,
+        "receiptProducts": 50
+      },
+      "channels": {
+        "whatsapp": null,
+        "stories": null
+      },
+      "fourStores": true,
+      "owner": true,
+      "operator": {
+        "sameState": true,
+        "rawJobsPrivate": true,
+        "releaseDenied": true
+      },
+      "foreignDenied": true,
+      "dataPreserved": true,
+      "externalAttempts": 0
+    }
+  },
+  {
+    "stage": "migrations-applied",
+    "at": "2026-11-17T03:20:14.420646+00:00",
+    "objects": {
+      "history": true,
+      "identity": true,
+      "diagnostic": true,
+      "limit": true,
+      "reader": true
+    },
+    "businessDataPreserved": true
+  },
+  {
+    "stage": "live-readers",
+    "at": "2026-11-17T03:20:24.447044+00:00",
+    "report": {
+      "ok": true,
+      "mode": "v2",
+      "counts": {
+        "queued": 169,
+        "waiting": 0,
+        "running": 0,
+        "uncertain": 33,
+        "captures": 100,
+        "batchSearches": 12,
+        "receiptProducts": 50
+      },
+      "channels": {
+        "whatsapp": null,
+        "stories": null
+      },
+      "fourStores": true,
+      "owner": true,
+      "operator": null,
+      "foreignDenied": true,
+      "dataPreserved": true,
+      "externalAttempts": 0
+    }
+  },
+  {
+    "stage": "published",
+    "at": "2026-11-17T03:20:59.358357+00:00",
+    "images": {
+      "garimpa-web": "sha256:1ca978603a82aaa5d6f5879ac887dd2f84ebeda07800212658241a7d5f5ab246",
+      "garimpa-capture-executor": "sha256:e3a2d26a4f5c1bd00e918b74f0026ff9549b8cbee2f8b5672e9d4e61cfec3cb5"
+    },
+    "configurationPreserved": true,
+    "otherServicesUnchanged": true
+  },
+  {
+    "stage": "clone-removed",
+    "at": "2026-11-17T03:20:59.566866+00:00"
+  }
+]

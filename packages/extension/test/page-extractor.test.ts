@@ -92,3 +92,57 @@ test("extração funciona em páginas de busca e categorias além de /ofertas", 
   assert.equal(categoryResult.page.kind, "category");
   assert.equal(categoryResult.products[0].externalId, "MLB111222333");
 });
+
+test("em página de produto (PDP) do Mercado Livre captura apenas o anúncio vigente e ignora carrossel de relacionados", () => {
+  const pdpResult = vm.runInNewContext(`(${collectBrowserOffers.toString()})()`, {
+    URL,
+    URLSearchParams,
+    location: {
+      href: "https://www.mercadolivre.com.br/samsung-smart-tv-43-qled/p/MLB63467528?wid=MLB7479165346&matt_word=bizu",
+    },
+    document: {
+      querySelector(selector: string) {
+        if (selector === "h1.ui-pdp-title") return { textContent: "Samsung Smart TV 43 QLED Full HD" };
+        if (selector.startsWith(".ui-pdp-price__second-line")) {
+          return { getAttribute: () => "1.599 reais com 90 centavos", querySelector: () => ({ getAttribute: () => "1.599 reais com 90 centavos" }) };
+        }
+        if (selector.startsWith(".ui-pdp-price__original-value")) {
+          return { getAttribute: () => "Antes: 2.199 reais" };
+        }
+        if (selector.startsWith("img.ui-pdp-image")) {
+          return { src: "https://http2.mlstatic.com/D_NQ_NP_2X_12345-MLB.webp" };
+        }
+        if (selector === ".ui-pdp-subtitle") {
+          return { textContent: "Novo | +10 mil vendidos" };
+        }
+        if (selector === ".ui-pdp-review__rating") {
+          return { textContent: "4.9" };
+        }
+        return null;
+      },
+      querySelectorAll(selector: string) {
+        if (selector === "script") return [];
+        if (selector.startsWith(".poly-card")) {
+          return [
+            card("https://produto.mercadolivre.com.br/MLB-1111111111-relacionado1_JM", "50 reais"),
+            card("https://produto.mercadolivre.com.br/MLB-2222222222-relacionado2_JM", "60 reais"),
+          ];
+        }
+        return [];
+      },
+    },
+    crypto: { randomUUID: () => "123e4567-e89b-42d3-a456-426614174099" },
+  });
+  assert.equal(pdpResult.page.kind, "product");
+  assert.equal(pdpResult.page.url, "https://www.mercadolivre.com.br/samsung-smart-tv-43-qled/p/MLB63467528?wid=MLB7479165346");
+  assert.equal(pdpResult.products.length, 1);
+  assert.equal(pdpResult.ignoredCards, 0);
+  const p = pdpResult.products[0];
+  assert.equal(p.externalId, "MLB7479165346");
+  assert.equal(p.title, "Samsung Smart TV 43 QLED Full HD");
+  assert.equal(p.productUrl, "https://www.mercadolivre.com.br/samsung-smart-tv-43-qled/p/MLB63467528?wid=MLB7479165346");
+  assert.equal(p.priceCents, 159990);
+  assert.equal(p.originalPriceCents, 219900);
+  assert.equal(p.ratingStar, 4.9);
+  assert.equal(p.salesCount, 10000);
+});

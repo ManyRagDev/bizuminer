@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>BizuMiner</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="brand">
+        <span class="mark">◆</span>
+        <h1><b>Bizu</b><i>Miner</i></h1>
+      </header>
+
+      <section id="status" class="status">
+        <p class="status-line">
+          <span class="dot"></span><span id="status-text">verificando…</span>
+        </p>
+        <p id="pending" class="pending" hidden></p>
+        <button id="clear-failed" class="ghost" type="button" hidden>Descartar envios interrompidos</button>
+      </section>
+
+      <button id="activate" class="primary" type="button">
+        Ativar nesta página
+      </button>
+      <button id="capture-active" class="primary" type="button" style="background:#16a34a;color:#fff;margin-top:6px;">
+        ⚡ Capturar / atualizar anúncio aberto
+      </button>
+      <p id="capture-active-status" class="hint" role="status"></p>
+
+      <section aria-labelledby="recapture-title">
+        <h2 id="recapture-title">Atualizar preços acompanhados</h2>
+        <p class="hint">A extensão revisita páginas da loja escolhida, uma de cada vez. Você pode pausar quando quiser.</p>
+        <label for="recapture-store">Loja</label>
+        <select id="recapture-store">
+          <option value="mercadolivre">Mercado Livre</option>
+          <option value="amazon">Amazon Brasil</option>
+          <option value="aliexpress">AliExpress</option>
+        </select>
+        <label for="recapture-pace">Intervalo entre ações</label>
+        <select id="recapture-pace">
+          <option value="normal">5 a 15 segundos</option>
+          <option value="tranquilo">15 a 30 segundos</option>
+          <option value="lento">30 a 60 segundos</option>
+        </select>
+        <button id="recapture-start" class="primary" type="button">Iniciar atualização</button>
+        <p id="recapture-status" class="hint" role="status"></p>
+        <p id="recapture-budget" class="hint" hidden></p>
+        <p id="recapture-report" class="hint" hidden></p>
+        <button id="recapture-assist-open" class="ghost" type="button" hidden>Abrir página indicada</button>
+        <button id="recapture-assist-read" class="ghost" type="button" hidden>Ler página aberta</button>
+        <a id="recapture-assist-link" target="_blank" rel="noopener noreferrer" hidden>Abrir página manualmente</a>
+        <button id="recapture-pause" class="ghost" type="button" hidden>Pausar</button>
+        <button id="recapture-resume" class="ghost" type="button" hidden>Retomar</button>
+        <button id="recapture-cancel" class="ghost" type="button" hidden>Cancelar atualização</button>
+      </section>
+
+      <section aria-labelledby="batch-title">
+        <h2 id="batch-title">Importar produtos</h2>
+        <p class="hint">
+          Abra uma oferta, busca ou listagem no Mercado Livre, Amazon Brasil ou AliExpress.
+          Confira os produtos e confirme o envio para revisão na sua conta.
+        </p>
+        <button id="batch-prepare" class="primary" type="button">
+          Ler anúncios desta página
+        </button>
+        <p id="batch-result" class="hint" role="status"></p>
+        <ul id="batch-metadata" class="report-counts" hidden></ul>
+        <p id="batch-guidance" class="hint" hidden></p>
+        <button id="batch-refresh" class="ghost" type="button" hidden>Refazer leitura</button>
+        <button id="batch-import" class="primary" type="button" hidden>
+          Importar para revisão
+        </button>
+        <button id="batch-cancel" class="ghost" type="button" hidden>Descartar leitura</button>
+      </section>
+
+      <section id="import-report" aria-labelledby="import-report-title" hidden>
+        <h2 id="import-report-title">Última importação</h2>
+        <p id="import-report-time" class="hint"></p>
+        <ul id="import-report-counts" class="report-counts"></ul>
+        <p id="import-report-explanation" class="hint"></p>
+        <details id="import-report-details" hidden>
+          <summary>Ver motivos e itens</summary>
+          <ul id="import-report-reasons" class="report-reasons"></ul>
+          <ul id="import-report-items" class="report-items"></ul>
+        </details>
+      </section>
+
+      <section id="pairing" class="pairing" hidden>
+        <p class="hint">
+          Conecte este navegador à sua conta. Gere o código no painel do
+          BizuMiner.
+        </p>
+        <input
+          id="code"
+          type="text"
+          inputmode="text"
+          placeholder="CÓDIGO"
+          autocomplete="off"
+          maxlength="8"
+        />
+        <button id="pair" class="primary" type="button">Conectar</button>
+      </section>
+
+      <div class="env-row">
+        <span>Destino desta versão:</span>
+        <output id="env-origin">verificando…</output>
+      </div>
+
+      <footer>
+        <button id="logout" class="ghost" type="button" hidden>Sair</button>
+      </footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

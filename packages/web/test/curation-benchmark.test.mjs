@@ -24,7 +24,7 @@ test("Benchmark: dataset canônico possui exatamente 50 casos estruturados", () 
   );
 });
 
-test("Benchmark: 5/5 casos de risco/peças industriais/adulto são rejeitados deterministamente", async () => {
+test("Benchmark: conteúdo restrito é rejeitado por regra e peças industriais seguem para avaliação sem aprovação", async () => {
   const riskItems = benchmarkData.filter((d) => d.group === "forbidden_risk");
   assert.equal(riskItems.length, 5);
 
@@ -40,14 +40,24 @@ test("Benchmark: 5/5 casos de risco/peças industriais/adulto são rejeitados de
   }));
 
   const decisions = await processIngestionPipeline(candidates, {
-    evaluator: async () => [],
+    evaluator: async (items) => items.map((i) => ({
+      productId: i.productId,
+      desirabilityScore: 1,
+      justification: "Peça técnica avaliada em vez de rejeitada antes da triagem",
+      editorialCategory: "peca_tecnica_avulsa",
+      hasMisleadingClaim: false,
+      isAdultOrUnsafe: false,
+    })),
   });
 
   assert.equal(decisions.length, 5);
-  for (const dec of decisions) {
-    assert.equal(dec.status, "rejected");
-    assert.ok(dec.reasonCode === "low_utility" || dec.reasonCode === "adult_sexual");
-    assert.equal(dec.actorType, "rule");
+  const adult = decisions.find((d) => d.productId === "bench_risk_04");
+  assert.equal(adult?.status, "rejected");
+  assert.equal(adult?.reasonCode, "adult_sexual");
+  assert.equal(adult?.actorType, "rule");
+  for (const dec of decisions.filter((d) => d.productId !== "bench_risk_04")) {
+    assert.equal(dec.status, "pending");
+    assert.equal(dec.actorType, "llm");
   }
 });
 
@@ -132,33 +142,31 @@ test("Benchmark Execução Completa: 50 casos canônicos passam pelo pipeline co
   const rejected = decisions.filter((d) => d.status === "rejected");
   const pending = decisions.filter((d) => d.status === "pending");
 
-  // 1. NENHUM produto proibido/de risco foi aprovado
-  for (const riskId of benchmarkData.filter((b) => b.group === "forbidden_risk").map((b) => b.id)) {
+  // 1. Conteúdo adulto/restrito é rejeitado por regra e nenhum item vira aprovado pela nota legada 1–5
+  assert.equal(approved.length, 0);
+  const adultRisk = decisions.find((d) => d.productId === "bench_risk_04");
+  assert.equal(adultRisk?.status, "rejected");
+  assert.equal(adultRisk?.reasonCode, "adult_sexual");
+  for (const riskId of benchmarkData.filter((b) => b.group === "forbidden_risk" && b.id !== "bench_risk_04").map((b) => b.id)) {
     const dec = decisions.find((d) => d.productId === riskId);
-    assert.equal(dec?.status, "rejected", "Item de risco deve ser rejeitado: " + riskId);
+    assert.equal(dec?.status, "pending", "Item técnico não é aprovado nem descartado em bloco: " + riskId);
   }
 
-  // 2. Itens baratos com pouco apelo são rejeitados pela avaliação editorial.
+  // 2. Itens baratos sem bloqueio de segurança permanecem pendentes com sinal registrado (não auto-rejeitados por low_utility)
   for (const fixture of benchmarkData.filter((b) => b.group === "cheap_junk")) {
     const dec = decisions.find((d) => d.productId === fixture.id);
-    assert.equal(dec?.status, fixture.expectedStatus);
-    assert.equal(dec?.reasonCode, fixture.expectedReason);
+    assert.equal(dec?.status, "pending");
+    assert.equal(dec?.reasonCode, null);
     assert.equal(dec?.actorType, fixture.expectedActor);
+    assert.equal(dec?.aiScore, fixture.mockScore);
   }
 
-  // 3. Nenhum produto com nota regular (score < 4) foi aprovado no piloto automático
-  for (const regId of benchmarkData.filter((b) => b.group === "expensive_regular").map((b) => b.id)) {
+  // 3. Nenhum produto com nota regular (score < 4) ou alta (score >= 4) é auto-aprovado pelo escore legado 1–5
+  for (const regId of benchmarkData.filter((b) => b.group === "expensive_regular" || b.group === "expensive_bargain").map((b) => b.id)) {
     const dec = decisions.find((d) => d.productId === regId);
-    assert.notEqual(dec?.status, "approved", "Item regular sem score alto não pode ser auto-aprovado: " + regId);
+    assert.equal(dec?.status, "pending", "Nota legada 1–5 mantém pending para avaliação v2: " + regId);
   }
 
-  // 4. Achadinhos de qualidade com score >= 4 foram aprovados
-  for (const bargainId of benchmarkData.filter((b) => b.group === "expensive_bargain").map((b) => b.id)) {
-    const dec = decisions.find((d) => d.productId === bargainId);
-    assert.equal(dec?.status, "approved", "Achadinho pechincha deve ser aprovado: " + bargainId);
-  }
-
-  assert.ok(approved.length >= 15, "Deve aprovar pelo menos 15 achadinhos válidos");
-  assert.ok(pending.length >= 2, "Excedentes de saturação devem aguardar exame humano");
-  assert.ok(rejected.length >= 5, "Deve rejeitar itens de risco");
+  assert.ok(pending.length >= 49, "Itens avaliados permanecem pendentes sem promoção legada");
+  assert.equal(rejected.length, 1, "Somente bloqueio restrito rejeita automaticamente neste benchmark");
 });

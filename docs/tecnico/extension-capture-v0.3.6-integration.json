@@ -1,0 +1,218 @@
+{
+  "version": "0.3.6",
+  "clientOnly": true,
+  "apiOrigin": "https://www.bizuminer.com.br",
+  "captureMode": "manual",
+  "newMigrations": [],
+  "runtimeFiles": [
+    {
+      "path": "packages/extension/scripts/build-config.mjs",
+      "bytes": 2762,
+      "sha256": "6e6da29a3ef96c57d0d93fd7dad752462c2157032613e857fe1f88b14bc14e1d"
+    },
+    {
+      "path": "packages/extension/scripts/build.mjs",
+      "bytes": 2811,
+      "sha256": "24b966e7032d15dbfcae9df341a262a09f7cfe3c128fa430fb72c5b3ba619cf4"
+    },
+    {
+      "path": "packages/extension/scripts/package.mjs",
+      "bytes": 4446,
+      "sha256": "9ac7983df29b31d90182d5ff86736b3d2b831bf569f7561964fe5e01fbfb951b"
+    },
+    {
+      "path": "packages/extension/scripts/verify-manifest.mjs",
+      "bytes": 1404,
+      "sha256": "a278931851e47911aa651d37acaed12b0e049cef935db8cf40c9a4a287a5f4d7"
+    },
+    {
+      "path": "packages/extension/src/background/service-worker.ts",
+      "bytes": 20414,
+      "sha256": "b9bd5fbbc971746434668c10613a7e6a5d770dbf71f2f6533075ff05d7c87e1c"
+    },
+    {
+      "path": "packages/extension/src/content/activate-catalog.ts",
+      "bytes": 542,
+      "sha256": "9acee994aef0a57a7b63ecee7fae1440602288bc96e0eb02a589913c0e21182e"
+    },
+    {
+      "path": "packages/extension/src/content/amazon-extractor.ts",
+      "bytes": 10322,
+      "sha256": "415e5133f89f5cb6b955806f9a8578d02672fc75be0c3ab5296be88dcb00fbff"
+    },
+    {
+      "path": "packages/extension/src/content/bizu-button.ts",
+      "bytes": 3938,
+      "sha256": "72bb3db4c5f5a408d1123304a294195bcbd87e931fd74de46855a08b8f5bf522"
+    },
+    {
+      "path": "packages/extension/src/content/card-extractor.ts",
+      "bytes": 3763,
+      "sha256": "eb4f2d9b16f6ec8e3672c80d99895f465470a385267a41c704fb91509fdd8940"
+    },
+    {
+      "path": "packages/extension/src/content/catalog-observer.ts",
+      "bytes": 2173,
+      "sha256": "cb1c64371afccb17b865b5edb599ddee4e22b87be91f29f1c4045f92a5235cf9"
+    },
+    {
+      "path": "packages/extension/src/content/marketplace-page.ts",
+      "bytes": 19125,
+      "sha256": "06b53de66525f198ad9453e255c807348cfec538710a211176f3a86fc3155546"
+    },
+    {
+      "path": "packages/extension/src/content/page-extractor.ts",
+      "bytes": 6172,
+      "sha256": "d93ebd61e0ac41fe0cd10a21cfd3f585b4ff1f4df2437a66c2ba4e54094bb690"
+    },
+    {
+      "path": "packages/extension/src/lib/api.ts",
+      "bytes": 4022,
+      "sha256": "cf083da2dc1334a324f3e6c186e06e9d1d5ffe8c9bf6e69932f41b4ef91c9e56"
+    },
+    {
+      "path": "packages/extension/src/lib/batch-queue.ts",
+      "bytes": 2107,
+      "sha256": "e5607c8b485988674684f3b1f25e0a60641a626dd9a539c383bab297d45ddd12"
+    },
+    {
+      "path": "packages/extension/src/lib/contracts.ts",
+      "bytes": 2255,
+      "sha256": "c1e07b22ecb38d6a3e7e32e6ee35f26d1cb7302a578ce3c039c6b2578fe11836"
+    },
+    {
+      "path": "packages/extension/src/lib/import-report.ts",
+      "bytes": 8318,
+      "sha256": "122020ebb4e69fec7332869fa62f283f39f8d8a073e4d9d8050270753c8643e6"
+    },
+    {
+      "path": "packages/extension/src/lib/outbox.ts",
+      "bytes": 2606,
+      "sha256": "ea69822f92206be30143b317717d26e166351b7c0b428f7e30324e69ca7599fb"
+    },
+    {
+      "path": "packages/extension/src/lib/storage.ts",
+      "bytes": 2464,
+      "sha256": "4fbb1d986d8273a1fa929b9304bc8b2e725a00262538388f3b263769e28b65a0"
+    },
+    {
+      "path": "packages/extension/src/popup/batch-view.ts",
+      "bytes": 1001,
+      "sha256": "14ee6dacece08a9f9ac9dbc849deb997c946b557a49ca25ce75f8ad62c51fb21"
+    },
+    {
+      "path": "packages/extension/src/popup/index.html",
+      "bytes": 3085,
+      "sha256": "848796987c794bc1fc691af5b5339d89623c00b94d1b83f44574ea6802eafa1f"
+    },
+    {
+      "path": "packages/extension/src/popup/popup.css",
+      "bytes": 3699,
+      "sha256": "bdc2ac4a5eec9f8ed217595442bf0e967dcf1ebc235900c76e36c2d53000e2ff"
+    },
+    {
+      "path": "packages/extension/src/popup/popup.ts",
+      "bytes": 16328,
+      "sha256": "96e937bd91783acb78f8da603b6015faf531e672cbd843cc75a19cafe83859f4"
+    },
+    {
+      "path": "packages/extension/manifest.json",
+      "bytes": 693,
+      "sha256": "fc7f5f978987f6f1324215a6d11d6ff1b12354c0eb3e3e57183ac67dc5eff836"
+    },
+    {
+      "path": "packages/extension/package.json",
+      "bytes": 711,
+      "sha256": "12d4924549281068c4661a48229bafa752739da864e7cb6e44c9efd08d1349a4"
+    },
+    {
+      "path": "packages/extension/package-lock.json",
+      "bytes": 17311,
+      "sha256": "08bba9690b997091dc6a06ed8980a72f275d85ff8f12a00cc6558cede251a401"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "packages/extension/test/amazon-extractor.test.ts",
+      "bytes": 4496,
+      "sha256": "aa36d0fd6486897062857592512455a7aec6bd91c1809e8b704bcb47d34b1c89"
+    },
+    {
+      "path": "packages/extension/test/batch-queue.test.ts",
+      "bytes": 2976,
+      "sha256": "41cf2cbf6cfa4b2826a3f18d603ede24fe851bc3de2621705c9f2c356ed84a4e"
+    },
+    {
+      "path": "packages/extension/test/batch-view.test.ts",
+      "bytes": 1730,
+      "sha256": "349cac42104bf8db9e78fe9f7ddb76abf507e9d091327f2ebd2ff88e08e5841b"
+    },
+    {
+      "path": "packages/extension/test/card-extractor.test.ts",
+      "bytes": 3009,
+      "sha256": "31b876e69bee4bfaf60a5988021e4e9120a999212b7b3a28873121ffe6939ac8"
+    },
+    {
+      "path": "packages/extension/test/contracts.test.ts",
+      "bytes": 845,
+      "sha256": "03090b94be7c9899d66107a2a06c1c0969f81a0114c8a2afb79d020358ae9d50"
+    },
+    {
+      "path": "packages/extension/test/import-report.test.ts",
+      "bytes": 8707,
+      "sha256": "f9adbe9c05df93af172843b601a1b7f9291b58804006507bd28dc11e8b79bf27"
+    },
+    {
+      "path": "packages/extension/test/marketplace-page.test.ts",
+      "bytes": 14338,
+      "sha256": "9efdf2586fa01ac4f657b1ab6b9f6e52e4619a1595d60325c46d5b739a0aa948"
+    },
+    {
+      "path": "packages/extension/test/outbox.test.ts",
+      "bytes": 2548,
+      "sha256": "a4d9e924c9dc3e893823362e9bebefb92662161addbc1bbc7ca67e9242964c33"
+    },
+    {
+      "path": "packages/extension/test/page-extractor.test.ts",
+      "bytes": 4146,
+      "sha256": "967d36e3f5a184a49d56fd105dd518b5355be079da5a05d7f3774c74b2ad0c35"
+    },
+    {
+      "path": "packages/extension/test/release-config.test.ts",
+      "bytes": 2733,
+      "sha256": "780ee5d9f862f33cec2ae011a801301ddfc4341b3e9ab51e7ba1f365df757d46"
+    },
+    {
+      "path": "packages/extension/test/service-worker.test.ts",
+      "bytes": 23911,
+      "sha256": "774733f6d772d9af6f8b7ef6b37127e10faeeb6474945d7899760007c51e6c42"
+    },
+    {
+      "path": "tools/editorial-tests/extension-up-listing-probe.test.ts",
+      "bytes": 5810,
+      "sha256": "5f6ed8d70ccfe949f87d721435153a7b2e241a558deeb800488c73fec52d98dc"
+    },
+    {
+      "path": "tools/editorial-tests/extension-compiled-identity-probe.mjs",
+      "bytes": 5217,
+      "sha256": "2f2f23c730ca0ad74246841f6a96fa88f4fb82a5030535a9af5174fd7ffde5f4"
+    },
+    {
+      "path": "tools/editorial-tests/extension-draft-upgrade-probe.mjs",
+      "bytes": 7793,
+      "sha256": "e3caabb3ba3b58f8a29394c558f7e16dd9ffe627bc828a55e658d197c0530a66"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/extension/release/bizuminer-extension-v0.3.6.zip",
+      "bytes": 32570,
+      "sha256": "fb70fbba04991619bb86f0efc0cee13d0559d4e032835fda8e0ef3afbb546f87"
+    },
+    {
+      "path": "packages/extension/release/bizuminer-extension-v0.3.6/release-manifest.json",
+      "bytes": 1184,
+      "sha256": "537fba9bfdec5f828eb5b00093d53e9ad8184062ad47f31a16fe2400471364a2"
+    }
+  ]
+}

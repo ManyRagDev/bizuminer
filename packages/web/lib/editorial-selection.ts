@@ -138,7 +138,7 @@ export function editorialEvidenceFingerprint(product: {
   const identityKeys = ["description", "variantKey", "variantLabel", "variantIdentity", "packageContents", "packageQuantity", "dimensions", "positiveReviewRate", "currency", "priceType", "fieldStates", "payment", "coupon", "region", "sellerId", "shipping", "conditions", "priceMinCents", "priceMaxCents"];
   // Price-range *values* may change with ordinary price updates. Only a change
   // between a single price and a range is a material ambiguity signal.
-  const facts = Object.fromEntries(identityKeys.filter((key) => !key.startsWith("price") && key in evidence).map((key) => [key, evidence[key]]));
+  const facts = Object.fromEntries(identityKeys.filter((key) => key !== "priceMinCents" && key !== "priceMaxCents" && key in evidence).map((key) => [key, evidence[key]]));
   const ranged = typeof evidence.priceMinCents === "number" && typeof evidence.priceMaxCents === "number" && evidence.priceMinCents !== evidence.priceMaxCents;
   return JSON.stringify(canonical({ title: product.title, imageUrl: product.imageUrl, category: product.category, productUrl: product.productUrl,
     ratingStar: product.ratingStar && product.ratingStar > 0 ? product.ratingStar : null, facts, ranged }));

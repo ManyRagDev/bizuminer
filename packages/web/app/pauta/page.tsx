@@ -3,8 +3,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getPageAuth, isAffiliate } from "../../lib/auth";
 import { getPautaQrBundle } from "../../lib/qr-service";
-import AdminShell from "../_components/admin-shell";
+import AccountAdminShell from "../_components/account-admin-shell.tsx";
+import DenyAccess from "../_components/deny-access";
 import PautaClient from "./pauta-client";
+import { readCurationPolicy } from "../../lib/curation-policy-db.ts";
 
 export const dynamic = "force-dynamic";
 
@@ -32,16 +34,18 @@ export default async function PautaPage({ searchParams }: { searchParams: Promis
 
   const { conta, canal } = await searchParams;
   const account = await pageAccount(conta);
-  if (!account) return <AdminShell><p>Nenhuma conta autorizada disponível.</p></AdminShell>;
+  if (!account) return <DenyAccess />;
   const initialChannel = canal === "stories" ? "stories" : "whatsapp";
   const headerList = await headers();
   const host = headerList.get("host");
   const qrBundle = await getPautaQrBundle(host);
+  const policy = await readCurationPolicy(account);
 
   return (
-    <AdminShell>
+    <AccountAdminShell account={account} userId={user.id}>
       <PautaClient key={`${account.tenantId}:${initialChannel}`} qrBundle={qrBundle}
+        automaticCuration={policy.enabled}
         accountKey={account.tenantId} userKey={user.id} initialChannel={initialChannel} />
-    </AdminShell>
+    </AccountAdminShell>
   );
 }

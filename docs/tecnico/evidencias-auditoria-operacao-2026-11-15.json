@@ -1,0 +1,544 @@
+{
+  "scope": {
+    "tenant": "local",
+    "account_label": "BizuMiner (casa)",
+    "date_brasilia": "2026-11-15",
+    "production": "https://www.bizuminer.com.br",
+    "mode": "read-only audit; normal authenticated page reads; no capture, retry, release, approval, send, configuration, migration or deploy initiated",
+    "sql_identity": "postgres through existing SSH; explicit tenant filters; READ ONLY transactions; not an RLS isolation test"
+  },
+  "recorded_at": "2026-11-15T20:09:34.906489+00:00",
+  "initial_sql_snapshot": {
+    "at": "2026-11-15T20:01:40.046681+00:00",
+    "browser_today": [
+      {
+        "marketplace": "mercadolivre",
+        "receipts": 3,
+        "receipt_item_counts": [
+          51,
+          48,
+          50
+        ],
+        "observations": 149,
+        "distinct_products": 145,
+        "observations_without_run": 149,
+        "first_received_at": "2026-11-15T16:03:54.678948+00:00",
+        "last_received_at": "2026-11-15T16:04:30.645086+00:00"
+      },
+      {
+        "marketplace": "amazon",
+        "receipts": 3,
+        "receipt_item_counts": [
+          66,
+          70,
+          69
+        ],
+        "observations": 205,
+        "distinct_products": 153,
+        "observations_without_run": 205,
+        "first_received_at": "2026-11-15T16:04:57.698364+00:00",
+        "last_received_at": "2026-11-15T16:05:29.723414+00:00"
+      },
+      {
+        "marketplace": "aliexpress",
+        "receipts": 3,
+        "receipt_item_counts": [
+          54,
+          46,
+          44
+        ],
+        "observations": 144,
+        "distinct_products": 99,
+        "observations_without_run": 144,
+        "first_received_at": "2026-11-15T16:06:04.67689+00:00",
+        "last_received_at": "2026-11-15T16:06:22.883385+00:00"
+      }
+    ],
+    "shopee_runs_today": [
+      {
+        "mode": "directed",
+        "runs": 12,
+        "items_sum": 220,
+        "status": "ok",
+        "all_belong_to_batch": true
+      },
+      {
+        "mode": "verification",
+        "runs": 71,
+        "items_sum": 71,
+        "status": "ok",
+        "batch_id": null
+      }
+    ],
+    "attribute_jobs": [
+      {
+        "status": "completed",
+        "jobs": 1408,
+        "distinct_products": 1081
+      },
+      {
+        "status": "reconciliation",
+        "jobs": 13,
+        "distinct_products": 13
+      },
+      {
+        "status": "running",
+        "jobs": 1,
+        "distinct_products": 1
+      },
+      {
+        "status": "superseded",
+        "jobs": 1,
+        "distinct_products": 1
+      }
+    ],
+    "legacy_triage_latest_finished": "2026-11-14T23:32:39.635609+00:00",
+    "promotion_pending": [
+      {
+        "marketplace": "mercadolivre",
+        "requests": 5,
+        "within_deadline": 5,
+        "reason": "promotion"
+      }
+    ]
+  },
+  "detail_sql_snapshot": [
+    {
+      "section": "context",
+      "at": "2026-11-15T20:04:20.737161+00:00",
+      "tenant": "local",
+      "read_only": "on"
+    },
+    {
+      "section": "shopee_batch_detail",
+      "rows": [
+        {
+          "id": "488698fe-32ea-48cc-9828-7b8dfc63ac24",
+          "status": "partial",
+          "started_at": "2026-11-15T16:06:58.243459+00:00",
+          "finished_at": "2026-11-15T16:12:57.194428+00:00",
+          "error": "affiliate_links_pending",
+          "stores": {
+            "shopee": {
+              "status": "ok"
+            }
+          },
+          "triage": {
+            "held": 0,
+            "mode": "attribute_queue",
+            "approved": 0,
+            "rejected": 0,
+            "processed": 0,
+            "annotatedPending": 0
+          },
+          "affiliate_failures": {
+            "shopee": "affiliate_links_pending"
+          },
+          "run_count": 12,
+          "distinct_products": 216
+        }
+      ]
+    },
+    {
+      "section": "today_browser_products_current",
+      "rows": [
+        {
+          "marketplace": "aliexpress",
+          "distinct_products": 99,
+          "has_assessment": 99,
+          "with_active_job": 0,
+          "with_uncertain_job": 0,
+          "catalog_pending": 0
+        },
+        {
+          "marketplace": "amazon",
+          "distinct_products": 153,
+          "has_assessment": 153,
+          "with_active_job": 0,
+          "with_uncertain_job": 0,
+          "catalog_pending": 3
+        },
+        {
+          "marketplace": "mercadolivre",
+          "distinct_products": 145,
+          "has_assessment": 145,
+          "with_active_job": 0,
+          "with_uncertain_job": 0,
+          "catalog_pending": 0
+        }
+      ]
+    },
+    {
+      "section": "recent_twenty_shopee_runs",
+      "rows": [
+        {
+          "mode": "verification",
+          "runs": 20,
+          "oldest": "2026-11-15T17:54:22.243+00:00",
+          "newest": "2026-11-15T19:41:08.373+00:00"
+        }
+      ]
+    },
+    {
+      "section": "database_visibility",
+      "rows": [
+        {
+          "table_name": "affiliate_monitoring_policy",
+          "column_name": "affiliate_id"
+        },
+        {
+          "table_name": "affiliate_monitoring_policy",
+          "column_name": "marketplace"
+        },
+        {
+          "table_name": "affiliate_monitoring_policy",
+          "column_name": "enabled"
+        },
+        {
+          "table_name": "affiliate_monitoring_policy",
+          "column_name": "updated_by_auth_user_id"
+        },
+        {
+          "table_name": "affiliate_monitoring_policy",
+          "column_name": "updated_at"
+        },
+        {
+          "table_name": "curation_policy_v2",
+          "column_name": "tenant_id"
+        },
+        {
+          "table_name": "curation_policy_v2",
+          "column_name": "version"
+        },
+        {
+          "table_name": "curation_policy_v2",
+          "column_name": "enabled"
+        },
+        {
+          "table_name": "curation_policy_v2",
+          "column_name": "factual_gate_required"
+        },
+        {
+          "table_name": "curation_policy_v2",
+          "column_name": "config"
+        },
+        {
+          "table_name": "curation_policy_v2",
+          "column_name": "updated_at"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "tenant_id"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "affiliate_id"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "channel"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "source_revision"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "format_version"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "active"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "offer_count"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "config_valid_until"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "offer_valid_until"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "selection"
+        },
+        {
+          "table_name": "pauta_selection_cache",
+          "column_name": "prepared_at"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "tenant_id"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "channel"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "id"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "version"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "config_version"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "policy_version"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "renewed_at"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "valid_until"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "selection"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "inputs"
+        },
+        {
+          "table_name": "recommendation_edition",
+          "column_name": "dependencies"
+        }
+      ]
+    }
+  ],
+  "controls_sql_snapshot": [
+    {
+      "section": "context",
+      "at": "2026-11-15T20:07:33.912064+00:00",
+      "tenant": "local",
+      "read_only": "on"
+    },
+    {
+      "section": "monitoring_policies",
+      "rows": []
+    },
+    {
+      "section": "discovery_policies",
+      "rows": []
+    },
+    {
+      "section": "affiliate_configuration",
+      "rows": [
+        {
+          "marketplace": "amazon",
+          "status": "active"
+        },
+        {
+          "marketplace": "mercadolivre",
+          "status": "active"
+        },
+        {
+          "marketplace": "shopee",
+          "status": "active"
+        }
+      ]
+    },
+    {
+      "section": "shopee_batch_publication_now",
+      "rows": [
+        {
+          "products": 216,
+          "with_active_link": 212,
+          "uncertain_evaluation": 13,
+          "has_assessment": 203
+        }
+      ]
+    },
+    {
+      "section": "rollout",
+      "commercial_ready": false
+    },
+    {
+      "section": "pauta_cached",
+      "rows": [
+        {
+          "channel": "stories",
+          "active": true,
+          "offer_count": 8,
+          "prepared_at": "2026-11-15T20:06:35.072+00:00",
+          "offer_valid_until": [
+            "2026-11-16T04:05:28.445+00:00",
+            "2026-11-15T20:41:08.688+00:00",
+            "2026-11-16T04:03:52.714+00:00",
+            "2026-11-16T04:05:07.013+00:00",
+            "2026-11-15T20:36:39.621+00:00",
+            "2026-11-16T04:05:07.013+00:00",
+            "2026-11-16T04:04:29.151+00:00",
+            "2026-11-15T20:36:32.5+00:00"
+          ]
+        },
+        {
+          "channel": "whatsapp",
+          "active": true,
+          "offer_count": 12,
+          "prepared_at": "2026-11-15T20:05:43.598+00:00",
+          "offer_valid_until": [
+            "2026-11-16T04:05:28.445+00:00",
+            "2026-11-15T20:41:08.688+00:00",
+            "2026-11-16T04:03:52.714+00:00",
+            "2026-11-16T04:05:07.013+00:00",
+            "2026-11-15T20:36:39.621+00:00",
+            "2026-11-16T04:05:07.013+00:00",
+            "2026-11-16T04:04:29.151+00:00",
+            "2026-11-15T20:36:32.5+00:00",
+            "2026-11-16T04:05:28.445+00:00",
+            "2026-11-16T04:03:52.714+00:00",
+            "2026-11-16T04:05:07.013+00:00",
+            "2026-11-16T04:04:29.151+00:00"
+          ]
+        }
+      ]
+    }
+  ],
+  "sql_used": {
+    "garimpa-audit-20261115.sql": "\\pset tuples_only on\n\\pset format unaligned\nBEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;\nSET LOCAL statement_timeout = '10s';\nSELECT json_build_object('section','context','at',now(),'day_brasilia',(now() at time zone 'America/Sao_Paulo')::date,'tenant','local','read_only',current_setting('transaction_read_only'));\nSELECT json_build_object('section','browser_receipts_today','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT r.request_id,r.created_at,count(p.id)::int AS products,string_agg(distinct p.marketplace,',') AS marketplaces\n FROM garimpa.extension_capture_receipt r\n CROSS JOIN LATERAL jsonb_array_elements_text(r.result->'productIds') item(id)\n JOIN garimpa.product p ON p.tenant_id=r.tenant_id AND p.id=item.id\n WHERE r.tenant_id='local' AND r.created_at >= ('2026-11-15'::timestamp AT TIME ZONE 'America/Sao_Paulo')\n GROUP BY r.request_id,r.created_at ORDER BY r.created_at\n) t;\nSELECT json_build_object('section','observations_today','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT p.marketplace,o.capture_source,count(*)::int AS observations,count(distinct p.id)::int AS products,\n count(*) filter(where o.capture_run_id is null)::int AS observations_without_run,min(o.observed_at) AS first_at,max(o.observed_at) AS last_at\n FROM garimpa.price_observation o JOIN garimpa.product p ON p.tenant_id=o.tenant_id AND p.id=o.product_id\n WHERE o.tenant_id='local' AND o.observed_at >= ('2026-11-15'::timestamp AT TIME ZONE 'America/Sao_Paulo')\n GROUP BY p.marketplace,o.capture_source ORDER BY p.marketplace,o.capture_source\n) t;\nSELECT json_build_object('section','capture_batches','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT id,status,requested_marketplaces,started_at,finished_at,metadata->>'error' AS error,\n metadata#>>'{execution,phase}' AS phase,metadata#>>'{triage,mode}' AS triage_mode,\n ARRAY(SELECT jsonb_object_keys(metadata)) AS metadata_keys\n FROM garimpa.capture_batch WHERE tenant_id='local' ORDER BY started_at DESC LIMIT 8\n) t;\nSELECT json_build_object('section','run_modes_today','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT marketplace,parameters->>'captureMode' AS mode,parameters->>'purpose' AS purpose,status,\n count(*)::int AS runs,sum(items_captured)::int AS items,min(started_at) AS first_at,max(started_at) AS last_at,\n count(*) filter(where parameters->>'operationBatchId' IS NOT NULL)::int AS with_batch\n FROM garimpa.capture_run WHERE tenant_id='local' AND started_at >= ('2026-11-15'::timestamp AT TIME ZONE 'America/Sao_Paulo')\n GROUP BY marketplace,parameters->>'captureMode',parameters->>'purpose',status ORDER BY marketplace,mode,purpose,status\n) t;\nSELECT json_build_object('section','recent_runs','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT id,marketplace,started_at,status,items_captured,error,parameters->>'captureMode' AS mode,parameters->>'purpose' AS purpose,\n parameters->>'operationBatchId' AS batch_id,ARRAY(SELECT jsonb_object_keys(parameters)) AS parameter_keys\n FROM garimpa.capture_run WHERE tenant_id='local' ORDER BY started_at DESC LIMIT 4\n) t;\nSELECT json_build_object('section','attribute_jobs','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT status,count(*)::int AS jobs,count(distinct product_id)::int AS products,min(updated_at) AS oldest,max(updated_at) AS newest\n FROM garimpa.curation_attribute_job WHERE tenant_id='local' GROUP BY status ORDER BY status\n) t;\nSELECT json_build_object('section','assessment_coverage','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT p.marketplace,count(*)::int AS products,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.curation_attribute_assessment a WHERE a.tenant_id=p.tenant_id AND a.product_id=p.id))::int AS assessed,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.curation_attribute_job j WHERE j.tenant_id=p.tenant_id AND j.product_id=p.id AND j.status='reconciliation'))::int AS with_uncertain_job,\n count(*) filter(where c.status='pending')::int AS legacy_pending,\n count(*) filter(where c.status='approved')::int AS catalog_approved\n FROM garimpa.product p LEFT JOIN garimpa.product_curation c ON c.tenant_id=p.tenant_id AND c.product_id=p.id\n WHERE p.tenant_id='local' GROUP BY p.marketplace ORDER BY p.marketplace\n) t;\nSELECT json_build_object('section','promotion_queue','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT p.marketplace,r.status,r.reason,r.result->>'reason' AS result_reason,count(*)::int AS requests,\n count(*) filter(where r.deadline>now())::int AS within_deadline,min(r.next_attempt_at) AS next_attempt_at\n FROM garimpa.curation_promotion r JOIN garimpa.product p ON p.tenant_id=r.tenant_id AND p.id=r.product_id\n WHERE r.tenant_id='local' AND r.status IN ('pending','claimed') GROUP BY p.marketplace,r.status,r.reason,r.result->>'reason'\n ORDER BY p.marketplace,r.status,r.reason\n) t;\nSELECT json_build_object('section','legacy_triage','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT status,count(*)::int AS runs,max(started_at) AS latest_started,max(finished_at) AS latest_finished\n FROM garimpa.triage_run WHERE tenant_id='local' GROUP BY status ORDER BY status\n) t;\nSELECT json_build_object('section','channels','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT channel,enabled,valid_until FROM garimpa.recommendation_channel WHERE tenant_id='local' ORDER BY channel\n) t;\nCOMMIT;\n",
+    "garimpa-audit-detail-20261115.sql": "\\pset tuples_only on\n\\pset format unaligned\nBEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;\nSET LOCAL statement_timeout='10s';\nSELECT json_build_object('section','context','at',now(),'tenant','local','read_only',current_setting('transaction_read_only'));\nSELECT json_build_object('section','shopee_batch_detail','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT b.id,b.status,b.started_at,b.finished_at,b.metadata#>>'{execution,error}' AS error,\n b.metadata#>'{execution,stores}' AS stores,b.metadata#>'{execution,triage}' AS triage,\n b.metadata#>'{execution,affiliateFailures}' AS affiliate_failures,\n (SELECT count(*)::int FROM garimpa.capture_run r WHERE r.tenant_id=b.tenant_id AND r.parameters->>'operationBatchId'=b.id::text) AS run_count,\n (SELECT count(distinct o.product_id)::int FROM garimpa.price_observation o JOIN garimpa.capture_run r ON r.tenant_id=o.tenant_id AND r.id=o.capture_run_id\n  WHERE r.tenant_id=b.tenant_id AND r.parameters->>'operationBatchId'=b.id::text) AS distinct_products\n FROM garimpa.capture_batch b WHERE b.tenant_id='local' AND b.id='488698fe-32ea-48cc-9828-7b8dfc63ac24'\n) t;\nSELECT json_build_object('section','today_browser_products_current','rows',coalesce(json_agg(t),'[]')) FROM (\n WITH received AS (\n  SELECT distinct r.tenant_id,item.id FROM garimpa.extension_capture_receipt r\n  CROSS JOIN LATERAL jsonb_array_elements_text(r.result->'productIds') item(id)\n  WHERE r.tenant_id='local' AND r.created_at>=('2026-11-15'::timestamp AT TIME ZONE 'America/Sao_Paulo')\n )\n SELECT p.marketplace,count(*)::int AS distinct_products,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.curation_attribute_assessment a WHERE a.tenant_id=p.tenant_id AND a.product_id=p.id))::int AS has_assessment,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.curation_attribute_job j WHERE j.tenant_id=p.tenant_id AND j.product_id=p.id AND j.status IN ('running','queued')))::int AS with_active_job,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.curation_attribute_job j WHERE j.tenant_id=p.tenant_id AND j.product_id=p.id AND j.status='reconciliation'))::int AS with_uncertain_job,\n count(*) filter(where c.status='pending')::int AS catalog_pending\n FROM received r JOIN garimpa.product p ON p.tenant_id=r.tenant_id AND p.id=r.id\n LEFT JOIN garimpa.product_curation c ON c.tenant_id=p.tenant_id AND c.product_id=p.id\n GROUP BY p.marketplace ORDER BY p.marketplace\n) t;\nSELECT json_build_object('section','recent_twenty_shopee_runs','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT mode,count(*)::int AS runs,min(started_at) AS oldest,max(started_at) AS newest FROM (\n SELECT parameters->>'captureMode' AS mode,started_at FROM garimpa.capture_run WHERE tenant_id='local' AND marketplace='shopee'\n ORDER BY started_at DESC LIMIT 20\n ) latest GROUP BY mode\n) t;\nSELECT json_build_object('section','database_visibility','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='garimpa'\n AND table_name IN ('affiliate_monitoring_policy','monitoring_policy','curation_policy_v2','discovery_policy','pauta_selection_cache','recommendation_edition')\n ORDER BY table_name,ordinal_position\n) t;\nCOMMIT;\n",
+    "garimpa-audit-controls-20261115.sql": "\\pset tuples_only on\n\\pset format unaligned\nBEGIN READ ONLY;\nSET LOCAL statement_timeout='8s';\nSELECT json_build_object('section','context','at',now(),'tenant','local','read_only',current_setting('transaction_read_only'));\nSELECT json_build_object('section','monitoring_policies','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT p.marketplace,p.enabled FROM garimpa.affiliate_monitoring_policy p\n JOIN garimpa.affiliate_account a ON a.id=p.affiliate_id WHERE a.tenant_id='local' ORDER BY p.marketplace\n) t;\nSELECT json_build_object('section','discovery_policies','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT marketplace,enabled FROM garimpa.editorial_discovery_policy WHERE tenant_id='local' ORDER BY marketplace\n) t;\nSELECT json_build_object('section','affiliate_configuration','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT c.marketplace,c.status FROM garimpa.affiliate_marketplace_config c\n JOIN garimpa.affiliate_account a ON a.id=c.affiliate_id WHERE a.tenant_id='local' ORDER BY c.marketplace\n) t;\nSELECT json_build_object('section','shopee_batch_publication_now','rows',coalesce(json_agg(t),'[]')) FROM (\n WITH products AS (\n SELECT distinct o.tenant_id,o.product_id FROM garimpa.price_observation o JOIN garimpa.capture_run r\n ON r.tenant_id=o.tenant_id AND r.id=o.capture_run_id\n WHERE r.tenant_id='local' AND r.parameters->>'operationBatchId'='488698fe-32ea-48cc-9828-7b8dfc63ac24'\n )\n SELECT count(*)::int AS products,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.publication pub WHERE pub.tenant_id=p.tenant_id AND pub.product_id=p.product_id AND pub.channel='web' AND pub.status='active' AND nullif(btrim(pub.affiliate_url),'') IS NOT NULL))::int AS with_active_link,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.curation_attribute_job j WHERE j.tenant_id=p.tenant_id AND j.product_id=p.product_id AND j.status='reconciliation'))::int AS uncertain_evaluation,\n count(*) filter(where EXISTS(SELECT 1 FROM garimpa.curation_attribute_assessment a WHERE a.tenant_id=p.tenant_id AND a.product_id=p.product_id))::int AS has_assessment\n FROM products p\n) t;\nSELECT json_build_object('section','rollout','commercial_ready',garimpa.commercial_rollout_ready());\nSELECT json_build_object('section','pauta_cached','rows',coalesce(json_agg(t),'[]')) FROM (\n SELECT channel,active,offer_count,prepared_at,offer_valid_until FROM garimpa.pauta_selection_cache WHERE tenant_id='local' ORDER BY channel\n) t;\nCOMMIT;\n"
+  },
+  "source_verification": {
+    "container": "platform-app-trial-garimpa-web-1",
+    "image_tag": "garimpa-web-trial:local",
+    "method": "sha256sum in deployed container compared to checkout; all ten match",
+    "files": [
+      {
+        "path": "packages/web/lib/today-operation-db.ts",
+        "sha256": "c414286ef8f20a2def49b0bed644b5125db0bdb3dc8d242a38d2a69a5bcf77f5"
+      },
+      {
+        "path": "packages/web/lib/curation-automation.ts",
+        "sha256": "1bcc3c7fafced208758373cace0e545977b73a5b2c026eac84453cd46ed13202"
+      },
+      {
+        "path": "packages/web/lib/extension-db.ts",
+        "sha256": "6f7c9b0f55a49a70af72e51d0740775d9dded0ecafb6dd8f593963c6d5b47ce5"
+      },
+      {
+        "path": "packages/web/lib/admin-db.ts",
+        "sha256": "c37230203482f171db91882b8d1b97f9b9d615343de076b5fd4a3d07e63ffc65"
+      },
+      {
+        "path": "packages/web/lib/pauta-db.ts",
+        "sha256": "b0164ffb86eef2d503b2830a314aa1430cee8b3f413ce205da19de51e55892f2"
+      },
+      {
+        "path": "packages/web/app/admin/today-command-center.tsx",
+        "sha256": "b704447a966d1c09f431c6875ee6a83902db3a5030a505e80fcd8a8b11b22c7f"
+      },
+      {
+        "path": "packages/web/app/admin/curadoria/page.tsx",
+        "sha256": "b456658f74fe1bcc75451b9f5afe45d7d2924278218f819ce3c827c9c5fb6e4e"
+      },
+      {
+        "path": "packages/web/app/admin/ofertas/layout.tsx",
+        "sha256": "17a0d2ad21e8deb2aa1c70adabaf63c60449af719be21a760f5e34c8a72c024e"
+      },
+      {
+        "path": "packages/web/app/admin/admin-panel.tsx",
+        "sha256": "65ad8a9270b70f5ca04be711995436b720624357bebadf377441baef6534d3a1"
+      },
+      {
+        "path": "packages/web/app/admin/direcionamento/pipeline-view.tsx",
+        "sha256": "ba55f72aa4fd77c03a9bb7ed2a7a7182835cf4cf423ffe6a9fb4eb4dc9ee5485"
+      }
+    ]
+  },
+  "github_workflows_read": [
+    {
+      "path": ".github/workflows/capture-offers.yml",
+      "state": "disabled_manually"
+    },
+    {
+      "path": ".github/workflows/discover-shopee.yml",
+      "state": "disabled_manually"
+    },
+    {
+      "path": ".github/workflows/monitor-prices.yml",
+      "state": "disabled_manually"
+    }
+  ],
+  "ui_checks": [
+    {
+      "path": "/admin?aba=visao-geral",
+      "observed": [
+        "Triar 33 produtos com IA",
+        "34 aguardando · 0 retidos",
+        "Aprova notas a partir de 4",
+        "O cron acompanha preços de produtos conhecidos.",
+        "Shopee, Mercado Livre and Amazon only in store health",
+        "manual decision table above capture action"
+      ],
+      "source": "authenticated browser, refreshed"
+    },
+    {
+      "path": "/admin?aba=rodagens",
+      "observed": [
+        "Mercado Livre: Nenhuma rodagem registrada ainda.",
+        "Amazon absent from run panels",
+        "20 recent Shopee rows are one-item checks rendered rodagem avulsa; expanded most recent row renders AVULSA",
+        "GitHub legacy monitoring and dispatch technical controls precede store histories"
+      ],
+      "source": "authenticated browser; SQL confirms all 20 are verification"
+    },
+    {
+      "path": "/admin/curadoria?aba=selecao",
+      "observed": [
+        "1081 products assessed",
+        "24 selected on home",
+        "13 assessments require reconciliation",
+        "Exceções 0 casos sinalizados",
+        "one evaluation running and five offers awaiting checks at refreshed observation",
+        "release action is under Configurações e diagnóstico > Operação da curadoria > 13 avaliação(ões) de IA aguardando conferência"
+      ],
+      "source": "authenticated browser and SQL; counts are point-in-time"
+    },
+    {
+      "path": "/admin/curadoria?aba=pipeline",
+      "observed": [
+        "latest displayed triage is 14/11 at 20:31 America/Sao_Paulo",
+        "eight legacy triage rows; no attribute-job history",
+        "historical credential errors are displayed"
+      ],
+      "source": "authenticated browser and matching source"
+    },
+    {
+      "path": "/pauta",
+      "observed": [
+        "12 WhatsApp offers",
+        "8 Stories offers",
+        "Agenda desativada até configurar os horários.",
+        "history represents distinct products with last price in 48h, not capture sessions",
+        "AliExpress filter: 186 products in 48h; first 12 visible items lack valid affiliate link"
+      ],
+      "source": "authenticated browser; both channels loaded; no copy or send confirmation performed"
+    },
+    {
+      "from": "/admin/ofertas/01ce73ff-caa9-4975-b15d-c09c048d9dbe?conta=local#confirmar-opcao-01ce73ff-caa9-4975-b15d-c09c048d9dbe",
+      "to": "/admin/curadoria?aba=selecao",
+      "observed": "detail link from blocked UGREEN offer redirects to generic curation and loses product context",
+      "source": "authenticated browser; deployed layout gate matches local source; commercial_rollout_ready false"
+    }
+  ],
+  "limits": [
+    "existing production operations continued independently during inspection; counts from separate snapshots must not be treated as one atomic state",
+    "no fresh captures or provider calls initiated for testing",
+    "retry/reconciliation/approval/send controls were inspected, not executed",
+    "no mobile viewport review, multi-account isolation test, or full audit of marketing/commercial modules",
+    "underlying cause of 13 uncertain model outcomes was not determined; no provider logs or paid retries requested"
+  ]
+}

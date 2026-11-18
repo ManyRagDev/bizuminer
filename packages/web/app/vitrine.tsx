@@ -21,6 +21,7 @@ import { useHomepageEngagement } from "./_components/use-homepage-engagement";
 import HomeBanner from "./_components/home-banner";
 import { selectCoverProduct } from "../lib/home-cover";
 import { trackEvent } from "../lib/analytics";
+import { useOfferExpired } from "./_components/offer-expiry-boundary";
 
 type EditorialProduct = VitrineProduct & { editorialRationale: string; editorialContext: string; editorialPurchaseContents: string };
 
@@ -252,6 +253,7 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
     if (!editorialStateKey) return;
     const controller = new AbortController();
     let checking = false;
+    let navigationTimer: number | undefined;
     const invalidate = () => { setHeroCurrent(false); };
     const verify = async () => {
       if (document.visibilityState === "hidden" || checking) return;
@@ -268,15 +270,19 @@ export default function Vitrine({ homepageReady = false, homepageEngagement = nu
       finally { checking = false; }
     };
     const deadline = editorialHeroValidUntil ? Date.parse(editorialHeroValidUntil) : NaN;
-    const expiry = Number.isFinite(deadline) ? window.setTimeout(() => { invalidate(); void verify(); }, Math.max(0, deadline - Date.now() + 50)) : null;
-    const timer = window.setInterval(() => { void verify(); }, 300_000);
-    const onVisible = () => { void verify(); };
+    // Expiry only removes the highlight. A new edition is read on navigation,
+    // never requested by the clock to fill the vacated position.
+    const expiry = Number.isFinite(deadline) ? window.setTimeout(invalidate, Math.max(0, deadline - Date.now() + 50)) : null;
+    const onVisible = () => {
+      window.clearTimeout(navigationTimer);
+      if (document.visibilityState !== "hidden") navigationTimer = window.setTimeout(() => { void verify(); }, 100);
+    };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
     return () => {
       controller.abort();
       if (expiry !== null) window.clearTimeout(expiry);
-      window.clearInterval(timer);
+      window.clearTimeout(navigationTimer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
@@ -512,11 +518,16 @@ function CatalogPagination({ current, total, disabled, onChange }: { current: nu
   return <nav className="catalog-pagination" aria-label="Paginação das ofertas"><button className="pagination-direction" type="button" disabled={disabled || current === 1} onClick={() => onChange(current - 1)}><span aria-hidden="true">←</span><b>anterior</b></button><div className="pagination-numbers">{items.map((item) => typeof item === "number" ? <button key={item} type="button" className={item === current ? "active" : ""} aria-current={item === current ? "page" : undefined} aria-label={`Ir para a página ${item}`} disabled={disabled} onClick={() => onChange(item)}>{item}</button> : <span key={item} aria-hidden="true">…</span>)}</div><span className="pagination-mobile-status" aria-live="polite">Página {current} de {total}</span><button className="pagination-direction next" type="button" disabled={disabled || current === total} onClick={() => onChange(current + 1)}><b>próxima</b><span aria-hidden="true">→</span></button></nav>;
 }
 
-function ProductCard({ product, favorite, onFavorite, editorialRationale, editorialPurchaseContents, featured = false, renderTime }: { product: VitrineProduct; favorite: boolean; onFavorite: (product: VitrineProduct) => void; editorialRationale?: string; editorialPurchaseContents?: string; featured?: boolean; renderTime?: Date }) {
-  const fresh = priceFreshness(product.evidenceObservedAt, renderTime);
-  const highlight = fresh === "current" ? priceHighlight(historyInput(product)) : null;
-  const discountPct = fresh === "current" ? discountPercentOf(product) : null;
-  const freshness = fresh === "current" ? freshnessLabel(product.evidenceObservedAt, renderTime) : null;
+type ProductCardProps = { product: VitrineProduct; favorite: boolean; onFavorite: (product: VitrineProduct) => void; editorialRationale?: string; editorialPurchaseContents?: string; featured?: boolean; renderTime?: Date };
+function ProductCard(props: ProductCardProps) {
+  return <ProductCardContents {...props} />;
+}
+function ProductCardContents({ product, favorite, onFavorite, editorialRationale, editorialPurchaseContents, featured = false, renderTime }: ProductCardProps) {
+  const offerExpired = useOfferExpired(product.offerValidUntil);
+  const fresh = offerExpired ? "stale" : priceFreshness(product.evidenceObservedAt, renderTime);
+  const highlight = !offerExpired && fresh === "current" ? priceHighlight(historyInput(product)) : null;
+  const discountPct = !offerExpired && fresh === "current" ? discountPercentOf(product) : null;
+  const freshness = !offerExpired && fresh === "current" ? freshnessLabel(product.evidenceObservedAt, renderTime) : null;
   const seen = fresh === "stale" ? seenAgo(product.evidenceObservedAt, renderTime) : null;
   const marketplaceDefinition = marketplaceDef(product.marketplace);
   const marketplaceLabel = marketplaceDefinition?.label ?? product.marketplace;
@@ -525,5 +536,5 @@ function ProductCard({ product, favorite, onFavorite, editorialRationale, editor
   const imageSizes = featured
     ? "(max-width: 820px) calc(100vw - 32px), 263px"
     : "(max-width: 659px) calc((100vw - 44px) / 2), (max-width: 820px) calc((100vw - 56px) / 3), (max-width: 1024px) 28vw, min(21vw, 263px)";
-  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`} data-home-product={product.id} data-home-surface="grid"><div className="product-image"><Link href={optionDetailPath(product.slug,product.offerOptionKey)} prefetch={false} aria-label={`Abrir detalhes de ${(product.displayTitle || product.title)}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={(product.displayTitle || product.title)} fill sizes={imageSizes} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></Link>{discountPct !== null && <span className="discount" suppressHydrationWarning><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${(product.displayTitle || product.title)}`} aria-pressed={favorite} onClick={() => onFavorite(product)} suppressHydrationWarning>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"} suppressHydrationWarning>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><Link href={optionDetailPath(product.slug,product.offerOptionKey)} prefetch={false}>{(product.displayTitle || product.title)}</Link></h3><MarketplaceEvidence product={product} />{editorialRationale && <p className="product-editorial-rationale">{editorialRationale}</p>}{editorialPurchaseContents && <p className="product-editorial-contents"><b>O que vem:</b> {editorialPurchaseContents}</p>}<p className="product-blurb" suppressHydrationWarning><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price"><div suppressHydrationWarning>{fresh === "current" ? <><small suppressHydrationWarning>{product.originalPriceKind === "source_claimed" && product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong suppressHydrationWarning>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em suppressHydrationWarning>{offerPriceNote(product)}</em>}{freshness && <em suppressHydrationWarning>{freshness}</em>}</> : <span className="stale-price" suppressHydrationWarning><strong suppressHydrationWarning>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em suppressHydrationWarning>{offerPriceNote(product)}</em>}<em suppressHydrationWarning>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a data-marketplace={marketplaceDefinition?.slug} href={product.offerOptionKey ? optionDetailPath(product.slug,product.offerOptionKey):`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></div><CopyProductLink optionKey={product.offerOptionKey} slug={product.slug} title={(product.displayTitle || product.title)} /></article>;
+  return <article className={`product-card${featured ? " mobile-featured-card" : ""}`} data-home-product={product.id} data-home-surface="grid"><div className="product-image"><Link href={optionDetailPath(product.slug,product.offerOptionKey)} prefetch={false} aria-label={`Abrir detalhes de ${(product.displayTitle || product.title)}`}>{product.imageUrl ? <Image src={product.imageUrl} alt={(product.displayTitle || product.title)} fill sizes={imageSizes} /> : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={32} height={32} /></div>}<MarketplaceIcon logo={marketplaceLogo} className="origin-icon" /></Link>{discountPct !== null && <span className="discount" suppressHydrationWarning><b>−{discountPct}%</b><i> no anúncio</i></span>}<button className={favorite ? "favorite active" : "favorite"} aria-label={`${favorite ? "Remover" : "Salvar"} ${(product.displayTitle || product.title)}`} aria-pressed={favorite} onClick={() => onFavorite(product)} suppressHydrationWarning>{favorite ? "♥" : "♡"}</button></div><div className={highlight ? "product-meta" : "product-meta quiet"} suppressHydrationWarning>{highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}</div><h3><Link href={optionDetailPath(product.slug,product.offerOptionKey)} prefetch={false}>{(product.displayTitle || product.title)}</Link></h3><MarketplaceEvidence product={product} />{editorialRationale && <p className="product-editorial-rationale">{editorialRationale}</p>}{editorialPurchaseContents && <p className="product-editorial-contents"><b>O que vem:</b> {editorialPurchaseContents}</p>}<p className="product-blurb" suppressHydrationWarning><b>Histórico do preço:</b> {priceNarrative(historyInput(product), brl)}</p><div className="product-price">{offerExpired ? <><div className="stale-price" role="status"><strong>Preço atual não confirmado.</strong><em>Esta oferta precisa de uma nova conferência.</em></div><Link href={`/bizu/${encodeURIComponent(product.slug)}`} prefetch={false}><span>ver histórico</span><b>→</b></Link></> : <><div suppressHydrationWarning>{fresh === "current" ? <><small suppressHydrationWarning>{product.originalPriceKind === "source_claimed" && product.originalPriceCents && product.originalPriceCents > product.priceCents ? brl(product.originalPriceCents) : ""}</small><strong suppressHydrationWarning>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em suppressHydrationWarning>{offerPriceNote(product)}</em>}{freshness && <em suppressHydrationWarning>{freshness}</em>}</> : <span className="stale-price" suppressHydrationWarning><strong suppressHydrationWarning>{offerPriceLabel(product)}</strong>{offerPriceNote(product) && <em suppressHydrationWarning>{offerPriceNote(product)}</em>}<em suppressHydrationWarning>última vez visto {seen ?? "há algum tempo"}</em></span>}</div><a data-marketplace={marketplaceDefinition?.slug} href={product.offerOptionKey ? optionDetailPath(product.slug,product.offerOptionKey):`/go/${product.slug}`} target="_blank" rel="noreferrer sponsored" onClick={() => trackInteraction("outbound_click", product.id)}><MarketplaceIcon logo={marketplaceLogo} className="cta-icon" /><span>{ctaLabel}</span><b>↗</b></a></>}</div><CopyProductLink optionKey={product.offerOptionKey} slug={product.slug} title={(product.displayTitle || product.title)} /></article>;
 }

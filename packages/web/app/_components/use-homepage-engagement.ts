@@ -12,6 +12,7 @@ export function useHomepageEngagement(editionId: string | null, ticket: Homepage
     if (!enabled || !editionId || !ticket || !window.IntersectionObserver || isKnownAutomation(navigator.userAgent)) return;
     const grid = gridKey.split("|"), hero = heroKey.split("|");
     const timers = new Map<Element, ReturnType<typeof setTimeout>>();
+    let flushTimer: ReturnType<typeof setTimeout> | undefined;
     const visible = new Set<Element>();
     const eventFor = (element: Element, event: HomepageEvent["event"]): HomepageEvent | null => {
       const productId = element.getAttribute("data-home-product");
@@ -22,9 +23,13 @@ export function useHomepageEngagement(editionId: string | null, ticket: Homepage
     const add = (element: Element, type: HomepageEvent["event"]) => {
       const event = eventFor(element, type); if (!event) return;
       const key = `${ticket.viewId}:${editionId}:${event.productId}:${event.surface}:${event.position}:${type}`;
-      if (!recorded.current.has(key)) { recorded.current.add(key); pending.current.set(key, event); }
+      if (!recorded.current.has(key)) {
+        recorded.current.add(key); pending.current.set(key, event);
+        if (flushTimer === undefined) flushTimer = setTimeout(flush, 10_000);
+      }
     };
     const flush = () => {
+      clearTimeout(flushTimer); flushTimer = undefined;
       const entries = [...pending.current.entries()].slice(0, 50); if (!entries.length) return;
       const payload = JSON.stringify({ editionId, token: ticket.token, viewId: ticket.viewId, events: entries.map(([, event]) => event) });
       for (const [key] of entries) pending.current.delete(key);
@@ -56,11 +61,10 @@ export function useHomepageEngagement(editionId: string | null, ticket: Homepage
       timers.forEach((_, element) => stopTimer(element));
       if (document.visibilityState === "hidden") flush(); else visible.forEach(startTimer);
     };
-    const interval = setInterval(flush, 10_000);
     document.addEventListener("click", click, true);
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", flush);
-    return () => { observer.disconnect(); timers.forEach(clearTimeout); clearInterval(interval); while (pending.current.size) flush();
+    return () => { observer.disconnect(); timers.forEach(clearTimeout); clearTimeout(flushTimer); while (pending.current.size) flush();
       document.removeEventListener("click", click, true); document.removeEventListener("visibilitychange", visibility); window.removeEventListener("pagehide", flush); };
   }, [editionId, ticket, gridKey, heroKey, enabled]);
 }

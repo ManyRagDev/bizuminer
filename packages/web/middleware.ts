@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createMiddlewareSupabase } from "./lib/supabase";
+import { attachSink, createMiddlewareSupabase } from "./lib/supabase";
 
 const UID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
@@ -18,12 +18,19 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
  *    o middleware é a UX, não a fronteira.
  */
 export async function middleware(request: NextRequest) {
+  // Shared layouts do not receive searchParams. Forward the URL context only;
+  // membership is still checked by pageAccount. Never accept a client override.
+  request.headers.delete("x-bm-page-account");
+  const accounts = request.nextUrl.searchParams.getAll("conta");
+  if (accounts.length) request.headers.set("x-bm-page-account",
+    accounts.length === 1 && /^[a-zA-Z0-9._-]{1,160}$/.test(accounts[0]) ? accounts[0] : "!invalid-account");
   const existing = request.cookies.get("bm_uid")?.value;
   const issuedUid = !existing || !UID_RE.test(existing) ? crypto.randomUUID() : null;
   if (issuedUid) request.cookies.set("bm_uid", issuedUid);
 
-  const { supabase, supabaseResponse } = createMiddlewareSupabase(request);
-  const { data } = await supabase.auth.getClaims();
+  const session = createMiddlewareSupabase(request);
+  const { data } = await session.supabase.auth.getClaims();
+  const { supabaseResponse } = session;
   const authenticated = Boolean(data?.claims);
 
   const { pathname } = request.nextUrl;
@@ -50,6 +57,10 @@ export async function middleware(request: NextRequest) {
     // Público: só o refresh de sessão (para a personalização das páginas).
     response = supabaseResponse;
   }
+
+  // Refresh and deletion cookies must also reach the browser on redirects and
+  // denied API requests, without copying passthrough-only middleware headers.
+  if (response !== supabaseResponse) attachSink(supabaseResponse, response);
 
   if (issuedUid) {
     response.cookies.set("bm_uid", issuedUid, {

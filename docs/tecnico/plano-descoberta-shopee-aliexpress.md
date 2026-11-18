@@ -79,9 +79,9 @@ type SourceQuery =
 
 ### Shopee
 
-Use `productOfferV2(productCatId: ..., listType: 0, sortType: 2, page: 1, limit: 20)` e omita `keyword` no modo por departamento. Leia `itemId`, `shopId`, `productCatIds`, `price`, `priceMin`, `priceMax`, `offerLink` e `pageInfo`. O `sales` retornado não veio em ordem estritamente decrescente. A ordenação da fonte ajuda a descobrir candidatos, e a seleção do Bizu aplica critérios próprios.
+Use `productOfferV2(productCatId: ..., sortType: 2, page: 1, limit: 20)` e omita `keyword` no modo por departamento. Não combine `listType` com esses filtros: o contrato oficial reserva esse argumento ao modo com `matchId`. Para ordem padrão, omita `sortType`; desconto não é uma ordenação suportada nessa consulta. Leia `itemId`, `shopId`, `productCatIds`, `priceMin`, `priceMax`, `offerLink` e `pageInfo`, sem o campo legado `price`, marcado para remoção. O `sales` retornado não veio em ordem estritamente decrescente. A ordenação da fonte ajuda a descobrir candidatos, e a seleção do Bizu aplica critérios próprios. [Contrato oficial](https://affiliate.shopee.com.br/open_api/list?type=product_offer) · [Integração e ensaio limitado](./contrato-integracao-supabase-vps.md#26-correcao-do-contrato-graphql-shopee-e-retomada-do-ensaio)
 
-Registre se o ID consultado aparece em `productCatIds`. No modo novo, trate o erro `10000 System Error` com uma repetição limitada e registrada. Uma falha persistente encerra aquele recorte e os demais seguem. Preserve o tratamento de limites e transporte do cliente. [Adaptador](../../packages/capture/src/adapters/shopee/index.ts) · [GraphQL](../../packages/capture/src/adapters/shopee/queries.ts) · [Portal de Afiliados](https://affiliate.shopee.com.br/open_api)
+Registre se o ID consultado aparece em `productCatIds`. Fora do ensaio de tentativa única, trate o erro transitório `10000 System Error` com uma repetição limitada e registrada; erro determinístico de contrato GraphQL não recebe repetição nem redução de página. Uma falha persistente encerra aquele recorte e os demais seguem. Preserve o tratamento de limites e transporte do cliente. [Adaptador](../../packages/capture/src/adapters/shopee/index.ts) · [GraphQL](../../packages/capture/src/adapters/shopee/queries.ts) · [Portal de Afiliados](https://affiliate.shopee.com.br/open_api)
 
 ### AliExpress
 

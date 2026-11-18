@@ -14,6 +14,7 @@ const ABA_ALIASES: Record<string, { aba: string; sub?: string }> = {
   aprendizados: { aba: "bussola" },
   selecao: { aba: "selecao" },
   excecoes: { aba: "excecoes" },
+  problemas: { aba: "problemas" },
   auditoria: { aba: "auditoria" },
   bussola: { aba: "bussola" },
   pipeline: { aba: "pipeline" },

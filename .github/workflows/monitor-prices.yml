@@ -1,8 +1,8 @@
 name: Acompanhar preços por ID
 
 on:
-  schedule:
-    - cron: '7 3,9,15,21 * * *'
+  # Cron suspenso por decisão do dono em 15/11/2026.
+  # Reativar somente mediante solicitação explícita do dono.
   workflow_dispatch:
 
 permissions:
@@ -10,11 +10,11 @@ permissions:
 
 jobs:
   monitor:
-    if: vars.MONITORING_ENABLED == 'true'
+    if: ${{ false }} # Replaced by the durable installation worker.
     strategy:
       fail-fast: false
       matrix:
-        marketplace: [shopee, aliexpress]
+        marketplace: [shopee]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency:

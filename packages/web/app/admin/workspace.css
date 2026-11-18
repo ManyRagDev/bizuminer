@@ -241,6 +241,43 @@
   margin: 0;
   min-width: 0;
 }
+.bm-marketplace-results {
+  margin-top: 24px;
+  min-width: 0;
+}
+.bm-marketplace-results h3 {
+  margin: 20px 0 8px;
+}
+.bm-marketplace-clicks,
+.bm-marketplace-report-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 12px;
+}
+.bm-marketplace-clicks dd {
+  margin: 4px 0 0;
+  font-weight: 750;
+}
+.bm-marketplace-table {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+.bm-marketplace-table table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.bm-marketplace-table caption {
+  text-align: left;
+  color: var(--ink-muted);
+  padding-bottom: 8px;
+}
+.bm-marketplace-table th,
+.bm-marketplace-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
 .bm-workspace :focus-visible {
   outline: 3px solid #7d9c27;
   outline-offset: 3px;

@@ -4,6 +4,10 @@
  * `local`, nunca `sync`.
  */
 
+declare const __API_BASE__: string;
+export const BUILD_API_ORIGIN = typeof __API_BASE__ === "string" ? __API_BASE__ : "https://www.bizuminer.com.br";
+if (!["https://www.bizuminer.com.br", "http://localhost:3100"].includes(BUILD_API_ORIGIN)) throw new Error("invalid_build_origin");
+
 export interface ExtensionStorage {
   get(keys: string | string[] | null): Promise<Record<string, unknown>>;
   set(items: Record<string, unknown>): Promise<void>;
@@ -16,6 +20,7 @@ export const STORAGE_KEYS = {
   activeTabId: "bm_active_tab_id",
   outbox: "bm_outbox",
   apiBaseUrl: "bm_api_base_url",
+  sessionOrigin: "bm_session_origin",
 } as const;
 
 export function chromeStorage(): ExtensionStorage {
@@ -23,26 +28,27 @@ export function chromeStorage(): ExtensionStorage {
 }
 
 export async function getToken(storage: ExtensionStorage): Promise<string | null> {
-  const data = await storage.get(STORAGE_KEYS.token);
+  const data = await storage.get([STORAGE_KEYS.token, STORAGE_KEYS.deviceId, STORAGE_KEYS.sessionOrigin]);
   const token = data[STORAGE_KEYS.token];
-  return typeof token === "string" && token.length > 0 ? token : null;
+  return typeof token === "string" && token.startsWith("bm_ext_") && data[STORAGE_KEYS.sessionOrigin] === BUILD_API_ORIGIN
+    && typeof data[STORAGE_KEYS.deviceId] === "string" && !!data[STORAGE_KEYS.deviceId] ? token : null;
 }
 
-export async function getApiBaseUrl(storage: ExtensionStorage, fallback = "http://localhost:3100"): Promise<string> {
-  const data = await storage.get(STORAGE_KEYS.apiBaseUrl);
-  const url = data[STORAGE_KEYS.apiBaseUrl];
-  return typeof url === "string" && url.length > 0 ? url : fallback;
+export async function getApiBaseUrl(_storage: ExtensionStorage): Promise<string> {
+  return BUILD_API_ORIGIN;
 }
 
 export async function setApiBaseUrl(storage: ExtensionStorage, url: string): Promise<void> {
-  await storage.set({ [STORAGE_KEYS.apiBaseUrl]: url });
+  if (url !== BUILD_API_ORIGIN) throw new Error("invalid_url");
+  await storage.set({ [STORAGE_KEYS.apiBaseUrl]: BUILD_API_ORIGIN });
 }
 
 export async function setSession(
   storage: ExtensionStorage,
-  session: { token: string; deviceId: string; affiliateName: string },
+  session: { token: string; deviceId: string; affiliateName: string; origin: string },
 ): Promise<void> {
   await storage.set({
+    [STORAGE_KEYS.sessionOrigin]: session.origin,
     [STORAGE_KEYS.token]: session.token,
     [STORAGE_KEYS.deviceId]: session.deviceId,
     [STORAGE_KEYS.affiliateName]: session.affiliateName,
@@ -51,6 +57,7 @@ export async function setSession(
 
 export async function clearSession(storage: ExtensionStorage): Promise<void> {
   await storage.set({
+    [STORAGE_KEYS.sessionOrigin]: "",
     [STORAGE_KEYS.token]: "",
     [STORAGE_KEYS.deviceId]: "",
     [STORAGE_KEYS.affiliateName]: "",

@@ -109,7 +109,7 @@ test("Piloto Automático: autoPublish=true aprova diretamente produtos com score
 
   const top = decisions.find((d) => d.productId === "prod_top");
   assert.ok(top);
-  assert.equal(top.status, "approved");
+  assert.equal(top.status, "pending");
   assert.equal(top.aiScore, 5);
   assert.equal(top.actorType, "llm");
 
@@ -205,7 +205,7 @@ test("Piloto Automático: filtros determinísticos e rejeições por risco preva
 
   const cheap = decisions.find((d) => d.productId === "prod_cheap");
   assert.ok(cheap);
-  assert.equal(cheap.status, "approved");
+  assert.equal(cheap.status, "pending");
   assert.equal(cheap.actorType, "llm");
 
   const miracle = decisions.find((d) => d.productId === "prod_miracle");

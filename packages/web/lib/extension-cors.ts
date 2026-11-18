@@ -7,19 +7,17 @@
 
 export function extensionAllowedOrigins(env: Record<string, string | undefined> = process.env): string[] {
   const raw = env.EXTENSION_ALLOWED_ORIGINS ?? "";
-  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  return raw.split(",").map((s) => s.trim()).filter(s => Boolean(s) && s !== "*");
 }
 
 /** Origem exata é permitida? (sem wildcard, comparação exata, case-sensitive). */
 export function isAllowedExtensionOrigin(origin: string | null, env: Record<string, string | undefined> = process.env): boolean {
   if (!origin) return false;
   const allowed = extensionAllowedOrigins(env);
-  if (allowed.includes("*")) return true;
   if (
     env.NODE_ENV === "development" &&
-    (origin.startsWith("chrome-extension://") ||
-      origin.startsWith("http://localhost:") ||
-      origin.startsWith("http://127.0.0.1:"))
+    (/^chrome-extension:\/\/[a-p]{32}$/.test(origin) ||
+      /^http:\/\/(?:localhost|127\.0\.0\.1):\d{1,5}$/.test(origin))
   ) {
     return true;
   }

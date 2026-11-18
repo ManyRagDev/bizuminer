@@ -1,3 +1,4 @@
+import { databaseSsl } from "../src/database-ssl.ts";
 import {runEditorialDiscovery} from "../src/editorial-discovery-run.ts";
 import { discoveryBudget,discoveryKeyword,loadDiscoveryPolicy } from "../src/editorial-discovery.ts";
 import { resolveWorkerCredential, withAccountCredential,accountCaptureAdapter } from "../src/account-credentials.ts";
@@ -17,7 +18,6 @@ import { categoryForTitle } from "../src/category.ts";
 import { familyInfoForTitle } from "../src/product-family.ts";
 import type { CaptureContext, Credential } from "../../capture/src/types.ts";
 import { shopeeCaptureEnabled } from "../../capture/src/shopee-capture.ts";
-import { aliexpressCaptureEnabled } from "../../capture/src/aliexpress-capture.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string): string | undefined => {
@@ -25,12 +25,13 @@ const flag = (name: string): string | undefined => {
   return index < 0 ? undefined : args[index + 1];
 };
 const marketplace = flag("marketplace") as MonitorMarketplace | undefined;
-if (marketplace !== "shopee" && marketplace !== "aliexpress") {
-  throw new Error("--marketplace deve ser shopee ou aliexpress; ML pertence à fila humana");
+if (marketplace !== "shopee") {
+  throw new Error("--marketplace deve ser shopee; outras lojas exigem navegador");
 }
 const limit = Number(flag("limit") ?? "20");
 if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("--limit deve ser inteiro entre 1 e 100");
 const execute = args.includes("--execute");
+if (execute) throw new Error("monitoring_legacy_execution_disabled_use_durable_worker");
 const tenantId = process.env.MONITOR_TENANT_ID ?? "local";
 // Global API credentials configured by the current cron belong to the house.
 // Another account needs its own credential resolver before enabling external calls.
@@ -41,7 +42,7 @@ if (!connectionString) throw new Error("DATABASE_URL não definido");
 const sql = postgres(connectionString, {
   prepare: false,
   max: 1,
-  ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false },
+  ssl: databaseSsl(connectionString),
 });
 const scheduleDecision = await withMonitoringDb(sql,tenantId,tx=>monitoringScheduleDecision(
   tx, tenantId, marketplace, process.env.GITHUB_EVENT_NAME,
@@ -158,8 +159,7 @@ try {
   }
   if(capacity.discovery && policy?.keywords.length){
     try{
-      const adapter=marketplace==='shopee' ? new (await import('../../capture/src/adapters/shopee/index.ts')).ShopeeAdapter()
-        : new (await import('../../capture/src/adapters/aliexpress/index.ts')).AliExpressAdapter();
+      const adapter=new (await import('../../capture/src/adapters/shopee/index.ts')).ShopeeAdapter();
       const result=await runEditorialDiscovery(accountCaptureAdapter(sql,tenantId,adapter),cred,store,
         {tenantId,keyword:discoveryKeyword(policy.keywords),budget:capacity.discovery,policyVersion:policy.version,monitoringRunId:runId},ctx);
       discovered=result.discovered;discoverySeen=result.seen;
@@ -167,6 +167,7 @@ try {
   }
 } finally {
   await store.finishCaptureRun(runId, {
+    tenantId,
     finishedAt: new Date(), status: failed+discoveryFailed > 0 ? "error" : "ok",
     itemsCaptured: matched, itemsNew: 0, priceChanges,
     error: failed > 0 ? `${failed} reconsultas falharam` : undefined,

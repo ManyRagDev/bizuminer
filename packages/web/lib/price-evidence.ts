@@ -38,6 +38,7 @@ export interface OfferEvidence {
   readonly conditions?: {
     readonly quantity?: number;
     readonly payment?: string;
+    readonly membership?: string;
     readonly shipping?: string;
     readonly coupon?: string;
     readonly region?: string;
@@ -180,6 +181,7 @@ export function buildConfigurationKey(evidence?: OfferEvidence | null): string |
     quantity,
     attributes: Object.fromEntries(Object.entries(evidence.variantIdentity?.attributes ?? {}).sort(([a],[b])=>a.localeCompare(b))),
     ...material,
+    membership: evidence.conditions?.membership ?? null,
   });
 }
 

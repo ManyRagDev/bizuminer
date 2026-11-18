@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TriageBatchHistory } from "../../../lib/editorial-compass.ts";
 import type { CaptureRunRow } from "../../../lib/admin-db.ts";
+import { automatedTriageFailureMessage } from "../../../lib/triage-feedback.ts";
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
   month: "2-digit",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
 });
 
-function timeAgo(isoString: string | null): string {
+function timeAgo(isoString: string | null, now: number | null): string {
   if (!isoString) return "nunca";
-  const ms = Date.now() - new Date(isoString).getTime();
+  if (now === null) return "—";
+  const ms = now - new Date(isoString).getTime();
   if (ms < 0) return "agora";
   const min = Math.floor(ms / 60000);
   if (min < 1) return "agora mesmo";
@@ -85,6 +88,9 @@ export default function ExecutionHistory({
   onInspectBatch?: (batchId: string, runTime: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"triage" | "capture">("triage");
+  const [now, setNow] = useState<number | null>(null);
+  // Server and first client render share stable dates; relative age is client-only.
+  useEffect(() => { setNow(Date.now()); }, []);
 
   return (
     <section
@@ -130,12 +136,13 @@ export default function ExecutionHistory({
               <thead>
                 <tr>
                   <th>Data / Horário</th>
-                  <th>Total Avaliado</th>
+                  <th>Itens recebidos</th>
+                  <th>Status</th>
                   <th>Aprovados (Piloto)</th>
                   <th>Retidos</th>
                   <th>Rejeitados</th>
                   <th>Motivo Principal / Filtro</th>
-                  <th>Método</th>
+                  <th>Modelo / método</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -145,11 +152,16 @@ export default function ExecutionHistory({
                     <td>
                       <strong>{dateFmt.format(new Date(batch.runTime))}</strong>
                       <small className="time-ago-sub">
-                        {timeAgo(batch.runTime)}
+                        {timeAgo(batch.runTime, now)}
                       </small>
                     </td>
                     <td>
                       <b className="batch-total">{batch.totalItems}</b>
+                    </td>
+                    <td>
+                      <span className={`pill-badge ${batch.status === "error" ? "pill-held" : batch.status === "running" ? "pill-neutral" : "pill-approved"}`}>
+                        {batch.status === "error" ? "Interrompida" : batch.status === "running" ? "Em andamento" : "Concluída"}
+                      </span>
                     </td>
                     <td>
                       {batch.approved > 0 ? (
@@ -179,17 +191,19 @@ export default function ExecutionHistory({
                       )}
                     </td>
                     <td>
-                      <span className="reason-label" title={batch.topReason}>
-                        {translateReason(batch.topReason)}
+                      <span className="reason-label">
+                        {batch.status === "error"
+                          ? batch.errorMessage ?? automatedTriageFailureMessage(undefined)
+                          : batch.status === "running" ? "Aguardando conclusão" : translateReason(batch.topReason)}
                       </span>
                     </td>
                     <td>
-                      {batch.llmCount > 0 ? (
+                      {batch.modelName || batch.llmCount > 0 ? (
                         <span className="method-pill llm">
-                          Gemini 2.5 Flash
+                          {batch.modelName ?? "IA"}
                         </span>
                       ) : (
-                        <span className="method-pill rule">Filtro Rápido</span>
+                        <span className="method-pill rule">{batch.ruleCount > 0 ? "Filtro Rápido" : "—"}</span>
                       )}
                     </td>
                     <td>
@@ -242,7 +256,7 @@ export default function ExecutionHistory({
                         {dateFmt.format(new Date(run.started_at))}
                       </strong>
                       <small className="time-ago-sub">
-                        {timeAgo(String(run.started_at))}
+                        {timeAgo(String(run.started_at), now)}
                       </small>
                     </td>
                     <td>

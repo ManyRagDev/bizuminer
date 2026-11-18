@@ -12,12 +12,12 @@ const approvedEvaluation = (items) => items.map((item) => ({
   isAdultOrUnsafe: false, editorialCategory: "gadget_util", justification: "Útil para a rotina.",
 }));
 
-test("R$ 100 observado antes e R$ 11 agora avança com contexto verificado e ainda exige a IA", async () => {
+test("R$ 100 observado antes e R$ 11 agora avança com contexto verificado sem autoaprovar por nota legada", async () => {
   let payload;
   const [decision] = await processIngestionPipeline([{ ...product, comparablePriceHistory: history }], {
     autoPublish: true, evaluator: async (items) => { payload = items; return approvedEvaluation(items); },
   });
-  assert.equal(decision.status, "approved");
+  assert.equal(decision.status, "pending");
   assert.equal(decision.actorType, "llm");
   assert.equal(decision.pricePolicy.outcome, "verified_discount");
   assert.deepEqual(payload[0].verifiedPriceReference, {
@@ -33,7 +33,7 @@ test("Preço baixo entra na triagem sem converter o preço riscado em desconto v
     assert.equal(items[0].verifiedPriceReference, undefined);
     return approvedEvaluation(items);
   } });
-  assert.equal(decision.status, "approved");
+  assert.equal(decision.status, "pending");
   assert.equal(decision.pricePolicy.outcome, "current_price");
 });
 
@@ -41,7 +41,7 @@ test("Queda verificada também vale para um produto habitualmente abaixo de R$ 2
   const [decision] = await processIngestionPipeline([{
     ...product, comparablePriceHistory: { ...history, referencePriceCents: 1500 },
   }], { autoPublish: true, evaluator: async (items) => approvedEvaluation(items) });
-  assert.equal(decision.status, "approved");
+  assert.equal(decision.status, "pending");
   assert.equal(decision.pricePolicy.outcome, "verified_discount");
 });
 
@@ -73,13 +73,25 @@ test("Contexto de preço preserva aprovação manual e rejeições editoriais", 
   assert.equal(rejected.reasonCode, "misleading_claim");
 });
 
-test("Promoção com histórico não contorna filtros de segurança ou de nota do anúncio", async () => {
+test("Promoção com histórico não contorna bloqueio de conteúdo restrito; nota baixa do anúncio segue para avaliação", async () => {
   const candidates = [
     { ...product, id: "adult", title: "Vibrador", comparablePriceHistory: history },
     { ...product, id: "bad", ratingStar: 3.2, comparablePriceHistory: history },
   ];
-  const decisions = await processIngestionPipeline(candidates, { autoPublish: true, evaluator: async () => assert.fail("Bloqueios prevalecem") });
-  assert.deepEqual(decisions.map((d) => d.reasonCode), ["adult_sexual", "low_quality_listing"]);
+  const seenByLlm = [];
+  const decisions = await processIngestionPipeline(candidates, {
+    autoPublish: true,
+    evaluator: async (items) => {
+      seenByLlm.push(...items.map((item) => item.productId));
+      return approvedEvaluation(items);
+    },
+  });
+  assert.deepEqual(seenByLlm, ["bad"]);
+  const adult = decisions.find((d) => d.productId === "adult");
+  const bad = decisions.find((d) => d.productId === "bad");
+  assert.equal(adult.status, "rejected");
+  assert.equal(adult.reasonCode, "adult_sexual");
+  assert.equal(bad.status, "pending");
 });
 
 test("Preço positivo de um centavo segue normalmente e preço zero não avança", async () => {
@@ -87,6 +99,6 @@ test("Preço positivo de um centavo segue normalmente e preço zero não avança
     { ...product, id: "one-cent", priceCents: 1 },
     { ...product, id: "zero", priceCents: 0, comparablePriceHistory: history },
   ], { autoPublish: true, evaluator: async (items) => approvedEvaluation(items) });
-  assert.equal(decisions.find((d) => d.productId === "one-cent").status, "approved");
+  assert.equal(decisions.find((d) => d.productId === "one-cent").status, "pending");
   assert.equal(decisions.find((d) => d.productId === "zero").reasonCode, "insufficient_evidence");
 });

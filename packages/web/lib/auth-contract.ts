@@ -26,3 +26,11 @@ export function sanitizeNext(value: unknown, fallback = "/minha-area"): string {
 }
 
 export { validUserId };
+
+/** Server-only deployment choice. Unset preserves the existing Google flow. */
+export function authLoginMethods(mode: unknown): { google: boolean; password: boolean } {
+  return {
+    google: mode === undefined || mode === "" || mode === "google" || mode === "both",
+    password: mode === "password" || mode === "both",
+  };
+}

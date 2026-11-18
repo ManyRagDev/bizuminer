@@ -42,12 +42,14 @@ function ConnectionForm({
   connection,
   canManage,
   ready,
+  secretStorageReady,
   onSaved,
 }: {
   store: (typeof stores)[number];
   connection?: ConnectionView;
   canManage: boolean;
   ready: boolean;
+  secretStorageReady: boolean;
   onSaved: () => void;
 }) {
   const fetch = useAdminFetch(),
@@ -108,7 +110,7 @@ function ConnectionForm({
           }
         }}
       >
-        <fieldset disabled={!canManage || !ready || busy}>
+        <fieldset disabled={!canManage || !ready || busy || (store.id !== "mercadolivre" && !secretStorageReady)}>
           {store.fields.map((f) => (
             <label key={f.id}>
               {f.label}
@@ -170,19 +172,21 @@ function ConnectionForm({
 export default function OnboardingWorkspace({
   tenantId,
   platformAdmin,
-  canManage = true,
+  canManage,
+  canDocumentLinks,
 }: {
   tenantId: string;
-  progress?: unknown;
-  configs: unknown[];
   platformAdmin: boolean;
-  canManage?: boolean;
+  canManage: boolean;
+  canDocumentLinks: boolean;
 }) {
   const fetch = useAdminFetch(),
     [data, setData] = useState<{
       schemaReady: boolean;
+      secretStorageReady: boolean;
       connections: ConnectionView[];
-    }>({ schemaReady: false, connections: [] }),
+    }>({ schemaReady: false, secretStorageReady: false, connections: [] }),
+    [loaded, setLoaded] = useState(false),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [refresh, setRefresh] = useState(0);
@@ -193,6 +197,7 @@ export default function OnboardingWorkspace({
         const v = await r.json();
         if (!r.ok) throw new Error(v.error);
         setData(v);
+        setLoaded(true);
       })
       .catch((e) => {
         if (!controller.signal.aborted) setNotice(e.message);
@@ -215,10 +220,17 @@ export default function OnboardingWorkspace({
           Peça ao responsável da conta para configurar as conexões.
         </p>
       )}
-      {!data.schemaReady && (
+      {!loaded && !notice && <p role="status">Carregando conexões…</p>}
+      {loaded && !data.schemaReady && (
         <p className="bm-notice">
           A configuração das conexões aguarda a habilitação desta capacidade no
           ambiente.
+        </p>
+      )}
+      {loaded && data.schemaReady && !data.secretStorageReady && (
+        <p className="bm-notice">
+          O armazenamento seguro de credenciais está indisponível neste ambiente.
+          Peça ao responsável pelo sistema para configurá-lo antes de salvar os dados da Shopee ou AliExpress.
         </p>
       )}
       <div className="bm-grid">
@@ -229,11 +241,18 @@ export default function OnboardingWorkspace({
             connection={data.connections.find((c) => c.marketplace === s.id)}
             canManage={canManage}
             ready={data.schemaReady}
+            secretStorageReady={data.secretStorageReady}
             onSaved={() => setRefresh((v) => v + 1)}
           />
         ))}
       </div>
-      {ml?.configId && (
+      {ml?.configId && !canDocumentLinks && (
+        <p className="bm-notice">
+          A conferência de links do Mercado Livre com envio de arquivo ainda não está disponível neste ambiente.
+          Os dados de conexão da loja podem ser salvos acima.
+        </p>
+      )}
+      {ml?.configId && canDocumentLinks && (
         <section className="bm-card">
           <h2>Conferir meu link do Mercado Livre</h2>
           <p>
@@ -314,10 +333,10 @@ export default function OnboardingWorkspace({
         </p>
       )}
       <div className="bm-actions">
-        <a href="/admin/ofertas" className="bm-button">
-          Encontrar minha primeira oferta →
+        <a href={`/admin?${new URLSearchParams({conta:tenantId})}`} className="bm-button">
+          Voltar a Hoje →
         </a>
-        <a href="/admin/configuracoes">Voltar às configurações</a>
+        <a href={`/admin/configuracoes?${new URLSearchParams({conta:tenantId})}`}>Voltar às configurações</a>
         {platformAdmin && <a href="/plataforma">Administração da plataforma</a>}
       </div>
     </div>

@@ -5,7 +5,7 @@ type Batch = Pick<StoredCaptureBatch, "status" | "started_at" | "finished_at" | 
 type CaptureRun = { marketplace: string; monitoring: boolean };
 
 export type TodayActivity = {
-  kind: "queued" | "capture" | "browser" | "triage" | "monitoring";
+  kind: "queued" | "capture" | "browser" | "triage" | "monitoring" | "retry" | "authorization" | "reconciliation" | "publication";
   marketplaces: string[];
 };
 export type TodayOperations = { activities: TodayActivity[]; issues: string[] };
@@ -138,6 +138,8 @@ const recentMs = 24 * 60 * 60_000;
 const triageTimeoutMs = 30 * 60_000;
 const phaseActivities: Record<Exclude<CapturePhase, "finished">, TodayActivity["kind"]> = {
   queued: "queued", capturing: "capture", awaiting_browser: "browser", triaging: "triage",
+  retry_wait: "retry", awaiting_authorization: "authorization",
+  awaiting_reconciliation: "reconciliation", publishing: "publication", affiliating: "publication",
 };
 
 export function describeTodayOperations(batch: Batch | null, triage: RunStatus | null, runs: CaptureRun[], now: Date): TodayOperations {
@@ -150,7 +152,8 @@ export function describeTodayOperations(batch: Batch | null, triage: RunStatus |
     const deadline = execution?.version === 1
       ? Date.parse(execution.deadline)
       : +new Date(batch.started_at) + 2 * 60 * 60_000;
-    if (batch.status === "running" && deadline > +now) {
+    const waiting = execution && ["retry_wait", "awaiting_authorization", "awaiting_reconciliation"].includes(execution.phase);
+    if (batch.status === "running" && (waiting || deadline > +now)) {
       const phase = execution?.phase ?? "capturing";
       if (phase !== "finished") activities.push({ kind: phaseActivities[phase], marketplaces: batch.requested_marketplaces });
     } else if (isRecent(batch.finished_at ?? batch.started_at)) {

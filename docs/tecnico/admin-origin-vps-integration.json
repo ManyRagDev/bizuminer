@@ -1,0 +1,102 @@
+{
+  "scope": "admin-mutations-proxy-origin",
+  "baseImage": "sha256:34171b6eaba29b259ed006b5908c1632cb53cb837157cad7c87259bd01b6ecb8",
+  "serverOnly": true,
+  "newMigrations": [],
+  "newEnvironmentVariables": [],
+  "requiredExistingEnvironment": [
+    "NODE_ENV=production",
+    "NEXT_PUBLIC_SITE_URL=https://www.bizuminer.com.br"
+  ],
+  "runtimeFiles": [
+    {
+      "path": "packages/web/lib/admin-request-origin.ts",
+      "bytes": 2170,
+      "sha256": "f62d1c1ef5d96b9c558a519c0193be05ded907c0e9669a476297157714e7c48f"
+    },
+    {
+      "path": "packages/web/app/api/admin/connections/route.ts",
+      "bytes": 1549,
+      "sha256": "6d234814123bf775c9a3f43818586b2e0b62df02e185c78db5bef4773c5637fa"
+    },
+    {
+      "path": "packages/web/app/api/admin/workspace/route.ts",
+      "bytes": 3181,
+      "sha256": "05fba1486d09ac7fe4d586d3f6321f8b53b14f9d748093e1e363e3f5351035d1"
+    },
+    {
+      "path": "packages/web/app/api/admin/work-drafts/route.ts",
+      "bytes": 2037,
+      "sha256": "1f539501536035f40d7acd2e5eb2d89957ba8f4ccc28fb3ca4d94995ab5f78db"
+    },
+    {
+      "path": "packages/web/app/api/admin/marketing/route.ts",
+      "bytes": 3653,
+      "sha256": "ff3638a19f70e72dd36e2b49ed5cc175854e77a5f1b0de6eaf5f6ee1e466b56e"
+    },
+    {
+      "path": "packages/web/app/api/admin/artifacts/upload/route.ts",
+      "bytes": 3107,
+      "sha256": "8cd1ee3d6f4ac0fea3f2b9231ac4a80eddced8a4827c7b4e33b9361d0a82d655"
+    },
+    {
+      "path": "packages/web/app/api/admin/rodagem/lote/route.ts",
+      "bytes": 8348,
+      "sha256": "c459586bfc53f0fc823a86631dd7d40b0dd85fa9ec8dfb9d35e4c5419f855f03"
+    },
+    {
+      "path": "packages/web/app/api/admin/rodagem/navegador/route.ts",
+      "bytes": 3221,
+      "sha256": "14ba4d34e240a070aa3751e447430cfe3a7ea4e11925b7b7d887a17f976e298c"
+    },
+    {
+      "path": "packages/web/app/api/admin/monitoring/dispatch/route.ts",
+      "bytes": 2857,
+      "sha256": "b32c940c92cea673b38cb81583217879790e05047b2aecba4b0d3bca9cdb9870"
+    },
+    {
+      "path": "packages/web/app/api/admin/monitoring/policy/route.ts",
+      "bytes": 2459,
+      "sha256": "3cbd93672c2e07c68b236ee5237ce90e28b22a4b2179d6477986ebea41010667"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "packages/web/test/admin-request-origin.test.mjs",
+      "bytes": 5350,
+      "sha256": "a0cc8ff107d3855e181aff5da8b0275386b7988d986dff686078a285597282d9"
+    },
+    {
+      "path": "packages/web/test/admin-origin-routes.test.mjs",
+      "bytes": 6678,
+      "sha256": "eee751eb8ad7e046f60b940b1dd04f65503b0f727c2dd259ee1e94c7165c78bd"
+    },
+    {
+      "path": "packages/web/test/account-connections-page.test.mjs",
+      "bytes": 14833,
+      "sha256": "b93d8040b9c3d0329f548c8b9c2e276e292f47233919921b1f9fad4fb9c8093a"
+    },
+    {
+      "path": "tools/editorial-tests/capture-route-flow.test.ts",
+      "bytes": 7669,
+      "sha256": "ee02bf4c69460763fcf2a6adf70664adcaed6d7f8696bf727acf352df4325136"
+    }
+  ],
+  "protectedUnchangedFiles": [
+    {
+      "path": "packages/web/app/auth/password/route.ts",
+      "bytes": 5041,
+      "sha256": "107af54ff222fc6024974dbc7c3badb0963baabdafd1c3799534838c9624ba28"
+    },
+    {
+      "path": "packages/web/lib/extension-cors.ts",
+      "bytes": 1714,
+      "sha256": "5f4793870f5fc7e9e24c2ab436f69906a6d01f28436a12f53d7263f2923f1dc5"
+    },
+    {
+      "path": "packages/extension/manifest.json",
+      "bytes": 693,
+      "sha256": "fc7f5f978987f6f1324215a6d11d6ff1b12354c0eb3e3e57183ac67dc5eff836"
+    }
+  ]
+}

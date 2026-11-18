@@ -34,6 +34,7 @@ export interface SweepOptions {
   readonly discovery?: DiscoveryPolicy;
   /** Lote acionado pelo painel; fica no audit trail de cada captura filha. */
   readonly operationBatchId?: string;
+  readonly operationWorkerId?: string;
 }
 
 export interface SweepSummary {
@@ -114,6 +115,7 @@ export async function sweep(
       maxPages: params.maxPages,
       captureExecutionId: opts.discovery?.executionId,
       operationBatchId: opts.operationBatchId,
+      operationWorkerId: opts.operationWorkerId,
       capturePlanId: opts.discovery?.planId,
       captureQueryId: opts.discovery?.queryId,
       captureMode: opts.discovery?.mode,
@@ -125,6 +127,9 @@ export async function sweep(
       minCandidatesForSaturation: opts.discovery?.minCandidatesForSaturation,
     },
   });
+
+  const checkpoint = await store.captureRunCheckpoint?.(runId, opts.tenantId);
+  if (checkpoint) return checkpoint;
 
   let itemsSeen = 0;
   let itemsCaptured = 0;

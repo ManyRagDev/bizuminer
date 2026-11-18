@@ -1,0 +1,318 @@
+{
+  "status": "published-technical-verification-complete-human-acceptance-pending",
+  "date": "2026-11-17",
+  "timezone": "America/Sao_Paulo",
+  "url": "https://www.bizuminer.com.br/admin?conta=local",
+  "publication": {
+    "status": "published-technical-verification-complete-human-acceptance-pending",
+    "oldImages": {
+      "garimpa-web": "sha256:d85eb0a15580d61da75149b55fc70f573def27233b49fba4be865fea397fff00",
+      "garimpa-capture-executor": "sha256:cd3c538c0438b40dfb4aea8dbaf728cc2156ca95c60e143345632ad35c67b0c9"
+    },
+    "newImages": {
+      "garimpa-web": "sha256:1ca978603a82aaa5d6f5879ac887dd2f84ebeda07800212658241a7d5f5ab246",
+      "garimpa-capture-executor": "sha256:e3a2d26a4f5c1bd00e918b74f0026ff9549b8cbee2f8b5672e9d4e61cfec3cb5"
+    },
+    "context": "contexts-operation-20261117T030142Z",
+    "sourcePackageSha256": "5936858da0b5a87af71f73177b9380bc889d25e46cec5afbd37c68eb3402f61e",
+    "environmentUnchanged": true,
+    "unrelatedServicesUnchanged": true,
+    "schema": {
+      "history": true,
+      "identity": true,
+      "diagnostic": true,
+      "limit": true,
+      "reader": true
+    },
+    "clone": {
+      "ok": true,
+      "mode": "v2",
+      "counts": {
+        "queued": 189,
+        "waiting": 0,
+        "running": 20,
+        "uncertain": 33,
+        "captures": 100,
+        "batchSearches": 12,
+        "receiptProducts": 50
+      },
+      "channels": {
+        "whatsapp": null,
+        "stories": null
+      },
+      "fourStores": true,
+      "owner": true,
+      "operator": {
+        "sameState": true,
+        "rawJobsPrivate": true,
+        "releaseDenied": true
+      },
+      "foreignDenied": true,
+      "dataPreserved": true,
+      "externalAttempts": 0
+    },
+    "liveReadOnly": {
+      "ok": true,
+      "mode": "v2",
+      "counts": {
+        "queued": 169,
+        "waiting": 0,
+        "running": 0,
+        "uncertain": 33,
+        "captures": 100,
+        "batchSearches": 12,
+        "receiptProducts": 50
+      },
+      "channels": {
+        "whatsapp": null,
+        "stories": null
+      },
+      "fourStores": true,
+      "owner": true,
+      "operator": null,
+      "foreignDenied": true,
+      "dataPreserved": true,
+      "externalAttempts": 0
+    },
+    "backup": "/opt/platform-staging/runtime/releases/operation-20261117T030142Z/garimpa-before-operation.dump",
+    "at": "2026-11-17T03:20:59.357949+00:00",
+    "browserVerificationAt": "2026-11-17T03:30:30.450642+00:00"
+  },
+  "finalIntegrityCheck": {
+    "at": "2026-11-17T03:29:14.865153+00:00",
+    "services": {
+      "garimpa-web": {
+        "image": "sha256:1ca978603a82aaa5d6f5879ac887dd2f84ebeda07800212658241a7d5f5ab246",
+        "state": "running",
+        "health": "healthy"
+      },
+      "garimpa-capture-executor": {
+        "image": "sha256:e3a2d26a4f5c1bd00e918b74f0026ff9549b8cbee2f8b5672e9d4e61cfec3cb5",
+        "state": "running",
+        "health": "healthy"
+      }
+    },
+    "environmentPreserved": true,
+    "otherServicesUnchanged": true,
+    "otherContainerCount": 14,
+    "database": {
+      "schemaObjects": {
+        "history": true,
+        "reader": true,
+        "diagnostic": true,
+        "configuredLimit": true
+      },
+      "uncertain": 33,
+      "cloneRemaining": false,
+      "viewOwner": "supabase_admin",
+      "securityBarrier": [
+        "security_barrier=true"
+      ],
+      "applicationRoleRestricted": true
+    },
+    "context": "contexts-operation-20261117T030142Z",
+    "sourcePackageSha256": "5936858da0b5a87af71f73177b9380bc889d25e46cec5afbd37c68eb3402f61e"
+  },
+  "release": {
+    "sourcePackageSha256": "5936858da0b5a87af71f73177b9380bc889d25e46cec5afbd37c68eb3402f61e",
+    "sourceSnapshotSha256": "d53ed7f9e976e09a13b40bf767d4d856f678b317e3ff3d940c4fb7daa5352ec2",
+    "contextArchiveSha256": "7fa28ee51d5888f02c949a736b22ca5c050adf196b851b242b2772e7c7c2abef",
+    "manifestSha256": "daaaa018a2a27b32f74045dc726ed9891a3c0122d2665e40d3c702c72bfc18ee",
+    "files": 995,
+    "migrationSha256": {
+      "20261115234320_capture_activity_history.sql": "64d549ccdcd42242680966a0df88e88444071e9fb8fbe8e93cb0554d581f3e02",
+      "20261116195549_curation_operation_diagnostic.sql": "bf16d96c70cc45a55d42dde4be811bd6647f32b3ada23ee46b9ddadf6c15cb59",
+      "20261117003000_curation_operation_reader.sql": "fa6939af1588d6387c939d7ea0beb8a22b3fe8bde6dd527a16de3ac11a4ee03e"
+    },
+    "combinedSqlSha256": "0f9ac3cbb45f00caab7c3b671946f97e5c5c15b28747296f41ad2ec906ebf2f0"
+  },
+  "migrationSteps": [
+    {
+      "stage": "preflight",
+      "at": "2026-11-17T03:19:09.156302+00:00",
+      "images": {
+        "garimpa-web": "sha256:d85eb0a15580d61da75149b55fc70f573def27233b49fba4be865fea397fff00",
+        "garimpa-capture-executor": "sha256:cd3c538c0438b40dfb4aea8dbaf728cc2156ca95c60e143345632ad35c67b0c9"
+      },
+      "otherServicesProtected": 14
+    },
+    {
+      "stage": "backup",
+      "at": "2026-11-17T03:19:11.726818+00:00",
+      "bytes": 13853456,
+      "sha256": "6ccd877a37f97a78dbcf4ede4cb0fd08e738648284800486981822536329624d"
+    },
+    {
+      "stage": "migration-rehearsal",
+      "at": "2026-11-17T03:19:17.668678+00:00",
+      "dataPreserved": true,
+      "objects": {
+        "history": true,
+        "identity": true,
+        "diagnostic": true,
+        "limit": true,
+        "reader": true
+      }
+    },
+    {
+      "stage": "candidate-images",
+      "at": "2026-11-17T03:19:37.529292+00:00",
+      "images": {
+        "garimpa-web": "sha256:1ca978603a82aaa5d6f5879ac887dd2f84ebeda07800212658241a7d5f5ab246",
+        "garimpa-capture-executor": "sha256:e3a2d26a4f5c1bd00e918b74f0026ff9549b8cbee2f8b5672e9d4e61cfec3cb5"
+      },
+      "clone": {
+        "ok": true,
+        "mode": "v2",
+        "counts": {
+          "queued": 189,
+          "waiting": 0,
+          "running": 20,
+          "uncertain": 33,
+          "captures": 100,
+          "batchSearches": 12,
+          "receiptProducts": 50
+        },
+        "channels": {
+          "whatsapp": null,
+          "stories": null
+        },
+        "fourStores": true,
+        "owner": true,
+        "operator": {
+          "sameState": true,
+          "rawJobsPrivate": true,
+          "releaseDenied": true
+        },
+        "foreignDenied": true,
+        "dataPreserved": true,
+        "externalAttempts": 0
+      }
+    },
+    {
+      "stage": "migrations-applied",
+      "at": "2026-11-17T03:20:14.420646+00:00",
+      "objects": {
+        "history": true,
+        "identity": true,
+        "diagnostic": true,
+        "limit": true,
+        "reader": true
+      },
+      "businessDataPreserved": true
+    },
+    {
+      "stage": "live-readers",
+      "at": "2026-11-17T03:20:24.447044+00:00",
+      "report": {
+        "ok": true,
+        "mode": "v2",
+        "counts": {
+          "queued": 169,
+          "waiting": 0,
+          "running": 0,
+          "uncertain": 33,
+          "captures": 100,
+          "batchSearches": 12,
+          "receiptProducts": 50
+        },
+        "channels": {
+          "whatsapp": null,
+          "stories": null
+        },
+        "fourStores": true,
+        "owner": true,
+        "operator": null,
+        "foreignDenied": true,
+        "dataPreserved": true,
+        "externalAttempts": 0
+      }
+    },
+    {
+      "stage": "published",
+      "at": "2026-11-17T03:20:59.358357+00:00",
+      "images": {
+        "garimpa-web": "sha256:1ca978603a82aaa5d6f5879ac887dd2f84ebeda07800212658241a7d5f5ab246",
+        "garimpa-capture-executor": "sha256:e3a2d26a4f5c1bd00e918b74f0026ff9549b8cbee2f8b5672e9d4e61cfec3cb5"
+      },
+      "configurationPreserved": true,
+      "otherServicesUnchanged": true
+    },
+    {
+      "stage": "clone-removed",
+      "at": "2026-11-17T03:20:59.566866+00:00"
+    }
+  ],
+  "browser": {
+    "authentication": "existing real owner session",
+    "environment": "production HTTPS",
+    "today": "account, consultation timestamp, queue/running/uncertain, receipts and four stores visible",
+    "receipts": "Amazon filter -> manual receipt:81 products/81 exact observations, unknown historic diagnostics explicit -> operational offer -> receipt -> same Amazon filter/account",
+    "problem": "real uncertain Shopee item opens with its state, per-channel reasons and return to problems; no release performed",
+    "pauta": {
+      "whatsapp": 12,
+      "stories": 8,
+      "scope": "snapshots while existing executor continued normal authorized processing",
+      "noCopyOrSendPerformed": true,
+      "directStoriesUrlVerified": true,
+      "readOnlySummaryCache": "may be unavailable while assessment changes invalidate current source revision; open channel to consult current edition, no fake zero"
+    },
+    "settings": "Lojas e extensão, Critérios e canais, Equipe e conta preserve requested account",
+    "foreignAccount": "real authenticated request to unbound account displays Sem acesso, without house data",
+    "mobile": {
+      "viewportWidth": 390,
+      "documentWidth": 375,
+      "horizontalOverflow": false,
+      "menuOpen": true,
+      "enterOpens": true,
+      "escapeCloses": true,
+      "focusReturned": true,
+      "viewportRestored": true,
+      "physicalDevice": false
+    },
+    "screenshot": "docs/implementation/evidencias/operacao-producao-20261117.jpg",
+    "screenshotSha256": "b6c8863616cf9b78d0464a48757c6655942f4dd785cc8aaaa77af1b70519ac2d",
+    "processingSnapshots": [
+      {
+        "consultedAtSaoPaulo": "2026-11-17 00:20",
+        "queued": 149,
+        "running": 20,
+        "uncertain": 33
+      },
+      {
+        "consultedAtSaoPaulo": "2026-11-17 00:28",
+        "queued": 0,
+        "running": 0,
+        "uncertain": 33,
+        "waitingForBrowser": 6
+      },
+      {
+        "consultedAtSaoPaulo": "2026-11-17 00:30",
+        "queued": 0,
+        "running": 1,
+        "uncertain": 33
+      }
+    ]
+  },
+  "workflows": {
+    "repository": "ManyRagDev/bizuminer",
+    "states": {
+      "capture-offers.yml": "disabled_manually",
+      "discover-shopee.yml": "disabled_manually",
+      "monitor-prices.yml": "disabled_manually"
+    },
+    "queued": [],
+    "inProgress": []
+  },
+  "limits": {
+    "humanAcceptance": "pending: owner to use Today -> Captures -> Curadoria -> Pauta and report remaining chat dependency",
+    "realOperatorMembership": "not created; operator tested only in restored private copy using real restricted runtime login",
+    "uncertainJobsAtCutover": 33,
+    "uncertainJobsReleased": false,
+    "newExternalTestOperations": false,
+    "existingExecutorConfigurationResumed": true,
+    "pushPerformed": false,
+    "clientMessagesSent": false
+  },
+  "generatedAt": "2026-11-17T03:31:11.018088+00:00"
+}

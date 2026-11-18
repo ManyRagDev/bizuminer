@@ -1,3 +1,4 @@
+import { adminMutationOrigin } from "../../../../lib/admin-request-origin.ts";
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth.ts";
@@ -30,7 +31,7 @@ async function handle(request: NextRequest, write: boolean) {
   const storageOwner=access.context.tenantId==="local" ? access.appUserId : "account_"+createHash("sha256").update(JSON.stringify([access.context.tenantId,access.appUserId])).digest("hex");
   const reply = (body: unknown, status = 200) =>
     sinkJson(access.sink, body, { status, headers });
-  if (write && request.headers.get("origin") !== request.nextUrl.origin)
+  if (write && !adminMutationOrigin(request))
     return reply({ error: "Origem da solicitação inválida." }, 403);
   try {
     if (!write)

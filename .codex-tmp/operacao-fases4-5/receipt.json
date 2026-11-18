@@ -1,0 +1,9 @@
+{
+  "archive": ".codex-tmp/operacao-fases4-5/bizuminer-operacao-fases4-5.tar.gz",
+  "sha256": "5936858da0b5a87af71f73177b9380bc889d25e46cec5afbd37c68eb3402f61e",
+  "bytes": 5982720,
+  "sourceFiles": 1093,
+  "sourceSnapshotSha256": "d53ed7f9e976e09a13b40bf767d4d856f678b317e3ff3d940c4fb7daa5352ec2",
+  "verifiedBuildId": "TJg1cRCGTGubGoaz5lCzG",
+  "manifest": ".codex-tmp/operacao-fases4-5/manifest.json"
+}

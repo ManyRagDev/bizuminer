@@ -10,6 +10,7 @@ import {
   type AdminRunGroupStatus,
   type AdminRunSource,
 } from "../../lib/admin-run-groups";
+import { captureTriggerFailureMessage } from "../../lib/capture-trigger-feedback.ts";
 
 export type { AdminRun } from "../../lib/admin-run-groups";
 
@@ -68,6 +69,7 @@ export default function AdminPanel({
   enabled,
   disabledNotice,
   requiresConsent,
+  trialSingleProduct = false,
 }: {
   marketplace: string;
   marketplaceLabel: string;
@@ -80,6 +82,7 @@ export default function AdminPanel({
   disabledNotice: ReactNode;
   /** Se true, exige checkbox de consentimento antes de acionar. */
   requiresConsent?: boolean;
+  trialSingleProduct?: boolean;
 }) {
   const fetch = useAdminFetch();
   const [runs, setRuns] = useState(initialRuns);
@@ -91,8 +94,10 @@ export default function AdminPanel({
   const [consented, setConsented] = useAdminDraftState(`admin-panel.${marketplace}.consented`, false);
   const [expandedGroups, setExpandedGroups] = useAdminDraftState<Set<string>>(`admin-panel.${marketplace}.expandedGroups`, () => new Set());
   const [knownIds, setKnownIds] = useAdminDraftState<string[]>(`admin-panel.${marketplace}.knownIds`, () => initialRuns.map((run) => run.id));
+  const [activeBatchId, setActiveBatchId] = useAdminDraftState<string | null>(`admin-panel.${marketplace}.activeBatchId`, null);
+  const [operationRunning, setOperationRunning] = useAdminDraftState(`admin-panel.${marketplace}.operationRunning`, false);
 
-  const busy = runningId !== null || awaitingSince !== null;
+  const busy = operationRunning || runningId !== null || awaitingSince !== null;
   const canTrigger = requiresConsent ? consented : enabled;
   const groups = groupAdminRuns(runs);
 
@@ -113,8 +118,25 @@ export default function AdminPanel({
       const next = parseRuns(payload);
       setRuns(next);
       setRunningId(payload.runningId ?? null);
+      if (activeBatchId) {
+        const statusResponse = await fetch(`/api/admin/rodagem/lote?id=${encodeURIComponent(activeBatchId)}`, { signal });
+        const statusPayload = await statusResponse.json();
+        if (signal?.aborted) return;
+        if (statusPayload.ok && statusPayload.batch) {
+          const running = statusPayload.batch.status === "running";
+          setOperationRunning(running);
+          if (!running) {
+            setAwaitingSince(null);
+            setMessage(statusPayload.batch.status === "ok"
+              ? "Captura concluída. Os fatos foram confirmados e seguem os critérios de curadoria."
+              : "A rodagem terminou com pendências. Expanda os detalhes; as consultas concluídas ficam preservadas para retomada.");
+            setActiveBatchId(null);
+            return;
+          }
+        }
+      }
       if (awaitingSince !== null) {
-        const hasNew = next.some((run) => !knownIds.includes(run.id));
+        const hasNew = payload.runningId || next.some((run) => !knownIds.includes(run.id));
         if (hasNew) {
           setAwaitingSince(null);
           setMessage("");
@@ -151,9 +173,9 @@ export default function AdminPanel({
     return () => { controller.abort(); clearTimeout(timer); document.removeEventListener("visibilitychange", resume); };
     // A changed waiting marker restarts with current run IDs; only one read runs at a time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy, awaitingSince, marketplace, fetch]);
+  }, [busy, awaitingSince, activeBatchId, marketplace, fetch]);
 
-  async function trigger() {
+  async function trigger(resumeBatchId?: string) {
     if (requesting || busy || !canTrigger) return;
     setRequesting(true);
     setMessage("");
@@ -161,11 +183,20 @@ export default function AdminPanel({
       const response = await fetch(triggerPath, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pages, consent: requiresConsent ? consented : undefined }),
+        body: JSON.stringify(resumeBatchId ? { action: "resume", batchId: resumeBatchId }
+          : { pages: trialSingleProduct ? 1 : pages, consent: requiresConsent ? consented : undefined }),
       });
-      const payload = (await response.json()) as { ok: boolean; error?: string; message?: string };
+      const payload = (await response.json().catch(() => ({ ok: false }))) as {
+        ok: boolean;
+        error?: string;
+        message?: string;
+        batch?: { id: string; status: string };
+      };
       if (response.status === 409) {
-        if (typeof payload.error === "string" && payload.error.endsWith("_capture_disabled")) {
+        const failureMessage = captureTriggerFailureMessage(response.status, payload);
+        if (failureMessage) {
+          setMessage(failureMessage);
+        } else if (typeof payload.error === "string" && payload.error.endsWith("_capture_disabled")) {
           setMessage(payload.message ?? `A captura de ${marketplaceLabel} está desligada.`);
         } else {
           setMessage("Já existe uma rodagem em andamento.");
@@ -173,9 +204,19 @@ export default function AdminPanel({
         await refresh();
         return;
       }
-      if (!payload.ok) throw new Error(payload.error ?? "falha");
+      if (!response.ok || !payload.ok) {
+        const failureMessage = captureTriggerFailureMessage(response.status, payload);
+        if (failureMessage) {
+          setMessage(failureMessage);
+          return;
+        }
+        throw new Error(payload.error ?? "falha");
+      }
+      setActiveBatchId(payload.batch?.id ?? null);
+      setOperationRunning(payload.batch?.status === "running");
       setAwaitingSince(Date.now());
-      setMessage("Rodagem solicitada. Aguardando o robô registrar a execução…");
+      setMessage(resumeBatchId ? "Retomada solicitada. As consultas já concluídas serão reutilizadas."
+        : "Rodagem solicitada. Aguardando o robô registrar a execução…");
     } catch {
       setMessage("Não foi possível acionar a rodagem. Veja o log do servidor web.");
     } finally {
@@ -211,14 +252,14 @@ export default function AdminPanel({
                   entendo os riscos de rodar automático
                 </label>
               )}
-              <label>
+              {trialSingleProduct ? <span>Ensaio: 1 consulta · até 1 produto</span> : <label>
                 páginas
                 <select value={pages} onChange={(event) => setPages(Number(event.target.value))} disabled={requesting || busy || !canTrigger}>
                   <option value={1}>1</option>
                   <option value={2}>2</option>
                   <option value={3}>3</option>
                 </select>
-              </label>
+              </label>}
               <button type="button" disabled={requesting || busy || !canTrigger} onClick={() => void trigger()}>
                 {busy ? "rodagem em andamento…" : requesting ? "acionando…" : "nova rodagem ▸"}
               </button>
@@ -340,6 +381,15 @@ export default function AdminPanel({
                       </Fragment>
                     );
                   })}
+                  {expanded && marketplace === "shopee" && !trialSingleProduct
+                    && (group.status === "partial" || group.status === "error")
+                    && group.children[0]?.operationBatchId && (
+                    <tr className="admin-run-child-detail"><td colSpan={7}>
+                      <p>As consultas concluídas ficam preparadas até a captura terminar. A retomada reutiliza esses resultados e tenta as consultas pendentes.</p>
+                      <div className="admin-trigger"><button type="button" disabled={requesting || busy || !canTrigger}
+                        onClick={() => void trigger(group.children[0]!.operationBatchId!)}>Retomar consultas pendentes</button></div>
+                    </td></tr>
+                  )}
                 </Fragment>
               );
             })}

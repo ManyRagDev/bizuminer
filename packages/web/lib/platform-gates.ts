@@ -1,6 +1,4 @@
 import { mlAutomatedCaptureEnabled } from "./automated-capture.ts";
-import { shopeeCaptureEnabled } from "./shopee-capture.ts";
-import { aliexpressCaptureEnabled } from "./aliexpress-capture.ts";
 
 /**
  * Gate de captura por plataforma, resolvido por slug.
@@ -17,15 +15,18 @@ import { aliexpressCaptureEnabled } from "./aliexpress-capture.ts";
  * Quando a AliExpress for aprovada (M5), a entrada dela entra aqui.
  * Ver `docs/tecnico/plano-multiplataforma.md`.
  */
-const CAPTURE_GATES: Readonly<Record<string, () => boolean>> = {
-  mercadolivre: mlAutomatedCaptureEnabled,
-  shopee: shopeeCaptureEnabled,
-  aliexpress: aliexpressCaptureEnabled,
+type CaptureEnvironment = Record<string, string | undefined>;
+// This is the installation switch, not account credential readiness. The
+// dispatch preflight resolves each account's encrypted credentials separately.
+const CAPTURE_GATES: Readonly<Record<string, (env: CaptureEnvironment) => boolean>> = {
+  mercadolivre: env => mlAutomatedCaptureEnabled(env),
+  shopee: env => env.SHOPEE_CAPTURE_ENABLED === "true",
+  aliexpress: env => env.ALIEXPRESS_CAPTURE_ENABLED === "true",
 };
 
 /** Falha fechado: plataforma desconhecida é sempre "desligada". */
-export function captureEnabled(marketplace: string): boolean {
-  return CAPTURE_GATES[marketplace]?.() ?? false;
+export function captureEnabled(marketplace: string, env: CaptureEnvironment = process.env): boolean {
+  return CAPTURE_GATES[marketplace]?.(env) ?? false;
 }
 
 /** Slugs com gate registrado — usado para distinguir "sem gate" de "desligada". */

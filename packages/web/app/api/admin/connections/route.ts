@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/account-connections.ts";
 import { workspaceError } from "../../../../lib/affiliate-workspace-contract.ts";
 import { workspaceJson } from "../../../../lib/workspace-request.ts";
+import { adminMutationOrigin } from "../../../../lib/admin-request-origin.ts";
 export const dynamic = "force-dynamic";
 async function handle(req: NextRequest, write = false) {
   const access = await checkAffiliateUser(req);
@@ -20,7 +21,7 @@ async function handle(req: NextRequest, write = false) {
       status,
       headers: { "Cache-Control": "private, no-store" },
     });
-  if (write && req.headers.get("origin") !== req.nextUrl.origin)
+  if (write && !adminMutationOrigin(req))
     return reply({ error: "Origem inválida." }, 403);
   try {
     if (!write) return reply(await accountConnections(access.context));

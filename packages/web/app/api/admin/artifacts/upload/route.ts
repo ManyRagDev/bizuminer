@@ -1,3 +1,4 @@
+import { adminMutationOrigin } from "../../../../../lib/admin-request-origin.ts";
 import { artifactAccessFailure } from "../../../../../lib/artifact-http.ts";
 import { NextRequest } from "next/server";
 import {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   const session = await checkAffiliateUser(request);
   if (session.kind !== "ok")
     return artifactAccessFailure(session.kind);
-  if (request.headers.get("origin") !== request.nextUrl.origin)
+  if (!adminMutationOrigin(request))
     return Response.json({ error: "invalid_origin" }, { status: 403 });
   const length = Number(request.headers.get("content-length"));
   if (Number.isFinite(length) && length > 11 * 1024 * 1024)

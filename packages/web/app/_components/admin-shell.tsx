@@ -13,14 +13,19 @@ interface NavItem {
   icon: string;
   badge?: number;
   badgeType?: "warning" | "neutral";
+  executionBadge?: number;
 }
 
 interface NavGroup {
   groupTitle: string;
   items: NavItem[];
+  collapsed?: boolean;
 }
 
 function resolveActiveId(pathname: string, search: string): string {
+  if (pathname.startsWith("/admin/configuracoes")) return "configuracoes";
+  if (pathname.startsWith("/admin/financeiro") || pathname.startsWith("/admin/resultados")) return "financeiro";
+  if (pathname.startsWith("/admin/capturas")) return "operacao";
   if (pathname.startsWith("/admin/onboarding")) return "onboarding";
   if (pathname.startsWith("/admin/governanca")) return "governanca";
   if (pathname.startsWith("/admin/campanhas")) return "campanhas";
@@ -40,7 +45,8 @@ function resolveActiveId(pathname: string, search: string): string {
   if (pathname === "/admin") {
     const params = new URLSearchParams(search);
     const aba = params.get("aba");
-    if (aba === "rodagens" || aba === "captura-manual") return "operacao";
+    if (aba === "rodagens") return "rodagens";
+    if (aba === "captura-manual") return "operacao";
     if (aba === "afiliados") return "configuracoes";
     if (aba === "publicacao") return "publicar";
     return "hoje";
@@ -55,12 +61,13 @@ function resolveSectionTitle(activeId: string): string {
     case "onboarding": return "Painel · Primeiros Passos";
     case "governanca": return "Painel · Governança";
     case "curadoria": return "Painel · Curadoria";
-    case "publicar": return "Painel · Publicar";
+    case "publicar": return "Painel · Pauta";
     case "marketing": return "Painel · Marketing";
     case "campanhas": return "Painel · Campanhas";
     case "financeiro": return "Painel · Resultados";
     case "experimentos": return "Painel · Experimentos de Políticas";
-    case "operacao": return "Painel · Operação";
+    case "operacao": return "Painel · Capturas";
+    case "rodagens": return "Painel · Comandos de captura";
     case "configuracoes": return "Painel · Configurações";
     default:
       return "Painel do Administrador";
@@ -70,16 +77,23 @@ function resolveSectionTitle(activeId: string): string {
 export default function AdminShell({
   children,
   curationCount = 0,
+  curationExecutionCount = 0,
   accountHeader,
   workspace=false,
+  tenantId,
+  curationStatusAvailable=true,
 }: {
   children: React.ReactNode;
   curationCount?: number;
+  curationExecutionCount?: number;
   accountHeader?: React.ReactNode;
   workspace?: boolean;
+  tenantId?:string;
+  curationStatusAvailable?:boolean;
 }) {
   const pathname = usePathname();
   const currentSearch = useSearchParams().toString();
+  const capturesHref=`/admin/capturas${tenantId ? `?${new URLSearchParams({conta:tenantId})}` : ''}`;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobile,setMobile]=useState(false),toggle=useRef<HTMLButtonElement>(null);
   useEffect(()=>{const media=window.matchMedia('(max-width: 820px)'),update=()=>setMobile(media.matches);update();media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[]);
@@ -97,9 +111,9 @@ export default function AdminShell({
               ? "pauta"
               : pathname.startsWith("/admin/curadoria")
                 ? "curadoria"
-                : pathname === "/admin" && new URLSearchParams(currentSearch).get("aba") === "rodagens"
+                : pathname.startsWith("/admin/capturas") || pathname === "/admin" && ["rodagens", "captura-manual"].includes(new URLSearchParams(currentSearch).get("aba") ?? "")
                   ? "operacao"
-                  : pathname === "/admin" && !new URLSearchParams(currentSearch).get("aba")
+                  : pathname === "/admin" && [null, "visao-geral"].includes(new URLSearchParams(currentSearch).get("aba"))
                     ? "hoje"
                     : "avancado"
     : resolveActiveId(pathname, currentSearch);
@@ -134,7 +148,7 @@ export default function AdminShell({
           items: [
             { id: "pauta", href: "/pauta", label: "Pauta Rápida", icon: "📱" },
             { id: "curadoria", href: "/admin/curadoria?aba=selecao", label: "Curadoria Geral", icon: "🎯" },
-            { id: "operacao", href: "/admin?aba=rodagens", label: "Operação & Captura", icon: "🔄" },
+            { id: "operacao", href: capturesHref, label: "Capturas", icon: "🔄" },
           ],
         },
         {
@@ -145,45 +159,28 @@ export default function AdminShell({
         },
       ]
     : [
-    {
-      groupTitle: "Rotina",
-      items: [
-        { id: "hoje", href: "/admin?aba=visao-geral", label: "Hoje", icon: "☀️" },
-      ],
-    },
-    {
-      groupTitle: "Trabalho",
-      items: [
-        { id: "marketing", href: "/admin/marketing", label: "Marketing", icon: "✦" },
-        { id: "campanhas", href: "/admin/campanhas", label: "Campanhas", icon: "▣" },
-        { id: "financeiro", href: "/admin/financeiro", label: "Resultados", icon: "↗" },
-        {
-          id: "curadoria",
-          href: "/admin/curadoria?aba=selecao",
-          label: "Curadoria",
-          icon: "🎯",
-          badge: curationCount > 0 ? curationCount : undefined,
-          badgeType: "warning",
-        },
-        {
-          id: "publicar",
-          href: "/pauta",
-          label: "Publicar",
-          icon: "📱",
-        },
-      ],
-    },
-    {
-      groupTitle: "Sistema",
-      items: [
-        { id: "onboarding", href: "/admin/onboarding", label: "Primeiros Passos", icon: "🚀" },
-        { id: "governanca", href: "/admin/governanca", label: "Governança", icon: "⚖️" },
-        { id: "operacao", href: "/admin?aba=rodagens", label: "Operação", icon: "🔄" },
-        { id: "experimentos", href: "/admin/experimentos", label: "Experimentos A/B", icon: "🧪" },
-        { id: "configuracoes", href: "/admin/curadoria?aba=bussola", label: "Configurações", icon: "⚙️" },
-      ],
-    },
-  ];
+      {groupTitle: "Operação", items: [
+        {id:"hoje",href:"/admin",label:"Hoje",icon:"☀️"},
+        {id:"operacao",href:capturesHref,label:"Capturas",icon:"🔄"},
+        {id:"curadoria",href:"/admin/curadoria?aba=andamento",label:"Curadoria",icon:"🎯",
+          badge:curationCount>0?curationCount:undefined,badgeType:"warning",executionBadge:curationExecutionCount},
+        {id:"publicar",href:"/pauta",label:"Pauta",icon:"📱"},
+        {id:"financeiro",href:"/admin/financeiro",label:"Resultados",icon:"↗"},
+      ]},
+      {groupTitle:"Conta",items:[{id:"configuracoes",href:"/admin/configuracoes",label:"Configurações",icon:"⚙️"}]},
+      {groupTitle:"Conteúdo",collapsed:true,items:[
+        {id:"marketing",href:"/admin/marketing",label:"Marketing",icon:"✦"},
+        {id:"campanhas",href:"/admin/campanhas",label:"Campanhas",icon:"▣"}]},
+      {groupTitle:"Ferramentas avançadas",collapsed:true,items:[
+        {id:"rodagens",href:"/admin?aba=rodagens",label:"Comandos de captura",icon:"↻"},
+        {id:"governanca",href:"/admin/governanca",label:"Governança",icon:"⚖️"},
+        {id:"experimentos",href:"/admin/experimentos",label:"Experimentos",icon:"🧪"}]},
+    ];
+  const accountHref=(href:string)=>{
+    if(!tenantId) return href;
+    const url=new URL(href,"https://local.invalid");url.searchParams.set("conta",tenantId);
+    return url.pathname+url.search+url.hash;
+  };
 
   return (
     <main className="admin-page admin-shell" onKeyDown={event=>{if(event.key==='Escape'&&drawerOpen){setDrawerOpen(false);toggle.current?.focus();}}}>
@@ -212,11 +209,11 @@ export default function AdminShell({
         <div className="detail-header-actions">
           {!workspace && !onPauta && activeId !== "marketing" && (
             <Link
-              href="/pauta"
+              href={accountHref("/pauta")}
               className="admin-shell-pauta-link"
-              title="Abrir mesa de links rápidos para Stories e Reels"
+              title="Abrir a Pauta de WhatsApp e Stories"
             >
-              📱 Pauta de Stories
+              📱 Pauta
             </Link>
           )}
           <a href="/" className="admin-shell-site-link" target="_blank" rel="noopener noreferrer">
@@ -250,16 +247,18 @@ export default function AdminShell({
           inert={mobile&&!drawerOpen}
         >
           <div className="admin-shell-nav-inner">
-            {navigationGroups.map((group) => (
-              <div key={group.groupTitle} className="admin-nav-group">
-                <span className="admin-nav-group-title">{group.groupTitle}</span>
+            {navigationGroups.map((group) => {
+              const Group = group.collapsed ? "details" : "div";
+              return (
+              <Group key={group.groupTitle} className="admin-nav-group" {...(group.collapsed?{open:group.items.some(item=>item.id===activeId)||undefined}:{})}>
+                {group.collapsed?<summary className="admin-nav-group-title">{group.groupTitle}</summary>:<span className="admin-nav-group-title">{group.groupTitle}</span>}
                 <div className="admin-nav-group-items">
                   {group.items.map((item) => {
                     const isActive = activeId === item.id;
                     return (
                       <AdminLink
                         key={item.id}
-                        href={item.href}
+                        href={accountHref(item.href)}
                         className={"admin-shell-nav-item" + (isActive ? " active" : "")}
                         aria-current={isActive ? "page" : undefined}
                         onClick={() => {
@@ -272,17 +271,24 @@ export default function AdminShell({
                           </span>
                           <span className="admin-nav-item-label">{item.label}</span>
                         </span>
-                        {item.badge !== undefined && item.badge > 0 && (
+                        {item.id==='curadoria'&&!curationStatusAvailable&&<span className="admin-shell-nav-count" title="Contagem da curadoria indisponível" aria-label="Contagem da curadoria indisponível">?</span>}
+                        {curationStatusAvailable && item.badge !== undefined && item.badge > 0 && (
                           <span className={`admin-shell-nav-count ${item.badgeType || "neutral"}`}>
                             {item.badge}
+                          </span>
+                        )}
+                        {curationStatusAvailable && item.executionBadge !== undefined && item.executionBadge > 0 && (
+                          <span className="admin-shell-nav-count warning" title="Avaliações com resultado incerto"
+                            aria-label={`${item.executionBadge} avaliações com resultado incerto`}>
+                            {item.executionBadge} incertas
                           </span>
                         )}
                       </AdminLink>
                     );
                   })}
                 </div>
-              </div>
-            ))}
+              </Group>
+            );})}
 
             <div className="admin-shell-nav-foot">
               <Link href="/" className="nav-foot-site">

@@ -15,7 +15,7 @@ function fakeBatch(overrides: Partial<StoredBrowserBatch> = {}): StoredBrowserBa
       version: 1 as const,
       marketplace: "amazon" as const,
       requestId: "00000000-0000-0000-0000-000000000000",
-      clientCapturedAt: new Date().toISOString(),
+      clientCapturedAt: new Date(1000000).toISOString(),
       page: { kind: "listing" as const, url: "https://www.amazon.com.br/s?k=fone" },
       products: [
         {

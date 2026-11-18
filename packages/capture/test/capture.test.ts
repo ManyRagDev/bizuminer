@@ -18,6 +18,7 @@ import { CaptureError } from "../src/errors.ts";
 import { mapProductNode, mapProductNodes } from "../src/adapters/shopee/mapper.ts";
 import { ShopeeClient } from "../src/adapters/shopee/client.ts";
 import { ShopeeAdapter } from "../src/adapters/shopee/index.ts";
+import { PRODUCT_OFFER_QUERY, buildProductOfferQuery } from "../src/adapters/shopee/queries.ts";
 import { AliExpressAdapter } from "../src/adapters/aliexpress/index.ts";
 import type { CaptureContext, Credential } from "../src/types.ts";
 
@@ -26,6 +27,12 @@ const cred: Credential = {
   marketplace: "shopee",
   secret: { appId: "APP123", appSecret: "SECRET456" },
 };
+
+function productArguments(body: { query: string; variables: Record<string, unknown> }): Record<string, any> {
+  assert.deepEqual(body.variables, {});
+  return Object.fromEntries([...body.query.matchAll(/\b(\w+): ("(?:\\.|[^"\\])*"|-?\d+)/g)]
+    .map((match) => [match[1], JSON.parse(match[2]!)]));
+}
 
 // ---------------------------------------------------------------- dinheiro
 
@@ -248,6 +255,38 @@ describe("tratamento de erro do cliente", () => {
     assert.equal(calls, 1, "credencial inválida não deve ser repetida");
   });
 
+  it("trata código GraphQL 10020 (Invalid Signature) como auth e não repete", async () => {
+    let calls = 0;
+    const client = new ShopeeClient({
+      ratePerSecond: 1000,
+      fetchImpl: (async () => {
+        calls++;
+        return new Response(
+          JSON.stringify({
+            errors: [
+              {
+                message: "error [10020]: Invalid Signature",
+                extensions: { code: 10020, message: "Invalid Signature" },
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    await assert.rejects(
+      () => client.request({ appId: "a", appSecret: "b" }, "{ x }", {}, ctx),
+      (err: unknown) =>
+        err instanceof CaptureError &&
+        err.kind === "auth" &&
+        err.vendorCode === 10020 &&
+        err.retryable === false &&
+        err.needsOperatorAttention === true,
+    );
+    assert.equal(calls, 1, "assinatura rejeitada não deve ser repetida");
+  });
+
   it("erro de GraphQL com 200 não passa despercebido", async () => {
     const client = new ShopeeClient({
       ratePerSecond: 1000,
@@ -377,7 +416,7 @@ describe("ShopeeAdapter", () => {
     const adapter = new ShopeeAdapter({
       ratePerSecond: 1000,
       fetchImpl: async (_input, init) => {
-        const { variables } = JSON.parse(String(init?.body));
+        const variables = productArguments(JSON.parse(String(init?.body))) as { page: number; limit: number; keyword: string };
         calls.push(variables);
         if (variables.limit === 50) return Response.json({ errors: [{ extensions: { code: 10000 } }] });
         return okResponse([node], variables.page === 1)(_input, init);
@@ -461,7 +500,8 @@ describe("ShopeeAdapter", () => {
     const adapter = new ShopeeAdapter({
       ratePerSecond: 1000,
       fetchImpl: (async (_url: string, init: RequestInit) => {
-        capturedBody = JSON.parse(init.body as string);
+        const body = JSON.parse(init.body as string);
+        capturedBody = { variables: productArguments(body) };
         return new Response(
           JSON.stringify({
             data: {
@@ -487,17 +527,21 @@ describe("ShopeeAdapter", () => {
     assert.equal(page.offers.length, 1);
     assert.equal(page.offers[0]!.externalId, "100");
     assert.equal(capturedBody.variables.productCatId, 100636);
-    assert.equal(capturedBody.variables.listType, 0);
+    assert.equal(Object.hasOwn(capturedBody.variables, "listType"), false);
     assert.equal(capturedBody.variables.sortType, 2);
-    assert.equal(capturedBody.variables.keyword, null);
+    assert.equal(Object.hasOwn(capturedBody.variables, "keyword"), false);
+    assert.equal(Object.hasOwn(capturedBody.variables, "shopId"), false);
   });
 
-  it("ShopeeAdapter suporta consulta por departamento com ordenação default e discount", async () => {
+  it("ShopeeAdapter omite ordenação default e rejeita discount antes da rede", async () => {
     let capturedBody: any;
+    let calls = 0;
     const adapter = new ShopeeAdapter({
       ratePerSecond: 1000,
       fetchImpl: (async (_url: string, init: RequestInit) => {
-        capturedBody = JSON.parse(init.body as string);
+        calls++;
+        const body = JSON.parse(init.body as string);
+        capturedBody = { variables: productArguments(body) };
         return new Response(
           JSON.stringify({
             data: {
@@ -519,16 +563,17 @@ describe("ShopeeAdapter", () => {
       },
       ctx,
     );
-    assert.equal(capturedBody.variables.sortType, 0);
+    assert.equal(Object.hasOwn(capturedBody.variables, "sortType"), false);
+    assert.equal(Object.hasOwn(capturedBody.variables, "listType"), false);
 
-    await adapter.fetchOffers(
+    await assert.rejects(adapter.fetchOffers(
       cred,
       {
         sourceQuery: { kind: "department", categoryId: "100636", order: "discount" },
       },
       ctx,
-    );
-    assert.equal(capturedBody.variables.sortType, 1);
+    ), { kind: "marketplace_error", message: "shopee_discount_order_unsupported" });
+    assert.equal(calls, 1);
   });
 
   it("ShopeeClient repete e recupera em erro de sistema 10000", async () => {
@@ -563,6 +608,81 @@ describe("ShopeeAdapter", () => {
     assert.equal(attempts, 2);
     assert.equal(page.offers.length, 1);
     assert.equal(page.offers[0]!.externalId, "200");
+  });
+
+  it("omite filtros opcionais não informados e assina exatamente o payload literal serializado", async () => {
+    let calls = 0;
+    const variables: Record<string, unknown>[] = [];
+    const adapter = new ShopeeAdapter({
+      ratePerSecond: 1000,
+      now: () => 1_700_000_000_000,
+      fetchImpl: async (_url, init) => {
+        calls++;
+        const serialized = String(init?.body);
+        const body = JSON.parse(serialized);
+        const args = productArguments(body);
+        variables.push(args);
+        assert.equal(body.query, buildProductOfferQuery(args));
+        assert.ok(Object.values(args).every((value) => value !== null && value !== undefined));
+        const signature = createHash("sha256").update(`APP1231700000000${serialized}SECRET456`, "utf8").digest("hex");
+        assert.equal(new Headers(init?.headers).get("Authorization"), `SHA256 Credential=APP123, Timestamp=1700000000, Signature=${signature}`);
+        return Response.json({ data: { productOfferV2: { nodes: [], pageInfo: { hasNextPage: false } } } });
+      },
+    });
+    await adapter.fetchOffers(cred, { keyword: "organização ç" }, ctx);
+    await adapter.fetchOffers(cred, { sourceQuery: { kind: "department", categoryId: "100636", order: "default" } }, ctx);
+    await adapter.fetchOffers(cred, { shopId: "0", pageSize: 1 }, ctx);
+    assert.equal(calls, 3);
+    assert.deepEqual(variables, [
+      { keyword: "organização ç", page: 1, limit: 50, sortType: 2 },
+      { productCatId: 100636, page: 1, limit: 50 },
+      { shopId: 0, page: 1, limit: 1, sortType: 2 },
+    ]);
+  });
+
+  it("rejeita números inválidos antes da rede sem converter filtros em null ou ampliar departamento", async () => {
+    let calls = 0;
+    const adapter = new ShopeeAdapter({ fetchImpl: async () => { calls++; return Response.json({}); } });
+    for (const pageSize of [NaN, Infinity, -Infinity, 0, -1, 1.5]) {
+      await assert.rejects(adapter.fetchOffers(cred, { pageSize }, ctx), { kind: "marketplace_error" });
+    }
+    for (const value of ["NaN", "Infinity", "-Infinity", "private-filter", "", "1.5", "9007199254740993"]) {
+      await assert.rejects(adapter.fetchOffers(cred, { shopId: value }, ctx), { kind: "marketplace_error" });
+      await assert.rejects(adapter.fetchOffers(cred, { sourceQuery: { kind: "department", categoryId: value } }, ctx), { kind: "marketplace_error" });
+    }
+    assert.equal(calls, 0);
+    const client = new ShopeeClient({ fetchImpl: async () => { calls++; return Response.json({}); } });
+    for (const variables of [{ page: NaN }, { shopId: Infinity }, { input: { nested: [-Infinity] } }]) {
+      await assert.rejects(client.request({ appId: "a", appSecret: "b" }, PRODUCT_OFFER_QUERY, variables, ctx), { kind: "marketplace_error" });
+    }
+    assert.equal(calls, 0);
+  });
+
+  it("erro GraphQL determinístico não repete transporte nem aplica fallback de página, inclusive com10000", async () => {
+    const errors = [
+      [{ message: "graphql: got null for non-null", extensions: { code: 10000 } }],
+      [{ message: "graphql: got null for non-null", extensions: { code: "private-secret-code" } }],
+      ...["GRAPHQL_PARSE", "GRAPHQL_PARSE_FAILED", "GRAPHQL_VALIDATION", "GRAPHQL_VALIDATION_FAILED"].map((code) => [{ message: "private-secret-provider-message", extensions: { code } }]),
+      [{ message: "System Error", extensions: { code: 10000 } }, { message: "private-secret-provider-message", extensions: { code: "GRAPHQL_VALIDATION_FAILED" } }],
+    ];
+    for (const errorList of errors) {
+      let calls = 0;
+      let retries = 0;
+      const adapter = new ShopeeAdapter({ ratePerSecond: 1000, fetchImpl: async () => {
+        calls++;
+        return Response.json({ errors: errorList });
+      } });
+      await assert.rejects(adapter.fetchOffers(cred, { keyword: "fone", pageSize: 50 }, { runId: "test", log: () => { retries++; } }), (error: unknown) => {
+        assert.ok(error instanceof CaptureError);
+        assert.equal(error.kind, "marketplace_error");
+        assert.equal(error.retryable, false);
+        assert.equal(error.message, "graphql_contract_error");
+        assert.doesNotMatch(JSON.stringify(error.toLogSafe()), /private-secret/);
+        return true;
+      });
+      assert.equal(calls, 1);
+      assert.equal(retries, 0);
+    }
   });
 });
 

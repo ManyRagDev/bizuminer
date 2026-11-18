@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { requestFavorite } from "../../lib/member-actions";
 import type { VitrineProduct } from "../../lib/deal-view";
+import { optionDetailPath } from "../../lib/offer-option";
 import { mergeSavedProducts, readSavedState, writeSavedState } from "../../lib/saved-products";
 
 const INTENT_KEY = "bizuminer:watch-intent";
@@ -23,12 +24,27 @@ export default function DetailActions({ product, initialSaved, initialWatching, 
     try { setPendingSessionSaves(readSavedState(sessionStorage).ids.length); } catch { /* Optional cache. */ }
     let intent: string | null = null;
     try { intent = sessionStorage.getItem(INTENT_KEY); } catch { /* Optional cache. */ }
-    if (intent !== product.id) return;
+    let target:{productId:string;optionKey:string|null}|null=null;
+    if(intent) {
+      try {
+        const parsed:unknown=JSON.parse(intent);
+        if(parsed && typeof parsed==="object" && !Array.isArray(parsed)) {
+          const data=parsed as Record<string,unknown>;
+          if(typeof data.productId==="string" && (data.optionKey===null || typeof data.optionKey==="string"))
+            target={productId:data.productId,optionKey:data.optionKey};
+        }
+      } catch {
+        // An intent from an older version had no option identity; do not
+        // attach it to a specific configuration after login.
+        if(intent===product.id) target={productId:intent,optionKey:null};
+      }
+    }
+    if (target?.productId !== product.id || target.optionKey !== (product.offerOptionKey ?? null)) return;
     try { sessionStorage.removeItem(INTENT_KEY); } catch { /* Optional cache. */ }
     void changeWatch(true);
     // Only run once for the product and login state; an explicit click owns the intent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.id, isLoggedIn]);
+  }, [product.id, product.offerOptionKey, isLoggedIn]);
 
   async function save() {
     if (busy) return;
@@ -54,13 +70,13 @@ export default function DetailActions({ product, initialSaved, initialWatching, 
 
   async function changeWatch(next: boolean) {
     if (!isLoggedIn) {
-      try { sessionStorage.setItem(INTENT_KEY, product.id); } catch { setNotice("Não foi possível guardar sua escolha. Entre e tente novamente."); return; }
-      window.location.assign(`/entrar?next=${encodeURIComponent(`/bizu/${product.slug}`)}`);
+      try { sessionStorage.setItem(INTENT_KEY, JSON.stringify({productId:product.id,optionKey:product.offerOptionKey ?? null})); } catch { setNotice("Não foi possível guardar sua escolha. Entre e tente novamente."); return; }
+      window.location.assign(`/entrar?next=${encodeURIComponent(optionDetailPath(product.slug, product.offerOptionKey))}`);
       return;
     }
     setBusy(true); setNotice("");
     try {
-      const response = await fetch("/api/minha/acompanhar", { method: next ? "POST" : "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.id }) });
+      const response = await fetch("/api/minha/acompanhar", { method: next ? "POST" : "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.id, optionKey: product.offerOptionKey ?? null }) });
       const result = await response.json();
       if (!response.ok || !result.ok) throw new Error();
       setWatching(next);

@@ -126,7 +126,7 @@ try{
  process.env.AFFILIATE_SECRETS_MASTER_KEY='11'.repeat(32);
  await connections.saveAccountConnection(owner,{marketplace:'shopee',fields:{appId:'fixture-app',appSecret:'fixture-secret'}},fx.factoryA);
  let views=await connections.accountConnections(owner,fx.factoryA);assert.equal(views.connections.find((c:any)=>c.marketplace==='shopee').status,'configured');assert.ok(!JSON.stringify(views).includes('fixture-secret'));
- const adapter={validateCredential:async(c:any)=>{assert.equal(c.secret.appId,'fixture-app');assert.equal(c.secret.appSecret,'fixture-secret');return true;}};
+ const adapter={validateCredential:async(c:any)=>{assert.equal(c.secret.appId,'fixture-app');assert.equal(c.secret.appSecret,'fixture-secret');return {ok:true,checkedAt:new Date()};}};
  assert.equal((await connections.testAccountConnection(owner,'shopee',fx.factoryA,{shopee:adapter})).ok,true);
  views=await connections.accountConnections(owner,fx.factoryA);assert.equal(views.connections.find((c:any)=>c.marketplace==='shopee').status,'verified');
  assert.equal((await connections.accountConnections(other,fx.factoryA)).connections.find((c:any)=>c.marketplace==='shopee').configured,false);

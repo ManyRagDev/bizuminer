@@ -63,7 +63,7 @@ test('multiple cycles renew by merit and confirmed exposure, preserving rejectio
 test('confirmed option preview uses the public offer facts instead of private assessment revisions',async()=>{
  const {productPreview}=await import('../lib/product-preview.ts');
  const base={...candidate('one'),sourceTitle:'Produto one'};
- const a=productPreview({...base,benefit:'Benefício editorial',displayTitle:'Título curto',editorialRevisionId:'revision'},now);
+ const a=productPreview({...base,benefit:'Benefício editorial',displayTitle:'Produto one — Uma unidade',editorialRevisionId:'revision'},now);
  const b=productPreview({...base,benefit:undefined,displayTitle:'Produto one — Uma unidade',editorialRevisionId:undefined},now);
  assert.equal(a.version,b.version);assert.ok(a.path.startsWith('/oferta/'));
  assert.notEqual(a.version,productPreview({...base,priceCents:2000},now).version);

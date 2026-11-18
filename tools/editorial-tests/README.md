@@ -67,3 +67,19 @@ O fechamento27 inclui 23 verificações em PostgreSQL17.6 com duas conexões rea
 `test:operational-maintenance` também exige `BIZUMINER_TEST_PG_BIN` e cria somente PostgreSQL descartável próprio, sem aceitar URL remota. São 21 verificações de backfill, bootstrap/config administrativo, captura manual/navegador/extensão, pareamento concorrente, revogação, sanitização de erros e retirada dos CLIs legados. Usa o trigger original de seed de curadoria. `test:replacement-rollout` grava agora evidência28 e contém 26 verificações mais seis aplicações locais.
 
 O catálogo selado daquela rodada era `docs/implementation/evidencias/rollout-28-expansion-catalog.json`. Os SQLs/manifesto/catálogo27/28 foram preservados em suas respectivas pastas de evidências; não confundir seus hashes com a candidata31. As suítes são ensaio local, não homologação Supabase.
+
+
+### Jornada operacional das fases 4 e 5
+
+`operation-journey-http.test.ts` inicia o Next de produção da árvore local com PostgreSQL nativo descartável, baseline/ACLs reais e Auth sintético em loopback usando o SDK Supabase instalado. Não usa o DATABASE_URL do ambiente e o filho Next recebe ambiente permitido explicitamente com `__NEXT_PROCESSED_ENV=true`, sem carregar `.env.local`. A fixture prepara fatos e uma oferta afiliada sintética, conclui avaliação controlada pelos serviços reais de projeção e prepara os dois canais. Nenhum serviço hospedado Supabase, loja ou IA é chamado.
+
+Prepare um build web em `.next-phase45` com configuração fictícia. Então, neste diretório:
+
+```bash
+BIZUMINER_TEST_PG_BIN=/caminho/postgresql/bin npm run test:operation-native
+BIZUMINER_TEST_PG_BIN=/caminho/postgresql/bin npm run test:operation-journey-http
+```
+
+O diretório deve conter `postgres`, `initdb` e `pg_ctl` de PostgreSQL 17 compatível com o baseline. O teste não baixa nem instala binários. `LD_LIBRARY_PATH` pode apontar para bibliotecas extraídas localmente. `OPERATION_JOURNEY_EVIDENCE=/tmp/evidencia.json` grava o resultado; `OPERATION_JOURNEY_HOLD=true` conserva temporariamente os serviços para conferência interativa. Os dados de acesso sintéticos ficam em `/tmp/garimpa-phase45-browser.json`; criar `/tmp/garimpa-phase45-browser-stop` encerra o ensaio e elimina o banco. Remova esse sinal antes de iniciar outro ensaio.
+
+`BIZUMINER_TEST_NATIVE=true` também executa `capture-activity-flow`, `curation-t01-t02-v2` e `curation-journey-t03-t08-v2` no servidor nativo. A adaptação de `pg.query` preserva o contrato de JSON pré-codificado e arrays comuns do PGlite/pg; serviços da aplicação usam postgres.js com papéis restritos e transações reais. `pauta-cache-native.test.ts` usa duas sessões independentes para concorrência, rollback e confirmação idempotente.

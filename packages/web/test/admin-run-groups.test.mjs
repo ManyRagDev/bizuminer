@@ -29,6 +29,15 @@ function source(overrides = {}) {
   };
 }
 
+test("retomada mantém os checkpoints e as consultas novas no mesmo lote", () => {
+  const original = toAdminRun(source({ marketplace: "shopee", parameters: { operationBatchId: "batch-a", captureExecutionId: "first" } }));
+  const resumed = toAdminRun(source({ id: "resumed", marketplace: "shopee", parameters: { operationBatchId: "batch-a", captureExecutionId: "second" } }));
+  const other = toAdminRun(source({ id: "other", marketplace: "shopee", parameters: { operationBatchId: "batch-b", captureExecutionId: "second" } }));
+  assert.equal(groupAdminRuns([original, resumed]).length, 1);
+  assert.equal(groupAdminRuns([original, resumed, other]).length, 2);
+  assert.equal(runExecutionId(resumed), "batch-a");
+});
+
 test("agrupa filhos históricos pelo prefixo exato do collector_run_id", () => {
   const first = toAdminRun(source());
   const second = toAdminRun(source({

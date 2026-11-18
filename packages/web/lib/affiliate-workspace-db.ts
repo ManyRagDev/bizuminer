@@ -26,6 +26,20 @@ import {
   confirmPublication,
 } from "./commercial-workflow.ts";
 
+async function withSavepoint(
+  tx: any,
+  name: string,
+  fn: () => Promise<void>,
+) {
+  await tx.unsafe(`savepoint ${name}`);
+  try {
+    await fn();
+    await tx.unsafe(`release savepoint ${name}`);
+  } catch {
+    await tx.unsafe(`rollback to savepoint ${name}`);
+  }
+}
+
 export function workspaceTransaction(tx: any): typeof db {
   return (() =>
     Object.assign((...args: any[]) => tx(...args), {
@@ -98,7 +112,7 @@ export async function workspaceOffers(
         const slugs = offers.map((o) => o.candidate.slug);
         const codes = new Map<string, string>();
         if (slugs.length) {
-          try {
+          await withSavepoint(tx, "short_link_mint", async () => {
             const existing = await tx<{ code: string; slug: string }[]>`
               select code, slug from garimpa.short_link
               where tenant_id = ${c.tenantId} and slug = any(${slugs})
@@ -111,20 +125,18 @@ export async function workspaceOffers(
                 insert into garimpa.short_link (code, tenant_id, slug)
                 select m.code, ${c.tenantId}, m.slug
                 from unnest(${missing}::text[], ${missingCodes}::text[]) as m(slug, code)
-                on conflict (tenant_id, slug) do nothing
+                on conflict do nothing
                 returning code, slug
-              `.catch(() => []);
+              `;
               for (const row of inserted) codes.set(row.slug, row.code);
             }
-          } catch {
-            // Graceful fallback: /bizu/<slug> if short links are not available
-          }
+          });
         }
 
         const candidateIds = offers.map((o) => o.candidate.id);
         const watchersMap = new Map<string, number>();
         if (candidateIds.length > 0) {
-          try {
+          await withSavepoint(tx, "watcher_counts", async () => {
             const counts = await tx<any[]>`
               select product_id, count(*)::int as cnt from (
                 select product_id from garimpa.price_watch where product_id = any(${candidateIds})
@@ -135,9 +147,7 @@ export async function workspaceOffers(
             for (const row of counts) {
               watchersMap.set(row.product_id, Number(row.cnt) || 0);
             }
-          } catch {
-            // Keep default 0 if tables are unmigrated or unavailable
-          }
+          });
         }
 
         for (let i = 0; i < offers.length; i++) {

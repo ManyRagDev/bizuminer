@@ -1,3 +1,4 @@
+import { adminMutationOrigin } from "../../../../lib/admin-request-origin.ts";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../../lib/api-auth.ts";
 import { workspaceJson } from "../../../../lib/workspace-request.ts";
@@ -36,7 +37,8 @@ export async function POST(req: NextRequest) {
       { error: "Esta capacidade ainda não está habilitada para sua conta." },
       404,
     );
-  if (req.headers.get("origin") !== req.nextUrl.origin)
+  const origin = adminMutationOrigin(req);
+  if (!origin)
     return reply({ error: "Origem inválida." }, 403);
   try {
     const i = await workspaceJson(req, 16000);
@@ -65,7 +67,7 @@ export async function POST(req: NextRequest) {
       const artifact = await generateKitArtifact(a.context, {
         kitId: p.kit_id,
         expectedVersion: p.kit_version,
-        origin: req.nextUrl.origin,
+        origin,
         format: "story",
       });
       return reply({ artifact });

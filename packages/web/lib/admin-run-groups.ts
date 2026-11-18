@@ -13,6 +13,7 @@ export interface AdminRun {
   collectorRunId: string | null;
   observationCount: number;
   executionId: string | null;
+  operationBatchId?: string | null;
   planId: string | null;
   queryId: string | null;
   mode: string | null;
@@ -100,6 +101,7 @@ export function toAdminRun(row: AdminRunSource): AdminRun {
     collectorRunId: row.collector_run_id ?? null,
     observationCount: Number(row.observation_count ?? 0),
     executionId: optionalString(row.execution_id) ?? optionalString(parameters.captureExecutionId),
+    operationBatchId: optionalString(parameters.operationBatchId),
     planId: optionalString(parameters.capturePlanId),
     queryId: optionalString(parameters.captureQueryId),
     mode: optionalString(parameters.captureMode),
@@ -120,6 +122,7 @@ export function toAdminRun(row: AdminRunSource): AdminRun {
  * a query persistida; horário e nome do plano nunca são usados como identidade.
  */
 export function runExecutionId(run: AdminRun): string {
+  if (run.operationBatchId) return run.operationBatchId;
   if (run.executionId) return run.executionId;
   if (run.planId && run.queryId && run.collectorRunId) {
     const suffix = `:${run.queryId}`;

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { checkAffiliateUser, sinkJson } from "../../../lib/api-auth";
 import { marketplaceDef } from "../../../lib/marketplaces";
 import { optionDetailPath } from "../../../lib/offer-option.ts";
-import { confirmPautaExposure, readLivePauta } from "../../../lib/pauta-db.ts";
+import { confirmPautaExposure, preparePautaCopy, readLivePauta, readPautaVersion, readPendingPautaPreparations } from "../../../lib/pauta-db.ts";
 import { productPreview } from "../../../lib/product-preview";
 import { shareBaseUrl } from "../../../lib/site-url";
 
@@ -19,10 +19,16 @@ export async function GET(request: NextRequest) {
   const channel = request.nextUrl.searchParams.get("canal") === "stories" ? "stories" : "whatsapp";
   const marketplace = marketplaceDef(request.nextUrl.searchParams.get("loja") ?? "")?.slug ?? null;
   try {
+    const knownRevision = request.nextUrl.searchParams.get("revision");
+    if (knownRevision && knownRevision === await readPautaVersion(check.context, channel)) {
+      const preparations = await readPendingPautaPreparations(check.context, channel);
+      return sinkJson(check.sink, { unchanged: true, revision: knownRevision, preparations }, { headers: noStore });
+    }
     const selection = await readLivePauta(check.context, channel, marketplace);
     const host = shareBaseUrl().replace(/\/$/, "");
     const products = selection.products.map(({ shareTarget, shortCode, ...product }) => {
-      const copyKey = JSON.stringify([product.id, product.offerOptionKey, product.priceCents, product.offerConditions]);
+      const copyKey = JSON.stringify([product.id,product.offerOptionKey,product.priceCents,product.priceType,
+        product.currency,product.priceMinCents,product.priceMaxCents,product.offerConditions,product.purchaseContents]);
       if (shareTarget.kind === "pauta") {
         const detailUrl = `/p/pauta/${shareTarget.token}`;
         return {
@@ -60,6 +66,19 @@ export async function POST(request: NextRequest) {
     || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,120}$/.test(body.productId)) {
     return Response.json({ ok: false, error: "invalid_exposure" }, { status: 400 });
   }
+  if (body.action === "prepare") {
+    if (typeof body.text !== "string" || !body.text.trim() || body.text.length > 12000)
+      return sinkJson(check.sink, { ok: false, error: "invalid_preparation" }, { status: 400, headers: noStore });
+    if(body.slotId!==undefined && (typeof body.slotId!=="string" || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(body.slotId)))
+      return sinkJson(check.sink,{ok:false,error:"invalid_slot"},{status:400,headers:noStore});
+    if(body.requestId!==undefined && (typeof body.requestId!=="string" || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(body.requestId)))
+      return sinkJson(check.sink,{ok:false,error:"invalid_preparation"},{status:400,headers:noStore});
+    const confirmationId = await preparePautaCopy(check.context, body.channel, body.confirmationId, body.productId, body.text,undefined,body.slotId,body.requestId);
+    return sinkJson(check.sink, { ok: confirmationId !== null, confirmationId },
+      { status: confirmationId ? 200 : 409, headers: noStore });
+  }
+  if (body.action !== undefined && body.action !== "confirm")
+    return sinkJson(check.sink, { ok: false, error: "invalid_action" }, { status: 400, headers: noStore });
   const ok = await confirmPautaExposure(check.context, body.channel, body.confirmationId, body.productId);
   return sinkJson(check.sink, { ok }, { status: ok ? 200 : 409, headers: noStore });
 }

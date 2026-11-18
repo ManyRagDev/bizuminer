@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
-import { extensionCorsHeaders } from "../../../../../lib/extension-cors";
+import { extensionCorsHeaders, isAllowedExtensionOrigin } from "../../../../../lib/extension-cors";
+import { extensionCaptureEnabled, extensionCaptureMode } from "../../../../../lib/flags";
+import { readExtensionJson } from "../../../../../lib/extension-request.ts";
 import { exchangePairingCode } from "../../../../../lib/extension-db";
 import { normalizePairingCode } from "../../../../../lib/extension-token";
 import { captureIpKey } from "../../../../../lib/rate-limit";
@@ -39,6 +41,11 @@ export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
   const headers = extensionCorsHeaders(origin);
 
+  if (!extensionCaptureEnabled() || !extensionCaptureMode())
+    return Response.json({ ok: false, error: "not_enabled" }, { status: 403, headers });
+  if (!isAllowedExtensionOrigin(origin))
+    return Response.json({ ok: false, error: "origin_not_allowed" }, { status: 403, headers });
+
   const ip = captureIpKey(request.headers.get("x-forwarded-for"));
   if (exchangeLimited(`exchange:${ip}`)) {
     return Response.json({ ok: false, error: "rate_limited" }, { status: 429, headers });
@@ -46,10 +53,12 @@ export async function POST(request: NextRequest) {
 
   let body: { pairingCode?: unknown };
   try {
-    body = (await request.json()) as typeof body;
+    body = await readExtensionJson(request, 4096) as typeof body;
   } catch {
     return Response.json({ ok: false, error: "invalid_body" }, { status: 400, headers });
   }
+  if (!body || typeof body !== "object" || Array.isArray(body))
+    return Response.json({ ok: false, error: "invalid_body" }, { status: 400, headers });
 
   const code = typeof body.pairingCode === "string" ? normalizePairingCode(body.pairingCode) : "";
   if (!code) {

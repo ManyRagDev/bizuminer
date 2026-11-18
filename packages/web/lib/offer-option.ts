@@ -37,7 +37,8 @@ export function confirmedOfferEvidence(input: ConfirmOfferInput, marketplace: st
     packageQuantity:input.quantity,packageContents:[input.contents.trim()],conditions,fieldStates,...facts };
 }
 export function optionDetailPath(slug: string, key?: string) {
-  return key ? `/oferta/${encodeURIComponent(slug)}/${encodeURIComponent(key)}` : `/bizu/${encodeURIComponent(slug)}`;
+  return key && /^[a-f0-9]{32}$/.test(key)
+    ? `/oferta/${encodeURIComponent(slug)}/${encodeURIComponent(key)}` : `/bizu/${encodeURIComponent(slug)}`;
 }
 /** Human option names have a stable identity without asking sellers to invent IDs. */
 export function optionIdentity(label:string):string {

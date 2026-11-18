@@ -1,4 +1,4 @@
-import { verifiedWorkflowsReady } from "../../../lib/workflow-readiness.ts";
+import { verifiedWorkflowsStatus } from "../../../lib/workflow-readiness.ts";
 import { redirect } from "next/navigation";
 import { getPageAuth, isAffiliate } from "../../../lib/auth.ts";
 import {
@@ -35,11 +35,13 @@ export default async function ExperimentosPage({
     );
   }
 
-  if (!(await verifiedWorkflowsReady()))
+  const workflowStatus = await verifiedWorkflowsStatus();
+  if (workflowStatus !== "ready")
     return (
       <p>
-        Experimentos aguardam a migration de workflows verificados neste
-        ambiente.
+        {workflowStatus === "schema_missing"
+          ? "A estrutura necessária para os experimentos ainda não está instalada neste ambiente."
+          : "Experimentos estão instalados, mas a ativação comercial está desligada neste ambiente."}
       </p>
     );
   const experiments = await listPolicyExperiments(context);

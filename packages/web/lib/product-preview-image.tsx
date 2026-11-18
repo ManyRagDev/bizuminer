@@ -1,10 +1,8 @@
-import {offerArtworkFacts} from "./offer-artwork.ts";
 import { ImageResponse } from "next/og";
 import type { VitrineProduct } from "./deal-view";
 import { marketplaceDef } from "./marketplaces";
 import { fetchProductImage, ogFonts } from "./og-assets";
-import { productPreview, PRODUCT_PREVIEW_SIZE } from "./product-preview";
-import { formatOfferMoney, offerPriceLabel } from "./offer-price";
+import { PRODUCT_PREVIEW_SIZE } from "./product-preview";
 
 // Paleta fixa (tema claro de globals.css): o card é uma imagem estática, sem
 // contexto de tema do visitante — usa sempre a identidade de superfície clara.
@@ -13,21 +11,18 @@ const PAPER_DEEP = "#e6e0d3";
 const SURFACE_BRIGHT = "#ffffff";
 const INK = "#151515";
 const INK_MUTED = "#5f5c55";
-const INK_QUIET = "#6b6b6b";
-const BLUE = "#2563eb";
 const BLUE_TEXT = "#1d4ed8";
 const LINE = "rgba(21, 21, 21, 0.18)";
 
-export async function renderProductPreview(deal: VitrineProduct, now = new Date()) {
+export async function renderProductPreview(deal: VitrineProduct) {
   const [fonts, photo] = await Promise.all([ogFonts(), fetchProductImage(deal.imageUrl)]);
-  const { stale, badge, ageLabel } = productPreview(deal, now);
+  // Social platforms can retain images beyond our HTTP cache headers. Avoid
+  // embedding perishable price claims in an image we cannot later invalidate.
   const marketplace = marketplaceDef(deal.marketplace);
   const sourceTitle=deal.displayTitle ?? deal.title;
   const optionLabel=(deal.offerOptionLabel ?? "");
   const title=deal.offerOptionKey && sourceTitle.length>220 ? `${(deal.sourceTitle ?? deal.title).slice(0,70)}… — ${optionLabel.length>160 ? `${optionLabel.slice(0,157)}…`:optionLabel}`:sourceTitle;
-  const facts=offerArtworkFacts(deal);
   const titleSize = title.length <= 65 ? 50 : title.length <= 110 ? 40 : title.length <= 180 ? 32 : title.length <= 300 ? 24 : 20;
-  const price = offerPriceLabel(deal);
   const stamp = marketplace
     ? { label: marketplace.stampLabel, style: marketplace.stampStyle }
     : { label: deal.marketplace, style: "outlined" as const };
@@ -94,25 +89,6 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
                 </div>
               )}
             </div>
-            {badge && (
-              <div
-                style={{
-                  display: "flex",
-                  alignSelf: "flex-start",
-                  marginBottom: 24,
-                  padding: "10px 16px",
-                  fontSize: 22,
-                  fontWeight: 600,
-                  letterSpacing: "0.02em",
-                  textTransform: "uppercase",
-                  border: `2px solid ${BLUE}`,
-                  color: badge.tone === "verified" ? "#ffffff" : BLUE_TEXT,
-                  backgroundColor: badge.tone === "verified" ? BLUE : SURFACE_BRIGHT,
-                }}
-              >
-                {badge.label}
-              </div>
-            )}
             <div
               style={{
                 display: "flex",
@@ -125,23 +101,9 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
             >
               {title}
             </div>
-            {facts.contents && <div style={{display:"flex",marginTop:12,fontSize:20,lineHeight:1.2,color:INK_QUIET}}>{facts.contents}</div>}
-            {facts.conditions && <div style={{display:"flex",marginTop:8,fontSize:20,lineHeight:1.2,color:INK_QUIET}}>{facts.conditions}</div>}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
-              {!stale && deal.originalPriceKind === "source_claimed" && deal.priceType === "exact" && deal.originalPriceCents !== null && deal.originalPriceCents > deal.priceCents && (
-                // Satori não suporta text-decoration (mesmo bug de "fit-content": erro
-                // minificado "u2 is not iterable" no pipe da resposta). Sem risco de
-                // reintroduzir — o contraste de tamanho/cor já distingue o preço anterior.
-                <div style={{ display: "flex", fontSize: 26, fontWeight: 600, color: INK_QUIET }}>
-                  {formatOfferMoney(deal.originalPriceCents, deal.currency || "BRL")}
-                </div>
-              )}
-              <div style={{ display: "flex", fontSize: price.length > 18 ? 36 : price.length > 12 ? 44 : 64, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>
-                {price}
-              </div>
-            </div>
+            <div style={{ display: "flex", fontSize: 34, fontWeight: 800, color: INK }}>Confira preço e condições na loja</div>
             <div
               style={{
                 display: "flex",
@@ -153,7 +115,7 @@ export async function renderProductPreview(deal: VitrineProduct, now = new Date(
                 color: INK_MUTED,
               }}
             >
-              {stale ? `Última captura ${ageLabel ?? "sem data"} · confira o preço atual` : "Ofertas monitoradas · link de afiliado"}
+              Link de afiliado · condições sujeitas à loja
             </div>
           </div>
         </div>

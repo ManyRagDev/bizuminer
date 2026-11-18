@@ -1,105 +1,37 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { marketplaceDef } from "../../lib/marketplaces.ts";
-import type { TodayActivity, TodayStatus } from "../../lib/today-operation.ts";
-import AdminLink from "../_components/admin-link.tsx";
-import styles from "./today-operation-status.module.css";
-
-const storesList = new Intl.ListFormat("pt-BR", { style: "long", type: "conjunction" });
-const channels = [["whatsapp", "WhatsApp"], ["stories", "Stories"]] as const;
-const labels: Record<TodayActivity["kind"], string> = {
-  queued: "Captura na fila de execução",
-  capture: "Capturando ofertas",
-  browser: "Mercado Livre aguarda a extensão no navegador",
-  triage: "IA avaliando ofertas",
-  monitoring: "Atualizando preços",
-};
-
-export default function TodayOperationStatus({ tenantId }: { tenantId: string }) {
-  const [result, setResult] = useState<TodayStatus | "error" | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let inFlight = false;
-    async function refresh() {
-      if (document.hidden || inFlight) return;
-      inFlight = true;
-      try {
-        const response = await fetch("/api/admin/operacao", {
-          cache: "no-store", headers: { "x-bm-account": tenantId }, signal: controller.signal,
-        });
-        if (!response.ok) throw new Error("status_unavailable");
-        const value = await response.json() as TodayStatus;
-        if (!controller.signal.aborted) setResult(value);
-      } catch {
-        if (!controller.signal.aborted) setResult("error");
-      } finally {
-        inFlight = false;
-      }
-    }
-    void refresh();
-    const timer = window.setInterval(refresh, 20_000);
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => {
-      controller.abort();
-      window.clearInterval(timer);
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, [tenantId]);
-
-  const status = result === "error" ? null : result;
-  const waitingForBrowser = status?.activities.some(activity => activity.kind === "browser");
-  const inProgress = status?.activities.some(activity => activity.kind !== "browser");
-  const hasIssue = Boolean(status?.issues.length);
-  const ready = status && channels.some(([channel]) => (status.pauta[channel]?.count ?? 0) > 0);
-  const bothKnown = status && channels.every(([channel]) => status.pauta[channel] !== null);
-  const hasActiveChannel = status && channels.some(([channel]) => status.pauta[channel]?.active);
-  let title = "Nenhuma rodagem em andamento";
-  if (result === "error") title = "Status indisponível no momento";
-  else if (!status) title = "Consultando a operação…";
-  else if (waitingForBrowser) title = "Sua ação é necessária";
-  else if (inProgress) title = "Operação em andamento";
-  else if (hasIssue) title = "Rodagem precisa de atenção";
-  else if (ready && bothKnown) title = "Tudo pronto";
-  const account = encodeURIComponent(tenantId);
-
-  return <section className={styles.banner} aria-label="Operação e Pauta">
-    <div>
-      <p className="eyebrow">Operação agora</p>
-      <div role="status">
-        <strong className={styles.title}>{title}</strong>
-        {status?.activities.map(({ kind, marketplaces }) => {
-          const stores = marketplaces.map(store => marketplaceDef(store)?.label ?? store);
-          const showStores = kind === "queued" || kind === "capture" || kind === "monitoring";
-          return <p key={kind}>{labels[kind]}{showStores && stores.length > 0 && ` · ${storesList.format(stores)}`}</p>;
-        })}
-        {status?.issues.map(issue => <p key={issue}>{issue}</p>)}
-      </div>
-      {waitingForBrowser && <AdminLink href={`/admin?aba=visao-geral&conta=${account}#captura-hoje`}>Continuar captura</AdminLink>}
-      {hasIssue && !waitingForBrowser && <AdminLink href={`/admin?aba=rodagens&conta=${account}`}>Conferir rodagens</AdminLink>}
+import AdminLink from '../_components/admin-link.tsx';
+import {useOperationProgress} from './use-operation-progress.ts';
+import styles from './today-operation-status.module.css';
+export default function TodayOperationStatus({tenantId,productIds,problemFilter}:{tenantId:string;productIds?:string[];problemFilter?:{category?:string;after?:string}}){
+  const {data,error,loading,paused,refresh}=useOperationProgress(tenantId,productIds,problemFilter),e=data?.evaluation,p=data?.preparation;
+  const account=encodeURIComponent(tenantId);
+  return <section className={styles.banner} aria-label={productIds?'Andamento destes produtos':'Operação e Pauta'}>
+    <div><p className="eyebrow">{productIds?'Situação atual destes produtos':'Operação agora'}</p>
+      {!data?<p role="status">{error?'Status indisponível. Consulte novamente.':'Consultando a operação…'}</p>:<>
+        <strong className={styles.title}>{error?'Consulta parcial; há informações indisponíveis':paused?'Aguardando confirmação de progresso':data.poll.active?'Há processamento para acompanhar':'Situação no momento da consulta'}</strong>
+        <p>Consultado em {new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'short',timeStyle:'short'}).format(new Date(data.consultedAt))}.</p>
+        {e?<><p>Avaliação: {e.queued} na fila · {e.running} em execução · {e.waiting} aguardando prazo, incluindo {e.quota} por limite diário.</p>
+          <p>{e.recorded} produtos com avaliação registrada; {e.compatible} com compatibilidade factual comprovada, dos quais {e.reused} usam avaliação de outro fato compatível.</p>
+          <p>{e.uncertain} resultados incertos · {e.expiredLease} execuções sem confirmação · {e.failed} falhas · {e.outdated} revisões anteriores ou sem compatibilidade comprovada na fila.</p>
+          <p>Produtos na fila ainda não comprovam que a avaliação começou. Contagens de etapas diferentes podem se sobrepor.</p></>:<p>{data.mode==='legacy'?'Esta conta usa o fluxo anterior de triagem.':'Avaliação indisponível nesta consulta.'}</p>}
+        {p&&<p>Conferência: {p.pending} na fila · {p.running} em execução · {p.unconfirmed} sem confirmação · {p.browser} aguardando navegador · {p.auth} aguardando conexão · {p.quota} aguardando cota · {p.retry} aguardando prazo · {p.expired} com prazo encerrado.</p>}
+        <p>Destino afiliado: {data.links?`${data.links.missing} produtos sem vínculo disponível na janela recente de 48 horas.`:'Consulta indisponível.'}</p>
+        {data.mode==='legacy'&&<>{data.activities.map((a,index)=><p key={index}>Atividade do fluxo anterior: {({queued:'captura na fila',capture:'captura em andamento',triage:'triagem em andamento',browser:'aguardando navegador',retry:'aguardando tentativa',authorization:'aguardando autorização',reconciliation:'aguardando conferência',monitoring:'acompanhamento de preços',publication:'salvando lote'})[a.kind]??'trabalho registrado'}.</p>)}{data.issues.map((issue,index)=><p key={index}>{issue}</p>)}</>}
+        {!data.availability.captures&&<p>Consulta de capturas indisponível.</p>}
+        {data.captures?.items.map(c=><p key={c.id}>{c.message} <AdminLink href={c.href}>Conferir captura</AdminLink></p>)}
+        {data.poll.nextAt&&!data.poll.active&&<p>Próxima consulta após o prazo registrado: {new Date(data.poll.nextAt).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})}.</p>}
+      </>}
+      {error&&data&&<p role="alert">A leitura está incompleta. Os últimos dados acima não comprovam que a operação terminou.</p>}
+      {paused&&<p>A fila não mudou nas últimas consultas e não há execução confirmada. O acompanhamento automático está em pausa; atualize a situação para consultar novamente.</p>}
+      <button type="button" onClick={refresh} disabled={loading}>Atualizar situação</button>
     </div>
-    <div>
-      <p className="eyebrow">Pauta</p>
-      {status && channels.map(([channel, label]) => {
-        const state = status.pauta[channel];
-        const count = state?.count ?? 0;
-        return <div key={channel} className={styles.channel}>
-          <p><strong>{label}</strong> · {state === null ? "Consulta indisponível"
-            : !state.active ? "Canal inativo"
-              : count === 0 ? "Sem ofertas prontas"
-                : count === 1 ? "1 oferta pronta" : `${count} ofertas prontas`}</p>
-          {count > 0 && <AdminLink href={`/pauta?conta=${account}&canal=${channel}`}>Abrir {label}</AdminLink>}
-        </div>;
-      })}
-      {bothKnown && !ready && (hasActiveChannel
-        ? <AdminLink href={`/admin/curadoria?aba=excecoes&conta=${account}`}>Revisar pendências</AdminLink>
-        : <AdminLink href={`/admin/curadoria?aba=selecao&conta=${account}`}>Conferir configuração dos canais</AdminLink>)}
-      {status && !bothKnown && !ready && <AdminLink href={`/pauta?conta=${account}`}>Abrir Pauta</AdminLink>}
-      {!status && <p>{result === "error" ? "Abra a Pauta para conferir as ofertas." : "Consultando as ofertas prontas…"}</p>}
-      {result === "error" && <AdminLink href={`/pauta?conta=${account}`}>Abrir Pauta</AdminLink>}
+    <div><p className="eyebrow">Pauta por canal</p>{(['whatsapp','stories'] as const).map(channel=>{
+      const state=data?.pauta[channel];return <div key={channel} className={styles.channel}><p><strong>{channel==='whatsapp'?'WhatsApp':'Stories'}</strong> · {data&&!data.availability[channel]?'Consulta indisponível':state===undefined?'Consultando…':state===null?'Seleção preparada ainda não consultável; abra a Pauta para conferir':!state.active?'Canal inativo':`${state.count} ofertas na seleção consultada`}</p>
+        <AdminLink href={`/pauta?conta=${account}&canal=${channel}`}>Abrir {channel==='whatsapp'?'WhatsApp':'Stories'}</AdminLink>
+        {!!state?.products?.length&&<details><summary>Ver situação dos produtos neste canal</summary>{state.products.map(product=><p key={product.id}><strong>{product.title}</strong>: {product.selected?'Está na seleção deste canal.':product.reasons.join(' ')}</p>)}</details>}
+      </div>;})}
+      <AdminLink href={`/admin/curadoria?aba=problemas&conta=${account}`}>Problemas para resolver</AdminLink>
+      <AdminLink href={`/admin/capturas?conta=${account}`}>Histórico de recebimentos</AdminLink>
     </div>
   </section>;
 }

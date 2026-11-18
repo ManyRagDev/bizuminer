@@ -273,6 +273,10 @@ export function workspaceError(error: unknown): string {
     return "Confira a origem e a permissão de uso comercial da imagem neste canal.";
   if (/EDITORIAL_REVIEW_REQUIRED/.test(code))
     return "A indicação ou as regras do canal mudaram. Confira a oferta antes de aprovar ou exportar novamente.";
+  if (/connection_storage_unavailable/.test(code))
+    return "O armazenamento seguro de credenciais está indisponível. Peça ao responsável pelo sistema para configurá-lo antes de salvar a conexão.";
+  if (/connection_test_unavailable/.test(code))
+    return "A loja não respondeu ao teste. O resultado anterior foi preservado; tente novamente mais tarde.";
   if (/account_credentials_missing|link_unavailable/.test(code))
     return "O link desta oferta ainda não está pronto. Confira a conexão da loja e prepare o link na página da oferta.";
   if (/marketplace_disabled/.test(code))

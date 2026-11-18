@@ -1,0 +1,213 @@
+{
+  "date": "2026-11-16",
+  "localAcceptance": "passed",
+  "scope": "Operational review phases 1–5: implementation and publication preparation",
+  "publication": {
+    "deployed": false,
+    "remoteMigration": false,
+    "realMarketplaceCapture": false,
+    "paidModelCall": false,
+    "customerSend": false,
+    "cronsReactivated": false
+  },
+  "unit": {
+    "count": 88,
+    "execution": "Each file directly with Node --experimental-strip-types",
+    "files": [
+      {
+        "file": "operation-observer",
+        "exit": 0,
+        "tests": 6
+      },
+      {
+        "file": "capture-activity",
+        "exit": 0,
+        "tests": 5
+      },
+      {
+        "file": "account-connections-page",
+        "exit": 0,
+        "tests": 13
+      },
+      {
+        "file": "account-context",
+        "exit": 0,
+        "tests": 3
+      },
+      {
+        "file": "curation-workflow",
+        "exit": 0,
+        "tests": 3
+      },
+      {
+        "file": "ai-curation-provider",
+        "exit": 0,
+        "tests": 18
+      },
+      {
+        "file": "account-credential-resolver",
+        "exit": 0,
+        "tests": 8
+      },
+      {
+        "file": "pauta-live",
+        "exit": 0,
+        "tests": 11
+      },
+      {
+        "file": "middleware-session",
+        "exit": 0,
+        "tests": 6
+      },
+      {
+        "file": "operational-curation",
+        "exit": 0,
+        "tests": 4
+      },
+      {
+        "file": "operation-progress-ui",
+        "exit": 0,
+        "tests": 6
+      },
+      {
+        "file": "operation-refresh",
+        "exit": 0,
+        "tests": 5
+      }
+    ]
+  },
+  "integration": {
+    "database": "Native PostgreSQL 17.12 in disposable localhost servers, restricted garimpa_app",
+    "suites": [
+      {
+        "file": "capture-activity-flow.test.ts",
+        "result": "passed",
+        "statements": [
+          "PASS phase 2: 9 imports / 498 observations / 397 products + Shopee 12 searches / 216 products remain discoverable after 71 verifications; cursor pages, immutable replay, historical gaps, retired devices, owner/operator/foreign/revoked RLS and read-only diagnosis verified."
+        ]
+      },
+      {
+        "file": "operation-progress-flow.test.ts",
+        "result": "passed",
+        "statements": [
+          "PASS phase 3 SQL/RLS: simultaneous receipts, compatible reused assessment, current versus superseded jobs, quota/lease/browser waits, sanitized uncertain diagnostics, paginated v2 history, owner/operator/foreign/revoked isolation and strictly read-only status."
+        ]
+      },
+      {
+        "file": "curation-t01-t02-v2.test.ts",
+        "result": "passed",
+        "statements": [
+          "PASS T01: per-source publication, atomic staging, stable price history, A->B->A, late event, option clocks, and isolation",
+          "PASS T02: attribute deltas (<10% reuse, veto supersede), reconciliation lock + owner release, eligibility v2, and score projection"
+        ]
+      },
+      {
+        "file": "curation-journey-t03-t08-v2.test.ts",
+        "result": "passed",
+        "statements": [
+          "PASS T03 unit: hysteresis (+10% challenger / -20% drop) & merit-drop non-refill",
+          "PASS T03/T04/T06 journey: promotion -> recapture -> vitrine -> pauta slot -> manual confirm (current + overdue)",
+          "PASS T03 workerless expiry: immediate public & /go block without worker, historical curve preserved",
+          "PASS T04/T03 unavailable_confirmed via HTTP POST: immediate public removal & historical preservation",
+          "PASS T07 & multi-tenant isolation: equivalence veto propagation, operational metrics, and A vs B isolation",
+          "PASS v2 member-db reads (savedDeals, watchedDeals, recommendedDeals)",
+          "PASS v2 vs legacy offerValidUntil handling in catalogPage and dealDetail"
+        ]
+      },
+      {
+        "file": "pauta-cache-native.test.ts",
+        "result": "passed",
+        "statements": [
+          "PASS duas sessões frias convergem em uma única composição",
+          "PASS escrita concorrente invalida edição anterior e leitura seguinte incorpora alteração",
+          "PASS rollback preserva versão e pauta; banco nativo descartável postgres (PostgreSQL) 17.12 (Ubuntu 17.12-1.pgdg24.04+1)",
+          "PASS progresso não recompõe; divulgação concorrente é idempotente e isolada por canal",
+          "PASS revogação bloqueia leitura em cache e repetição de divulgação"
+        ]
+      },
+      {
+        "file": "extension-manual-http.test.ts",
+        "result": "passed",
+        "statements": [
+          "PASS real Next HTTP + restricted PostgreSQL: pairing/capture/replay/revocation, 53→35/18 diagnostics and all-invalid400 without writes; no publications/jobs/AI, tenant isolation"
+        ]
+      }
+    ]
+  },
+  "httpJourney": {
+    "postgres": "postgres (PostgreSQL) 17.12 (Ubuntu 17.12-1.pgdg24.04+1)",
+    "auth": "loopback synthetic Auth through installed Supabase SDK",
+    "assertions": [
+      "ready pauta alongside 13 uncertain evaluations",
+      "four store facts, affiliated configuration, approval distinct from channel counts and expiry",
+      "scoped status remains available",
+      "real Next pages and auth guards",
+      "URL account and shell agree, spoofed context stripped",
+      "operator,foreign,revoked permissions",
+      "read-only status preserves facts/jobs/budget/publications/editions"
+    ],
+    "operationReads": 7,
+    "authCalls": 34,
+    "externalProviderCalls": 0
+  },
+  "build": {
+    "result": "passed",
+    "buildId": "TJg1cRCGTGubGoaz5lCzG",
+    "typescript": "passed",
+    "environment": "fixture only, __NEXT_PROCESSED_ENV=true prevents loading .env.local"
+  },
+  "browser": {
+    "result": "passed",
+    "data": "synthetic fixtures in loopback",
+    "desktop": [
+      1366,
+      900
+    ],
+    "mobileViewport": [
+      390,
+      844
+    ],
+    "mobileDocumentWidth": 375,
+    "mobileControlsOutsideWidth": [],
+    "journey": [
+      "password login through Next and installed Supabase SDK",
+      "Hoje shows 13 uncertain evaluations with ready pauta",
+      "Amazon filter → receipt → offer → receipt → same filter",
+      "A → B → A: empty B receipts and no A products, menu context follows selected account",
+      "prepare and copy WhatsApp offer: saved preparation, no send declaration",
+      "Stories navigation keeps account/channel",
+      "house settings and connections return to Hoje",
+      "Enter opens mobile menu, Escape restores focus, closed nav inert",
+      "mobile Capturas controls fit the viewport"
+    ],
+    "screenshot": "docs/implementation/evidencias/operacao-hoje-desktop.png",
+    "limitations": [
+      "Mobile checked through viewport/DOM/control geometry/keyboard, not a physical phone; viewport screenshot capture was unreliable in the tool",
+      "No hosted Supabase Auth/pooler, live marketplace or model provider tested"
+    ]
+  },
+  "fixedFindings": [
+    "URL account could disagree with shell account",
+    "Operator RLS returned false zero for uncertain jobs: safe scoped read-only projection, raw jobs and releases kept owner-only",
+    "Page transport kept encoded receipt references: normalize once and reject double encoding, real Next digest and browser regression checked",
+    "Pauta recent-product history and pending labels implied receipts/active work: relabelled and linked to actual activity/status"
+  ],
+  "schema": [
+    "20261115234320_capture_activity_history.sql",
+    "20261116195549_curation_operation_diagnostic.sql",
+    "20261117003000_curation_operation_reader.sql"
+  ],
+  "workflowVerification": {
+    "localScheduleTriggers": 0,
+    "changedDuringThisTask": false,
+    "lastKnownRemoteState": "disabled_manually per owner instructions dated 2026-11-15; not re-enabled or independently rechecked here"
+  },
+  "remoteAcceptance": "Pending separately authorized publication and human acceptance; local tests do not certify permanent operational autonomy",
+  "packageVerification": {
+    "perFileHashes": "verified against archive entries",
+    "sourceTraceMissingFiles": 0,
+    "scopedDiffWhitespaceCheck": "passed",
+    "fullCheckoutWhitespace": "Pre-existing CRLF changes in web package metadata were preserved; unrelated local work was not normalized",
+    "configuration": "source snapshot only; no .env, credentials, node_modules or Next cache"
+  }
+}

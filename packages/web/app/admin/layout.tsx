@@ -1,15 +1,10 @@
 import { pageAccount } from "../../lib/page-account.ts";
 import './workspace.css';
 import './workspace-cards.css';
-import { getUserMemberships } from "../../lib/account-context.ts";
-import AccountSwitcher from "./account-switcher.tsx";
 import { redirect } from "next/navigation";
 import { getPageAuth, isAffiliate } from "../../lib/auth";
-import { curationSummary } from "../../lib/curation-db";
-import AdminShell from "../_components/admin-shell";
+import AccountAdminShell from "../_components/account-admin-shell.tsx";
 import DenyAccess from "../_components/deny-access";
-import { AdminDraftProvider } from "./draft-provider.tsx";
-import {affiliateWorkspaceEnabled} from '../../lib/affiliate-workspace-db.ts';
 
 export const dynamic = "force-dynamic";
 
@@ -28,20 +23,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const account = await pageAccount();
   if (!account) return <DenyAccess />;
 
-  const workspace = await affiliateWorkspaceEnabled(account);
-  const summary = workspace ? {awaiting:0,held:0,deferred:0} : await curationSummary(account.tenantId, undefined, account);
-
   return (
-    <AdminDraftProvider key={user.id} user={user.id} account={account.tenantId} actor={account.actorAppUserId ?? ""}>
-    <AdminShell
-      workspace={workspace}
-      curationCount={summary.awaiting + summary.held + summary.deferred}
-      accountHeader={
-        <AccountSwitcher accounts={await getUserMemberships(user.id)} selected={account.tenantId} />
-      }
-    >
+    <AccountAdminShell account={account} userId={user.id}>
       {children}
-    </AdminShell>
-    </AdminDraftProvider>
+    </AccountAdminShell>
   );
 }

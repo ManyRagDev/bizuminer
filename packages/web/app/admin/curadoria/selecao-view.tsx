@@ -22,8 +22,33 @@ import HomeBanner from "../../_components/home-banner";
 import { coverBlockers, selectCoverProduct } from "../../../lib/home-cover";
 import { COVER_HEADLINE_MAX_LENGTH, COVER_DESCRIPTION_MAX_LENGTH, COVER_TITLE_MAX_LENGTH } from "../../../lib/product-presentation";
 import { HERO_MAX_PRODUCTS, HERO_POLICY_VERSION, HERO_RUBRIC, HERO_WEIGHTS } from "../../../lib/hero-policy.ts";
+import type { ScoreComparison } from "../../../lib/curation-score-read.ts";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const EMPTY_SCORE_COMPARISON: ScoreComparison[] = [];
+const SCORE_LABELS: Record<string,string> = { quality:"Qualidade e utilidade", popularity:"Popularidade", discount:"Sinal de desconto",
+  savings:"Economia observada", freshness:"Frescor", store:"Sinais da loja" };
+function ScoreDetails({ score }: { score: ScoreComparison & { position: number } }) {
+  const raw = score.components.raw as {discount?:{source?:string;value?:number|null};categoryReference?:{
+    p95?:number|null;sampleSize?:number|null;minHistoryDays?:number|null;minHistorySpanDays?:number|null;
+    declaredPercent?:number|null;unusual?:boolean;penalty?:number;week?:string|null};historyCoverage?:{
+      days?:number;spanDays?:number;lastObservedAt?:string|null;ageDays?:number|null}} | undefined;
+  const reference=raw?.categoryReference;
+  return <details className="hero-classification-details"><summary>Comparação v2: #{score.position} · vitrine {score.scoreVitrine.toFixed(1)} · pauta {score.scorePauta.toFixed(1)}</summary>
+    <p>Grupo: {score.cohort.fallback ?? "não informado"} ({score.cohort.size ?? 0} candidatos). Calculado em {new Date(score.calculatedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}. Esta comparação não publica a oferta.</p>
+    <dl>{Object.entries(SCORE_LABELS).map(([key,label]) => {
+      const value = score.components[key] as { value?: number | null; confidence?: number; contribution?: number } | undefined;
+      return <div key={key}><dt>{label}</dt><dd>{value?.value == null ? "Dado ausente; contribuição neutra" : `${value.value.toFixed(1)} · confiança ${Math.round((value.confidence ?? 0)*100)}% · contribuição ${(value.contribution ?? 0).toFixed(1)}`}</dd></div>;
+    })}</dl>
+    <p>Origem do sinal de desconto: {raw?.discount?.source === "historico_comparavel" ? "histórico da mesma configuração" : raw?.discount?.source === "declaracao_da_fonte" ? "valor declarado pela loja" : "não disponível"}.</p>
+    {raw?.historyCoverage && <p>Histórico comparável: {raw.historyCoverage.days ?? 0} dias observados em um intervalo de {raw.historyCoverage.spanDays ?? 0} dias
+      {raw.historyCoverage.lastObservedAt && <> · última observação anterior em {new Date(raw.historyCoverage.lastObservedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</>}.
+      A confiança diminui conforme essa observação envelhece.</p>}
+    {reference?.p95 != null && reference.sampleSize != null
+      ? <p>Referência semanal da mesma loja, categoria e faixa: percentil 95 de {reference.p95.toFixed(1)}% em {reference.sampleSize} produtos, com pelo menos {reference.minHistoryDays} dias observados ao longo de {reference.minHistorySpanDays} dias. {reference.unusual ? `A alegação de ${reference.declaredPercent?.toFixed(1)}% é incomum neste grupo; penalidade de ${reference.penalty} pontos. Isso não comprova fraude.` : "Não há alegação acima dessa referência."}</p>
+      : <p>Referência de categoria indisponível: amostra histórica insuficiente ou ainda não calculada.</p>}
+  </details>;
+}
 function errorMessage(error: string): string {
   const messages: Record<string, string> = {
     forbidden: "Você não tem permissão para alterar a curadoria.",
@@ -338,8 +363,8 @@ function AssessmentForm({ candidate, disabled, onSaved, onCancel }: {
   </form>;
 }
 
-export default function SelecaoView({ initialCandidates, initialSelection, schemaReady, catalogHeroActive, initialEditingId,reviewOnly=false }: {
-  initialCandidates: EditorialCandidate[]; initialSelection: EditorialSelection | null; schemaReady: boolean; catalogHeroActive: boolean; initialEditingId?: string;reviewOnly?:boolean;
+export default function SelecaoView({ initialCandidates, initialSelection, schemaReady, catalogHeroActive, initialEditingId,reviewOnly=false,scoreComparison=EMPTY_SCORE_COMPARISON }: {
+  initialCandidates: EditorialCandidate[]; initialSelection: EditorialSelection | null; schemaReady: boolean; catalogHeroActive: boolean; initialEditingId?: string;reviewOnly?:boolean; scoreComparison?: ScoreComparison[];
 }) {
   const [candidates, setCandidates] = useState(initialCandidates);
   useEffect(()=>setCandidates(initialCandidates),[initialCandidates]);
@@ -354,6 +379,15 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
   const [pending, startTransition] = useTransition();
   const byId = useMemo(() => new Map(candidates.map((candidate) => [candidate.id, candidate])), [candidates]);
   const ranked = useMemo(() => rankHeroCandidates(candidates), [candidates]);
+  const comparisonById = useMemo(() => new Map(scoreComparison.map((item, index) => [item.productId, { ...item, position: index + 1 }])), [scoreComparison]);
+  const shadowComparison=useMemo(()=>{
+    const common=ranked.filter(item=>comparisonById.has(item.candidate.id));
+    const v2=[...common].sort((a,b)=>comparisonById.get(b.candidate.id)!.scoreVitrine-comparisonById.get(a.candidate.id)!.scoreVitrine
+      || a.candidate.id.localeCompare(b.candidate.id));
+    const positions=new Map(v2.map((item,index)=>[item.candidate.id,index+1]));
+    return common.map((item,index)=>({candidate:item.candidate,legacyPosition:index+1,v2Position:positions.get(item.candidate.id)!,
+      legacyStatus:item.classification.status,score:comparisonById.get(item.candidate.id)!.scoreVitrine}));
+  },[ranked,comparisonById]);
   const filtered = useMemo(() => ranked.filter(({ candidate }) => (marketplace === "all" || candidate.marketplace === marketplace) && candidate.title.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"))), [ranked, marketplace, search]);
   const heroPreview = useMemo(() => {
     if(reviewOnly)return [];
@@ -400,6 +434,14 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
     <div className="selecao-dia-header"><div><h2 id="selecao-dia-title" className="selecao-dia-heading">Seleção editorial</h2><p className="selecao-dia-sub">Confira os fatos da oferta e avalie público, utilidade, valor, confiança e clareza. A escolha de produtos e a ordem ficam nos controles de cada canal.</p></div></div>
     {!schemaReady && <p className="editorial-selection-alert" role="alert">A estrutura da seleção ainda não está disponível no banco. Avaliação e ativação permanecem desabilitadas até a migração ser aplicada.</p>}
     {feedback && <p className="editorial-selection-alert" role="status">{feedback}</p>}
+    {shadowComparison.length>0 && <details className="hero-classification-details"><summary>Comparar ordenações na mesma amostra ({shadowComparison.length})</summary>
+      <p>Compara a ordenação individual da capa existente com a pontuação v2 para os mesmos produtos. As posições não representam uma edição publicada: composição, diversidade e validade podem alterar a escolha final.</p>
+      <p>{candidates.length-shadowComparison.length} candidato(s) desta mesa sem projeção v2 atual ficaram fora da comparação.</p>
+      <div style={{overflowX:"auto"}}><table><thead><tr><th>Produto</th><th>Ordem da capa</th><th>Situação na capa</th><th>Ordem v2</th><th>Score v2</th></tr></thead>
+        <tbody>{shadowComparison.map(item=><tr key={item.candidate.id}><td>{item.candidate.title}</td><td>{item.legacyPosition}</td>
+          <td>{item.legacyStatus==='hero' ? 'Apto à capa' : item.legacyStatus==='selection' ? 'Seleção' : 'Com impedimento'}</td>
+          <td>{item.v2Position}</td><td>{item.score.toFixed(1)}</td></tr>)}</tbody></table></div>
+    </details>}
     {!reviewOnly && <>
     <section className="hero-ranking-board" aria-labelledby="hero-ranking-title">
       <h3 id="hero-ranking-title">Candidatos à capa da home</h3>
@@ -470,6 +512,7 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       {candidate.assessment && <p className="editorial-card-rationale">{candidate.assessment.publicRationale}</p>}
       {heroRank !== null && <p className="hero-rank-label">#{heroRank} no ranking individual · a composição final considera clareza e variedade</p>}
       <HeroClassificationDetails classification={classification} />
+      {comparisonById.get(candidate.id) ? <ScoreDetails score={comparisonById.get(candidate.id)!} /> : null}
       {homepageClarityBlockers(candidate).length > 0 && <p className="editorial-selection-blockers">Para a seleção automática: {homepageClarityBlockers(candidate).join(" ")}</p>}
       {candidate.selectionBlockers.length > 0 && <div className="editorial-selection-blockers"><p>Para incluir numa edição editorial:</p><ul>{candidate.selectionBlockers.map((blocker, index) => <li key={`${index}-${blocker}`}>{blocker}</li>)}</ul></div>}
       <EvidenceDetails candidate={candidate} />

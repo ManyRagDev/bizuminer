@@ -25,13 +25,18 @@ export async function serveProductPreview(request: Request, slug: string, depend
     return new Response(null, { status: 302, headers: { ...PUBLIC_HEADERS, Location: preview.path } });
   }
   const response = await dependencies.render(product, now);
+  if(product.offerValidUntil && !(Date.parse(product.offerValidUntil)>now.getTime()))
+    return new Response("Oferta expirada",{status:410,headers:PUBLIC_HEADERS});
+  // Rendering can wait for remote assets. Re-read the public projection so a
+  // veto or changed price during that wait cannot escape as the old image.
+  const current=await dependencies.loadProduct(slug);
+  if (!current || productPreview(current,now).version!==preview.version
+    || current.offerValidUntil && !(Date.parse(current.offerValidUntil)>now.getTime()))
+    return new Response("Oferta alterada ou indisponível",{status:410,headers:PUBLIC_HEADERS});
   for (const [key, value] of Object.entries(PUBLIC_HEADERS)) response.headers.set(key, value);
-  const cacheable = response.ok && response.headers.get("X-BizuMiner-Preview") === "ready";
-  const ttl = cacheable ? preview.cacheSeconds : 0;
-  response.headers.set("X-BizuMiner-Preview-Ttl", String(ttl));
-  if (ttl > 0) {
-    response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
-    response.headers.set("Vercel-CDN-Cache-Control", `public, s-maxage=${ttl}`);
-  }
+  // Price or a human veto can change before the time-based deadline. Until
+  // there is reliable invalidation, a shared cache must not retain the image.
+  response.headers.set("X-BizuMiner-Preview-Ttl", "0");
+  response.headers.delete("Vercel-CDN-Cache-Control");
   return response;
 }

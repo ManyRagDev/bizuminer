@@ -8,12 +8,16 @@ import { build } from "esbuild";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { apiOrigin, buildMode, manifestFailures, manifestForBuild } from "./build-config.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const outdir = path.join(root, "dist");
-const prod = process.argv.includes("--prod");
-const dev = !prod;
-const apiBase = prod ? "https://www.bizuminer.com.br" : "http://localhost:3100";
+export async function buildExtension(mode = "prod") {
+const apiBase = apiOrigin(mode);
+const source = JSON.parse(await readFile(path.join(root, "manifest.json"), "utf8"));
+const pkg = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+const sourceFailures = manifestFailures(source, "prod", pkg.version);
+if (sourceFailures.length) throw new Error(sourceFailures.join("; "));
 
 await rm(outdir, { recursive: true, force: true });
 await mkdir(path.join(outdir, "content"), { recursive: true });
@@ -24,7 +28,7 @@ const common = {
   format: "iife",
   target: "chrome110",
   minify: false,
-  define: { __API_BASE__: JSON.stringify(apiBase) },
+  define: { __API_BASE__: JSON.stringify(apiBase), __COLLECTOR_VERSION__: JSON.stringify(pkg.version) },
 };
 
 await build({
@@ -53,17 +57,16 @@ await build({
   outfile: path.join(outdir, "popup/popup.js"),
 });
 
-// Manifest: em dev, acrescenta o host local à lista de host_permissions.
-const manifest = JSON.parse(await readFile(path.join(root, "manifest.json"), "utf8"));
-if (dev) {
-  manifest.name = `${manifest.name} (dev)`;
-  const hostPermissions = new Set(manifest.host_permissions ?? []);
-  hostPermissions.add("http://localhost:3100/*");
-  manifest.host_permissions = [...hostPermissions];
-}
+// Each build has one origin. A development artifact never inherits production access.
+const manifest = manifestForBuild(source, mode);
 await writeFile(path.join(outdir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 
 await cp(path.join(root, "src/popup/index.html"), path.join(outdir, "popup/index.html"));
 await cp(path.join(root, "src/popup/popup.css"), path.join(outdir, "popup/popup.css"));
 
-console.log(`extensão construída em dist/ (${dev ? "dev → " + apiBase : "prod → " + apiBase})`);
+console.log(`extensão construída em dist/ (${mode} → ${apiBase})`);
+return { mode, apiBase, version: pkg.version, outdir };
+}
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await buildExtension(buildMode(process.argv.slice(2)));
+}

@@ -1,9 +1,8 @@
 name: Descobrir ofertas Shopee por departamentos
 
 on:
-  schedule:
-    # A cada 3h entre 06:25 e 21:25 horário de Brasília (UTC: 09:25, 12:25, 15:25, 18:25, 21:25, 00:25)
-    - cron: '25 0,9,12,15,18,21 * * *'
+  # Cron suspenso por decisão do dono em 15/11/2026.
+  # Reativar somente mediante solicitação explícita do dono.
   workflow_dispatch:
 
 permissions:
@@ -15,7 +14,7 @@ concurrency:
 
 jobs:
   discover:
-    if: vars.MONITORING_ENABLED == 'true' && vars.SHOPEE_CAPTURE_ENABLED == 'true'
+    if: ${{ false }} # Replaced by the durable installation worker.
     runs-on: ubuntu-latest
     timeout-minutes: 55
     env:

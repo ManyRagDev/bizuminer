@@ -388,6 +388,9 @@ export async function recordHumanRubricReview(
     notes?: string | null;
     shadowResult?: RubricAssessment | null;
     requestId?: string;
+    evidenceSnapshot?: RubricInputItem;
+    evidenceObservationId?: string;
+    reviewDurationMs?: number;
   },
 ): Promise<{
   saved: boolean;
@@ -400,7 +403,8 @@ export async function recordHumanRubricReview(
   await assertCommercialRolloutReady(sql);
   const [membership]=await sql`select m.app_user_id from garimpa.affiliate_membership m join garimpa.affiliate_account a on a.id=m.affiliate_id where a.tenant_id=${input.tenantId} and a.status='active' and m.app_user_id=${input.reviewedByAppUserId} and m.revoked_at is null`;
   if(!membership)throw new Error("reviewer_membership_required");
-  const digest=calculateContentDigest({productId:input.productId,reviewer:input.reviewedByAppUserId,assessment:{...input.humanAssessment,createdAt:undefined},notes:input.notes??null});
+  const digest=calculateContentDigest({productId:input.productId,reviewer:input.reviewedByAppUserId,assessment:{...input.humanAssessment,createdAt:undefined},notes:input.notes??null,
+    ...(input.reviewDurationMs!==undefined ? {reviewDurationMs:input.reviewDurationMs} : {})});
   const key=input.requestId??digest;
   await sql`select pg_advisory_xact_lock(hashtextextended(${input.tenantId+":review:"+key},0))`;
   const [prior]=await sql<{id:string;review_digest:string}[]>`select id,review_digest from garimpa.editorial_assessment where tenant_id=${input.tenantId} and review_key=${key}`;
@@ -435,7 +439,10 @@ export async function recordHumanRubricReview(
         ${rubricVersion},
         ${input.humanAssessment.evidenceDigest || "human-direct"},
         ${sql.json(input.humanAssessment as any)},
-        coalesce((select to_jsonb(p) from garimpa.product p where id = ${input.productId} and tenant_id = ${input.tenantId}), '{}'::jsonb), ${key}, ${digest}
+        coalesce((select to_jsonb(p) from garimpa.product p where id = ${input.productId} and tenant_id = ${input.tenantId}), '{}'::jsonb)
+          || jsonb_build_object('rubricEvidence',${sql.json((input.evidenceSnapshot ?? null) as any)}::jsonb,
+            'rubricObservationId',${input.evidenceObservationId ?? null}::text,
+            'reviewDurationMs',${input.reviewDurationMs ?? null}::integer), ${key}, ${digest}
       )
       returning id
     `;
@@ -563,9 +570,9 @@ export function exportComparisonReviewSampleAsCsv(
   return [headers.join(","), ...rows].join("\n");
 }
 
-export async function loadRubricInput(sql:Sql,tenantId:string,productId:string):Promise<RubricInputItem> {
+export async function loadRubricInput(sql:Sql,tenantId:string,productId:string,observationId?:string):Promise<RubricInputItem> {
   await assertCommercialRolloutReady(sql);
- const [r]=await sql<any[]>`select p.*,o.price_cents,o.original_price_cents,o.offer_evidence,o.id as observation_id from garimpa.product p join lateral(select * from garimpa.price_observation o where o.product_id=p.id and o.tenant_id=p.tenant_id order by o.observed_at desc,o.id desc limit 1)o on true where p.id=${productId} and p.tenant_id=${tenantId}`;
+ const [r]=await sql<any[]>`select p.*,o.price_cents,o.original_price_cents,o.offer_evidence,o.id as observation_id from garimpa.product p join lateral(select * from garimpa.price_observation o where o.product_id=p.id and o.tenant_id=p.tenant_id and (${observationId ?? null}::text is null or o.id=${observationId ?? null}) order by o.observed_at desc,o.id desc limit 1)o on true where p.id=${productId} and p.tenant_id=${tenantId}`;
  if(!r)throw new Error("product_evidence_required");
  return {productId:r.id,title:r.title,category:r.category??"",priceCents:r.price_cents,originalPriceCents:r.original_price_cents??undefined,marketplace:r.marketplace,productUrl:r.product_url,priceEvidenceDigest:createHash("sha256").update(JSON.stringify([r.observation_id,r.offer_evidence])).digest("hex")};
 }

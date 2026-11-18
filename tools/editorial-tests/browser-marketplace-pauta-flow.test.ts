@@ -11,6 +11,7 @@ const { executeCaptureBatch } = require("../../packages/web/lib/capture-batch-wo
 const { readLivePauta } = require("../../packages/web/lib/pauta-db.ts");
 const { defaultChannelPolicy } = require("../../packages/web/lib/recommendation-policy.ts");
 const { linkBrowserAliExpress } = require("../../packages/web/lib/browser-affiliate-links.ts");
+const { publishCaptureBatch } = require("../../packages/persistence/src/capture-publication.ts");
 const { publicGo } = require("../../packages/web/lib/public-go.ts");
 
 const { pg, factory, adminFactory } = await commercialFixture();
@@ -26,6 +27,8 @@ const files = [
   "20261023041600_optimize_public_link_reads.sql", "20261027030237_compose_homepage_editions.sql",
   "20261028041629_durable_product_presentation.sql", "20261101125432_renew_editorial_pauta.sql",
   "20261101193221_improve_editorial_recommendations.sql", "20261102131234_optimize_price_observation_scope.sql",
+    "20261020002440_garimpa_comparative_evidence_event.sql", "20261111042204_pauta_versioned_selection.sql",
+  "20261112002247_capture_atomic_publication.sql",
   "20261107185200_fix_price_comparability_and_currency_defaults.sql", "20261109120000_amazon_monetized_target.sql",
 ];
 
@@ -68,10 +71,15 @@ try {
     const imported = await browser.complete(access, batchId, payload);
     assert.equal(imported.importedCount, 1);
     assert.equal((await browser.complete(access, batchId, payload)).duplicate, true);
+    assert.equal((await pg.query("select count(*)::int n from garimpa.product where marketplace=$1",[marketplace])).rows[0].n, 0, "prepared offers stay invisible");
     const steps: string[] = [];
     let aliTarget = "https://s.click.aliexpress.com/e/test";
-    await executeCaptureBatch(batchId, async (step: { kind: string; captureRunId?: string }) => {
+    await executeCaptureBatch(batchId, async (step: { kind: string; captureRunId?: string; workerId: string }) => {
       steps.push(step.kind);
+      if (step.kind === "publish") {
+        await publishCaptureBatch(factory(), "local", batchId, step.workerId);
+        return { ok: true };
+      }
       if (step.kind === "affiliate") {
         assert.ok(step.captureRunId);
         if (process.env.BIZUMINER_LIVE_ALI_LINK_TEST === "1") {
@@ -88,7 +96,7 @@ try {
         from garimpa.product p where p.id=c.product_id and p.tenant_id=c.tenant_id and p.marketplace=$1`, [marketplace]);
       return { ok: true, triage: { processed: 1, approved: 1, held: 0, rejected: 0, annotatedPending: 0 } };
     }, batches, "local");
-    assert.deepEqual(steps, ali ? ["affiliate", "triage"] : ["triage"]);
+    assert.deepEqual(steps, ali ? ["publish", "affiliate", "triage"] : ["publish", "triage"]);
     assert.equal((await batches.read(batchId, "local"))?.status, "ok");
     if (ali) {
       await pg.exec(`insert into garimpa.price_observation(id,tenant_id,product_id,price_cents,observed_at,offer_evidence)
@@ -118,6 +126,23 @@ try {
     assert.equal(unavailable.recent.find((p: { id: string }) => p.id === selected.id)?.status, "blocked");
     assert.equal((await go(selected.shareTarget.slug)).status, 404);
     console.log(`PASS ${marketplace}: import, replay, scoped triage, Pauta, affiliate redirect and missing-link protection`);
+  }
+  const previousExecutor = process.env.CAPTURE_EXECUTOR;
+  process.env.CAPTURE_EXECUTOR = "durable";
+  try {
+    const waiting = await browser.pending(access, "amazon");
+    assert.ok(waiting);
+    assert.equal((await batches.read(waiting, "local"))?.metadata.execution?.executor, "durable");
+    await pg.query("update garimpa.capture_batch set metadata=jsonb_set(metadata,'{execution,deadline}',to_jsonb((now()-interval '1 minute')::text)) where id=$1", [waiting]);
+    assert.equal(await browser.pending(access, "amazon"), waiting, "explicit owner request renews expired browser window");
+    assert.equal((await batches.read(waiting, "local"))?.status, "running");
+    await pg.query("update garimpa.capture_batch set metadata=jsonb_set(jsonb_set(metadata,'{execution,phase}','\"capturing\"'),'{execution,deadline}',to_jsonb((now()-interval '1 minute')::text)) where id=$1", [waiting]);
+    assert.equal(await browser.pending(access, "amazon"), null);
+    assert.equal((await batches.read(waiting, "local"))?.status, "running", "browser cannot expire a durable worker lease");
+    console.log("PASS browser uses configured executor, renews explicit wait and preserves durable recovery ownership");
+  } finally {
+    if (previousExecutor === undefined) delete process.env.CAPTURE_EXECUTOR;
+    else process.env.CAPTURE_EXECUTOR = previousExecutor;
   }
 } finally {
   await pg.close();

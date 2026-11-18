@@ -5,12 +5,15 @@ import { commercialFixture } from "./commercial-fixture.ts";
 import type { AccountContext } from "../../packages/web/lib/tenant-db.ts";
 
 const require = createRequire(import.meta.url);
-const { readLivePauta, confirmPautaExposure, readPautaAvailability } = require("../../packages/web/lib/pauta-db.ts");
+const { readLivePauta, confirmPautaExposure, readPautaAvailability, readPautaVersion } = require("../../packages/web/lib/pauta-db.ts");
 const { readTodayOperations } = require("../../packages/web/lib/today-operation-db.ts");
 const { readPublicPautaLink, redirectPublicPautaLink } = require("../../packages/web/lib/pauta-link-db.ts");
 const { defaultChannelPolicy } = require("../../packages/web/lib/recommendation-policy.ts");
 process.env.DATABASE_URL = "postgresql://isolated-fixture-unused";
-const { pg, factory, adminFactory } = await commercialFixture();
+const queries: Array<{ sql: string; bytes: number }> = [];
+const { pg, factory, adminFactory } = await commercialFixture({ onQuery: (sql, rows) => {
+  queries.push({ sql, bytes: Buffer.byteLength(JSON.stringify(rows)) });
+} });
 const { inAccountScope } = require("../../packages/web/lib/account-scope.ts");
 const { confirmOfferOption } = require("../../packages/web/lib/offer-option-db.ts");
 const { confirmedOfferDetail } = require("../../packages/web/lib/confirmed-offer-db.ts");
@@ -30,6 +33,8 @@ try {
     "20261023041600_optimize_public_link_reads.sql", "20261027030237_compose_homepage_editions.sql",
     "20261028041629_durable_product_presentation.sql", "20261101125432_renew_editorial_pauta.sql",
     "20261101193221_improve_editorial_recommendations.sql", "20261102131234_optimize_price_observation_scope.sql",
+    "20261020002440_garimpa_comparative_evidence_event.sql", "20261111042204_pauta_versioned_selection.sql",
+
   ]) {
     await pg.exec(await readFile(new URL(file, sqlDirectory), "utf8"));
   }
@@ -89,6 +94,59 @@ try {
   const approved = (await read()).products[0];
   assert.equal(approved.id, "p_a");
   assert.deepEqual(await readPautaAvailability(a, "whatsapp", factory), { active: true, count: 1 });
+  // Warm both channels, then measure all database results including authorization.
+  await readPautaAvailability(a, "stories", factory);
+  const stableVersion = await readPautaVersion(a, "whatsapp", factory);
+  queries.length = 0;
+  for (let i = 0; i < 20; i++) {
+    assert.deepEqual(await readPautaAvailability(a, "whatsapp", factory), { active: true, count: 1 });
+    await readPautaAvailability(a, "stories", factory);
+    assert.equal(await readPautaVersion(a, "whatsapp", factory), stableVersion);
+  }
+  assert.ok(!queries.some(q => /curation_queue_facts|select selection from|from garimpa.price_observation/.test(q.sql)),
+    "idle checks must not load candidates, evidence or cached delivery documents");
+  const idleBytes = queries.reduce((sum, q) => sum + q.bytes, 0);
+  assert.ok(idleBytes < 60_000, `idle SQL results exceed budget: ${idleBytes}`);
+  const versions = async () => (await pg.query<{ channel: string; revision: number }>(
+    "select channel,revision::int from garimpa.pauta_source_version where tenant_id='a' order by channel")).rows;
+  const beforeBatch = await versions();
+  await pg.transaction(async tx => {
+    await tx.exec("update garimpa.product set title=title||' batch' where id='p_a'");
+    await tx.exec("update garimpa.product set title=replace(title,' batch','') where id='p_a'");
+    await tx.exec("update garimpa.product_curation set status='approved' where product_id='p_a'");
+  });
+  assert.deepEqual(await versions(), beforeBatch.map(v => ({ ...v, revision: v.revision + 1 })),
+    "a batch invalidates each channel once, without recomposing in triggers");
+  queries.length = 0;
+  assert.notEqual(await readPautaVersion(a, "whatsapp", factory), stableVersion);
+  assert.equal(queries.filter(q => q.sql.includes("from garimpa.curation_queue_facts")).length, 1);
+  queries.length = 0;
+  await readPautaAvailability(a, "whatsapp", factory);
+  assert.ok(!queries.some(q => q.sql.includes("from garimpa.curation_queue_facts")));
+  // Age alone never rebuilds the catalogue. Authentication is checked even on a hit.
+  await pg.exec("update garimpa.pauta_selection_cache set prepared_at='2000-01-01' where tenant_id='a' and channel='whatsapp'");
+  queries.length = 0;
+  await readPautaAvailability(a, "whatsapp", factory);
+  assert.ok(!queries.some(q => q.sql.includes("from garimpa.curation_queue_facts")));
+  // Simulate an edition ageing while the input version stays unchanged. Cheap
+  // expiry must not refill it or restart the candidate queries.
+  await pg.exec(`update garimpa.pauta_selection_cache set offer_valid_until=array[now()-interval '1 second'],
+    selection=jsonb_set(selection,'{selected,0,evidenceObservedAt}',to_jsonb((now()-interval '49 hours')::text))
+    where tenant_id='a' and channel='whatsapp'`);
+  queries.length = 0;
+  assert.deepEqual(await readPautaAvailability(a, "whatsapp", factory), { active: true, count: 0 });
+  assert.equal((await read()).products.length, 0);
+  assert.ok(!queries.some(q => q.sql.includes("from garimpa.curation_queue_facts")));
+  await pg.exec("update garimpa.product set last_seen_at=now() where id='p_a'");
+  assert.deepEqual(await readPautaAvailability(a, "whatsapp", factory), { active: true, count: 1 });
+  await pg.exec("delete from garimpa.affiliate_membership where affiliate_id='aff_a' and app_user_id='user_a'");
+  await assert.rejects(() => readPautaAvailability(a, "whatsapp", factory), /forbidden/);
+  await pg.exec("insert into garimpa.affiliate_membership(affiliate_id,app_user_id,role) values('aff_a','user_a','owner')");
+  await factory().begin(async (tx: any) => {
+    await tx`select set_config('garimpa.tenant_id','a',true)`;
+    assert.equal((await tx`select selection from garimpa.pauta_selection_cache where tenant_id='b'`).length, 0);
+  });
+  console.log(`PASS pauta versionada: 60 verificações, ${idleBytes} bytes de resultados SQL e nenhuma releitura de candidatos`);
   assert.equal(approved.shareTarget.kind, "pauta");
   assert.ok(!JSON.stringify(approved).includes("fixture-a"));
   const otherOffer = (await read(b)).products[0];
@@ -111,18 +169,21 @@ try {
   assert.equal((await read()).recentTotal, 1);
   await assert.rejects(() => read({ ...a, tenantId: "b", affiliateId: "aff_b" }), /forbidden/);
   assert.equal(await confirmPautaExposure(b, "whatsapp", approved.confirmationId, "p_a", factory), false);
-  assert.equal((await pg.query("select * from garimpa.recommendation_edition_archive")).rows.length, 0);
+  assert.equal((await pg.query("select * from garimpa.recommendation_exposure")).rows.length, 0);
+  const preparedArchives = await pg.query("select selection->>'kind' as kind from garimpa.recommendation_edition_archive");
+  assert.equal(preparedArchives.rows.length > 0 && preparedArchives.rows.every(r => r.kind === "pauta-preparation-v1"), true);
 
   await pg.exec(`insert into garimpa.price_observation(id,tenant_id,product_id,price_cents,offer_evidence)
     values ('o_a_new','a','p_a',9400,'{"version":2,"currency":"BRL","priceType":"exact"}')`);
-  assert.equal(await confirmPautaExposure(a, "whatsapp", approved.confirmationId, "p_a", factory), false);
+  assert.equal(await confirmPautaExposure(a, "whatsapp", "00000000-0000-0000-0000-000000000000", "p_a", factory), false);
   const updated = (await read()).products[0];
   assert.equal(updated.priceCents, 9400);
   assert.notEqual(updated.confirmationId, approved.confirmationId);
   assert.equal(updated.shareTarget.token, aToken);
   assert.equal(await confirmPautaExposure(a, "whatsapp", updated.confirmationId, "p_a", factory), true);
   assert.equal(await confirmPautaExposure(a, "whatsapp", updated.confirmationId, "p_a", factory), true);
-  assert.equal((await pg.query("select * from garimpa.recommendation_exposure")).rows.length, 1);
+  assert.equal(await confirmPautaExposure(a, "whatsapp", approved.confirmationId, "p_a", factory), true);
+  assert.equal((await pg.query("select * from garimpa.recommendation_exposure")).rows.length, 2);
   assert.equal((await read()).products.length, 0);
   assert.deepEqual(await readPautaAvailability(a, "whatsapp", factory), { active: true, count: 0 });
   assert.deepEqual(await readPautaAvailability(a, "stories", factory), { active: true, count: 1 });

@@ -8,6 +8,7 @@ import type { VitrineProduct } from "../../lib/deal-view";
 import { offerPriceLabel, offerPriceNote } from "../../lib/offer-price";
 import { formatWatchMoney, countComparableDrops } from "../../lib/watch-format";
 import { movementLabel, watchMovement } from "../../lib/member-contract";
+import { optionDetailPath } from "../../lib/offer-option";
 import { readSavedState, writeSavedState, remainingAfterConfirmedSync } from "../../lib/saved-products";
 import AdminBadge from "../_components/admin-badge";
 import DetailHeader from "../_components/detail-header";
@@ -22,12 +23,18 @@ export type MemberWatch = {
   slug: string;
   imageUrl: string | null;
   category: string | null;
+  marketplace: string;
+  optionKey: string | null;
+  optionLabel: string | null;
   baselineCents: number;
   baselineCurrency: string | null;
   targetCents: number | null;
   currentCents: number | null;
   currentObservedAt: string | null;
-  comparisonStatus: "comparable" | "configuration_changed" | "unavailable";
+  comparisonStatus: "comparable" | "configuration_changed" | "baseline_unresolved" | "unavailable";
+  evidenceCurrent: boolean;
+  noSafePage: boolean;
+  validUntil: string | null;
   available: boolean;
   benefit?: string; audience?: string; caveat?: string; purchaseContents?: string;
   watchedAt: string;
@@ -92,7 +99,7 @@ function MemberCard({ product, meta, actions, available = true }: { product: Vit
       </a>
       <p className="member-card-meta">
         <span>{product.category ?? "Mercado Livre"}</span>
-        {highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}
+        {available && highlight && <span className={`signal-badge ${highlight.tone}`}>{highlight.label}</span>}
       </p>
       <h3>{available ? <a href={`/bizu/${product.slug}`}>{product.title}</a> : product.title}</h3>
       {meta}
@@ -145,19 +152,38 @@ export default function MemberArea({
   const [pendingLocalIds, setPendingLocalIds] = useState<string[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [notice, setNotice] = useState("");
+  const [clock, setClock] = useState(0);
+  const isCurrent = (until?:string) => !until || (Number.isFinite(Date.parse(until)) && Date.parse(until)>clock);
+  const liveSaved = saved.map(product=>({...product,available:product.available && isCurrent(product.offerValidUntil)}));
+  const liveRecommended = recommended.filter(product=>isCurrent(product.offerValidUntil));
+  const liveWatches = watches.map(watch=>watch.validUntil && !isCurrent(watch.validUntil)
+    ? {...watch,available:false,evidenceCurrent:false,currentCents:null,comparisonStatus:watch.comparisonStatus === "baseline_unresolved" ? "baseline_unresolved" as const : "unavailable" as const} : watch);
 
-  const watchedIds = useMemo(() => new Set(watches.map((watch) => watch.productId)), [watches]);
+  useEffect(()=>{setClock(Date.now());},[]);
+  useEffect(() => {
+    const refresh=()=>setClock(Date.now());
+    const deadlines=[...saved.map(product=>product.offerValidUntil),...recommended.map(product=>product.offerValidUntil),...watches.map(watch=>watch.validUntil)]
+      .map(value=>Date.parse(value ?? ""))
+      .filter(value=>Number.isFinite(value) && value>Date.now());
+    const delay=deadlines.length ? Math.min(2_147_000_000,Math.max(0,Math.min(...deadlines)-Date.now()+50)) : null;
+    const timer=delay===null ? null : window.setTimeout(refresh,delay);
+    document.addEventListener("visibilitychange",refresh);
+    window.addEventListener("focus",refresh);
+    return ()=>{if(timer!==null) window.clearTimeout(timer);document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh);};
+  },[saved,recommended,watches,clock]);
 
-  const comparableDrops = useMemo(() => countComparableDrops(watches), [watches]);
+  const watchedIds = useMemo(() => new Set(watches.map((watch) => JSON.stringify([watch.productId, watch.optionKey]))), [watches]);
+
+  const comparableDrops = countComparableDrops(liveWatches);
 
   // Quando toda recomendação nasce do mesmo motivo, ele é dito uma vez no
   // cabeçalho. Repetir a mesma frase em sete cartões é a cicatriz dos 24
   // blurbs idênticos se repetindo em outra tela.
-  const uniformReason = useMemo(() => {
-    if (recommended.length === 0) return null;
-    const distinct = new Set(recommended.map((rec) => `${rec.reasonOrigin}|${rec.category ?? ""}`));
-    return distinct.size === 1 ? reasonText(recommended[0]) : null;
-  }, [recommended]);
+  const uniformReason = (() => {
+    if (liveRecommended.length === 0) return null;
+    const distinct = new Set(liveRecommended.map((rec) => `${rec.reasonOrigin}|${rec.category ?? ""}`));
+    return distinct.size === 1 ? reasonText(liveRecommended[0]) : null;
+  })();
 
   useEffect(() => {
     try { setPendingLocalIds(readSavedState(window.sessionStorage).ids); }
@@ -183,7 +209,8 @@ export default function MemberArea({
 
   async function watchProduct(product: VitrineProduct) {
     try {
-      const result = await api("/api/minha/acompanhar", "POST", { productId: product.id });
+      const result = await api("/api/minha/acompanhar", "POST", { productId: product.id,
+        ...(product.offerOptionKey ? { optionKey: product.offerOptionKey } : {}) });
       if (!result.ok || !result.watch) throw new Error();
       const row = result.watch as Record<string, unknown>;
       const watch: MemberWatch = {
@@ -193,17 +220,23 @@ export default function MemberArea({
         slug: String(row.slug),
         imageUrl: (row.image_url as string | null) ?? null,
         category: (row.category as string | null) ?? null,
+        marketplace: String(row.marketplace),
+        optionKey: typeof row.option_key === "string" ? row.option_key : null,
+        optionLabel: typeof row.option_label === "string" ? row.option_label : null,
         baselineCents: Number(row.baseline_price_cents),
         baselineCurrency: typeof row.baseline_currency === "string" ? row.baseline_currency : null,
         targetCents: row.target_price_cents === null ? null : Number(row.target_price_cents),
         currentCents: row.current_price_cents === null ? null : Number(row.current_price_cents),
         currentObservedAt: row.current_observed_at ? new Date(row.current_observed_at as string).toISOString() : null,
         comparisonStatus: row.comparison_status as MemberWatch["comparisonStatus"],
+        evidenceCurrent: Boolean(row.evidence_current),
+        noSafePage: Boolean(row.no_safe_page),
+        validUntil: row.valid_until ? new Date(row.valid_until as string).toISOString() : null,
         available: Boolean(row.available),
         benefit: product.benefit, audience: product.audience, caveat: product.caveat, purchaseContents: product.purchaseContents,
         watchedAt: new Date(row.watched_at as string).toISOString(),
       };
-      setWatches((current) => [watch, ...current.filter((item) => item.productId !== watch.productId)]);
+      setWatches((current) => [watch, ...current.filter((item) => item.watchId !== watch.watchId)]);
       showNotice("De olho no preço: avisamos aqui o que mudar desde hoje.");
     } catch {
       showNotice("Não deu para acompanhar agora. Tente de novo.");
@@ -213,7 +246,7 @@ export default function MemberArea({
   async function unwatch(watch: MemberWatch) {
     setWatches((current) => current.filter((item) => item.watchId !== watch.watchId));
     try {
-      const result = await api("/api/minha/acompanhar", "DELETE", { productId: watch.productId });
+      const result = await api("/api/minha/acompanhar", "DELETE", { productId: watch.productId, watchId: watch.watchId });
       if (!result.ok) throw new Error();
       showNotice("Você parou de acompanhar este item.");
     } catch {
@@ -322,31 +355,41 @@ export default function MemberArea({
               BizuMiner passa a comparar o preço de hoje com todos os que vierem depois.
             </p>
             <ol className="watch-how">
-              <li><span>01</span>Guardamos o preço exato do dia em que você marca o produto.</li>
+              <li><span>01</span>Guardamos o preço observado quando você começa a acompanhar.</li>
               <li><span>02</span>Comparamos apenas observações recentes da mesma configuração e condições.</li>
               <li><span>03</span>A diferença aparece aqui, em reais e em porcentagem — sem depender da sua memória.</li>
             </ol>
           </div>
         ) : (
           <ul className="watch-list">
-            {watches.map((watch) => {
+            {liveWatches.map((watch) => {
               const movement = watchMovement(watch.baselineCents, watch.currentCents);
               const since = shortDate(watch.watchedAt);
               return (
                 <li key={watch.watchId} className="watch-card">
-                  <a className="watch-image" href={watch.available ? `/bizu/${watch.slug}` : "#watch-title"} aria-label={watch.available ? `Abrir detalhes de ${watch.title}` : `${watch.title}: oferta indisponível`}>
+                  <a className="watch-image" href={watch.available ? optionDetailPath(watch.slug,watch.optionKey ?? undefined) : "#watch-title"} aria-label={watch.available ? `Abrir detalhes de ${watch.title}` : `${watch.title}: detalhes não estão disponíveis no momento`}>
                     {watch.imageUrl
                       ? <Image src={watch.imageUrl} alt="" fill sizes="96px" />
                       : <div className="image-placeholder"><Image src="/brand/bizuminer-icon-light.svg" alt="BizuMiner" width={24} height={24} /></div>}
                   </a>
                   <div className="watch-body">
-                    <h3>{watch.available ? <a href={`/bizu/${watch.slug}`}>{watch.title}</a> : watch.title}</h3>
+                    <h3>{watch.available ? <a href={optionDetailPath(watch.slug,watch.optionKey ?? undefined)}>{watch.title}</a> : watch.title}</h3>
                     {watch.benefit && <p className="member-card-note">{watch.benefit}</p>}
                     {watch.caveat && <p className="member-card-note">{watch.caveat}</p>}
+                    <p className="member-card-note">{watch.optionKey && watch.optionKey !== "listing"
+                      ? `Opção acompanhada: ${watch.optionLabel || "opção selecionada"}.`
+                      : watch.optionKey === "listing" ? "Acompanhamento do anúncio; a opção específica não foi confirmada."
+                      : "Acompanhamento do produto; nenhuma opção específica foi registrada."}</p>
+                    <p className="member-card-note">{watch.marketplace === "shopee"
+                      ? "A atualização depende da disponibilidade da consulta à loja e pode atrasar."
+                      : "A atualização depende de uma sessão autorizada no navegador e pode atrasar."}</p>
+                    {!watch.evidenceCurrent && <p className="member-card-note">{watch.noSafePage
+                      ? "Ainda não há uma página segura para atualizar este acompanhamento."
+                      : "Aguardando uma nova conferência de preço."}</p>}
                     <p className={`watch-move ${movement.state}`}>
                       {movement.state === "down" && <b aria-hidden="true">▼</b>}
                       {movement.state === "up" && <b aria-hidden="true">▲</b>}
-                      {watch.comparisonStatus === "configuration_changed" ? "A configuração ou condições mudaram. Pare e inicie novamente para acompanhar a nova opção." : watch.comparisonStatus === "unavailable" ? "Ainda não é possível comparar este preço com segurança." : movementLabel(movement, (cents) => formatWatchMoney(cents, watch.baselineCurrency), since)}
+                      {watch.comparisonStatus === "baseline_unresolved" ? "Não foi possível confirmar as condições do preço inicial. Para comparar a partir de um novo preço, pare e inicie o acompanhamento novamente." : watch.comparisonStatus === "configuration_changed" ? "A configuração ou condições mudaram. Pare e inicie novamente para acompanhar a nova opção." : watch.comparisonStatus === "unavailable" ? "Ainda não é possível comparar este preço com segurança." : movementLabel(movement, (cents) => formatWatchMoney(cents, watch.baselineCurrency), since)}
                     </p>
                     <p className="watch-facts">
                       <span>marcado a {formatWatchMoney(watch.baselineCents, watch.baselineCurrency)} em {since}</span>
@@ -354,7 +397,7 @@ export default function MemberArea({
                     </p>
                   </div>
                   <div className="watch-actions">
-                    {watch.available && <a href={`/go/${watch.slug}`} target="_blank" rel="noreferrer sponsored">ver oferta ↗</a>}
+                    {watch.available && <a href={`/go/${watch.slug}${watch.optionKey && watch.optionKey !== "listing" ? `?opcao=${encodeURIComponent(watch.optionKey)}` : ""}`} target="_blank" rel="noreferrer sponsored">ver oferta ↗</a>}
                     <button type="button" onClick={() => void unwatch(watch)}>parar de acompanhar</button>
                   </div>
                 </li>
@@ -375,7 +418,7 @@ export default function MemberArea({
           </p>
         ) : (
           <div className="member-grid">
-            {saved.map((product) => (
+            {liveSaved.map((product) => (
               <MemberCard
                 key={product.id}
                 product={product}
@@ -383,7 +426,7 @@ export default function MemberArea({
                 meta={<p className="member-card-note">{product.available ? `salvo em ${shortDate(product.savedAt)}` : "Oferta indisponível ou desatualizada"}</p>}
                 actions={
                   <div className="member-card-actions">
-                    {watchedIds.has(product.id)
+                    {watchedIds.has(JSON.stringify([product.id, product.offerOptionKey ?? null]))
                       ? <span className="member-watching">✓ de olho no preço</span>
                       : product.available && <button type="button" onClick={() => void watchProduct(product)}>de olho no preço</button>}
                     <button type="button" className="member-remove" onClick={() => void removeSaved(product)}>remover</button>
@@ -399,19 +442,19 @@ export default function MemberArea({
       <section className="member-section rec-section" aria-labelledby="rec-title">
         <div className="member-section-head">
           <h2 id="rec-title">Recomendados para você</h2>
-          {recommended.length > 0 && (
-            <span className="member-count">{countLabel(recommended.length, "sugestão", "sugestões")}</span>
+          {liveRecommended.length > 0 && (
+            <span className="member-count">{countLabel(liveRecommended.length, "sugestão", "sugestões")}</span>
           )}
         </div>
         {uniformReason && <p className="member-reason-note">{capitalize(uniformReason)}.</p>}
-        {recommended.length === 0 ? (
+        {liveRecommended.length === 0 ? (
           <p className="member-empty">
             Ainda não há base para recomendar: salve produtos, acompanhe preços ou preencha o perfil abaixo — as
             sugestões nascem do que você fizer, com o motivo dito em cada uma.
           </p>
         ) : (
           <div className="member-grid">
-            {recommended.map((rec) => (
+            {liveRecommended.map((rec) => (
               <MemberCard
                 key={rec.id}
                 product={rec}

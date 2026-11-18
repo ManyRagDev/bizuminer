@@ -4,21 +4,24 @@ import {monitoringDecision,monitoringQueue} from '../src/monitoring-policy.ts';
 import {discoveryBudget,discoveryKeyword} from '../src/editorial-discovery.ts';
 const now=new Date('2026-11-01T12:00:00Z');
 const base={productId:'one',marketplace:'shopee' as const,lastObservedAt:new Date(+now-80*3600000),activeWatches:0,clicks7d:0,curationStatus:'held',curationReason:'insufficient_evidence',hasEditorialMerit:true};
-test('held for history, weak offer or stale observation can be rechecked with actual merit outside the shelf',()=>{
+test('itens fora da edição sem acompanhamento não consomem reconsulta automática de histórico',()=>{
  for(const curationReason of ['insufficient_evidence','weak_offer','stale_offer']){
   const decision=monitoringDecision({...base,curationReason,inCurrentEdition:false},now);
-  assert.equal(decision.tier,'formation');assert.equal(decision.due,true);
+  assert.equal(decision.tier,'archive');assert.equal(decision.due,false);
+  const editionDecision=monitoringDecision({...base,curationStatus:'approved',curationReason,inCurrentEdition:true},now);
+  assert.equal(editionDecision.tier,'edition');assert.equal(editionDecision.due,true);
  }
  assert.equal(monitoringDecision({...base,hasEditorialMerit:false},now).tier,'archive');
  assert.equal(monitoringDecision({...base,curationStatus:'rejected'},now).tier,'archive');
  assert.equal(monitoringDecision({...base,curationReason:'unavailable'},now).tier,'archive');
- assert.equal(monitoringDecision({...base,curationStatus:'pending',firstSeenAt:new Date(+now-30*86400000),lastObservedAt:now},now).tier,'archive');
+ assert.equal(monitoringDecision({...base,activeWatches:1,inCurrentEdition:false},now).tier,'watch');
 });
-test('formation, maintenance and discovery share bounded capacity, watches precede discovery',()=>{
+test('watches, edition maintenance and discovery share bounded capacity, watches precede discovery',()=>{
  assert.deepEqual(discoveryBudget(20,20,3,true),{monitoring:20,discovery:0});
  assert.deepEqual(discoveryBudget(20,1,3,true),{monitoring:17,discovery:3});
  assert.deepEqual(discoveryBudget(20,0,3,false),{monitoring:20,discovery:0});
- assert.ok(monitoringQueue([base],'shopee',1,now).length===1);
+ assert.ok(monitoringQueue([{...base,curationStatus:'approved',inCurrentEdition:true}],'shopee',1,now).length===1);
+ assert.equal(monitoringQueue([base],'shopee',1,now).length,0);
  assert.notEqual(discoveryKeyword(['a','b'],now),discoveryKeyword(['a','b'],new Date(+now+6*3600000)));
 });
 
@@ -41,11 +44,13 @@ test('memory and postgres contract preserve variants in the same run without an 
  const second=await store.upsertProductWithObservation({...input,offerEvidence:evidence('green')});
  assert.equal(second.previousPriceCents,undefined);assert.equal((await store.priceRange(first.product.id))?.observations,2);
  await store.upsertProductWithObservation({...input,priceCents:3000,offerEvidence:evidence('red'),observedAt:new Date(+now+1000)});
- assert.equal((await store.priceRange(first.product.id))?.observations,2);assert.equal((await store.latestObservation(first.product.id))?.priceCents,3000);
+ assert.equal((await store.priceRange(first.product.id))?.observations,2);assert.equal((await store.latestObservation(first.product.id))?.priceCents,2500);
+ await store.upsertProductWithObservation({...input,captureRunId:'r2',priceCents:3000,offerEvidence:evidence('red'),observedAt:new Date(+now+2000)});
+ assert.equal((await store.priceRange(first.product.id))?.observations,3);assert.equal((await store.latestObservation(first.product.id))?.priceCents,3000);
 });
 
-test('formation receives an existing reserved history slot even with a large approved backlog',()=>{
- const approved=Array.from({length:100},(_,i)=>({...base,productId:`approved${i}`,curationStatus:'approved'}));
- const queue=monitoringQueue([...approved,base],'shopee',20,now);
- assert.equal(queue.length,20);assert.ok(queue.some(d=>d.productId==='one'&&d.tier==='formation'));
+test('acompanhamento explícito vence fila da edição vigente mesmo com fila grande',()=>{
+ const edition=Array.from({length:100},(_,i)=>({...base,productId:`edition${i}`,curationStatus:'approved',inCurrentEdition:true}));
+ const queue=monitoringQueue([...edition,{...base,activeWatches:1}],'shopee',20,now);
+ assert.equal(queue.length,20);assert.ok(queue.some(d=>d.productId==='one'&&d.tier==='watch'));
 });

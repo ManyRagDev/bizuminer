@@ -1,0 +1,35 @@
+{
+  "at": "2026-11-17T03:29:14.865153+00:00",
+  "services": {
+    "garimpa-web": {
+      "image": "sha256:1ca978603a82aaa5d6f5879ac887dd2f84ebeda07800212658241a7d5f5ab246",
+      "state": "running",
+      "health": "healthy"
+    },
+    "garimpa-capture-executor": {
+      "image": "sha256:e3a2d26a4f5c1bd00e918b74f0026ff9549b8cbee2f8b5672e9d4e61cfec3cb5",
+      "state": "running",
+      "health": "healthy"
+    }
+  },
+  "environmentPreserved": true,
+  "otherServicesUnchanged": true,
+  "otherContainerCount": 14,
+  "database": {
+    "schemaObjects": {
+      "history": true,
+      "reader": true,
+      "diagnostic": true,
+      "configuredLimit": true
+    },
+    "uncertain": 33,
+    "cloneRemaining": false,
+    "viewOwner": "supabase_admin",
+    "securityBarrier": [
+      "security_barrier=true"
+    ],
+    "applicationRoleRestricted": true
+  },
+  "context": "contexts-operation-20261117T030142Z",
+  "sourcePackageSha256": "5936858da0b5a87af71f73177b9380bc889d25e46cec5afbd37c68eb3402f61e"
+}

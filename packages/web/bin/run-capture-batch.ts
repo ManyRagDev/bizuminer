@@ -1,9 +1,15 @@
-import { captureProcessFailure, runBoundedCaptureProcess } from "../lib/capture-process.ts";
+import { captureProcessRetry, captureProcessFailure, runBoundedCaptureProcess } from "../lib/capture-process.ts";
 import { fileURLToPath } from "node:url";
 import { executeCaptureBatch } from "../lib/capture-batch-worker.ts";
 import { captureBatches } from "../lib/capture-batch-db.ts";
-import { linkBrowserAliExpress } from "../lib/browser-affiliate-links.ts";
+import { classifyCaptureFailure } from "../../persistence/src/capture-failure.ts";
+import { publishCaptureSource } from "../../persistence/src/capture-publication.ts";
+import { publishCaptureAffiliateLinks } from "../lib/capture-affiliate-publication.ts";
+import { db } from "../lib/db.ts";
 import type { BatchStepRunner } from "../lib/capture-batch-worker.ts";
+import { aiCurationProvider } from "../lib/ai-curation-provider.ts";
+import { enqueueAttributeDeltas } from "../lib/curation-attributes-db.ts";
+import { readCaptureDiagnostic } from "../../persistence/src/capture-diagnostic.ts";
 
 const tenantIndex = process.argv.indexOf("--tenant");
 const tenantId = tenantIndex >= 0 ? process.argv[tenantIndex + 1] : "local";
@@ -14,33 +20,58 @@ if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id ?? ""))
 const persistenceDir = fileURLToPath(
   new URL("../../persistence/", import.meta.url),
 );
-const triageScript = fileURLToPath(new URL("./run-triage.ts", import.meta.url));
 const scripts: Record<string, string> = {
   shopee: "bin/sweep-shopee.ts",
   aliexpress: "bin/sweep-aliexpress.ts",
 };
+const attributeModel = () => {
+  const provider = aiCurationProvider();
+  const model = provider === "openrouter" ? process.env.AI_CURATION_MODEL : process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  return model ? `${provider}:${model}` : null;
+};
 const runStep: BatchStepRunner = async (step) => {
   if (step.tenantId !== tenantId) return { ok: false, error: "capture_batch_tenant_mismatch" };
+  if (step.kind === "publish") {
+    const sql = db();
+    try {
+      if (!step.marketplace) throw new Error("capture_marketplace_missing");
+      await publishCaptureSource(sql, tenantId, step.batchId, step.workerId, step.marketplace);
+      // The source transaction is already committed. Queue its factual deltas
+      // without waiting for other stores or for an external model request.
+      // A queue failure cannot turn a committed publication into a failure;
+      // the persisted deltas remain available to the projection scheduler.
+      try {
+        const model = attributeModel();
+        if (model) await enqueueAttributeDeltas(sql, tenantId, model);
+      } catch { console.error("capture_attribute_queue_deferred"); }
+      return {ok:true};
+    }
+    catch(error) {const failure=classifyCaptureFailure(error);return {ok:false,error:"capture_publication_failed",failureKind:failure.kind,retryAfterMs:failure.retryAfterMs};}
+    finally { await sql.end(); }
+  }
   if (step.kind === "affiliate") {
-    if (!step.captureRunId) return { ok: false, error: "affiliate_links_pending" };
-    const result = await linkBrowserAliExpress(step.tenantId, step.captureRunId);
-    return result.failed > 0 ? { ok: false, error: "affiliate_links_pending" } : { ok: true };
+    return publishCaptureAffiliateLinks(tenantId, step.marketplace!, step.batchId);
+  }
+  if (step.kind === "triage") {
+    const model = attributeModel();
+    if (!model) return { ok: false, error: "ai_curation_model_missing" };
+    const sql = db();
+    try {
+      const queued = await enqueueAttributeDeltas(sql, tenantId, model);
+      return { ok: true, triage: { mode: "attribute_queue", processed: queued, approved: 0, rejected: 0, held: 0, annotatedPending: queued } };
+    } catch { return { ok: false, error: "attribute_queue_unavailable" }; }
+    finally { await sql.end(); }
   }
   if (step.marketplace === "mercadolivre") return { ok: false, error: "manual_capture_only" };
-  if (step.kind === "triage" && !process.env.GEMINI_API_KEY)
-    return { ok: false, error: "gemini_key_not_configured" };
-  const script =
-    step.kind === "triage" ? triageScript : scripts[step.marketplace!];
+  const script = scripts[step.marketplace!];
   if (!script) return { ok: false, error: "unknown_marketplace" };
-  const args =
-    step.kind === "triage"
-      ? ["--limit", "200", "--batch", step.batchId, "--worker", step.workerId, "--tenant", step.tenantId]
-      : ["--pages", String(step.pages), "--operation-batch", step.batchId, "--tenant", step.tenantId];
+  const args = ["--pages", String(step.pages), "--operation-batch", step.batchId, "--worker", step.workerId, "--tenant", step.tenantId];
   if (step.kind === "capture") {
     if (step.planMode) args.push("--plan", step.planMode);
     if (step.sortOrder) args.push("--order", step.sortOrder);
     if (step.pageSize) args.push("--page-size", String(step.pageSize));
   }
+  if (step.trial) args.push("--trial-single-product");
   const env = process.env;
   const result = await runBoundedCaptureProcess(
     process.execPath,
@@ -48,28 +79,23 @@ const runStep: BatchStepRunner = async (step) => {
     {
       cwd: persistenceDir,
       env,
-      timeoutMs: step.kind === "triage" ? 30 * 60_000 : 12 * 60_000,
+      timeoutMs: 12 * 60_000,
     },
   );
   if (!result.ok) return {
     ok: false,
-    error: step.kind === "capture"
-      ? captureProcessFailure(result, step.marketplace!)
-      : result.error,
+    diagnostic: {
+      ...readCaptureDiagnostic(result.output),
+      ...(result.diagnosticCode ? { diagnosticCode: result.diagnosticCode } : {}),
+      exitCode: result.exitCode,
+      signal: result.signal === null || result.signal === "SIGKILL" || result.signal === "SIGTERM"
+        || result.signal === "SIGABRT" || result.signal === "SIGSEGV" ? result.signal : undefined,
+      stderrBytes: result.stderrBytes, durationMs: result.durationMs,
+    },
+    ...captureProcessRetry(result, step.marketplace!),
+    error: captureProcessFailure(result, step.marketplace!),
   };
-  if (step.kind === "capture") return { ok: true };
-  try {
-    const line = result.output
-      .split("\n")
-      .findLast((item) => item.startsWith("TRIAGE_SUMMARY="));
-    if (!line) throw new Error("missing_summary");
-    return {
-      ok: true,
-      triage: JSON.parse(line.slice("TRIAGE_SUMMARY=".length)),
-    };
-  } catch {
-    return { ok: false, error: "triage_summary_missing" };
-  }
+  return { ok: true };
 };
 
 try {

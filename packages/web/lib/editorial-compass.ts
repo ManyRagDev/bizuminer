@@ -3,6 +3,9 @@ import { db } from "./db.ts";
 import { withTenantDb } from "./tenant-db.ts";
 import { PRODUCT_EVIDENCE_TTL_DAYS } from "./catalog-policy.ts";
 import { productSlug } from "./marketplaces.ts";
+import { DEFAULT_SCORE_WEIGHTS, type ScoreWeights } from "./curation-score-v2.ts";
+import { scoreWeightsRevision } from "./curation-score-revision.ts";
+import { automatedTriageFailureMessage } from "./triage-feedback.ts";
 
 export interface EditorialGuidelineConfig {
   tenantId: string;
@@ -15,6 +18,7 @@ export interface EditorialGuidelineConfig {
 export interface GoldenExample {
   productId: string;
   title: string;
+  snapshotTitle?: string;
   decision: "approved" | "rejected" | "held";
   reasonCode: string | null;
   reasonDetail: string | null;
@@ -189,7 +193,8 @@ export async function saveEditorialGuideline(
  * Carrega as decisões humanas mais recentes com justificativa ou aprovação explícita.
  * Esses itens funcionam como exemplos Few-Shot dinâmicos injetados no Gemini 2.5 Flash.
  */
-export async function getGoldenExamples(tenantId = scopedTenantId(), limit = 6, sqlFactory: typeof db = db): Promise<GoldenExample[]> {
+export async function getGoldenExamples(tenantId = scopedTenantId(), limit = 6, sqlFactory: typeof db = db,
+  requireDecisionSnapshot = false): Promise<GoldenExample[]> {
   if (!process.env.DATABASE_URL) return [];
 
   return await withTenantDb(tenantId, async (sql) => {
@@ -207,28 +212,38 @@ export async function getGoldenExamples(tenantId = scopedTenantId(), limit = 6, 
         with latest_events as (
           select distinct on (e.product_id)
             e.product_id,
-            coalesce(p.title, (e.metadata->'snapshot'->>'title'), 'Produto') as title,
+            coalesce(nullif(e.metadata->'snapshot'->>'title', ''), p.title, 'Produto') as title,
             e.to_status,
             e.reason_code,
             e.reason_detail,
             e.metadata,
             e.created_at,
-            coalesce(latest_price.price_cents, (e.metadata->'snapshot'->>'priceCents')::int) as price_cents
+            case when jsonb_typeof(e.metadata->'snapshot'->'priceCents') = 'number' then
+              case when (e.metadata->'snapshot'->>'priceCents')::numeric between 0 and 2147483647
+                and trunc((e.metadata->'snapshot'->>'priceCents')::numeric) = (e.metadata->'snapshot'->>'priceCents')::numeric
+                then (e.metadata->'snapshot'->>'priceCents')::numeric::int else null end
+              else null end as price_cents
           from garimpa.curation_event e
           left join garimpa.product p on p.id = e.product_id and p.tenant_id = e.tenant_id
-          left join lateral (
-            select price_cents from garimpa.price_observation o
-            where o.product_id = e.product_id and o.tenant_id = e.tenant_id
-            order by observed_at desc limit 1
-          ) latest_price on true
           where e.tenant_id = ${tenantId}
             and e.actor_type = 'human'
+            -- A stable product partition keeps the evaluation holdout out of few-shots.
+            and substr(md5(e.tenant_id || ':' || e.product_id), 1, 1) not in ('0','1','2','3')
+            and not exists(select 1 from garimpa.curation_equivalence_member own
+              join garimpa.curation_equivalence_group g on g.tenant_id=own.tenant_id and g.id=own.group_id and g.revoked_at is null
+              join garimpa.curation_equivalence_member related on related.tenant_id=g.tenant_id and related.group_id=g.id and related.active
+              where own.tenant_id=e.tenant_id and own.product_id=e.product_id and own.active
+                and substr(md5(related.tenant_id || ':' || related.product_id),1,1) in ('0','1','2','3'))
           order by e.product_id, e.id desc
         ),
         balanced as (
           select *,
             row_number() over (partition by (to_status = 'approved') order by created_at desc) as rn
           from latest_events
+          where not ${requireDecisionSnapshot} or (
+            nullif(btrim(reason_detail), '') is not null
+            and nullif(btrim(metadata->'snapshot'->>'title'), '') is not null
+          )
         )
         select product_id, title, to_status, reason_code, reason_detail, metadata, created_at, price_cents
         from balanced
@@ -239,10 +254,11 @@ export async function getGoldenExamples(tenantId = scopedTenantId(), limit = 6, 
 
       return rows.map((r) => {
         const snapshot = r.metadata?.snapshot as Record<string, unknown> | undefined;
-        const priceCents = r.price_cents ?? (typeof snapshot?.priceCents === "number" ? snapshot.priceCents : null);
+        const priceCents = r.price_cents;
         return {
           productId: r.product_id,
           title: r.title,
+          snapshotTitle: typeof snapshot?.title === "string" && snapshot.title.trim() ? snapshot.title : undefined,
           decision: r.to_status,
           reasonCode: r.reason_code,
           reasonDetail: r.reason_detail,
@@ -255,6 +271,102 @@ export async function getGoldenExamples(tenantId = scopedTenantId(), limit = 6, 
       return [];
     }
   }, sqlFactory);
+}
+
+export type WeeklyAuditProduct = {
+  id: string; title: string; marketplace: string; category: string | null;
+  productUrl: string; priceCents: number | null; observedAt: string | null; observationId: string | null;
+  score: number | null; group: "selected" | "boundary" | "tail"; holdout: boolean; reviewed: boolean;
+};
+
+export async function getWeeklyAuditSettings(tenantId = scopedTenantId(), sqlFactory: typeof db = db) {
+  if (!process.env.DATABASE_URL) return {version:0,limit:20,available:false};
+  return withTenantDb(tenantId, async sql => {
+    try {
+      const [row] = await sql<{version:number;config:{weeklyAuditLimit?:unknown}}[]>`
+        select version,config from garimpa.curation_policy_v2 where tenant_id=${tenantId}`;
+      const value=row?.config?.weeklyAuditLimit;
+      return {version:row?.version ?? 0,limit:typeof value==='number' && Number.isInteger(value) && value>=1 && value<=50 ? value : 20,available:true};
+    } catch { return {version:0,limit:20,available:false}; }
+  },sqlFactory);
+}
+
+/** Weekly, deterministic sample; it never changes a curation decision. */
+export async function getWeeklyAuditSample(tenantId = scopedTenantId(), limitPerGroup = 20,
+  sqlFactory: typeof db = db): Promise<WeeklyAuditProduct[]> {
+  if (!process.env.DATABASE_URL) return [];
+  const limit = Math.min(50, Math.max(1, Math.floor(limitPerGroup)));
+  return withTenantDb(tenantId, async sql => {
+    try {
+      const [policy]=await sql<{enabled:boolean;factual_gate_required:boolean;config:{scoreWeights?:ScoreWeights}}[]>`
+        select enabled,factual_gate_required,config from garimpa.curation_policy_v2 where tenant_id=${tenantId}`;
+      const scoreVersion=policy?.enabled ? scoreWeightsRevision(policy.config.scoreWeights ?? DEFAULT_SCORE_WEIGHTS) : null;
+      const rows = await sql<{id:string;title:string;marketplace:string;category:string|null;product_url:string;observation_id:string|null;price_cents:number|null;observed_at:Date|string|null;score:string|number|null;
+        sample_group:WeeklyAuditProduct["group"];holdout:boolean;reviewed:boolean}[]>`
+        with selected as (
+          select item->>'productId' as product_id from garimpa.recommendation_edition e
+          join garimpa.recommendation_channel channel on channel.tenant_id=e.tenant_id and channel.channel=e.channel
+          cross join lateral jsonb_array_elements(e.inputs) item
+          where e.tenant_id=${tenantId} and e.channel='home' and channel.enabled and channel.version=e.config_version
+            and (channel.valid_until is null or channel.valid_until>now()) and (item->>'validUntil')::timestamptz>now()
+            and (not ${Boolean(policy?.enabled || policy?.factual_gate_required)} or
+              now()<garimpa.current_offer_valid_until(e.tenant_id,item->>'productId',item->>'observationId'))
+            and (not ${Boolean(policy?.enabled)} or garimpa.has_current_curation_assessment(e.tenant_id,item->>'productId',item->>'observationId'))
+            and not garimpa.equivalent_human_veto(e.tenant_id,item->>'productId',item->>'observationId')
+        ), pool as (
+          select p.id,p.title,p.marketplace,p.category,p.product_url,o.id as observation_id,o.price_cents,o.observed_at,s.score_vitrine,
+            exists(select 1 from selected where product_id=p.id) as selected,
+            exists(select 1 from garimpa.price_observation previous where previous.tenant_id=p.tenant_id
+              and previous.product_id=p.id and previous.option_key=o.option_key and o.option_key<>'listing'
+              and previous.offer_evidence->>'currency'=o.offer_evidence->>'currency'
+              and previous.observed_at<o.observed_at) as has_history,
+            md5(${tenantId} || ':' || p.id || ':' || date_trunc('week',now() at time zone 'America/Sao_Paulo')::date::text) as draw
+          from garimpa.product p
+          left join lateral (select id,price_cents,observed_at,option_key,offer_evidence from garimpa.price_observation o
+            where o.tenant_id=p.tenant_id and o.product_id=p.id
+              and (not exists(select 1 from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id)
+                or o.option_key=(select choice.option_key from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id))
+            order by o.observed_at desc,o.id desc limit 1) o on true
+          left join garimpa.curation_score_projection s on s.tenant_id=p.tenant_id and s.product_id=p.id
+            and s.option_key=o.option_key and s.observation_id=o.id and s.policy_version=${scoreVersion}
+            and o.observed_at>=now()-case when p.marketplace='shopee' then interval '72 hours' else interval '48 hours' end
+          where p.tenant_id=${tenantId}
+        ), boundary as (
+          select id from pool where not selected and score_vitrine is not null
+          order by abs(score_vitrine-coalesce((select min(chosen.score_vitrine) from pool chosen
+            where chosen.selected and chosen.score_vitrine is not null),score_vitrine)),score_vitrine desc,id limit ${limit}
+        ), classified as (
+          select p.*,case when selected then 'selected' when exists(select 1 from boundary b where b.id=p.id)
+            then 'boundary' else 'tail' end as sample_group,
+            row_number() over(partition by coalesce(nullif(category,''),'Sem categoria'),
+              case when score_vitrine is null then 'sem_pontuacao' when not has_history then 'sem_historico' else 'demais' end
+              order by draw,id) as category_rank
+          from pool p
+        ), ranked as (
+          select *,row_number() over(partition by sample_group order by
+            case when sample_group='tail' then category_rank else 0 end,draw,id) as sample_rank from classified
+        )
+        select r.id,r.title,r.marketplace,r.category,r.product_url,r.observation_id,r.price_cents,r.observed_at,r.score_vitrine as score,r.sample_group,
+          (substr(md5(${tenantId} || ':' || r.id),1,1) in ('0','1','2','3') or exists(
+            select 1 from garimpa.curation_equivalence_member own
+            join garimpa.curation_equivalence_group g on g.tenant_id=own.tenant_id and g.id=own.group_id and g.revoked_at is null
+            join garimpa.curation_equivalence_member related on related.tenant_id=g.tenant_id and related.group_id=g.id and related.active
+            where own.tenant_id=${tenantId} and own.product_id=r.id and own.active
+              and substr(md5(related.tenant_id || ':' || related.product_id),1,1) in ('0','1','2','3'))) as holdout,
+          exists(select 1 from garimpa.editorial_assessment a where a.tenant_id=${tenantId} and a.product_id=r.id
+            and a.actor_app_user_id is not null and a.assessment->>'schemaVersion'='2'
+            and a.snapshot->>'rubricObservationId'=r.observation_id
+            and a.snapshot->>'title'=r.title
+            and a.snapshot->>'category' is not distinct from r.category
+            and a.snapshot->>'product_url'=r.product_url
+            and a.created_at >= (date_trunc('week',now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo')) as reviewed
+        from ranked r where r.sample_rank<=${limit}
+        order by case r.sample_group when 'selected' then 0 when 'boundary' then 1 else 2 end,r.sample_rank`;
+      return rows.map(r=>({id:r.id,title:r.title,marketplace:r.marketplace,category:r.category,productUrl:r.product_url,
+        observationId:r.observation_id,priceCents:r.price_cents,observedAt:r.observed_at ? new Date(r.observed_at).toISOString() : null,
+        score:r.score === null ? null : Number(r.score),group:r.sample_group,holdout:r.holdout,reviewed:r.reviewed}));
+    } catch { return []; }
+  },sqlFactory);
 }
 
 /**
@@ -476,6 +588,7 @@ export interface TriageBatchHistory {
   topReason: string;
   status?: "running" | "ok" | "error";
   modelName?: string | null;
+  errorMessage?: string | null;
 }
 
 /**
@@ -502,6 +615,7 @@ export async function getTriageBatchesHistory(
         top_reason: string | null;
         status: "running" | "ok" | "error";
         model_name: string | null;
+        error_message: string | null;
       }[]>`
         with run_batches as (
           select
@@ -515,7 +629,8 @@ export async function getTriageBatchesHistory(
             coalesce(ev.rule_count, 0)::int as rule_count,
             coalesce(ev.top_reason, 'concluído') as top_reason,
             r.status,
-            r.model_name
+            r.model_name,
+            r.error_message
           from garimpa.triage_run r
           left join lateral (
             select
@@ -539,7 +654,8 @@ export async function getTriageBatchesHistory(
             count(*) filter (where actor_type = 'rule')::int as rule_count,
             mode() within group (order by coalesce(reason_code, 'none')) as top_reason,
             'ok'::varchar(32) as status,
-            null::varchar(64) as model_name
+            null::varchar(64) as model_name,
+            null::text as error_message
           from garimpa.curation_event
           where actor_type in ('rule', 'llm')
             and tenant_id = ${tenantId}
@@ -565,6 +681,7 @@ export async function getTriageBatchesHistory(
         topReason: r.top_reason ?? "none",
         status: r.status,
         modelName: r.model_name,
+        errorMessage: r.status === "error" ? automatedTriageFailureMessage(r.error_message) : null,
       }));
     } catch {
       return [];

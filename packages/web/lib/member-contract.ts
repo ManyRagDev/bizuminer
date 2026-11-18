@@ -45,18 +45,22 @@ export function parseFavoriteBulkPayload(body: unknown): { productIds: string[] 
   return { productIds: ids };
 }
 
-export type WatchPayload = { productId: string; targetPriceCents: number | null };
+export type WatchPayload = { productId: string; targetPriceCents: number | null; optionKey?: string | null; watchId?: string };
 
 export function parseWatchPayload(body: unknown): WatchPayload | null {
   if (!body || typeof body !== "object") return null;
-  const { productId, targetPriceCents } = body as Record<string, unknown>;
+  const { productId, targetPriceCents, optionKey, watchId } = body as Record<string, unknown>;
   if (!validProductId(productId)) return null;
+  if (optionKey !== undefined && optionKey !== null && (typeof optionKey !== "string" || !/^(?:listing|[a-f0-9]{32})$/.test(optionKey))) return null;
+  if (watchId !== undefined && !validUserId(watchId)) return null;
+  const option = optionKey === undefined ? {} : { optionKey };
+  const watch = watchId === undefined ? {} : { watchId };
   if (targetPriceCents === undefined || targetPriceCents === null) {
-    return { productId, targetPriceCents: null };
+    return { productId, targetPriceCents: null, ...option, ...watch };
   }
   if (typeof targetPriceCents !== "number" || !Number.isInteger(targetPriceCents)) return null;
   if (targetPriceCents <= 0 || targetPriceCents > MAX_TARGET_CENTS) return null;
-  return { productId, targetPriceCents };
+  return { productId, targetPriceCents, ...option, ...watch };
 }
 
 /**

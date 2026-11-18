@@ -28,9 +28,10 @@ export function missingRetryHours(attempts: number, watched: boolean): number {
 export async function loadMonitoringCandidates(sql: Sql, tenantId: string, marketplace?: MonitorMarketplace): Promise<MonitoringProduct[]> {
   const [projection]=await sql<{ready:boolean}[]>`select to_regprocedure('garimpa.monitoring_interest_counts(text)') is not null as ready`;
   // Trusted worker context supplies the account. The definer returns aggregate counts only.
-  const watches=projection?.ready
-    ? sql.unsafe("select product_id,active_watches from garimpa.monitoring_interest_counts(current_setting('garimpa.tenant_id',true))")
-    : sql.unsafe("select product_id,count(*)::int as active_watches from (select product_id from garimpa.price_watch where tenant_id=current_setting('garimpa.tenant_id',true) and active union all select product_id from garimpa.favorite where tenant_id=current_setting('garimpa.tenant_id',true)) combined_interests group by product_id");
+  // User-scoped RLS would return an incomplete queue for a worker; fail rather
+  // than silently discard commitments when the aggregate is unavailable.
+  if (!projection?.ready) throw new Error("monitoring_interest_projection_missing");
+  const watches=sql.unsafe("select product_id,active_watches from garimpa.monitoring_interest_counts(current_setting('garimpa.tenant_id',true))");
   const rows = await sql<CandidateRow[]>`
     with watches as (
       ${watches}
@@ -44,19 +45,24 @@ export async function loadMonitoringCandidates(sql: Sql, tenantId: string, marke
       group by pub.product_id
     )
     select p.id as product_id, p.marketplace, p.external_id, p.title,
-      p.last_seen_at as last_observed_at,p.first_seen_at,
+      observation.observed_at as last_observed_at,p.first_seen_at,
       coalesce(w.active_watches, 0)::int as active_watches,
       coalesce(c.clicks_7d, 0)::int as clicks_7d,
       pc.status as curation_status, pc.reason_code
     from garimpa.product p
+    join lateral (
+      select o.observed_at from garimpa.price_observation o
+      where o.tenant_id = p.tenant_id and o.product_id = p.id
+      order by o.observed_at desc, o.id desc limit 1
+    ) observation on true
     left join watches w on w.product_id = p.id
     left join clicks c on c.product_id = p.id
     left join garimpa.product_curation pc on pc.product_id = p.id
       and pc.tenant_id = p.tenant_id
     where p.tenant_id = ${tenantId}
-      and p.marketplace in ('mercadolivre', 'shopee', 'aliexpress')
+      and p.marketplace in ('mercadolivre', 'shopee', 'aliexpress', 'amazon')
       and (${marketplace ?? null}::text is null or p.marketplace = ${marketplace ?? null})
-      and p.last_seen_at is not null
+      and observation.observed_at is not null
   `;
   const [ready]=await sql<{ready:boolean}[]>`select to_regclass('garimpa.opportunity') is not null as ready`;
   const prioritized=ready?.ready ? await sql<{product_id:string;state:"monitored"|"prioritized"}[]>`select distinct o.product_id,o.state from garimpa.opportunity o join garimpa.audience_policy_version v on v.id=o.policy_version_id and v.tenant_id=o.tenant_id join garimpa.audience_policy p on p.id=v.policy_id and p.tenant_id=v.tenant_id and p.status='active' and p.current_version=v.version where o.tenant_id=${tenantId} and o.state in ('monitored','prioritized') and o.valid_until>now()` : [];

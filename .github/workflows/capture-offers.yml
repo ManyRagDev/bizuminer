@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   capture:
+    if: ${{ false }} # Replaced by the durable installation worker.
     runs-on: ubuntu-latest
     timeout-minutes: 55
     env:

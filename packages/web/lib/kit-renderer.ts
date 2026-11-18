@@ -1,4 +1,4 @@
-import sharp from "sharp";
+import sharp, { type OverlayOptions } from "sharp";
 import QRCode from "qrcode";
 import type { KitSnapshot, KitMaterial } from "./commerce-contract.ts";
 const escape = (s: string) =>
@@ -54,7 +54,7 @@ async function renderStoryPng(
   )
     .png()
     .toBuffer();
-  const layers: sharp.OverlayOptions[] = [
+  const layers: OverlayOptions[] = [
     {input:Buffer.from(`<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">${conditions.map((s,i)=>`<text x="72" y="${1460+i*28}" font-family="DejaVu Sans" font-size="20" fill="#d8e0e5">${s}</text>`).join('')}</svg>`),top:0,left:0},
     {
       input: await QRCode.toBuffer(trackedLink, {
@@ -101,7 +101,7 @@ export async function renderKitPng(snapshot:KitSnapshot,material:KitMaterial,tra
   const qr={left:banner?970:840,top:banner?354:648,width:banner?180:184};
   const ctaY=banner?440:850,ctaWidth=banner?840:968;
   const svg=`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="${height}" fill="#101b24"/>${text("BizuMiner",left,banner?60:80,banner?32:40,"#80f4ca","bold")}${title}${text(price,left,priceY,banner?48:58,"#80f4ca","bold")}${block(material.shortCopy,banner?55:38,banner?2:asset?2:4,left,copyY,banner?25:28)}<rect x="${left}" y="${ctaY}" width="${ctaWidth}" height="${banner?64:82}" rx="14" fill="#80f4ca"/>${text((material.cta||"Ver oferta").slice(0,banner?42:45),left+25,ctaY+(banner?43:53),banner?28:30,"#101b24")}${text(trackedLink,left,banner?550:965,banner?17:18)}${text("Link de afiliado. Podemos receber comissão pela compra.",left,banner?587:1010,banner?18:20)}${text("Confira preço e condições na loja.",left,banner?615:1045,banner?14:16,"#bfccd7")}</svg>`;
-  const layers:sharp.OverlayOptions[]=[{input:await QRCode.toBuffer(trackedLink,{width:qr.width,margin:2,errorCorrectionLevel:"M"}),left:qr.left,top:qr.top}];
+  const layers:OverlayOptions[]=[{input:await QRCode.toBuffer(trackedLink,{width:qr.width,margin:2,errorCorrectionLevel:"M"}),left:qr.left,top:qr.top}];
   if(asset)layers.push({input:await sharp(asset).resize(banner?260:900,banner?220:300,{fit:"contain",background:"white"}).png().toBuffer(),left:banner?900:90,top:banner?95:326});
   return new Uint8Array(await sharp(Buffer.from(svg)).composite(layers).png().toBuffer());
 }

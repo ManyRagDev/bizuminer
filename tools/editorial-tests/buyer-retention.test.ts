@@ -3,8 +3,15 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { commercialFixture } from "./commercial-fixture.ts";
 const require = createRequire(import.meta.url);
-const { startWatch, stopWatch, watchedDeals, setFavorite, savedDeals, bulkFavorites, savedProductIds } = require("../../packages/web/lib/member-db.ts");
+const { startWatch, stopWatch, watchedDeals, setFavorite, savedDeals, bulkFavorites, savedProductIds, recommendedDeals, saveProfile } = require("../../packages/web/lib/member-db.ts");
+const { getPublishedEditorialSelection } = require("../../packages/web/lib/editorial-selection-db.ts");
+const { catalogPage } = require("../../packages/web/lib/db.ts");
+const { hydrateProductPresentations } = require("../../packages/web/lib/product-presentation-db.ts");
+const { publicMonetizedTarget } = require("../../packages/web/lib/public-offer-db.ts");
 const { readSavedState, writeSavedState, remainingAfterConfirmedSync } = require("../../packages/web/lib/saved-products.ts");
+const { workspaceOffers } = require("../../packages/web/lib/affiliate-workspace-db.ts");
+const { readPautaAvailability, readPautaVersion, readLivePauta } = require("../../packages/web/lib/pauta-db.ts");
+const { readPautaSlots } = require("../../packages/web/lib/pauta-slots-db.ts");
 const { pg, factory } = await commercialFixture();
 const evidence = { version: 2, currency: "BRL", priceType: "exact", variantIdentity: { state: "source_verified", key: "unit", attributes: {} }, packageQuantity: 1, fieldStates: { sellerId: "not_applicable", packageContents: "not_applicable", dimensions: "not_applicable", payment: "not_applicable", coupon: "not_applicable", region: "not_applicable" } };
 let passed = 0;
@@ -110,6 +117,51 @@ try {
     assert.equal(await startWatch("buyer_a", "pa", null, "a", factory), null);
     await pg.query(`update garimpa.price_observation set observed_at=now(), offer_evidence='{}' where id='oa2'`);
     w = await startWatch("buyer_a", "pa", null, "a", factory); assert.equal(w.comparison_status, "unavailable"); assert.equal(w.current_price_cents, null);
+  });
+  await check("vitrine autenticada (GET /) e links públicos funcionam antes das migrações v2", async () => {
+    await pg.exec(`update garimpa.product set category='Casa' where id='pa';
+      insert into garimpa.product(id,tenant_id,marketplace,external_id,title,category,product_url,last_price_cents,last_seen_at)
+      values('pa_rec','a','shopee','103','Produto Recomendado A','Casa','https://example.test/rec',8000,now());
+      insert into garimpa.product_curation(tenant_id,product_id,status) values('a','pa_rec','approved');
+      insert into garimpa.publication(id,tenant_id,affiliate_id,product_id,channel,slug,status,affiliate_url)
+      values('pub_pa_rec','a','aff_a','pa_rec','web','shp-103','active','https://shopee.com.br/aff-rec')`);
+    await pg.query(`insert into garimpa.price_observation(id,tenant_id,product_id,price_cents,observed_at,offer_evidence) values('oa_rec','a','pa_rec',8000,now(),$1)`, [JSON.stringify(evidence)]);
+    await saveProfile("buyer_a", { preferredCategories: ["Casa"], priceBand: "all" }, "a", factory);
+    const selection = await getPublishedEditorialSelection("home", "a", factory);
+    const catalog = await catalogPage({}, "a", factory, selection);
+    assert.ok(catalog.page.deals.length >= 1);
+    const [savedIds, savedRows] = await Promise.all([
+      savedProductIds("buyer_a", "a", factory),
+      savedDeals("buyer_a", "a", factory),
+    ]);
+    assert.deepEqual(savedIds, ["pa"]);
+    const hydrated = await hydrateProductPresentations(savedRows.filter((row: any) => row.available), "a", factory);
+    assert.equal(hydrated.length, 1);
+    const recs = await recommendedDeals("buyer_a", 8, "a", factory);
+    assert.equal(recs.some((row: any) => row.id === "pa_rec"), true);
+    const target = await publicMonetizedTarget("shp-103", factory);
+    assert.equal(target?.url, "https://shopee.com.br/aff-rec");
+    assert.equal(await publicMonetizedTarget("shp-103", factory, "0123456789abcdef0123456789abcdef"), null);
+  });
+  await check("painel admin e pauta não abortam transação antes das migrações v2", async () => {
+    await pg.exec(`insert into garimpa.app_user_role(app_user_id,role) values('buyer_a','afiliado') on conflict do nothing`);
+    const adminAccount = {
+      tenantId: "a", affiliateId: "aff_a", actor: "human" as const,
+      actorAppUserId: "buyer_a", authenticatedAuthUserId: "auth_a",
+      membershipRole: "owner" as const, requestId: "req-admin-pre-v2",
+    };
+    const ws = await workspaceOffers(adminAccount, undefined, factory);
+    assert.equal(ws.ready, true);
+    assert.ok(ws.offers.length >= 1);
+    assert.deepEqual(await readPautaAvailability(adminAccount, "whatsapp", factory), { active: false, count: 0 });
+    assert.equal(await readPautaVersion(adminAccount, "whatsapp", factory), null);
+    const liveEmpty = await readLivePauta(adminAccount, "whatsapp", null, factory);
+    assert.equal(liveEmpty.active, false);
+    assert.deepEqual(liveEmpty.products, []);
+    const slots = await readPautaSlots(adminAccount, "whatsapp", factory);
+    assert.equal(slots.channelActive, false);
+    assert.deepEqual(slots.slots, []);
+    assert.equal(slots.canConfigure, false);
   });
   await check("salvo retirado permanece reconhecível e sem disponibilidade", async () => {
     await pg.exec(`update garimpa.product_curation set status='rejected' where product_id='pa'`);

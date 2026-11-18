@@ -23,6 +23,7 @@ const iso = (value: Date | string | null): string | null =>
 function serializeSnapshot(snapshot: MemberSnapshot) {
   const saved: MemberSaved[] = snapshot.saved.map((row) => ({
     ...toVitrineProduct(row),
+    offerValidUntil: row.offerValidUntil ? iso(row.offerValidUntil) ?? undefined : undefined,
     savedAt: iso(row.saved_at)!,
     available: row.available,
   }));
@@ -33,6 +34,9 @@ function serializeSnapshot(snapshot: MemberSnapshot) {
     slug: row.slug,
     imageUrl: row.image_url,
     category: row.category,
+    marketplace: row.marketplace,
+    optionKey: row.option_key,
+    optionLabel: row.option_label,
     baselineCents: row.baseline_price_cents,
     baselineCurrency: row.baseline_currency,
     targetCents: row.target_price_cents,
@@ -40,11 +44,15 @@ function serializeSnapshot(snapshot: MemberSnapshot) {
     currentObservedAt: iso(row.current_observed_at),
     watchedAt: iso(row.watched_at)!,
     comparisonStatus: row.comparison_status,
+    evidenceCurrent: row.evidence_current,
+    noSafePage: row.no_safe_page,
+    validUntil: iso(row.valid_until),
     available: row.available,
     benefit: row.benefit, audience: row.audience, caveat: row.caveat, purchaseContents: row.purchaseContents,
   }));
   const recommended: MemberRec[] = snapshot.recommended.map((row) => ({
     ...toVitrineProduct(row),
+    offerValidUntil: row.offerValidUntil ? iso(row.offerValidUntil) ?? undefined : undefined,
     reasonOrigin: row.reason_origin,
   }));
   return { saved, watches, recommended, profile: snapshot.profile };

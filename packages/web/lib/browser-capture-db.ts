@@ -1,7 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
 import { db } from "./db.ts";
+import { captureExecutor } from "./capture-dispatch.ts";
 import { categoryForTitle } from "../../persistence/src/category.ts";
 import { familyInfoForTitle } from "../../persistence/src/product-family.ts";
+import { pageObservationMethod } from "../../capture/src/source-page-url.ts";
 import { browserOfferEvidence, type SupportedExtensionMarketplace } from "./extension-contract.ts";
 import type { BrowserCapturePayload } from "./browser-capture-contract.ts";
 import type { StoredCaptureBatch } from "./capture-batch-db.ts";
@@ -52,21 +54,28 @@ export class BrowserCaptureStore {
           metadata=jsonb_set(metadata,'{execution}',coalesce(metadata->'execution','{}'::jsonb)
             || '{"phase":"finished","error":"execution_timeout"}'::jsonb)
         where tenant_id=${access.tenantId} and status='running'
+          and metadata#>>'{execution,executor}' is distinct from 'durable'
           and case when metadata->'execution'->>'version'='1'
             then (metadata->'execution'->>'deadline')::timestamptz < now()
             else true end
       `;
 
       const [row] = await sql<
-        { id: string }[]
-      >`select id from garimpa.capture_batch
+        { id: string; expired: boolean }[]
+      >`select id,(metadata#>>'{execution,deadline}')::timestamptz<=now() as expired from garimpa.capture_batch
         where tenant_id=${access.tenantId} and status='running'
-          and metadata->'execution'->>'phase'='awaiting_browser'
+          and (metadata->'execution'->>'phase'='awaiting_browser'
+            or (metadata->'execution'->>'phase'='retry_wait' and metadata->'execution'->'stores'->${marketplace}::text->>'status'='awaiting_browser'))
           and metadata->'execution'->'browser'->>'ownerAppUserId'=${access.appUserId}
           and coalesce(metadata->'execution'->'browser'->>'marketplace','mercadolivre')=${marketplace}
-          and (metadata->'execution'->>'deadline')::timestamptz>now()
-        order by started_at desc limit 1`;
-      if (row?.id) return row.id;
+        order by started_at desc limit 1 for update`;
+      if (row?.id) {
+        // An explicit capture request by the same owner renews the browser window.
+        // Waiting itself performs no periodic query or automatic provider request.
+        if (row.expired) await sql`update garimpa.capture_batch set metadata=jsonb_set(metadata,'{execution,deadline}',
+          to_jsonb((now()+interval '30 minutes')::text)) where id=${row.id} and tenant_id=${access.tenantId}`;
+        return row.id;
+      }
 
       const [running] = await sql<
         { id: string; metadata: any }[]
@@ -103,7 +112,7 @@ export class BrowserCaptureStore {
       const execution = {
         version: 1,
         phase: "awaiting_browser",
-        executor: "local",
+        executor: captureExecutor(),
         mlConsent: true,
         browser: { ownerAppUserId: access.appUserId, marketplace },
         deadline: new Date(Date.now() + 30 * 60_000).toISOString(),
@@ -161,8 +170,8 @@ export class BrowserCaptureStore {
         }
         if (
           batch.status !== "running" ||
-          (execution.phase !== "awaiting_browser" &&
-            execution.phase !== "capturing") ||
+          (execution.phase !== "awaiting_browser" && execution.phase !== "retry_wait") ||
+          (execution.phase === "retry_wait" && execution.stores?.[marketplace]?.status !== "awaiting_browser") ||
           new Date(execution.deadline).getTime() <= Date.now()
         )
           throw new Error("browser_capture_not_waiting");
@@ -170,7 +179,8 @@ export class BrowserCaptureStore {
         if (payload) {
           const products = payload.products.map((p) => ({
             ...p,
-            offerEvidence: browserOfferEvidence(p, p.productUrl, payload.clientCapturedAt, marketplace),
+            offerEvidence: browserOfferEvidence(p, p.productUrl, payload.clientCapturedAt, marketplace,
+              pageObservationMethod(marketplace, payload.page, p.externalId)),
             category: categoryForTitle(p.title),
             family: familyInfoForTitle(p.title),
           }));
@@ -187,58 +197,20 @@ export class BrowserCaptureStore {
           >`insert into garimpa.capture_run
             (id,tenant_id,marketplace,started_at,status,collector_run_id,parameters)
             values(gen_random_uuid()::text,${access.tenantId},${marketplace},now(),'running',${`browser-${payload.requestId}`},${tx.json(parameters)}) returning id`;
-          const [counts] = await tx<
-            { captured: number; new_items: number; price_changes: number }[]
-          >`
-            with input as (
-              select * from jsonb_to_recordset(${tx.json(products.map((p) => ({ ...p, family: p.family ? { ...p.family } : null })) as any)}::jsonb) as x(
-                "externalId" text,title text,"productUrl" text,"imageUrl" text,"priceCents" int,"originalPriceCents" int,
-                "ratingStar" numeric,"salesCount" bigint,"salesLabel" text,category text,family jsonb,"offerEvidence" jsonb)
-            ), previous as materialized (
-              select p.external_id,p.last_price_cents from garimpa.product p join input i on i."externalId"=p.external_id
-              where p.tenant_id=${access.tenantId} and p.marketplace=${marketplace}
-            ), up as (
-              insert into garimpa.product as p
-                (id,tenant_id,marketplace,external_id,title,product_url,image_url,category,
-                  family_key,family_label,family_method,family_version,last_price_cents,first_seen_at,last_seen_at,last_capture_run_id)
-              select gen_random_uuid()::text,${access.tenantId},${marketplace},i."externalId",i.title,i."productUrl",i."imageUrl",i.category,
-                i.family->>'key',i.family->>'label',i.family->>'method',i.family->>'version',
-                i."priceCents",now(),now(),${run.id} from input i
-              on conflict(tenant_id,marketplace,external_id) do update set
-                title=excluded.title,product_url=case when p.marketplace='aliexpress' and p.product_url like 'https://s.click.aliexpress.com/%'
-                  then p.product_url else excluded.product_url end,image_url=coalesce(excluded.image_url,p.image_url),
-                category=coalesce(excluded.category,p.category),family_key=coalesce(excluded.family_key,p.family_key),
-                family_label=coalesce(excluded.family_label,p.family_label),family_method=coalesce(excluded.family_method,p.family_method),
-                family_version=coalesce(excluded.family_version,p.family_version),last_price_cents=excluded.last_price_cents,
-                last_seen_at=excluded.last_seen_at,last_capture_run_id=excluded.last_capture_run_id,updated_at=now()
-              returning id,external_id
-            ), observations as (
-              insert into garimpa.price_observation
-                (id,tenant_id,capture_run_id,product_id,price_cents,original_price_cents,claimed_discount_rate,
-                  rating_star,sales_count,sales_label,observed_at,title_snapshot,product_url_snapshot,image_url_snapshot,category_snapshot,
-                  offer_evidence,capture_source,source_page_url,client_captured_at)
-              select gen_random_uuid()::text,${access.tenantId},${run.id},up.id,i."priceCents",i."originalPriceCents",
-                case when i."offerEvidence"->'conditions' is null and i."offerEvidence"->>'priceType'<>'range' and i."originalPriceCents">i."priceCents" then 1-i."priceCents"::numeric/i."originalPriceCents" else null end,
-                i."ratingStar",i."salesCount",i."salesLabel",least(now(),${payload.clientCapturedAt}::timestamptz),i.title,i."productUrl",i."imageUrl",i.category,
-                i."offerEvidence",
-                ${access.deviceId ? "extension" : "bookmarklet"},${payload.page.url},${payload.clientCapturedAt}::timestamptz
-              from up join input i on i."externalId"=up.external_id returning id
-            ) select (select count(*)::int from observations) as captured,
-              (select count(*)::int from up where external_id not in (select external_id from previous)) as new_items,
-              (select count(*)::int from input i join previous p on p.external_id=i."externalId" where p.last_price_cents<>i."priceCents") as price_changes
-          `;
-          if (marketplace !== "mercadolivre") {
-            const prefix = marketplace === "amazon" ? "amz-" : "ali-";
-            await tx`insert into garimpa.publication(id,tenant_id,product_id,affiliate_id,channel,slug)
-              select gen_random_uuid()::text,p.tenant_id,p.id,a.id,'web',
-                case when p.marketplace='amazon' then ${prefix}||p.external_id||'-'||a.public_slug
-                when p.tenant_id='local' then ${prefix}||p.external_id
-                else a.public_slug||'-'||${prefix}||p.external_id end
-              from garimpa.product p
-              join garimpa.affiliate_account a on a.tenant_id=p.tenant_id and a.status='active'
-              where p.tenant_id=${access.tenantId} and p.marketplace=${marketplace}
-                and exists(select 1 from garimpa.price_observation o where o.tenant_id=p.tenant_id and o.product_id=p.id and o.capture_run_id=${run.id})
-              on conflict (affiliate_id,product_id,channel) do nothing`;
+          const counts = { captured: 0, new_items: 0, price_changes: 0 };
+          for (const product of products) {
+            const [prepared] = await tx<{ result: { is_new: boolean; previous_price_cents: number | null } }[]>`
+              select garimpa.stage_capture_offer(${access.tenantId},${run.id},${tx.json({
+                ...product, marketplace, observedAt: new Date(Math.min(Date.now(), Date.parse(payload.clientCapturedAt))).toISOString(),
+                captureSource: access.deviceId ? "extension" : "bookmarklet", sourcePageUrl: payload.page.url,
+                clientCapturedAt: payload.clientCapturedAt,
+                claimedDiscountRate: !product.offerEvidence.conditions && product.offerEvidence.priceType !== "range"
+                  && product.originalPriceCents && product.originalPriceCents > product.priceCents
+                  ? 1 - product.priceCents / product.originalPriceCents : null,
+              } as any)}::jsonb) as result`;
+            counts.captured++;
+            if (prepared.result.is_new) counts.new_items++;
+            else if (prepared.result.previous_price_cents !== null && prepared.result.previous_price_cents !== product.priceCents) counts.price_changes++;
           }
           importedCount = counts.captured;
           await tx`update garimpa.capture_run set status='ok',finished_at=now(),items_captured=${counts.captured},

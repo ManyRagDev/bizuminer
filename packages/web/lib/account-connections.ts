@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { db } from "./db.ts";
 import { withAccountDb, type AccountContext } from "./tenant-db.ts";
-import { storeAffiliateSecret } from "./affiliate-secret.ts";
+import { getMasterKey, storeAffiliateSecret } from "./affiliate-secret.ts";
 import { resolveAccountMarketplaceCredentials } from "../../persistence/src/account-credentials.ts";
 import { ShopeeAdapter } from "../../capture/src/adapters/shopee/index.ts";
 import { AliExpressAdapter } from "../../capture/src/adapters/aliexpress/index.ts";
@@ -24,6 +24,10 @@ const owner = (c: AccountContext) => {
   if (c.actor !== "human" || !c.actorAppUserId || c.membershipRole !== "owner")
     throw new Error("owner_required");
 };
+function secretStorageReady(): boolean {
+  try { getMasterKey(); return true; }
+  catch { return false; }
+}
 async function ready(tx: any) {
   const [r] =
     await tx`select exists(select 1 from information_schema.columns where table_schema='garimpa' and table_name='affiliate_marketplace_config' and column_name='connection_status') as ready`;
@@ -75,7 +79,7 @@ export async function accountConnections(
           };
         },
       );
-      return { schemaReady, connections };
+      return { schemaReady, secretStorageReady: secretStorageReady(), connections };
     },
     factory,
   );
@@ -104,6 +108,8 @@ export async function saveAccountConnection(
     c,
     async (tx) => {
       if (!(await ready(tx))) throw new Error("workspace_schema_required");
+      if (input.marketplace !== "mercadolivre" && !secretStorageReady())
+        throw new Error("connection_storage_unavailable");
       if (input.marketplace !== "mercadolivre")
         await storeAffiliateSecret(
           {
@@ -168,14 +174,22 @@ export async function testAccountConnection(
   const adapter =
     adapters[marketplace] ??
     (marketplace === "shopee" ? new ShopeeAdapter() : new AliExpressAdapter());
-  const ok = await adapter.validateCredential(
-    { marketplace, secret: prepared.secret },
-    {
-      runId: crypto.randomUUID(),
-      signal: AbortSignal.timeout(15000),
-      log: () => {},
-    },
-  );
+  let ok = false;
+  try {
+    const result = await adapter.validateCredential(
+      { marketplace, secret: prepared.secret },
+      {
+        runId: crypto.randomUUID(),
+        signal: AbortSignal.timeout(15000),
+        log: () => {},
+      },
+    );
+    // ValidationResult is an object; its truthiness is never provider acceptance.
+    ok = result?.ok === true;
+  } catch {
+    // Do not return provider exceptions, which can contain credential/request details.
+    throw new Error("connection_test_unavailable");
+  }
   await withAccountDb(
     c,
     async (tx) => {

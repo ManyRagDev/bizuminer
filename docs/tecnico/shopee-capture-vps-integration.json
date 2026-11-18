@@ -1,0 +1,166 @@
+{
+  "scope": "shopee-account-capture-with-budgeted-triage",
+  "baseImage": "sha256:67a6c07f50205cc1493508e7706801462b09e5552a7f62d0ba1cffa25fc03e72",
+  "newMigrations": [],
+  "runtimeFiles": [
+    {
+      "path": "packages/web/app/admin/page.tsx",
+      "bytes": 18991,
+      "sha256": "71376d3f49d51add1385467c8a67c0af160df97513e4b29520d51756b301dce7"
+    },
+    {
+      "path": "packages/web/app/admin/admin-panel.tsx",
+      "bytes": 16139,
+      "sha256": "682c58d172870ec28dc14d7ebc12a24bc13f35d3a3607ff920d9be7a53ffe32b"
+    },
+    {
+      "path": "packages/web/lib/platform-gates.ts",
+      "bytes": 1704,
+      "sha256": "ae41492c7c7f047199a58d5a1204dc4e188c5031ff031dde04c0e2eb5420666d"
+    },
+    {
+      "path": "packages/web/lib/ai-curation-provider.ts",
+      "bytes": 11762,
+      "sha256": "0acf32dca64892872c3d078c0557b80a2c45317d45d871e4d0e715fa7d39baa7"
+    },
+    {
+      "path": "packages/web/lib/ai-curation-service.ts",
+      "bytes": 17116,
+      "sha256": "cf312d116e6cdb24e95daf04b089a64be84de68fd518ea4af1bc75cb8725f5df"
+    },
+    {
+      "path": "packages/web/lib/curation-db.ts",
+      "bytes": 54738,
+      "sha256": "d54073a02d49a336763a3df265b739ffcb897d05f5712d68265f712121a3d4ea"
+    },
+    {
+      "path": "packages/web/lib/capture-batch-db.ts",
+      "bytes": 20451,
+      "sha256": "bb6df30447e83f64e314f432da0a14f37a0d812237566c436e402bef2ead3212"
+    },
+    {
+      "path": "packages/web/lib/capture-batch-worker.ts",
+      "bytes": 11716,
+      "sha256": "ed0ac25597f5cf881e1a8be763bad89886467a17b8faf856044228d9840b260e"
+    },
+    {
+      "path": "packages/web/lib/capture-affiliate-publication.ts",
+      "bytes": 2340,
+      "sha256": "343ea95f0b670a1939d9b2bbdd4fecba1a07d5890ebf83c616e76bd3700f4880"
+    },
+    {
+      "path": "packages/web/app/api/admin/rodagem/lote/route.ts",
+      "bytes": 9572,
+      "sha256": "cc9e2997f034a54984674775024b1d02ea27690ed4bba06622f524d9a3999216"
+    },
+    {
+      "path": "packages/web/bin/run-capture-batch.ts",
+      "bytes": 4999,
+      "sha256": "79610581f0d753326cc0984a5a3446f57bf022199ff6b4c1f3c701ec79f1faeb"
+    },
+    {
+      "path": "packages/web/bin/run-triage.ts",
+      "bytes": 3477,
+      "sha256": "ca54bc975741683259709f1acd9cb6d8a0ce303adfd616cc3818c36ffedf3159"
+    },
+    {
+      "path": "packages/persistence/src/capture-plan.ts",
+      "bytes": 8245,
+      "sha256": "8e50cfecfba2fa13a9050117a4a89bc3359313f02293c09b170c2ed6387762e3"
+    },
+    {
+      "path": "packages/persistence/src/shopee-links.ts",
+      "bytes": 4014,
+      "sha256": "b2d17c36a94e0731a7593802861e0eaef3c4a2764ea468aab9de8089dc9f6452"
+    },
+    {
+      "path": "packages/persistence/bin/sweep-shopee.ts",
+      "bytes": 9024,
+      "sha256": "058ce580dd43c5a1a69dceec6bf2414935dd368fbcb4a723c9246a290393f188"
+    },
+    {
+      "path": "packages/capture/src/adapters/shopee/client.ts",
+      "bytes": 7808,
+      "sha256": "f8893e242868e872da45c936cb54b0d3d23ee7791ae7c9cb848e7fe58b963d55"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "packages/web/test/platform-gates.test.mjs",
+      "bytes": 993,
+      "sha256": "e6501378c55005e468f3e809ab8c7910ca08cb4f107973662c629db627316d4a"
+    },
+    {
+      "path": "packages/web/test/ai-curation-provider.test.mjs",
+      "bytes": 9954,
+      "sha256": "8da0c9b87ef6350a8b3c7e4fbdc84c90c797572eb854e5f80744c2fde4e74bb7"
+    },
+    {
+      "path": "packages/web/test/capture-ai-readiness.test.mjs",
+      "bytes": 9136,
+      "sha256": "120ef7ed46dba6818da60333123c4155638ecad0936a6f6e5c8095c0c5f1d530"
+    },
+    {
+      "path": "packages/web/test/triage-trial-cli.test.mjs",
+      "bytes": 5913,
+      "sha256": "364a306cab2fdbdd25b0a90e559534aea2662ce2d9f22b5eb1f644e85d8f07b7"
+    },
+    {
+      "path": "packages/web/test/capture-affiliate-trial.test.mjs",
+      "bytes": 2744,
+      "sha256": "70c3e1bd3a09070aa8b555c2c09f675193f04115907fc5fd8d1a9ad7d993b4a1"
+    },
+    {
+      "path": "packages/capture/test/shopee-trial.test.ts",
+      "bytes": 1334,
+      "sha256": "c525a331c5d04dd3ea9d7cb8322ad7c46a3ae0636ee1816f1b515c6a08969f89"
+    },
+    {
+      "path": "packages/persistence/test/capture-trial.test.ts",
+      "bytes": 3264,
+      "sha256": "390b6c265255a92b6f91667d990c2562bc03d03e687da3e5345a2e9d4102693e"
+    },
+    {
+      "path": "tools/editorial-tests/capture-trial-native.test.ts",
+      "bytes": 8667,
+      "sha256": "1a160faa4681ede354058133fbb45dc0492a0c3f59c60dd9e947ebafaed04a84"
+    },
+    {
+      "path": "tools/editorial-tests/capture-route-flow.test.ts",
+      "bytes": 8346,
+      "sha256": "f19d8b2d78d7d2f6b7e2ad900b742496c9b1960e80ce78cf7833c027cf3658a4"
+    }
+  ],
+  "trial": {
+    "tenantAllowlist": [
+      "local"
+    ],
+    "marketplace": "shopee",
+    "mode": "single_product",
+    "queryId": "single-product-casa-v1",
+    "pages": 1,
+    "productsMax": 1,
+    "provider": "openrouter",
+    "model": "openai/gpt-4.1-mini",
+    "maxOutputTokens": 1024,
+    "captureRequestsMax": 1,
+    "affiliateRequestsMax": 1,
+    "aiRequestsMax": 1,
+    "automaticRetries": false,
+    "autoPublish": false,
+    "hardBudgetUsd": 1,
+    "budgetEnforcement": "shared capped OpenRouter key, provisioned privately by infrastructure"
+  },
+  "environmentNames": [
+    "SHOPEE_CAPTURE_ENABLED",
+    "AFFILIATE_SECRETS_MASTER_KEY",
+    "AI_CURATION_PROVIDER",
+    "OPENROUTER_API_KEY",
+    "AI_CURATION_MODEL",
+    "AI_CURATION_MAX_OUTPUT_TOKENS",
+    "CAPTURE_EXECUTOR",
+    "CAPTURE_WORKER_TENANTS",
+    "CAPTURE_TRIAL_MODE",
+    "CAPTURE_TRIAL_TENANTS"
+  ]
+}

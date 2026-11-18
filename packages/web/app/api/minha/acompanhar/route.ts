@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!payload) return Response.json({ ok: false, error: "invalid_body" }, { status: 400 });
   try {
     await ensureUser(identity.userId);
-    const watch = await startWatch(identity.userId, payload.productId, payload.targetPriceCents);
+    const watch = await startWatch(identity.userId, payload.productId, payload.targetPriceCents, undefined, undefined, payload.optionKey);
     if (!watch) return sinkJson(identity.sink, { ok: false, error: "no_price_observation" }, { status: 422 });
     return sinkJson(identity.sink, { ok: true, watch });
   } catch {
@@ -36,7 +36,10 @@ export async function DELETE(request: NextRequest) {
   const payload = parseWatchPayload(await safeJson(request));
   if (!payload) return Response.json({ ok: false, error: "invalid_body" }, { status: 400 });
   try {
-    const stopped = await stopWatch(identity.userId, payload.productId);
+    const stopped = await stopWatch(identity.userId, payload.productId, undefined, undefined,
+      payload.watchId ? { watchId: payload.watchId,
+        ...(payload.optionKey !== undefined ? { optionKey: payload.optionKey } : {}) }
+        : { optionKey: payload.optionKey ?? null });
     return sinkJson(identity.sink, { ok: true, stopped });
   } catch {
     return sinkJson(identity.sink, { ok: false, error: "server_error" }, { status: 500 });

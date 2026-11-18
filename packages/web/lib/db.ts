@@ -111,13 +111,48 @@ function withHomepageOptions(page: DealsPage, query: DealQuery, selection: Publi
   }) };
 }
 
+/**
+ * Indica se o tenant exige validade factual v2 nas superfícies públicas.
+ * No modo legado (sem policy v2 ativa), a vitrine aceita itens de até 7 dias
+ * e sinaliza ofertas >48h com `priceFreshness === "stale"`, sem expirar o card.
+ */
+export async function hasActiveV2OfferExpiryPolicy(tenantId = "local", sqlFactory: typeof db = db): Promise<boolean> {
+  if (sqlFactory === db && !process.env.DATABASE_URL) return false;
+  const sql = sqlFactory();
+  try {
+    return await sql.begin("isolation level repeatable read read only", async (tx) => {
+      await tx`select set_config('garimpa.tenant_id', ${tenantId}, true), set_config('garimpa.actor_type', 'worker', true), set_config('garimpa.membership_role', '', true)`;
+      const [schema] = await tx<{ ready: boolean }[]>`select to_regclass('garimpa.curation_policy_v2') is not null as ready`;
+      if (!schema?.ready) return false;
+      const [row] = await tx<{ active: boolean }[]>`
+        select exists(
+          select 1 from garimpa.curation_policy_v2
+          where tenant_id = ${tenantId} and (enabled or factual_gate_required)
+        ) as active
+      `;
+      return row?.active === true;
+    });
+  } finally {
+    await sql.end();
+  }
+}
+
+function withPolicyOfferDeadlines(page: DealsPage, v2Active: boolean): DealsPage {
+  if (v2Active) return page;
+  return {
+    ...page,
+    deals: page.deals.map((deal) => (deal.offerValidUntil === undefined ? deal : { ...deal, offerValidUntil: undefined })),
+  };
+}
+
 /** A seleção editorial determina a ordem inicial; filtros explícitos preservam sua ordenação. */
 export async function topDeals(query: DealQuery = {}, tenantId = "local", publishedSelection?: PublishedEditorialSelection, sqlFactory: typeof db = db): Promise<DealsPage> {
   const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId, sqlFactory);
   const publicReader = await import("./public-offer-db.ts");
   if (await publicReader.publicProjectionReady(sqlFactory)) {
     const page = await publicReader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
-    return { ...page, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) };
+    const v2Active = await hasActiveV2OfferExpiryPolicy(tenantId, sqlFactory);
+    return withPolicyOfferDeadlines({ ...page, selectionVersion: selection.version, selectionStateKey: publishedEditorialStateKey(selection) }, v2Active);
   }
   const limit = Math.min(Math.max(query.limit ?? 12, 1), 24);
   const offset = Math.max(query.offset ?? 0, 0);
@@ -310,11 +345,12 @@ export async function marketplaceCounts(freshness: FreshnessBand = "7d", tenantI
 export async function catalogPage(query: DealQuery = {}, tenantId = "local", sqlFactory: typeof db = db, publishedSelection?: PublishedEditorialSelection): Promise<CatalogPage> {
   const selection = publishedSelection ?? await (await import("./editorial-selection-db.ts")).getPublishedEditorialSelection("home", tenantId, sqlFactory);
   const reader = await import("./public-offer-db.ts");
+  const v2Active = await hasActiveV2OfferExpiryPolicy(tenantId, sqlFactory);
   if (await reader.publicProjectionReady(sqlFactory)) {
     const page = await reader.publicCatalog(tenantId, publicCatalogQuery(query), sqlFactory);
     page.selectionVersion = selection.version;
     page.selectionStateKey = publishedEditorialStateKey(selection);
-    const dealsPage = withHomepageOptions(page, query, selection);
+    const dealsPage = withPolicyOfferDeadlines(withHomepageOptions(page, query, selection), v2Active);
     if (Array.isArray(page.categories) && page.marketplaceCounts && typeof page.marketplaceCounts === "object") {
       return { page: dealsPage, presentation: { categories: page.categories, marketplaceCounts: page.marketplaceCounts } };
     }
@@ -325,7 +361,7 @@ export async function catalogPage(query: DealQuery = {}, tenantId = "local", sql
     topDeals(query, tenantId, selection, sqlFactory),
     catalogPresentation(query.freshness, tenantId, sqlFactory),
   ]);
-  return { page: withHomepageOptions(page, query, selection), presentation };
+  return { page: withPolicyOfferDeadlines(withHomepageOptions(page, query, selection), v2Active), presentation };
 }
 
 /**
@@ -401,7 +437,14 @@ export async function catalogCategories(tenantId = "local"): Promise<string[]> {
 /** Produto individual e seus fatos de preço para a página compartilhável. */
 export async function dealDetail(slug: string, tenantId = "local", sqlFactory: typeof db = db): Promise<DealDetail | null> {
   const publicReader = await import("./public-offer-db.ts");
-  if (await publicReader.publicProjectionReady(sqlFactory)) return publicReader.publicDealDetail(slug, sqlFactory);
+  if (await publicReader.publicProjectionReady(sqlFactory)) {
+    const detail = await publicReader.publicDealDetail(slug, sqlFactory);
+    if (!detail) return null;
+    if (detail.deal.offerValidUntil && !(await hasActiveV2OfferExpiryPolicy(tenantId, sqlFactory))) {
+      return { ...detail, deal: { ...detail.deal, offerValidUntil: undefined } };
+    }
+    return detail;
+  }
   const parsed = parseProductSlug(slug);
   if (!parsed) return null;
   const { marketplace, externalId } = parsed;

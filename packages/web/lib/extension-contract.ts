@@ -8,6 +8,7 @@
  */
 
 import { MAX_SOURCE_TITLE_LENGTH, normalizeSourceTitle } from "../../capture/src/title.ts";
+import { ambiguousSourceIdentity, pageObservationMethod, sourcePageUrl } from "../../capture/src/source-page-url.ts";
 
 import type { OfferEvidenceV2 } from "../../capture/src/types.ts";
 
@@ -64,6 +65,8 @@ export interface ExtensionCaptureProduct {
   priceMaxCents?: number;
   condition?: "coupon" | "first_purchase" | "pix" | "prime";
   variantLabel?: string;
+  /** Source-provided option ID, accepted only for the matching product page. */
+  variantKey?: string;
 }
 
 export interface ExtensionCapturePayload {
@@ -98,6 +101,13 @@ export function validateExtensionCapturePayload(raw: unknown, batch = false): Ex
   const pageUrl = typeof page.url === "string" ? page.url : "";
   const pageHost = hostOf(pageUrl);
   if (!pageHost) bad("page.url inválida");
+  const parsedPage = new URL(pageUrl);
+  if (ambiguousSourceIdentity(parsedPage,marketplace)) bad("page.url ambígua");
+  if (parsedPage.protocol !== "https:" || parsedPage.username || parsedPage.password || parsedPage.port || pageUrl.length > 2048
+    || /\/(?:login|checkout|ap\/signin|gp\/cart|p\/trade)(?:\/|$)/i.test(parsedPage.pathname)) bad("page.url inválida");
+  if (marketplace === "mercadolivre" && !/(^|\.)mercadolivre\.com\.br$/i.test(parsedPage.hostname)) bad("page.url não é do Mercado Livre");
+  if (marketplace === "amazon" && !/(^|\.)amazon\.com\.br$/i.test(parsedPage.hostname)) bad("page.url não é da Amazon");
+  if (marketplace === "aliexpress" && !/(^|\.)aliexpress\.com$/i.test(parsedPage.hostname)) bad("page.url não é da AliExpress");
   if (marketplace === "mercadolivre" && !isMlHost(pageHost)) bad("page.url não é do Mercado Livre");
   if (marketplace === "amazon" && !isAmazonHost(pageHost)) bad("page.url não é da Amazon");
   if (marketplace === "aliexpress" && !isAliHost(pageHost)) bad("page.url não é da AliExpress");
@@ -119,6 +129,13 @@ export function validateExtensionCapturePayload(raw: unknown, batch = false): Ex
   const productUrl = typeof prod.productUrl === "string" ? prod.productUrl : "";
   const productHost = hostOf(productUrl);
   if (!productHost) bad("product.productUrl inválida");
+  const parsedProduct = new URL(productUrl);
+  if (ambiguousSourceIdentity(parsedProduct,marketplace)) bad("product.productUrl ambígua");
+  if (parsedProduct.protocol !== "https:" || parsedProduct.username || parsedProduct.password || parsedProduct.port || productUrl.length > 2048)
+    bad("product.productUrl inválida");
+  const productDomain = marketplace === "mercadolivre" ? /(^|\.)mercadolivre\.com\.br$/i
+    : marketplace === "amazon" ? /(^|\.)amazon\.com\.br$/i : /(^|\.)aliexpress\.com$/i;
+  if (!productDomain.test(parsedProduct.hostname)) bad("product.productUrl inválida");
   if (marketplace === "mercadolivre") {
     if (!isMlHost(productHost)) bad("product.productUrl não é do Mercado Livre");
     if (/[?&]matt_(word|tool)=/i.test(productUrl)) bad("product.productUrl não pode conter matt_* (vem do client)");
@@ -128,6 +145,15 @@ export function validateExtensionCapturePayload(raw: unknown, batch = false): Ex
   }
 
   if (marketplace === "aliexpress" && !isAliHost(productHost)) bad("product.productUrl não é da AliExpress");
+  const normalizedExternalId = marketplace === "amazon" ? externalId.toUpperCase() : externalId;
+  const wid = parsedProduct.searchParams.get("wid");
+  const productIdentity = marketplace === "mercadolivre"
+    ? (wid ?? parsedProduct.pathname.match(/MLB-?(\d{6,})/i)?.[1]?.replace(/^(\d)/, "MLB$1"))?.toUpperCase()
+    : marketplace === "amazon" ? parsedProduct.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?:\/|$)/i)?.[1]?.toUpperCase()
+      : parsedProduct.pathname.match(/\/item\/(\d{8,20})\.html$/)?.[1];
+  if (productIdentity !== normalizedExternalId) bad("product.productUrl não corresponde ao produto");
+  const safeProductUrl = parsedProduct.origin + parsedProduct.pathname
+    + (marketplace === "mercadolivre" && wid ? `?wid=${encodeURIComponent(wid)}` : "");
 
   const priceCents = prod.priceCents;
   if (typeof priceCents !== "number" || !Number.isInteger(priceCents) || priceCents <= 0 || priceCents > MAX_PRICE_CENTS) {
@@ -161,16 +187,25 @@ export function validateExtensionCapturePayload(raw: unknown, batch = false): Ex
     ? prod.condition : undefined;
   const variantLabel = batch && typeof prod.variantLabel === "string"
     ? normalizeSourceTitle(prod.variantLabel).slice(0, 100) || undefined : undefined;
+  let variantKey:string | undefined;
+  if (prod.variantKey !== undefined && prod.variantKey !== null) {
+    if (!batch || marketplace==='amazon' || typeof prod.variantKey!=='string' || !/^\d{1,24}$/.test(prod.variantKey)
+      || pageObservationMethod(marketplace,{kind:pageKind,url:sourcePageUrl(parsedPage,marketplace)},normalizedExternalId)!=='product_page'
+      || marketplace==='aliexpress' && parsedPage.searchParams.get('sku_id')!==prod.variantKey
+      || marketplace==='mercadolivre' && parsedPage.searchParams.has('variation') && parsedPage.searchParams.get('variation')!==prod.variantKey)
+      bad("product.variantKey inválida");
+    variantKey=prod.variantKey;
+  }
   return {
     version: 1,
     requestId,
     marketplace,
     clientCapturedAt,
-    page: { kind: pageKind, url: pageUrl },
+    page: { kind: pageKind, url: sourcePageUrl(parsedPage, marketplace) },
     product: {
-      externalId: marketplace === "amazon" ? externalId.toUpperCase() : externalId,
+      externalId: normalizedExternalId,
       title,
-      productUrl,
+      productUrl: safeProductUrl,
       imageUrl,
       priceCents,
       originalPriceCents,
@@ -179,23 +214,28 @@ export function validateExtensionCapturePayload(raw: unknown, batch = false): Ex
       ...(range ? { priceMaxCents: priceMaxCents as number } : {}),
       ...(condition ? { condition } : {}),
       ...(variantLabel ? { variantLabel } : {}),
+      ...(variantKey ? { variantKey } : {}),
     },
   };
 }
 
 /** Only facts explicitly transported by the reader; legacy payloads remain unknown. */
 export function browserOfferEvidence(
-  product: Pick<ExtensionCaptureProduct, 'currency' | 'priceType' | 'originalPriceCents' | 'priceMaxCents' | 'condition' | 'variantLabel'> & { priceCents?: number },
+  product: Pick<ExtensionCaptureProduct, 'currency' | 'priceType' | 'originalPriceCents' | 'priceMaxCents' | 'condition' | 'variantLabel' | 'variantKey'> & { priceCents?: number },
   url: string,
   capturedAt: string,
-  marketplace: SupportedExtensionMarketplace = 'mercadolivre'
+  marketplace: SupportedExtensionMarketplace = 'mercadolivre',
+  observationMethod?: 'listing' | 'product_page'
 ): OfferEvidenceV2 {
   return {
     version: 2,
+    ...(observationMethod ? { observationMethod } : {}),
     source: { marketplace, method: 'browser', url, capturedAt },
     currency: product.currency,
     priceType: product.priceType ?? 'unknown',
-    variantIdentity: { state: 'unknown' },
+    variantIdentity: product.variantKey && observationMethod==='product_page'
+      ? { state:'source_verified',key:product.variantKey,methodVersion:'browser-option-v1' } : { state:'unknown' },
+    ...(product.variantKey && observationMethod==='product_page' ? { variantKey:product.variantKey } : {}),
     ...(product.variantLabel ? { variantLabel: product.variantLabel } : {}),
     ...(product.priceType === "range" ? { priceMinCents: product.priceCents, priceMaxCents: product.priceMaxCents } : {}),
     ...(product.condition === "prime" ? { conditions: { membership: "Oferta exclusiva Prime" } } :

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { PGlite } from "@electric-sql/pglite";
+import type { PGlite } from "@electric-sql/pglite";
+import { commercialFixture } from "./commercial-fixture.ts";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const {
@@ -19,7 +20,8 @@ const {
   applyAutomatedTriageDecisions,
 } = require("../../packages/web/lib/curation-db.ts");
 
-const pg = new PGlite();
+const { pg } = await commercialFixture();
+const { publishCaptureBatch } = require("../../packages/persistence/src/capture-publication.ts");
 function adapter(client: Pick<PGlite, "query" | "exec">): any {
   const sql: any = async (
     parts: TemplateStringsArray,
@@ -80,7 +82,7 @@ const summary = {
 let passed = 0;
 async function scenario(label: string, run: () => Promise<void>) {
   await pg.exec(
-    "truncate garimpa.price_observation,garimpa.product,garimpa.capture_batch,garimpa.capture_run,garimpa.triage_run",
+    "truncate garimpa.price_observation,garimpa.product,garimpa.capture_batch,garimpa.capture_run,garimpa.triage_run cascade",
   );
   await run();
   passed++;
@@ -92,42 +94,21 @@ async function captured(id: string, marketplace: string, status = "ok") {
     [marketplace, status, JSON.stringify({ operationBatchId: id })],
   );
 }
-await pg.exec(`create schema garimpa;create role garimpa_app;create role service_role;
-  create table garimpa.capture_run(id text not null,tenant_id text,marketplace text,
-    status text,started_at timestamptz not null,finished_at timestamptz,error text,parameters jsonb);
-  create table garimpa.triage_run(id uuid default gen_random_uuid(),tenant_id text,status text,
-    finished_at timestamptz,error_message text,metadata jsonb default '{}');`);
-await pg.exec(
-  await readFile(
-    new URL(
-      "../../packages/persistence/supabase/migrations/20260917170000_operational_batches.sql",
-      import.meta.url,
-    ),
-    "utf8",
-  ),
-);
+for (const file of ["20261023041600_optimize_public_link_reads.sql", "20261027030237_compose_homepage_editions.sql",
+  "20261028041629_durable_product_presentation.sql", "20261101125432_renew_editorial_pauta.sql",
+  "20261101193221_improve_editorial_recommendations.sql", "20261102131234_optimize_price_observation_scope.sql",
+  "20261112002243_capture_durable_execution.sql", "20261112002247_capture_atomic_publication.sql"]) {
+  await pg.exec(await readFile(new URL(`../../packages/persistence/supabase/migrations/${file}`,import.meta.url),"utf8"));
+}
 await pg.exec(`
-  alter table garimpa.capture_run add primary key(id);
-  alter table garimpa.capture_run add column collector_run_id text, add column items_captured int,
-    add column items_new int, add column price_changes int;
-  create table garimpa.product(id text primary key,tenant_id text,marketplace text,external_id text,title text,
-    product_url text,image_url text,category text,family_key text,family_label text,family_method text,family_version text,
-    last_price_cents int check(last_price_cents>0),first_seen_at timestamptz,last_seen_at timestamptz,last_capture_run_id text,updated_at timestamptz,
-    unique(tenant_id,marketplace,external_id));
-  create table garimpa.price_observation(id text,tenant_id text,capture_run_id text references garimpa.capture_run(id),
-    product_id text references garimpa.product(id),price_cents int check(price_cents>0),original_price_cents int,claimed_discount_rate numeric,
-    rating_star numeric,sales_count bigint,sales_label text,observed_at timestamptz,title_snapshot text,product_url_snapshot text,
-    image_url_snapshot text,category_snapshot text,offer_evidence jsonb,capture_source text check(capture_source in ('sweep','extension','bookmarklet','legacy')),
-    source_page_url text,client_captured_at timestamptz,unique(capture_run_id,product_id));
-  create table garimpa.app_user_role(app_user_id text,role text,revoked_at timestamptz);
-  create table garimpa.affiliate_account(id text,tenant_id text,status text);
-  create table garimpa.affiliate_membership(app_user_id text,affiliate_id text,revoked_at timestamptz);
-  create table garimpa.extension_device(id text,affiliate_id text,created_by_app_user_id text,revoked_at timestamptz);
-  insert into garimpa.app_user_role values('owner','afiliado',null);
-  insert into garimpa.affiliate_account values('aff_local','local','active');
-  insert into garimpa.affiliate_membership values('owner','aff_local',null);
-  insert into garimpa.extension_device values('device','aff_local','owner',null);
+  insert into garimpa.affiliate_account(id,tenant_id,public_slug,display_name) values('aff_local','local','local','Batch test');
+  insert into garimpa.app_user(id,tenant_id,auth_user_id) values('owner','local','owner-auth');
+  insert into garimpa.app_user_role(app_user_id,role) values('owner','afiliado');
+  insert into garimpa.affiliate_membership(affiliate_id,app_user_id,role) values('aff_local','owner','owner');
+  insert into garimpa.extension_device(id,affiliate_id,created_by_app_user_id,name) values('device','aff_local','owner','Fixture');
 `);
+async function publish(step:any) { await publishCaptureBatch(factory(), step.tenantId,step.batchId,step.workerId); return {ok:true}; }
+
 try {
   await scenario(
     "Um lote ativo por tenant e um único dono por lote",
@@ -186,7 +167,7 @@ try {
     },
   );
   await scenario(
-    "Uma loja falha; a outra termina; triagem persistida é parcial e executada uma vez",
+    "Uma loja falha; lote incompleto preserva edição anterior sem publicar nem triar",
     async () => {
       const b = await store.create(
         "local",
@@ -213,11 +194,11 @@ try {
       );
       const result = await store.publicStatus(b.id);
       assert.equal(result?.status, "partial");
-      assert.deepEqual(result?.triage, summary);
+      assert.equal(result?.triage, undefined);
+      assert.equal(result?.error, "capture_incomplete");
       assert.deepEqual(calls, [
         "capture:shopee",
         "capture:aliexpress",
-        "triage:batch",
       ]);
     },
   );
@@ -228,6 +209,8 @@ try {
       await executeCaptureBatch(
         b.id,
         async (step: any) => {
+          if (step.kind === "publish") return publish(step);
+          if (step.kind === "affiliate") return {ok:true};
           if (step.marketplace) {
             await captured(b.id, step.marketplace);
             return { ok: true };
@@ -246,6 +229,8 @@ try {
       await executeCaptureBatch(
         b.id,
         async (step: any) => {
+          if (step.kind === "publish") return publish(step);
+          if (step.kind === "affiliate") return {ok:true};
           if (step.marketplace) {
             await captured(b.id, step.marketplace);
             return { ok: true };
@@ -378,6 +363,7 @@ try {
       assert.equal(imported.importedCount, 2);
 
       await executeCaptureBatch(b.id, async (step: any) => {
+        if (step.kind === "publish") return publish(step);
         assert.equal(step.kind, "triage");
         triageCalls++;
         return { ok: true, triage: summary };
@@ -454,14 +440,14 @@ try {
       assert.equal(
         (
           await pg.query<any>(
-            "select count(*)::int as n from garimpa.price_observation",
+            "select count(*)::int as n from garimpa.capture_prepared_offer",
           )
         ).rows[0].n,
         2,
       );
       const observation = (
         await pg.query<any>(
-          "select o.*,r.parameters from garimpa.price_observation o join garimpa.capture_run r on r.id=o.capture_run_id limit 1",
+          "select s.payload->>'captureSource' as capture_source,s.payload->'offerEvidence' as offer_evidence,r.parameters from garimpa.capture_prepared_offer s join garimpa.capture_run r on r.id=s.capture_run_id limit 1",
         )
       ).rows[0];
       assert.equal(observation.parameters.operationBatchId, b.id);
@@ -482,6 +468,8 @@ try {
       await executeCaptureBatch(
         b.id,
         async (step: any) => {
+          if (step.kind === "publish") return publish(step);
+          if (step.kind === "affiliate") return {ok:true};
           assert.equal(step.kind, "triage");
           calls.push("triage");
           return { ok: true, triage: summary };
@@ -507,7 +495,7 @@ try {
     },
   );
   await scenario(
-    "Lote misto legado que omite ML conclui com status partial e triagem não usa ML ausente como sucesso (AC-027.2)",
+    "Lote misto que omite ML preserva edição anterior sem publicar captura incompleta",
     async () => {
       const b = await store.create(
         "local",
@@ -542,7 +530,7 @@ try {
         },
         store,
       );
-      assert.deepEqual(calls, ["capture:shopee", "triage"]);
+      assert.deepEqual(calls, ["capture:shopee"]);
       const result = await store.publicStatus(b.id);
       assert.equal(result.status, "partial");
       const ml = result.marketplaces.find((m: any) => m.marketplace === "mercadolivre");
@@ -625,7 +613,7 @@ try {
       assert.equal(
         (
           await pg.query<any>(
-            "select distinct capture_source from garimpa.price_observation",
+            "select distinct payload->>'captureSource' as capture_source from garimpa.capture_prepared_offer",
           )
         ).rows[0].capture_source,
         "extension",
@@ -654,7 +642,7 @@ try {
       p.products[1].priceCents = -1; // Simulate an unexpected persistence failure after route validation.
       await assert.rejects(
         () => browserStore.complete(browserAccess, b.id, p),
-        /check constraint/i,
+        /capture_offer_invalid/i,
       );
       for (const table of ["product", "price_observation", "capture_run"])
         assert.equal(

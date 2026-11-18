@@ -1,3 +1,4 @@
+import { adminMutationOrigin } from "../../../../../lib/admin-request-origin.ts";
 import { inAccountScope } from "../../../../../lib/account-scope.ts";
 import { NextRequest } from "next/server";
 import { captureBatches } from "../../../../../lib/capture-batch-db";
@@ -63,12 +64,16 @@ export async function POST(request: NextRequest) {
   if (check.kind === "forbidden")
     return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
  return inAccountScope(check.context, async () => {
-  if (request.headers.get("origin") !== request.nextUrl.origin) {
+  if (!adminMutationOrigin(request)) {
     return sinkJson(
       check.sink,
       { ok: false, error: "invalid_origin" },
       { status: 403 },
     );
+  }
+  const requestId = request.headers.get("Idempotency-Key") ?? undefined;
+  if (requestId && !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(requestId)) {
+    return sinkJson(check.sink,{ok:false,error:"invalid_capture_request_id"},{status:400});
   }
   let pages = 2;
   let consent = false;
@@ -76,8 +81,10 @@ export async function POST(request: NextRequest) {
   let planMode: "departments" | "keywords" | undefined;
   let sortOrder: "sales" | "default" | "discount" | undefined;
   let pageSize: number | undefined;
-  try {
-    const body = (await request.json()) as {
+  {
+    const body = (await request.json().catch(() => ({}))) as {
+      action?: "retry" | "cancel" | "resume";
+      batchId?: string;
       pages?: number;
       consent?: boolean;
       marketplaces?: unknown;
@@ -85,6 +92,43 @@ export async function POST(request: NextRequest) {
       sortOrder?: "sales" | "default" | "discount";
       pageSize?: number;
     };
+    if (body.action === "resume") {
+      if (body.marketplaces !== undefined && (!Array.isArray(body.marketplaces)
+        || body.marketplaces.length !== 1 || body.marketplaces[0] !== "shopee"))
+        return sinkJson(check.sink,{ok:false,error:"capture_batch_not_resumable"},{status:409});
+      if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(body.batchId ?? ""))
+        return sinkJson(check.sink,{ok:false,error:"invalid_batch_id"},{status:400});
+      if (captureExecutor() !== "local")
+        return sinkJson(check.sink,{ok:false,error:"capture_batch_not_resumable"},{status:409});
+      try {
+        const prepared = await prepareAccountCapture(check.context, ["shopee"], false);
+        if (!prepared.enabled.includes("shopee"))
+          return sinkJson(check.sink,{ok:false,error:"no_enabled_marketplace",skipped:prepared.skipped},{status:409});
+        await captureBatches.resumeLocalShopee(body.batchId!, check.context.tenantId);
+      } catch (error) {
+        const conflict = typeof error === "object" && error !== null && "code" in error && error.code === "23505";
+        return sinkJson(check.sink,{ok:false,error:conflict ? "batch_in_progress" : "capture_batch_not_resumable"},{status:409});
+      }
+      try {
+        await dispatchCaptureBatch(body.batchId!, check.context);
+      } catch {
+        await captureBatches.dispatchFailed(body.batchId!);
+        const batch = await captureBatches.publicStatus(body.batchId!);
+        return sinkJson(check.sink,{ok:batch?.status === "running",error:"dispatch_failed",batch},{status:batch?.status === "running" ? 202 : 502});
+      }
+      return sinkJson(check.sink,{ok:true,batch:await captureBatches.publicStatus(body.batchId!)},{status:202});
+    }
+    if (body.action === "retry" || body.action === "cancel") {
+      if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(body.batchId ?? ""))
+        return sinkJson(check.sink,{ok:false,error:"invalid_batch_id"},{status:400});
+      try {
+        await captureBatches.resolveWait(body.batchId!,check.context.tenantId,body.action);
+        if(body.action==='retry')await dispatchCaptureBatch(body.batchId!,check.context);
+        return sinkJson(check.sink,{ok:true,batch:await captureBatches.publicStatus(body.batchId!)},{status:200});
+      } catch {
+        return sinkJson(check.sink,{ok:false,error:"capture_batch_not_waiting"},{status:409});
+      }
+    }
     if (Number.isInteger(body.pages))
       pages = Math.min(Math.max(body.pages!, 1), MAX_PAGES);
     consent = body.consent === true;
@@ -102,8 +146,6 @@ export async function POST(request: NextRequest) {
         (value): value is string => typeof value === "string",
       );
     }
-  } catch {
-    /* corpo vazio usa o padrão seguro */
   }
 
   if (!process.env.DATABASE_URL)
@@ -153,10 +195,10 @@ export async function POST(request: NextRequest) {
     );
 
   const executor = captureExecutor();
-  if (executor === "github" && !process.env.GITHUB_ACTIONS_WRITE_TOKEN) {
+  if (executor === "github") {
     return sinkJson(
       check.sink,
-      { ok: false, error: "github_token_not_configured" },
+      { ok: false, error: "durable_capture_executor_not_configured" },
       { status: 503 },
     );
   }
@@ -173,9 +215,16 @@ export async function POST(request: NextRequest) {
         planMode: planMode ?? "departments",
         sortOrder: sortOrder ?? "sales",
         pageSize: pageSize ?? 20,
+        requestId,
       },
     );
   } catch (error) {
+    if (error instanceof Error && error.message === "capture_trial_not_authorized")
+      return sinkJson(check.sink,{ok:false,error:error.message,message:"O ensaio de captura não está autorizado para esta conta."},{status:403});
+    if (error instanceof Error && ["capture_trial_marketplace_invalid","capture_trial_executor_invalid"].includes(error.message))
+      return sinkJson(check.sink,{ok:false,error:error.message,message:"Este ensaio permite somente uma rodagem limitada da Shopee."},{status:409});
+    if (error instanceof Error && error.message === "capture_request_conflict")
+      return sinkJson(check.sink,{ok:false,error:"capture_request_conflict"},{status:409});
     if (
       typeof error === "object" &&
       error !== null &&
@@ -197,6 +246,9 @@ export async function POST(request: NextRequest) {
       { ok: false, error: "batch_create_failed" },
       { status: 500 },
     );
+  }
+  if (storedBatch.status !== "running" || storedBatch.metadata.execution?.phase !== "queued") {
+    return sinkJson(check.sink,{ok:true,batch:await captureBatches.publicStatus(storedBatch.id),skipped},{status:200});
   }
   try {
     await dispatchCaptureBatch(storedBatch.id, check.context);

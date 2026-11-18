@@ -1,6 +1,8 @@
 import type { WorkbenchPage } from "../../lib/workbench-contract.ts";
 import type { StoreHealth } from "../../lib/today-operation.ts";
 import WorkbenchInteractiveTable from "./workbench-interactive-table.tsx";
+import type { CurationAutomation } from "../../lib/curation-automation.ts";
+import AutomationStatus from "./curadoria/automation-status.tsx";
 
 interface TodayCommandCenterProps {
   autoPublish: boolean;
@@ -17,6 +19,8 @@ interface TodayCommandCenterProps {
   auditRemaining: number;
   workbenchPage?: WorkbenchPage | null;
   storesHealth?: StoreHealth[];
+  automation?: CurationAutomation | null;
+  tenantId?: string;
 }
 
 export default function TodayCommandCenter(props: TodayCommandCenterProps) {
@@ -29,6 +33,7 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
           <h1 id="today-title">
             {props.selectionReady
               ? "Seleção de destaques disponível"
+              : props.automation ? "Acompanhe suas capturas e a curadoria automática"
               : pending
                 ? "Resolva as pendências ou capture novas ofertas"
                 : "Capture ofertas para ampliar a seleção"}
@@ -39,20 +44,21 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
           </p>
         </div>
         <div
-          className={`autopilot-status ${props.autoPublish ? "active" : "paused"}`}
+          className={`autopilot-status ${props.automation || props.autoPublish ? "active" : "paused"}`}
         >
           <span>
-            {props.autoPublish
+            {props.automation ? "Curadoria automática ativa" : props.autoPublish
               ? "Aprovação automática ativa"
               : "Aprovação humana"}
           </span>
           <small>
-            {props.autoPublish
+            {props.automation ? "Avaliação e seleção por critérios" : props.autoPublish
               ? `Aprova notas a partir de ${props.minScore}`
               : "A IA recomenda e você decide"}
           </small>
         </div>
       </header>
+      {props.automation ? <AutomationStatus automation={props.automation} tenantId={props.tenantId ?? ""} selectionLabel={props.selectionLabel} /> : <>
       <ol className="today-workflow" aria-label="Estado real da operação">
         <li className={props.captureDoneToday ? "done" : ""}>
           <span className="workflow-step-mark">1</span>
@@ -115,9 +121,9 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
           </a>
         )}
       </div>
+      </>}
       <p className="curation-muted">
-        O cron acompanha preços de produtos conhecidos. Qualidade da IA é uma
-        amostra opcional
+        A conferência da qualidade da IA é uma amostra opcional
         {props.auditRemaining > 0
           ? ` com ${props.auditRemaining} produtos disponíveis para conferir`
           : ""}
@@ -163,9 +169,9 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
                     </span>
                   </div>
                   <div className="today-store-metric-row">
-                    <span className="today-store-metric-label">Ofertas &lt;3h na pauta:</span>
+                    <span className="today-store-metric-label">Preços observados há menos de 3h:</span>
                     <span className="today-store-metric-value">
-                      <b>{store.freshApprovedCount}</b> aprovadas ({store.freshCount} total)
+                      <b>{store.freshCount}</b> produtos; {store.freshApprovedCount} aprovados no catálogo
                     </span>
                   </div>
                 </div>
@@ -185,7 +191,7 @@ export default function TodayCommandCenter(props: TodayCommandCenterProps) {
         </section>
       )}
 
-      {props.workbenchPage && (
+      {!props.automation && props.workbenchPage && (
         <WorkbenchInteractiveTable initialPage={props.workbenchPage} />
       )}
     </section>

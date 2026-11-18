@@ -42,6 +42,116 @@ export function collectBrowserOffers() {
     salesCount?: number;
   }> = [];
   const seen = new Set<string>();
+  const pdpTitleEl = typeof document.querySelector === "function"
+    ? document.querySelector<HTMLElement>("h1.ui-pdp-title")
+    : null;
+  const pdpTitle = (pdpTitleEl?.textContent || "").replace(/\s+/gu, " ").trim();
+  if (pdpTitle && pdpTitle.length <= 2000 && typeof document.querySelector === "function") {
+    const pageFragment = new URLSearchParams(page.hash.slice(1));
+    const pageFiltered = (page.searchParams.get("pdp_filters") || pageFragment.get("pdp_filters") || "").match(/item_id:(MLB\d{6,})/i);
+    const pageDirect = !normalizedPath.includes("/p/") ? normalizedPath.match(/\/MLB-?(\d{6,})/i) : null;
+    const domItemInput = document.querySelector<HTMLInputElement>('input[name="item_id"], input[name="itemId"]')?.value || "";
+    const domMetaApp = document.querySelector('meta[name="twitter:app:url:iphone"], meta[property="al:ios:url"], meta[property="al:android:url"]')?.getAttribute("content") || "";
+    const domMetaMatch = domMetaApp.match(/id=(MLB\d{6,})/i);
+    const domActionLink = document.querySelector<HTMLAnchorElement>('.ui-pdp-container a[href*="wid=MLB"], .ui-pdp-container a[href*="item_id:MLB"], .ui-pdp-container a[href*="item_id=MLB"]')?.href || "";
+    const domActionMatch = domActionLink.match(/(?:wid=|item_id[:=])(MLB\d{6,})/i);
+    let scriptItemId = "";
+    if (typeof document.querySelectorAll === "function") {
+      for (const s of Array.from(document.querySelectorAll("script"))) {
+        const m = /"item_id"\s*:\s*"(MLB\d{6,})"/i.exec(s.textContent || "");
+        if (m) { scriptItemId = m[1]!.toUpperCase(); break; }
+      }
+    }
+    const pdpListingId = (
+      page.searchParams.get("wid") ||
+      pageFragment.get("wid") ||
+      (pageFiltered ? pageFiltered[1] : "") ||
+      (/^MLB\d{6,}$/i.test(domItemInput) ? domItemInput : "") ||
+      (domMetaMatch ? domMetaMatch[1] : "") ||
+      (domActionMatch ? domActionMatch[1] : "") ||
+      scriptItemId
+    ).toUpperCase();
+    const pdpExternalId = pdpListingId || (pageDirect ? "MLB" + pageDirect[1] : "");
+    const pdpPriceRoot =
+      document.querySelector(".ui-pdp-price__second-line") ||
+      document.querySelector(".ui-pdp-price__main-container") ||
+      document.querySelector(".ui-pdp-price");
+    const pdpPriceEl =
+      document.querySelector('.ui-pdp-price__second-line [aria-label*="reais" i]') ||
+      document.querySelector('.ui-pdp-price__second-line[aria-label*="reais" i]') ||
+      pdpPriceRoot?.querySelector('.andes-money-amount:not(.andes-money-amount--previous)[aria-label*="reais" i]') ||
+      pdpPriceRoot?.querySelector('.andes-money-amount:not(.andes-money-amount--previous) [aria-label*="reais" i]') ||
+      pdpPriceRoot?.querySelector('[aria-label*="reais" i]:not([aria-label^="Antes:" i])');
+    const pdpPriceLabel = pdpPriceEl?.getAttribute("aria-label") || "";
+    let pdpPriceCents = money(pdpPriceLabel || null);
+    if (!pdpPriceCents && pdpPriceRoot) {
+      const amountBox = pdpPriceRoot.querySelector(".andes-money-amount:not(.andes-money-amount--previous)") || pdpPriceRoot;
+      const frac = (amountBox.querySelector(".andes-money-amount__fraction")?.textContent || "").replace(/\./g, "").trim();
+      const cents = (amountBox.querySelector(".andes-money-amount__cents")?.textContent || "").trim();
+      if (/^\d+$/.test(frac)) {
+        pdpPriceCents = Number(frac) * 100 + (/^\d{1,2}$/.test(cents) ? Number(cents.padEnd(2, "0")) : 0);
+      }
+    }
+    if (/^MLB\d{6,}$/.test(pdpExternalId) && pdpPriceCents && !/\b(?:faixa|entre)\b/i.test(pdpPriceLabel)) {
+      const pdpOriginalEl =
+        document.querySelector('.ui-pdp-price__original-value [aria-label*="reais" i]') ||
+        document.querySelector('.ui-pdp-price__original-value[aria-label*="reais" i]') ||
+        document.querySelector('.ui-pdp-price__main-container .andes-money-amount--previous[aria-label*="reais" i]') ||
+        document.querySelector('.ui-pdp-price__main-container .andes-money-amount--previous [aria-label*="reais" i]') ||
+        document.querySelector('.ui-pdp-price [aria-label^="Antes:" i]');
+      const pdpOriginal = money(pdpOriginalEl?.getAttribute("aria-label") || null);
+      const pdpImg = document.querySelector<HTMLImageElement>(
+        'img.ui-pdp-image[src^="https://"], img[data-zoom][src*=".mlstatic.com/"], .ui-pdp-gallery img[src*=".mlstatic.com/"]',
+      );
+      let pdpText = (document.querySelector(".ui-pdp-header, .ui-pdp-container")?.textContent || "") + " " +
+        (document.querySelector(".ui-pdp-subtitle")?.textContent || "");
+      for (const el of Array.from(document.querySelectorAll(".ui-pdp-header [aria-label]"))) {
+        pdpText += " " + el.getAttribute("aria-label");
+      }
+      const pdpRating = /Classificação\s*([0-5](?:[.,]\d+)?)\s*de\s*5\s*estrelas/i.exec(pdpText) ||
+        /^([0-5](?:[.,]\d+)?)$/.exec((document.querySelector(".ui-pdp-review__rating")?.textContent || "").trim());
+      const pdpSales = /(?:\+\s*|Mais de\s+)(\d+(?:[.,]\d+)?)\s*(milhões|milhão|mil|mi|m)?\s*(?:produtos?\s+)?vendidos/i.exec(pdpText);
+      const pdpProduct: (typeof products)[number] = {
+        externalId: pdpExternalId,
+        title: pdpTitle,
+        productUrl:
+          page.origin +
+          normalizedPath +
+          (pdpListingId || normalizedPath.includes("/p/") ? "?wid=" + pdpExternalId : ""),
+        priceCents: pdpPriceCents,
+        currency: "BRL",
+        priceType: /a\s+partir\s+de/i.test(pdpPriceLabel) ? "from" : "exact",
+      };
+      if (pdpOriginal && pdpOriginal > pdpPriceCents) pdpProduct.originalPriceCents = pdpOriginal;
+      if (pdpImg) {
+        const src = pdpImg.src && pdpImg.src.startsWith("https://") ? pdpImg.src : pdpImg.getAttribute("data-src");
+        if (src && src.startsWith("https://")) pdpProduct.imageUrl = src;
+      }
+      if (pdpRating && Number(pdpRating[1]!.replace(",", ".")) > 0) {
+        pdpProduct.ratingStar = Number(pdpRating[1]!.replace(",", "."));
+      }
+      if (pdpSales) {
+        pdpProduct.salesLabel = pdpSales[0];
+        pdpProduct.salesCount = Math.round(
+          Number(pdpSales[1]!.replace(",", ".")) *
+            (pdpSales[2] ? (pdpSales[2] === "mil" ? 1000 : 1000000) : 1),
+        );
+      }
+      const pdpSource = new URL(page.origin + (normalizedPath || "/"));
+      if (pdpListingId || normalizedPath.includes("/p/")) {
+        pdpSource.searchParams.set("wid", pdpExternalId);
+      }
+      return {
+        version: 1 as const,
+        requestId: crypto.randomUUID(),
+        marketplace: "mercadolivre" as const,
+        clientCapturedAt: new Date().toISOString(),
+        page: { kind: "product" as const, url: pdpSource.toString() },
+        products: [pdpProduct],
+        ignoredCards: 0,
+      };
+    }
+  }
   const cards = Array.from(
     document.querySelectorAll<HTMLElement>(
       ".poly-card, .ui-search-layout__item, .ui-search-result",
@@ -55,7 +165,8 @@ export function collectBrowserOffers() {
         "a.ui-search-item__group__element",
       );
     if (!anchor) continue;
-    const url = new URL(anchor.href);
+    let url: URL;
+    try { url = new URL(anchor.href); } catch { continue; }
     if (
       !/(^|\.)mercadolivre\.com\.br$/.test(url.hostname) ||
       url.protocol !== "https:"
@@ -69,11 +180,11 @@ export function collectBrowserOffers() {
     );
     const fragment = new URLSearchParams(url.hash.slice(1));
     // A catalog ID alone does not establish the listing/seller observed in the card.
-    const externalId =
+    const listingId =
       url.searchParams.get("wid") ||
       fragment.get("wid") ||
-      (filtered ? filtered[1] : "") ||
-      (direct ? "MLB" + direct[1] : "");
+      (filtered ? filtered[1] : "");
+    const externalId = listingId || (direct ? "MLB" + direct[1] : "");
     const title = (anchor.textContent || "").replace(/\s+/gu, " ").trim();
     const priceEl =
       card.querySelector('.poly-price__current [aria-label*="reais"]') ||
@@ -116,7 +227,9 @@ export function collectBrowserOffers() {
       productUrl:
         url.origin +
         url.pathname +
-        (url.pathname.includes("/p/") ? "?wid=" + externalId : ""),
+        // The listing may differ from the ID in a direct URL too. Dropping
+        // its explicit identity here makes server validation see another item.
+        (listingId || url.pathname.includes("/p/") ? "?wid=" + externalId : ""),
       priceCents,
       currency: "BRL",
       priceType: /a\s+partir\s+de/i.test(priceLabel) ? "from" : "exact",
@@ -156,12 +269,24 @@ export function collectBrowserOffers() {
           : "listing";
 
   const pagePath = normalizedPath || "/ofertas";
+  // This function is serialized into the bookmarklet, so its sanitizer must
+  // stay self-contained and match the server's allowlist.
+  const source = new URL(page.origin + pagePath);
+  for (const key of ["q", "search", "page", "wid"]) {
+    for (const value of page.searchParams.getAll(key)) {
+      if (!value || value.length > 120 || /[@\r\n]/.test(value)) continue;
+      if (key === "page" && !/^[1-9]\d{0,4}$/.test(value)) continue;
+      if (key === "wid" && !/^MLB\d{6,}$/i.test(value)) continue;
+      if (["q", "search"].includes(key) && (/\d{10,}/.test(value) || /(?:bearer|token|session|password|senha)/i.test(value))) continue;
+      source.searchParams.append(key, value);
+    }
+  }
   return {
     version: 1 as const,
     requestId: crypto.randomUUID(),
     marketplace: "mercadolivre" as const,
     clientCapturedAt: new Date().toISOString(),
-    page: { kind: pageKind, url: page.origin + pagePath },
+    page: { kind: pageKind, url: source.toString() },
     products,
     ignoredCards: cards.length - products.length,
   };

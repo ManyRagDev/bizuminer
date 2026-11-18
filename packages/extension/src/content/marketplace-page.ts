@@ -1,4 +1,5 @@
 import { extractAmazonCardFromElement, extractAmazonProductFromDoc } from "./amazon-extractor.ts";
+import { sourcePageUrl } from "../../../capture/src/source-page-url.ts";
 
 type Marketplace = "amazon" | "aliexpress";
 type Price = {
@@ -15,14 +16,17 @@ type Offer = Price & {
   currency: "BRL";
   condition?: "coupon" | "first_purchase" | "pix" | "prime";
   variantLabel?: string;
+  variantKey?: string;
 };
 
 // Some Brazilian listings use a dot for decimals even with the BRL symbol.
 const BRL_AMOUNT = "(?:\\d{1,3}(?:\\.\\d{3})+(?:,\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)";
-const BRL_VALUE = "R\\$\\s*" + BRL_AMOUNT + "(?:\\s*(?:a|até|[-–—~])\\s*(?:R\\$\\s*)?" + BRL_AMOUNT + ")?(?![\\d.,])";
+const PRICE_RANGE_SEPARATOR = "\\s*(?:a|até|[-–—~])\\s*";
+const BRL_VALUE = "R\\$\\s*" + BRL_AMOUNT + "(?:" + PRICE_RANGE_SEPARATOR + "(?:R\\$\\s*)?" + BRL_AMOUNT + ")?(?![\\d.,])";
+const BARE_BRL_PRICE = new RegExp(`^(a partir de )?(${BRL_AMOUNT}(?:${PRICE_RANGE_SEPARATOR}${BRL_AMOUNT})?)$`, "i");
 
 export function displayedPrice(label: string): Price | undefined {
-  const match = new RegExp(`R\\$\\s*(${BRL_AMOUNT})(?:\\s*(?:a|até|[-–—~])\\s*(?:R\\$\\s*)?(${BRL_AMOUNT}))?(?![\\d.,])`, "i")
+  const match = new RegExp(`R\\$\\s*(${BRL_AMOUNT})(?:${PRICE_RANGE_SEPARATOR}(?:R\\$\\s*)?(${BRL_AMOUNT}))?(?![\\d.,])`, "i")
     .exec(normalizePriceText(label));
   if (!match) return;
   const cents = (value: string) => {
@@ -46,6 +50,13 @@ function normalizePriceText(text: string): string {
     .replace(/\s+/g, " ");
 }
 
+function bareAliPrice(label: string, page: URL): Price | undefined {
+  const currency = page.searchParams.get("currency");
+  if (page.hostname !== "pt.aliexpress.com" || (currency && currency.toUpperCase() !== "BRL")) return;
+  const match = BARE_BRL_PRICE.exec(normalizePriceText(label).trim());
+  if (match) return displayedPrice(`${match[1] ?? ""}R$ ${match[2]}`);
+}
+
 const itemId = (href: string, marketplace: Marketplace) => {
   let url: URL;
   try { url = new URL(href); } catch { return; }
@@ -60,6 +71,17 @@ const itemId = (href: string, marketplace: Marketplace) => {
 
 const ALI_PRICE_SELECTOR = "[class*='price-default'], [class*='price--current'], [class*='price-sale'], [class*='price--sale'], [data-testid='product-price'], [itemprop='price']";
 const ALI_CARD_SELECTOR = "[class*='search-card-item'], [class*='product-card'], [data-testid*='product-card'], [data-product-id], [data-item-id], [data-productid]";
+const AMAZON_SEARCH_CARD = "[data-cy='asin-faceout-container']";
+const AMAZON_CURRENT_PRICE = ".a-price:not(.a-text-price):not([data-a-strike='true'])";
+
+function amazonSplitPrice(price: Element): Price | undefined {
+  const symbol = price.querySelector(".a-price-symbol")?.textContent?.trim();
+  const whole = price.querySelector(".a-price-whole")?.textContent?.trim().replace(/,$/, "");
+  const fraction = price.querySelector(".a-price-fraction")?.textContent?.trim();
+  if (symbol === "R$" && whole && /^[\d.]+$/.test(whole) && fraction && /^\d{2}$/.test(fraction)) {
+    return displayedPrice(`${symbol} ${whole},${fraction}`);
+  }
+}
 
 const visibleText = (element: Element): string => (element as HTMLElement).innerText ?? element.textContent ?? "";
 
@@ -86,9 +108,37 @@ function priceFromCardText(text: string): Price | undefined {
   return uniquePrice(current.length ? current : values);
 }
 
+function aliSplitPrice(card: Element): Price | undefined {
+  const prices: Price[] = [];
+  const view = card.ownerDocument?.defaultView;
+  // The accessible amount precedes a sequence of visual price fragments.
+  for (const first of Array.from(card.querySelectorAll("span:not([aria-hidden='true']) + span[aria-hidden='true']")).slice(0, 60)) {
+    const label = normalizePriceText(first.previousElementSibling?.textContent ?? "").trim();
+    if (!/^(?:a partir de )?R\$/i.test(label) || !BARE_BRL_PRICE.test(label.replace(/R\$\s*/g, ""))) continue;
+
+    let visual = "";
+    let crossedOut = false;
+    for (let part: Element | null = first; part?.getAttribute("aria-hidden") === "true"; part = part.nextElementSibling) {
+      visual += part.textContent ?? "";
+      crossedOut ||= !!view?.getComputedStyle(part).textDecorationLine.includes("line-through");
+    }
+    if (label.replace(/\s/g, "") !== visual.replace(/\s/g, "")) continue;
+
+    for (let parent = first.parentElement; parent && parent !== card; parent = parent.parentElement) {
+      crossedOut ||= parent.matches("s, del") || !!view?.getComputedStyle(parent).textDecorationLine.includes("line-through");
+    }
+    if (crossedOut) continue;
+    const price = displayedPrice(label);
+    if (price) prices.push(price);
+  }
+  return uniquePrice(prices);
+}
+
 function aliPrice(card: Element, text: string): Price | undefined {
   const identified = priceFromCardText(text);
-  if (identified) return identified;
+  if (identified && identified.priceType !== "exact") return identified;
+  const split = aliSplitPrice(card);
+  if (split || identified) return split ?? identified;
   const view = card.ownerDocument?.defaultView;
   if (!view) return;
 
@@ -137,16 +187,26 @@ function cleanTitle(text: string | null | undefined): string | undefined {
   return title;
 }
 
-function readCard(doc: Document, card: Element, id: string, marketplace: Marketplace, detail: boolean, anchor?: HTMLAnchorElement, diagnostics?: ReadDiagnostics): Offer | null {
+function readCard(page: URL, card: Element, id: string, marketplace: Marketplace, detail: boolean, anchor?: HTMLAnchorElement, diagnostics?: ReadDiagnostics): Offer | null {
   const amazon = marketplace === "amazon";
+  const searchCard = amazon && !detail && card.matches(AMAZON_SEARCH_CARD);
+  const titleLink = searchCard ? card.querySelector<HTMLAnchorElement>("[data-cy='title-recipe'] a[href]") : null;
+  const titleId = titleLink && itemId(titleLink.href, marketplace);
+  if (titleId && titleId !== id) return null;
+
+  const priceRecipe = searchCard ? card.querySelector("[data-cy='price-recipe']") : null;
+  const mainPrice = priceRecipe?.querySelector(AMAZON_CURRENT_PRICE);
   const priceSelector = amazon
-    ? ".a-price:not(.a-text-price):not([data-a-strike='true']) .a-offscreen, [data-testid*='price']"
+    ? `${AMAZON_CURRENT_PRICE} .a-offscreen, [data-testid*='price']`
     : ALI_PRICE_SELECTOR;
-  const priceElement = card.querySelector(priceSelector);
+  const priceElement = searchCard ? mainPrice?.querySelector(".a-offscreen") : card.querySelector(priceSelector);
   const text = visibleText(card);
-  const priceText = priceElement ? visibleText(priceElement).trim() : "";
-  const knownAmazon = amazon && (detail ? extractAmazonProductFromDoc(doc, doc.URL) : extractAmazonCardFromElement(card));
-  const price = (amazon ? displayedPrice(priceText) : priceFromCardText(priceText) ?? (!detail ? aliPrice(card, text) : undefined))
+  // The accessible label stays readable even when CSS hides it visually.
+  const priceText = searchCard ? priceElement?.textContent ?? "" : priceElement ? visibleText(priceElement).trim() : "";
+  const knownAmazon = amazon && !searchCard && (detail ? extractAmazonProductFromDoc(card.ownerDocument, page.href) : extractAmazonCardFromElement(card));
+  const price = (amazon ? displayedPrice(priceText)
+    : priceFromCardText(priceText) ?? bareAliPrice(priceText, page) ?? (!detail ? aliPrice(card, text) : undefined))
+    ?? (mainPrice ? amazonSplitPrice(mainPrice) : undefined)
     ?? (knownAmazon ? { priceCents: knownAmazon.priceCents, priceType: "exact" as const } : undefined);
   if (diagnostics) {
     diagnostics.currency ||= /R\s*[$＄]|\bBRL\s*\d/i.test(text);
@@ -154,22 +214,29 @@ function readCard(doc: Document, card: Element, id: string, marketplace: Marketp
     diagnostics.inViewport ||= intersectsViewport(card);
   }
   if (!price) return null;
-  const dealTitle = amazon ? card.querySelector<HTMLElement>("[data-testid*='deal-card-title'], [class*='deal-title'], [class*='DealTitle'], .a-truncate-cut, h2 a span, h2 span, h3 a span, h3 span, a.a-link-normal span") : null;
-  const heading = card.querySelector<HTMLElement>(detail
+  const dealTitle = amazon && !searchCard ? card.querySelector<HTMLElement>("[data-testid*='deal-card-title'], [class*='deal-title'], [class*='DealTitle'], .a-truncate-cut, h2 a span, h2 span, h3 a span, h3 span, a.a-link-normal span") : null;
+  const heading = card.querySelector<HTMLElement>(searchCard ? "[data-cy='title-recipe'] h2" : detail
     ? amazon ? "#productTitle, h1" : "h1, [data-testid='product-title']"
     : "h2, h3, h4, [role='heading'], [class*='title--'], [data-testid*='product-title'], [class*='product-title']");
-  const img = card.querySelector<HTMLImageElement>("img.s-image, img#landingImage, img[alt]:not([alt='']), img[src], img[data-src]");
+  const img = card.querySelector<HTMLImageElement>(searchCard
+    ? "[data-cy='image-container'] img.s-image, img.s-image"
+    : "img.s-image, img#landingImage, img[alt]:not([alt='']), img[src], img[data-src]");
   const title = (knownAmazon ? cleanTitle(knownAmazon.title) : undefined)
     ?? cleanTitle(dealTitle?.textContent)
     ?? cleanTitle(dealTitle?.getAttribute?.("title"))
     ?? cleanTitle(heading?.textContent)
-    ?? cleanTitle(heading?.getAttribute?.("title"))
+    ?? cleanTitle(heading?.getAttribute?.(searchCard ? "aria-label" : "title"))
     ?? cleanTitle(img?.alt)
     ?? cleanTitle(anchor?.getAttribute?.("title"))
     ?? cleanTitle(anchor?.getAttribute?.("aria-label"))
-    ?? (!detail ? text.split(/\n+/).map(cleanTitle).find(Boolean) : undefined);
+    ?? (!detail && !searchCard ? text.split(/\n+/).map(cleanTitle).find(Boolean) : undefined);
   if (!title || title.length < 3) return null;
-  const scope = detail ? priceElement?.parentElement?.textContent ?? priceText : text;
+  // The price row contains payment terms. Separate promotion rows describe
+  // other offers, such as a discount on a first purchase in the app.
+  const closestRow = mainPrice?.closest(".a-row");
+  const priceRow = closestRow && priceRecipe?.contains(closestRow) ? closestRow : null;
+  const scope = searchCard ? priceRow ? visibleText(priceRow) : priceText
+    : detail ? priceElement?.parentElement?.textContent ?? priceText : text;
   const condition = amazon && /(?:oferta|preço) (?:exclusiv[oa] )?(?:para )?(?:membros )?prime/i.test(scope) ? "prime"
     : /primeira compra|novo usuário|desconto de boas.vindas/i.test(scope)
     ? "first_purchase" : /com (?:o )?cupom|cupom aplicado/i.test(scope)
@@ -177,11 +244,23 @@ function readCard(doc: Document, card: Element, id: string, marketplace: Marketp
   const variantLabel = !amazon && detail
     ? card.querySelector("[class*='sku-item'][aria-checked='true'], [class*='sku-item--selected']")?.getAttribute("title")?.trim()
     : undefined;
+  // Accept an AliExpress SKU only when the URL and the selected control
+  // independently agree; a label alone is not a stable product identity.
+  const requestedSku=!amazon && detail ? page.searchParams.get('sku_id') : null;
+  const selectedSku=!amazon && detail ? card.querySelector<HTMLInputElement>('input[name="sku_id"], input[name="skuId"]')?.value
+    ?? card.querySelector('[data-sku-id][aria-checked="true"], [data-sku-id][aria-selected="true"]')?.getAttribute('data-sku-id') : null;
+  const variantKey=requestedSku && /^\d{1,24}$/.test(requestedSku) && selectedSku===requestedSku ? requestedSku : undefined;
+  // A selected SKU whose identity cannot be confirmed must not become a
+  // generic listing observation with a potentially variant-specific price.
+  if (detail && !amazon && (requestedSku || selectedSku) && !variantKey) return null;
+  const originalPrice = searchCard
+    ? displayedPrice(priceRow?.querySelector(".a-price[data-a-strike='true'] .a-offscreen")?.textContent ?? "")?.priceCents
+    : knownAmazon ? knownAmazon.originalPriceCents : undefined;
   return {
-    ...price, externalId: id, title, currency: "BRL", condition, variantLabel,
+    ...price, externalId: id, title, currency: "BRL", condition, variantLabel, ...(variantKey ? {variantKey} : {}),
     productUrl: amazon ? `https://www.amazon.com.br/dp/${id}` : `https://pt.aliexpress.com/item/${id}.html`,
     imageUrl: knownAmazon && knownAmazon.imageUrl || img?.currentSrc || img?.src || img?.getAttribute("data-src") || undefined,
-    originalPriceCents: !condition && price.priceType === "exact" && knownAmazon ? knownAmazon.originalPriceCents : undefined,
+    originalPriceCents: !condition && price.priceType === "exact" && originalPrice !== undefined && originalPrice > price.priceCents ? originalPrice : undefined,
   };
 }
 
@@ -190,6 +269,16 @@ export function collectMarketplacePage(doc = document, page = new URL(location.h
     : /(^|\.)aliexpress\.com$/.test(page.hostname) ? "aliexpress" : undefined;
   if (!marketplace || page.protocol !== "https:" || /\/(ap\/signin|gp\/cart|p\/trade|login|checkout)(\/|$)/i.test(page.pathname)) return null;
   const detailId = itemId(page.href, marketplace);
+  const unavailableElement = detailId ? marketplace === "amazon"
+    ? doc.querySelector("#availability")
+    : doc.querySelector('[data-testid="product-unavailable"], [data-pl="product-unavailable"]') : null;
+  const unavailableText=(unavailableElement?.textContent ?? "").trim().replace(/\s+/g," ");
+  const unavailable=Boolean(detailId && /^(?:(?:no momento|atualmente),?\s*)?(?:(?:este|o) (?:produto|item)\s*)?(?:est[aá]\s*)?(?:indispon[ií]vel|n[aã]o dispon[ií]vel)(?:\s|[.!]|$)/i.test(unavailableText));
+  // A stock message can refer only to the selected variation. It is not
+  // proof that the entire product has disappeared when variants are shown.
+  const unavailableAmbiguous=unavailable && (marketplace==='amazon'
+    ? !!doc.querySelector('#twister, #variation_color_name, #variation_size_name, [data-feature-name="twister"]')
+    : page.searchParams.has('sku_id') || !!doc.querySelector('[data-sku-id], [data-sku]'));
   const products = new Map<string, Offer>();
   const seen = new Set<string>();
   const attempts = new Map<string, ReadDiagnostics>();
@@ -204,7 +293,7 @@ export function collectMarketplacePage(doc = document, page = new URL(location.h
   };
   if (detailId) {
     seen.add(detailId);
-    const offer = readCard(doc, doc.documentElement, detailId, marketplace, true, undefined, report(detailId));
+    const offer = readCard(page, doc.documentElement, detailId, marketplace, true, undefined, report(detailId));
     if (offer) products.set(detailId, offer);
   } else {
     const amazon = marketplace === "amazon";
@@ -216,15 +305,17 @@ export function collectMarketplacePage(doc = document, page = new URL(location.h
       const id = itemId(anchor.href, marketplace);
       if (!id || products.has(id)) continue;
       seen.add(id);
-      let card = amazon ? anchor.closest(cardSelector) ?? anchor : anchor as Element;
+      const searchCard = amazon ? anchor.closest(AMAZON_SEARCH_CARD) : null;
+      let card = amazon ? searchCard ?? anchor.closest(cardSelector) ?? anchor : anchor as Element;
       const diagnostics = report(id);
       // Some offer grids have no card marker. Climb only while this element
       // contains one product, so a price from a neighbor cannot be attached.
       for (let level = 0; level < (amazon ? 4 : 10); level++) {
         const text = amazon ? "" : visibleText(card);
         if (text.length > 950) break;
-        const offer = readCard(doc, card, id, marketplace, false, anchor, diagnostics);
+        const offer = readCard(page, card, id, marketplace, false, anchor, diagnostics);
         if (offer) { products.set(id, offer); break; }
+        if (searchCard) break;
         const parent = card.parentElement;
         if (!parent || /^(BODY|HTML|MAIN|HEADER|FOOTER|NAV)$/.test(parent.tagName) || Array.from(parent.querySelectorAll<HTMLAnchorElement>(linkSelector))
           .some(link => { const other = itemId(link.href, marketplace); return other && other !== id; })) break;
@@ -234,16 +325,22 @@ export function collectMarketplacePage(doc = document, page = new URL(location.h
     }
     const idAttributes = amazon ? ["data-asin"] : ["data-product-id", "data-item-id", "data-productid"];
     const idPattern = amazon ? /^[A-Z0-9]{10}$/ : /^\d{8,20}$/;
-    for (const card of Array.from(doc.querySelectorAll<HTMLElement>(idAttributes.map(attr => `[${attr}]`).join(","))).slice(0, 500)) {
+    for (const wrapper of Array.from(doc.querySelectorAll<HTMLElement>(idAttributes.map(attr => `[${attr}]`).join(","))).slice(0, 500)) {
       if (products.size >= 200) break;
-      const id = idAttributes.map(attr => card.getAttribute?.(attr)?.trim().toUpperCase()).find(value => !!value && idPattern.test(value));
+      const id = idAttributes.map(attr => wrapper.getAttribute?.(attr)?.trim().toUpperCase()).find(value => !!value && idPattern.test(value));
       if (!id || !idPattern.test(id) || products.has(id)) continue;
       seen.add(id);
       // An explicit item id can identify a card whose click is handled by the site.
       // Skip wrappers that contain links to a different item.
-      if (Array.from(card.querySelectorAll<HTMLAnchorElement>(linkSelector))
+      if (Array.from(wrapper.querySelectorAll<HTMLAnchorElement>(linkSelector))
         .some(link => { const other = itemId(link.href, marketplace); return other && other !== id; })) continue;
-      const offer = readCard(doc, card, id, marketplace, false, undefined, report(id));
+      let card: Element = wrapper;
+      if (amazon && wrapper.matches("[data-component-type='s-search-result']")) {
+        const faceouts = wrapper.querySelectorAll(AMAZON_SEARCH_CARD);
+        if (faceouts.length > 1) continue;
+        card = faceouts[0] ?? wrapper;
+      }
+      const offer = readCard(page, card, id, marketplace, false, undefined, report(id));
       if (offer) products.set(id, offer);
     }
   }
@@ -258,10 +355,27 @@ export function collectMarketplacePage(doc = document, page = new URL(location.h
       if (attempt?.inViewport) skipped.visibleNoPrice++;
     }
   }
+  // A recognized product page without a price is different from a failed
+  // parser or a missing listing card. Never infer availability from it.
+  const detailHeading=detailId && cleanTitle(doc.querySelector(marketplace === "amazon"
+    ? "#productTitle, h1" : "h1, [data-testid='product-title']")?.textContent);
+  const detailPrice=detailId && doc.querySelector(marketplace === "amazon"
+    ? `${AMAZON_CURRENT_PRICE} .a-offscreen, [data-testid*='price']` : ALI_PRICE_SELECTOR);
+  const requestedDetailSku=marketplace==='aliexpress' && detailId ? page.searchParams.get('sku_id') : null;
+  const selectedDetailSku=marketplace==='aliexpress' && detailId
+    ? doc.querySelector<HTMLInputElement>('input[name="sku_id"], input[name="skuId"]')?.value
+      ?? doc.querySelector('[data-sku-id][aria-checked="true"], [data-sku-id][aria-selected="true"]')?.getAttribute('data-sku-id') : null;
+  const uncertainSku=!!(requestedDetailSku || selectedDetailSku)
+    && !(requestedDetailSku && /^\d{1,24}$/.test(requestedDetailSku) && requestedDetailSku===selectedDetailSku);
+  const missingDetailStatus=detailId && !unavailable && !products.size
+    ? uncertainSku ? "configuration_mismatch" as const : detailHeading && !detailPrice ? "no_price" as const : "parse_error" as const
+    : undefined;
   return {
     version: 1 as const, marketplace, requestId: crypto.randomUUID(), clientCapturedAt: new Date().toISOString(),
-    page: { kind: detailId ? "product" : "listing", url: page.origin + page.pathname },
-    products: [...products.values()], ignoredCards: seen.size - products.size,
+    page: { kind: detailId ? "product" : "listing", url: sourcePageUrl(page, marketplace) },
+    products: unavailable ? [] : [...products.values()], ignoredCards: seen.size - products.size,
+    ...(unavailable ? { status:unavailableAmbiguous ? "configuration_mismatch" as const : "unavailable_confirmed" as const } : {}),
+    ...(missingDetailStatus ? { status:missingDetailStatus } : {}),
     ...(marketplace === "aliexpress" ? { diagnostics: {
       links: doc.querySelectorAll("a[href*='/item/']").length,
       products: seen.size,

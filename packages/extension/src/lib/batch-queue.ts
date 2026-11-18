@@ -10,11 +10,17 @@ export interface StoredBrowserBatch {
   attempts?: number;
   lastAttemptAt?: number;
   lastError?: string;
+  nextRetryAt?: number;
+  stopped?: boolean;
+  origin?: string;
+  deviceId?: string;
+  /** Recorded only by a successful fresh extraction. Missing means unknown, never current. */
+  collectorVersion?: string | null;
 }
 
 export const BROWSER_BATCH_KEY = "bm_browser_batch";
 export const BATCH_QUEUE_ALARM = "bm_batch_queue_retry";
-export const BATCH_MAX_ATTEMPTS = 60; // 60 tentativas * ~30-60s = 30-60 minutos
+export const BATCH_MAX_ATTEMPTS = 6; // includes initial delivery; never indefinite
 export const BATCH_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutos
 
 /**
@@ -23,7 +29,7 @@ export const BATCH_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutos
  */
 export function markBatchQueued(
   batch: StoredBrowserBatch,
-  error: string = "no_waiting_batch",
+  error: string = "retryable",
   now: number = Date.now(),
 ): StoredBrowserBatch {
   return {
@@ -43,10 +49,9 @@ export function isBatchExpired(
   batch: StoredBrowserBatch,
   now: number = Date.now(),
 ): boolean {
-  if (!batch.queued) return false;
-  const queuedAt = batch.queuedAt ?? now;
+  const capturedAt = Date.parse(batch.payload?.clientCapturedAt ?? "");
   const attempts = batch.attempts ?? 0;
-  return now - queuedAt > BATCH_MAX_AGE_MS || attempts >= BATCH_MAX_ATTEMPTS;
+  return !Number.isFinite(capturedAt) || now - capturedAt >= BATCH_MAX_AGE_MS || attempts >= BATCH_MAX_ATTEMPTS;
 }
 
 /**
@@ -56,6 +61,6 @@ export function shouldRetryBatch(
   batch: StoredBrowserBatch | undefined,
   now: number = Date.now(),
 ): boolean {
-  if (!batch || !batch.queued || !batch.payload) return false;
+  if (!batch || batch.stopped || !batch.queued || !batch.payload) return false;
   return !isBatchExpired(batch, now);
 }

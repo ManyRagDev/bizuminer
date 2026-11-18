@@ -1,3 +1,5 @@
+import { sharedLinkArchive } from "../../../lib/shared-link-archive-db.ts";
+import { archivePageResponse } from "../../../lib/shared-link-archive.ts";
 import { confirmedOfferDetail } from "../../../lib/confirmed-offer-db.ts";
 import { createHash } from "node:crypto";
 import {
@@ -11,7 +13,7 @@ import { PRODUCT_EVIDENCE_TTL_DAYS, PUBLIC_CURATION_STATUS } from "../../../lib/
 import { affiliateLinksV2Enabled } from "../../../lib/flags";
 import { marketplaceDef, parseProductSlug } from "../../../lib/marketplaces";
 import { validateCampaignTokenForSlug, type CampaignTokenValidationResult } from "../../../lib/campaign-attribution";
-import { publicProjectionReady } from "../../../lib/public-offer-db";
+import { publicOfferHistory, publicProjectionReady } from "../../../lib/public-offer-db";
 import { publicGo } from "../../../lib/public-go";
 
 export const preferredRegion = "gru1";
@@ -42,9 +44,16 @@ export async function GET(
 ) {
   const { slug } = await params;
   const url = new URL(req.url);
+  const archive = await sharedLinkArchive("slug", slug);
+  if (archive) return archivePageResponse(archive, url.searchParams);
   const campaignCode = url.searchParams.get("c");
   const option=url.searchParams.get("opcao");
-  if (!campaignCode && option && !await confirmedOfferDetail(slug,option)) return new Response("Esta opção precisa de nova conferência",{status:404,headers:{"Cache-Control":"no-store"}});
+  if (option && !await confirmedOfferDetail(slug,option)) {
+    if (campaignCode && await publicProjectionReady()) return publicGo(req,slug,campaignCode);
+    if (!campaignCode && /^[a-f0-9]{32}$/.test(option) && await publicOfferHistory(slug))
+      return new Response(null,{status:302,headers:{Location:`/oferta/${encodeURIComponent(slug)}/${option}`,"Cache-Control":"no-store"}});
+    return new Response("Esta opção precisa de nova conferência",{status:404,headers:{"Cache-Control":"no-store"}});
+  }
   if (await publicProjectionReady()) return publicGo(req, slug, campaignCode);
 
   let campaignAttribution: CampaignTokenValidationResult | null = null;

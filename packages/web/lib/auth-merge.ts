@@ -70,11 +70,39 @@ export async function mergeAnonymousIntoAuth(input: MergeInput, sqlFactory: type
         // intact; copying it would violate product/user composite ownership.
         const mergeAnon = anon !== null && anon.id !== linked.id &&
           anon.auth_user_id === null && linked.tenant_id === tenantId;
+        const [watchColumns] = mergeAnon ? await tx<{ has_option: boolean; has_baseline: boolean }[]>`
+          select
+            bool_or(a.attname = 'option_key') as has_option,
+            bool_or(a.attname = 'baseline_currency') as has_baseline
+          from pg_attribute a
+          join pg_class c on c.oid = a.attrelid
+          join pg_namespace n on n.oid = c.relnamespace
+          where n.nspname = 'garimpa' and c.relname = 'price_watch'
+            and a.attname in ('option_key', 'baseline_currency')
+            and not a.attisdropped` : [{ has_option: false, has_baseline: false }];
+        const hasWatchOption = watchColumns?.has_option === true;
+        const hasWatchBaseline = watchColumns?.has_baseline === true;
         const favorites = mergeAnon ? await tx<{ product_id: string }[]>`
           select product_id from garimpa.favorite where user_id=${anon!.id} and tenant_id=${tenantId}` : [];
-        const watches = mergeAnon ? await tx<{ product_id: string; baseline_price_cents: number; target_price_cents: number | null; active: boolean; created_at: Date; deactivated_at: Date | null }[]>`
-          select product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at
-          from garimpa.price_watch where user_id=${anon!.id} and tenant_id=${tenantId}` : [];
+        const watches = mergeAnon
+          ? (hasWatchOption
+            ? await tx<{ product_id: string; baseline_price_cents: number; target_price_cents: number | null; active: boolean; created_at: Date; deactivated_at: Date | null;
+                option_key: string | null; baseline_currency: string | null; baseline_configuration: unknown; baseline_observed_at: Date | null }[]>`
+                select product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at,
+                  option_key, baseline_currency, baseline_configuration, baseline_observed_at
+                from garimpa.price_watch where user_id=${anon!.id} and tenant_id=${tenantId}`
+            : hasWatchBaseline
+              ? await tx<{ product_id: string; baseline_price_cents: number; target_price_cents: number | null; active: boolean; created_at: Date; deactivated_at: Date | null;
+                  option_key: string | null; baseline_currency: string | null; baseline_configuration: unknown; baseline_observed_at: Date | null }[]>`
+                  select product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at,
+                    null::text as option_key, baseline_currency, baseline_configuration, baseline_observed_at
+                  from garimpa.price_watch where user_id=${anon!.id} and tenant_id=${tenantId}`
+              : await tx<{ product_id: string; baseline_price_cents: number; target_price_cents: number | null; active: boolean; created_at: Date; deactivated_at: Date | null;
+                  option_key: string | null; baseline_currency: string | null; baseline_configuration: unknown; baseline_observed_at: Date | null }[]>`
+                  select product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at,
+                    null::text as option_key, null::text as baseline_currency, null::jsonb as baseline_configuration, null::timestamptz as baseline_observed_at
+                  from garimpa.price_watch where user_id=${anon!.id} and tenant_id=${tenantId}`)
+          : [];
         const profiles = mergeAnon ? await tx<{ preferred_categories: string[]; price_band: string; updated_at: Date }[]>`
           select preferred_categories, price_band, updated_at from garimpa.buyer_profile
           where user_id=${anon!.id} and tenant_id=${tenantId}` : [];
@@ -95,12 +123,32 @@ export async function mergeAnonymousIntoAuth(input: MergeInput, sqlFactory: type
             `;
           }
           for (const watch of watches) {
-            await tx`
-              insert into garimpa.price_watch (id, tenant_id, user_id, product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at)
-              values (gen_random_uuid()::text, ${tenantId}, ${linked.id}, ${watch.product_id},
-                ${watch.baseline_price_cents}, ${watch.target_price_cents}, ${watch.active}, ${watch.created_at}, ${watch.deactivated_at})
-              on conflict (user_id, product_id) do nothing
-            `;
+            if (hasWatchOption) {
+              await tx`
+                insert into garimpa.price_watch (id, tenant_id, user_id, product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at,
+                  option_key, baseline_currency, baseline_configuration, baseline_observed_at)
+                values (gen_random_uuid()::text, ${tenantId}, ${linked.id}, ${watch.product_id},
+                  ${watch.baseline_price_cents}, ${watch.target_price_cents}, ${watch.active}, ${watch.created_at}, ${watch.deactivated_at},
+                  ${watch.option_key}, ${watch.baseline_currency}, ${watch.baseline_configuration === null ? null : tx.json(watch.baseline_configuration as never)}, ${watch.baseline_observed_at})
+                on conflict do nothing
+              `;
+            } else if (hasWatchBaseline) {
+              await tx`
+                insert into garimpa.price_watch (id, tenant_id, user_id, product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at,
+                  baseline_currency, baseline_configuration, baseline_observed_at)
+                values (gen_random_uuid()::text, ${tenantId}, ${linked.id}, ${watch.product_id},
+                  ${watch.baseline_price_cents}, ${watch.target_price_cents}, ${watch.active}, ${watch.created_at}, ${watch.deactivated_at},
+                  ${watch.baseline_currency}, ${watch.baseline_configuration === null ? null : tx.json(watch.baseline_configuration as never)}, ${watch.baseline_observed_at})
+                on conflict (user_id, product_id) do nothing
+              `;
+            } else {
+              await tx`
+                insert into garimpa.price_watch (id, tenant_id, user_id, product_id, baseline_price_cents, target_price_cents, active, created_at, deactivated_at)
+                values (gen_random_uuid()::text, ${tenantId}, ${linked.id}, ${watch.product_id},
+                  ${watch.baseline_price_cents}, ${watch.target_price_cents}, ${watch.active}, ${watch.created_at}, ${watch.deactivated_at})
+                on conflict (user_id, product_id) do nothing
+              `;
+            }
           }
           for (const profile of profiles) {
             await tx`

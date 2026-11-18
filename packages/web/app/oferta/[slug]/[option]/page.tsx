@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cache } from "react";
 import { notFound,redirect } from "next/navigation";
-import {publicWorkspaceLink} from '../../../../lib/public-offer-db.ts';
+import {publicCampaignHistory,publicOfferHistory,publicWorkspaceLink} from '../../../../lib/public-offer-db.ts';
 import { confirmedOfferDetail } from "../../../../lib/confirmed-offer-db.ts";
 import { offerPriceLabel } from "../../../../lib/offer-price.ts";
 import { productPreview } from "../../../../lib/product-preview.ts";
@@ -17,6 +17,8 @@ import {savedProductIds,isWatching} from '../../../../lib/member-db.ts';
 import DetailActions from '../../../_components/detail-actions.tsx';
 import TrackProductView from '../../../_components/track-product-view.tsx';
 import AffiliateLink from '../../../_components/affiliate-link.tsx';
+import OfferExpiryBoundary from '../../../_components/offer-expiry-boundary.tsx';
+import HistoricalOffer from '../../../_components/historical-offer.tsx';
 
 export const dynamic="force-dynamic";
 type Props={params:Promise<{slug:string;option:string}>;searchParams:Promise<{c?:string}>};
@@ -30,15 +32,24 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
 }
 export default async function ConfirmedOfferPage({params,searchParams}:Props){
   const query=await searchParams,route=await params;
-  if(query.c){const stored=await publicWorkspaceLink(query.c,route.slug);if(stored?.workspace){if(!stored.available)notFound();if(stored.option_key!==route.option)redirect(`/oferta/${encodeURIComponent(route.slug)}/${stored.option_key}?c=${encodeURIComponent(query.c)}`);}}
+  if(query.c){const stored=await publicWorkspaceLink(query.c,route.slug);if(stored?.workspace){
+    if(!stored.available){const history=await publicCampaignHistory(query.c,route.slug);if(!history || history.option_key!==route.option)notFound();redirect(`/oferta/${encodeURIComponent(route.slug)}/${encodeURIComponent(route.option)}`);}
+    if(stored.option_key!==route.option)redirect(`/oferta/${encodeURIComponent(route.slug)}/${stored.option_key}?c=${encodeURIComponent(query.c)}`);
+  }}
   const {slug,option}=await params,detail=await load(slug,option);
-  if(!detail)notFound();
+  if(!detail){
+    if(!/^[a-f0-9]{32}$/.test(option)) notFound();
+    const history=await publicOfferHistory(slug);
+    if(!history) notFound();
+    return <HistoricalOffer offer={history} optionRequested/>;
+  }
   const p=detail.product,{c}=await searchParams;
   const uid=(await cookies()).get('bm_uid')?.value,session=await getPageSession(validUserId(uid)?uid:null);
-  const [saved,watching,isUserAdmin]=session?await Promise.all([savedProductIds(session.appUserId),isWatching(session.appUserId,p.id),isAffiliate(session.authUser)]):[[],false,false];
+  const [saved,watching,isUserAdmin]=session?await Promise.all([savedProductIds(session.appUserId),isWatching(session.appUserId,p.id,"local",p.offerOptionKey ?? null),isAffiliate(session.authUser)]):[[],false,false];
   const go=`/go/${encodeURIComponent(slug)}?opcao=${encodeURIComponent(option)}${c ? `&c=${encodeURIComponent(c)}`:""}`;
   return <main className="confirmed-offer">
     <Link href="/" prefetch={false}>← Explorar achados</Link>
+    <OfferExpiryBoundary validUntil={p.offerValidUntil}>
     <article>
       <p className="eyebrow">Opção de compra conferida · {marketplaceDef(p.marketplace)?.label ?? p.marketplace}</p>
       <h1>{p.displayTitle ?? p.title}</h1>
@@ -67,6 +78,7 @@ export default async function ConfirmedOfferPage({params,searchParams}:Props){
       <p className="affiliate-disclosure">Link de afiliado: o BizuMiner pode receber comissão sem custo adicional para você.</p>
       <DetailActions product={p} initialSaved={saved.includes(p.id)} initialWatching={watching} isLoggedIn={!!session} cacheScope={session?.appUserId??null}/>
     </article>
+    </OfferExpiryBoundary>
     <PriceHistory points={detail.priceHistory} context={detail.historyContext} totalCount={detail.historyContext.totalCount} isAdmin={isUserAdmin}/>
   </main>;
 }

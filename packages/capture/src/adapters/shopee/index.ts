@@ -23,8 +23,8 @@ import type {
 import { MARKETPLACE, SYSTEM_ERROR_CODE, ShopeeClient, type ShopeeClientOptions, type ShopeeCredentialFields } from "./client.ts";
 import { mapProductNodes, type ShopeeProductOfferResponse } from "./mapper.ts";
 import {
-  GENERATE_SHORT_LINK_MUTATION,
-  PRODUCT_OFFER_QUERY,
+  buildGenerateShortLinkMutation,
+  buildProductOfferQuery,
   VALIDATE_QUERY,
 } from "./queries.ts";
 
@@ -72,44 +72,48 @@ export class ShopeeAdapter implements CaptureAdapter {
   ): Promise<OfferPage> {
     const fields = readCredential(cred);
     const { page, limit: cursorLimit } = readPageCursor(params.cursor);
+    if (params.pageSize != null && (!Number.isSafeInteger(params.pageSize) || params.pageSize < 1)) {
+      throw invalidOfferVariables();
+    }
     const requestedLimit = Math.min(params.pageSize ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     let limit = cursorLimit ?? requestedLimit;
     let keyword: string | null = params.keyword ?? null;
     let productCatId: number | null = null;
-    let listType: number | null = null;
-    // 2 = ordenação por comissão/vendas
-    let sortType = 2;
+    // 2 = ordenação por unidades vendidas, conforme o contrato ProductOffer.
+    let sortType: number | undefined = 2;
 
     if (params.sourceQuery?.kind === "department") {
       const parsedCatId = Number(params.sourceQuery.categoryId);
-      if (Number.isInteger(parsedCatId) && parsedCatId > 0) {
-        productCatId = parsedCatId;
-        listType = 0;
-      }
+      if (!Number.isSafeInteger(parsedCatId) || parsedCatId <= 0) throw invalidOfferVariables();
+      productCatId = parsedCatId;
       if (!params.keyword) {
         keyword = null;
       }
       if (params.sourceQuery.order === "default") {
-        sortType = 0;
+        sortType = undefined;
       } else if (params.sourceQuery.order === "sales") {
         sortType = 2;
       } else if (params.sourceQuery.order === "discount") {
-        sortType = 1;
+        throw new CaptureError({ kind: "marketplace_error", marketplace: MARKETPLACE, message: "shopee_discount_order_unsupported" });
       }
+    }
+
+    const shopId = params.shopId == null ? undefined : Number(params.shopId);
+    if (shopId !== undefined && (!Number.isSafeInteger(shopId) || shopId < 0 || typeof params.shopId !== "string" || !params.shopId.trim())) {
+      throw invalidOfferVariables();
     }
 
     const request = (limit: number, maxAttempts?: number) => this.client.request<ShopeeProductOfferResponse>(
       fields,
-      PRODUCT_OFFER_QUERY,
-      {
+      buildProductOfferQuery({
         keyword,
-        shopId: params.shopId ? Number(params.shopId) : null,
+        shopId,
         productCatId,
-        listType,
         page,
         limit,
         sortType,
-      },
+      }),
+      {},
       ctx,
       maxAttempts,
     );
@@ -118,7 +122,7 @@ export class ShopeeAdapter implements CaptureAdapter {
     try {
       data = await request(limit);
     } catch (error) {
-      if (!(error instanceof CaptureError) || error.vendorCode !== SYSTEM_ERROR_CODE
+      if (!(error instanceof CaptureError) || error.kind !== "transport" || error.vendorCode !== SYSTEM_ERROR_CODE
         || page !== 1 || params.cursor || limit <= 10) throw error;
       // Only the first page can change size. The cursor pins the new page boundaries.
       const originalLimit = limit;
@@ -206,8 +210,8 @@ export class ShopeeAdapter implements CaptureAdapter {
       generateShortLink?: { shortLink?: string };
     }>(
       fields,
-      GENERATE_SHORT_LINK_MUTATION,
-      { input: { originUrl: productUrl, subIds } },
+      buildGenerateShortLinkMutation({ originUrl: productUrl, subIds }),
+      {},
       ctx,
     );
 
@@ -221,6 +225,13 @@ export class ShopeeAdapter implements CaptureAdapter {
     }
     return link;
   }
+}
+
+function invalidOfferVariables(): CaptureError {
+  return new CaptureError({
+    kind: "marketplace_error", marketplace: MARKETPLACE,
+    message: "parâmetros numéricos inválidos para consulta de ofertas Shopee",
+  });
 }
 
 /**

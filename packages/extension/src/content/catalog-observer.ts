@@ -25,6 +25,16 @@ export function findCards(): Element[] {
     if (amazonCards.length > 0) return amazonCards;
     return [];
   }
+  const mlPdpTitle = document.querySelector<HTMLElement>("h1.ui-pdp-title");
+  if (mlPdpTitle) {
+    const mlPdpContainer =
+      document.querySelector<HTMLElement>(".ui-pdp-header") ||
+      document.querySelector<HTMLElement>(".ui-pdp-container__col--main") ||
+      document.querySelector<HTMLElement>(".ui-pdp-main") ||
+      mlPdpTitle.parentElement ||
+      mlPdpTitle;
+    return [mlPdpContainer, ...Array.from(document.querySelectorAll<HTMLElement>(".poly-card"))];
+  }
   return Array.from(document.querySelectorAll<HTMLElement>(".poly-card"));
 }
 

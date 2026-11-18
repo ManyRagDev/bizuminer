@@ -1,3 +1,4 @@
+import { databaseSsl } from "../../persistence/src/database-ssl.ts";
 import postgres from "postgres";
 import { authorizeAccountTransaction, releaseAccountTransaction } from "./account-scope.ts";
 import type { AccountContext } from "./account-context.ts";
@@ -23,7 +24,7 @@ export function accountDatabase(connectionString: string, context?: AccountConte
       connect_timeout: 10,
       max_lifetime: 60,
       connection: { application_name: "bizuminer-web" },
-      ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false },
+      ssl: databaseSsl(connectionString),
     });
     pools.set(connectionString, pool);
   }

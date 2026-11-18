@@ -39,8 +39,8 @@ export function recommendationBlockers(candidate: EditorialCandidate, channel: R
   blockers.push(...homepageClarityBlockers({ ...candidate, assessment: null }));
   if (candidate.assessment?.presentation?.status==='withdrawn') blockers.push("A ficha foi retirada. Revise a indicação antes de divulgar novamente.");
   if (candidate.assessment) {
-    for (const [key, dimension] of Object.entries(candidate.assessment.dimensions)) {
-      if (!["strong", "exceptional"].includes(dimension.level)) blockers.push(`Indicação direta exige avaliação forte: ${key}.`);
+    for (const [key, dimension] of Object.entries(candidate.assessment.dimensions ?? {})) {
+      if (!dimension || !["strong", "exceptional"].includes(dimension.level)) blockers.push(`Indicação direta exige avaliação forte: ${key}.`);
     }
     if (hasSuperiorityClaim([candidate.assessment.benefit,candidate.assessment.audience,candidate.assessment.purchaseContents].join(" "))
       || /R\$|\d+[.,]?\d*\s*%|menor pre[çc]o/iu.test([candidate.assessment.benefit,candidate.assessment.audience,candidate.assessment.purchaseContents].join(" "))) {

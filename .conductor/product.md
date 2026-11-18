@@ -74,8 +74,13 @@ flowchart LR
 - Registra `click_event` em banco: o IP do visitante é imediatamente anonimizado via hash com sal criptográfico (conformidade integral com LGPD).
 - Não há cookies invasivos nem rastreamento de dados pessoais sem consentimento.
 
-### 5. Pauta Diária e Composer Editorial
-- Ferramenta dedicada no painel (`/pauta` e Composer) para organizar as melhores ofertas do dia.
+### 5. Pauta Diária e Hub de Ofertas (Dupla Régua Editorial)
+- Ferramentas complementares de curadoria e disparo: **`/pauta`** (Copiloto Diário guiado por prateleiras e controle de repetição) e **`/admin/ofertas`** (Catálogo amplo de garimpo livre e criação para Instagram/PostSpark).
+- **Dupla Régua de Valor:** Produtos não competem sob uma única régua matemática cega. O sistema separa:
+  - **🏆 Alto Impacto & Desejo (`>= R$ 200` ou economia real `>= R$ 80`):** Bens duráveis, eletrônicos e marcas fortes avaliados pela economia nominal em Reais (R$) e piso histórico, sem bloqueio de teto de impulso.
+  - **🛒 Giro Diário & Utilidade (`< R$ 200`):** Compras cotidianas avaliadas por percentual de desconto, utilidade imediata e prova social.
+  - **🎯 Demanda da Comunidade (`watchersCount`):** Produtos priorizados pelo interesse real dos visitantes da vitrine (favoritos e alertas "de olho no preço").
+- **Frescor e Validação *Just-in-Time*:** Ofertas de até 7 dias permanecem visíveis na Pauta para não esconder grandes oportunidades, mas itens com observação `> 48h` exigem conferência rápida na loja (com atualização automática via extensão) antes de liberar a cópia.
 - Gera templates de copy com formatação pensada para mobile e WhatsApp (emojis funcionais, preço anterior riscado, preço novo destacado, link seguro e aviso claro de promoção relâmpago).
 
 ---

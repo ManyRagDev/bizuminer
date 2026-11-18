@@ -7,7 +7,8 @@
 import type { CapturePayload } from "./contracts.ts";
 
 export const OUTBOX_MAX_ITEMS = 200;
-export const OUTBOX_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
+export const OUTBOX_TTL_MS = 30 * 60 * 1000; // same freshness window as manual browser imports
+export const OUTBOX_MAX_ATTEMPTS = 6;
 
 /** Backoff em ms, indexado por tentativa: 5s, 30s, 2min, 10min. */
 export const RETRY_DELAYS_MS = [5_000, 30_000, 120_000, 600_000];
@@ -19,13 +20,17 @@ export interface OutboxEntry {
   addedAt: number;
   nextRetryAt: number;
   lastError?: string;
+  stopped?: boolean;
+  origin?: string;
+  deviceId?: string;
 }
 
 export type Outbox = OutboxEntry[];
 
-/** Adiciona um payload à fila. Descarta silenciosamente se já existir (idempotente). */
+/** Adiciona um payload à fila. Preserva se já existir (idempotente). */
 export function enqueue(outbox: Outbox, payload: CapturePayload, now = Date.now()): Outbox {
   if (outbox.some((e) => e.requestId === payload.requestId)) return outbox;
+  if (outbox.length >= OUTBOX_MAX_ITEMS) throw new Error("queue_full");
   const entry: OutboxEntry = {
     requestId: payload.requestId,
     payload,
@@ -33,8 +38,7 @@ export function enqueue(outbox: Outbox, payload: CapturePayload, now = Date.now(
     addedAt: now,
     nextRetryAt: now,
   };
-  const next = [...outbox, entry];
-  return next.length > OUTBOX_MAX_ITEMS ? next.slice(next.length - OUTBOX_MAX_ITEMS) : next;
+  return [...outbox, entry];
 }
 
 /** Remove o item por requestId (200 recebido, mesmo com duplicate:true). */
@@ -51,12 +55,13 @@ export function markRetry(outbox: Outbox, requestId: string, error: string, now 
   });
 }
 
-/** Remove itens expirados (TTL) — chamado no alarme/ativação. */
+/** Retém itens expirados como falhas visíveis (TTL) — chamado no alarme/ativação. */
 export function pruneExpired(outbox: Outbox, now = Date.now()): Outbox {
-  return outbox.filter((e) => now - e.addedAt < OUTBOX_TTL_MS);
+  return outbox.map(e => !e.stopped && (now - e.addedAt >= OUTBOX_TTL_MS || e.attempts >= OUTBOX_MAX_ATTEMPTS)
+    ? { ...e, stopped: true, lastError: e.attempts >= OUTBOX_MAX_ATTEMPTS ? "retry_limit" : "capture_expired" } : e);
 }
 
 /** Itens prontos para nova tentativa (nextRetryAt <= now). */
 export function dueForRetry(outbox: Outbox, now = Date.now()): OutboxEntry[] {
-  return outbox.filter((e) => e.nextRetryAt <= now);
+  return pruneExpired(outbox, now).filter((e) => !e.stopped && e.nextRetryAt <= now);
 }

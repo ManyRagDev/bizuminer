@@ -1,5 +1,5 @@
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { getPageAuth, isAffiliate, resolveAccountContext } from "./auth.ts";
 import { inAccountScope } from "./account-scope.ts";
 import type { AccountContext } from "./account-context.ts";
@@ -11,7 +11,9 @@ export async function pageAccount(
 ): Promise<AccountContext | null> {
   const user = await getPageAuth();
   if (!user || !(await isAffiliate(user))) return null;
-  const selected = requested ?? (await cookies()).get("bm_account")?.value;
+  const urlAccount = (await headers()).get("x-bm-page-account");
+  if (urlAccount === "!invalid-account") return null;
+  const selected = requested ?? urlAccount ?? (await cookies()).get("bm_account")?.value;
   return resolveAccountContext({
     authUserId: user.id,
     requestedAccount: selected,

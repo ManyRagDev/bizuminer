@@ -121,3 +121,42 @@ test("falha em página posterior preserva contadores e continua os outros depart
   assert.equal(store.allRuns[0]!.itemsCaptured, 2);
   assert.equal(store.allRuns[1]!.status, "ok");
 });
+
+test("lote durável pausa no rate limit e conserva checkpoints concluídos", async () => {
+  const { CaptureError } = await import("../../capture/src/errors.ts");
+  const requested: string[] = [];
+  const adapter: CaptureAdapter = {
+    ...searchableAdapter(),
+    async *streamOffers(_credential, params) {
+      requested.push(params.keyword!);
+      if (params.keyword === "audio") throw new CaptureError({kind:"rate_limit",marketplace:"test",message:"private vendor detail",retryAfterMs:90000});
+      yield [offer(params.keyword!)];
+    },
+  };
+  const plan: CapturePlan = {id:"durable-test",entries:["casa","audio","garden"].map(keyword=>({id:keyword,mode:"directed",category:keyword,keyword}))};
+  const summary = await runCapturePlan(adapter,cred,new InMemoryStore(),{tenantId:"t1",plan,operationBatchId:"batch"},ctx);
+  assert.deepEqual(requested,["casa","audio"]);
+  assert.equal(summary.queriesCompleted,1);
+  assert.equal(summary.queriesFailed,1);
+  assert.deepEqual(summary.failure,{kind:"rate_limit",retryAfterMs:90000});
+  assert.equal(JSON.stringify(summary.failure).includes("private"),false);
+});
+
+test("lote operacional continua tentando os outros departamentos após erro transitório 10000 pontual", async () => {
+  const { CaptureError } = await import("../../capture/src/errors.ts");
+  const requested: string[] = [];
+  const adapter: CaptureAdapter = {
+    ...searchableAdapter(),
+    async *streamOffers(_credential, params) {
+      requested.push(params.keyword!);
+      if (params.keyword === "audio") throw new CaptureError({ kind: "transport", marketplace: "shopee", vendorCode: 10000, message: "error [10000]: System Error" });
+      yield [offer(params.keyword!)];
+    },
+  };
+  const plan: CapturePlan = { id: "departments-shopee-v1", entries: ["casa", "audio", "garden"].map(keyword => ({ id: keyword, mode: "directed", category: keyword, keyword })) };
+  const summary = await runCapturePlan(adapter, cred, new InMemoryStore(), { tenantId: "t1", plan, operationBatchId: "batch" }, ctx);
+  assert.deepEqual(requested, ["casa", "audio", "garden"]);
+  assert.equal(summary.queriesCompleted, 2);
+  assert.equal(summary.queriesFailed, 1);
+  assert.deepEqual(summary.failure, { kind: "transient" });
+});
