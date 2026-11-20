@@ -214,6 +214,7 @@ async function handleMessage(message: unknown): Promise<unknown> {
       const lastImport = await readImportReport(await scope());
       return saved?.payload ? { ok: true, hasBatch: true, queued: Boolean(saved.queued), stopped: Boolean(saved.stopped),
         lastError: saved.lastError, count: saved.payload.products.length, marketplace: saved.payload.marketplace,
+        lightningCount: saved.payload.products.filter(p => p.promotionType === "lightning").length,
         attempts: saved.attempts ?? 0, queuedAt: saved.queuedAt, lastImport,
         capturedAt: saved.payload.clientCapturedAt, preparedVersion: saved.collectorVersion ?? null,
         sent: Boolean(saved.sent), canReplace: canReplaceBatch(saved) }
@@ -260,6 +261,7 @@ async function prepareBrowserBatch(replace = false) {
 
   await writeBatch({ payload, collectorVersion: COLLECTOR_VERSION, sent: false, queued: false, origin: current.origin, deviceId: current.deviceId });
   return { ok: true, count: payload.products.length, ignored: payload.ignoredCards,
+    lightningCount: payload.products.filter(p => p.promotionType === "lightning").length,
     capturedAt: payload.clientCapturedAt, preparedVersion: COLLECTOR_VERSION, sent: false, canReplace: true,
     diagnostics: "diagnostics" in payload ? payload.diagnostics : undefined,
     sample: payload.products[0] };

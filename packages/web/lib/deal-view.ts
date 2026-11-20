@@ -24,6 +24,8 @@ export function toVitrineProduct(deal: DealRow): VitrineProduct {
     coverHeadline: deal.coverHeadline, coverImageApproved: deal.coverImageApproved,
     priceType: deal.priceType, priceMinCents: deal.priceMinCents, priceMaxCents: deal.priceMaxCents,
     currency: deal.currency, originalPriceKind: deal.originalPriceKind,
+    promotionType: deal.promotionType,
+    promotionEndsAt: deal.promotionEndsAt ? new Date(deal.promotionEndsAt).toISOString() : undefined,
     originalPriceCents: deal.original_price_cents, previousMinPriceCents: deal.previous_min_price_cents,
     discountPercent: deal.claimed_discount_rate === null ? null : Math.round(deal.claimed_discount_rate * 100),
     imageUrl: deal.image_url, ratingStar: deal.rating_star, salesLabel: deal.sales_label,

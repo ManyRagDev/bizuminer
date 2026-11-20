@@ -82,6 +82,8 @@ export interface OfferEvidenceV1 {
   /** Faixa declarada do anúncio; não prova identidade da variante no preço. */
   readonly priceMinCents?: number;
   readonly priceMaxCents?: number;
+  readonly promotionType?: "lightning";
+  readonly promotionEndsAt?: string;
 }
 
 /**
@@ -117,6 +119,8 @@ export interface OfferEvidenceV2 {
   readonly positiveReviewRate?: number;
   readonly priceMinCents?: number;
   readonly priceMaxCents?: number;
+  readonly promotionType?: "lightning";
+  readonly promotionEndsAt?: string;
 }
 
 export type OfferEvidence = OfferEvidenceV1 | OfferEvidenceV2;

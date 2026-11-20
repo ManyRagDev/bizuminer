@@ -1,6 +1,7 @@
 import type { WorkspaceOffer } from "./affiliate-workspace-contract.ts";
 import { offerPriceLabel, offerPriceNote, type OfferPrice } from "./offer-price.ts";
 import { MINIMUM_HISTORY } from "./deal-signal.ts";
+import { formatFlashSaleDeadline } from "./flash-sale.ts";
 
 export type CopyTone = "relampago" | "sincero" | "direto";
 
@@ -32,6 +33,8 @@ export interface CopyOfferData extends OfferPrice {
   offerOptionLabel?: string | null;
   purchaseContents?: string | null;
   offerConditions?: string | null;
+  promotionType?: "lightning";
+  promotionEndsAt?: string | null;
 }
 
 export type PautaLikeProduct = OfferPrice & {
@@ -54,6 +57,8 @@ export type PautaLikeProduct = OfferPrice & {
   purchaseContents?: string | null;
   editorialPurchaseContents?: string | null;
   offerConditions?: string | null;
+  promotionType?: "lightning";
+  promotionEndsAt?: string | null;
 };
 
 export function extractPautaCopyData(product: PautaLikeProduct): CopyOfferData {
@@ -79,6 +84,8 @@ export function extractPautaCopyData(product: PautaLikeProduct): CopyOfferData {
     bioCode: product.bioCode,
     offerOptionLabel: product.offerOptionLabel,
     purchaseContents: product.purchaseContents || product.editorialPurchaseContents,
+    promotionType: product.promotionType,
+    promotionEndsAt: product.promotionEndsAt,
   };
 }
 
@@ -106,6 +113,8 @@ export function extractCopyData(offer: WorkspaceOffer): CopyOfferData {
     bioCode: offer.bioCode,
     offerOptionLabel: c.offerOptionLabel,
     purchaseContents: c.purchaseContents,
+    promotionType: c.promotionType,
+    promotionEndsAt: c.promotionEndsAt,
   };
 }
 
@@ -113,7 +122,7 @@ function offerHeadline(data: CopyOfferData): string {
   const store = { mercadolivre: "no Mercado Livre", shopee: "na Shopee", aliexpress: "no AliExpress" }[data.marketplace];
   const from = data.priceType === "from" || data.priceType === "range";
   const price = offerPriceLabel(data).replace(/\u00A0/g, " ");
-  const title = data.displayTitle || data.title;
+  const title = (data.displayTitle || data.title).replace(/\*/g, "").replace(/\s+/g, " ").trim();
   const priceLine = from ? `*${price}*` : `por *${price}*`;
   return `*${title}* ${priceLine}${store ? ` ${store}` : ""}`;
 }
@@ -131,9 +140,22 @@ function comparablePriceLine(data: CopyOfferData): string | null {
   return null;
 }
 
-function shareLines(data: CopyOfferData): string[] {
+function flashSaleBanner(data: CopyOfferData): string[] | null {
+  if (data.promotionType !== "lightning" || !data.promotionEndsAt) return null;
+  const deadlineText = formatFlashSaleDeadline(data.promotionEndsAt);
+  if (!deadlineText) return null;
+  return [
+    `⚡ *OFERTA RELÂMPAGO · ${deadlineText.toUpperCase()}!*`,
+    `⏳ _Preço promocional por tempo limitado (ou enquanto durar o estoque)._`,
+  ];
+}
+
+function shareLines(data: CopyOfferData, isLightning = false): string[] {
   const variation = data.priceType === "range" ? offerPriceNote(data) : null;
-  return [...(variation ? [variation] : []), `Ver oferta: ${data.shareUrl}`, ...(data.bioCode ? [`Código na bio: ${data.bioCode}`] : [])];
+  const linkLine = isLightning
+    ? `👉 *Pegue antes de encerrar:* ${data.shareUrl}`
+    : `Ver oferta: ${data.shareUrl}`;
+  return [...(variation ? [variation] : []), linkLine, ...(data.bioCode ? [`Código na bio: ${data.bioCode}`] : [])];
 }
 
 export function buildRelampagoCopy(data: CopyOfferData): string {
@@ -141,10 +163,13 @@ export function buildRelampagoCopy(data: CopyOfferData): string {
   const priceNote = comparablePriceLine(data)
     ?? (data.priceType !== "range" && discount > 0 && discount < 99 ? `O anúncio indica ${discount}% de desconto.` : null);
   const detail = data.offerConditions || (data.offerOptionLabel ? `Opção: ${data.offerOptionLabel}` : null);
-  return [offerHeadline(data), ...[priceNote, data.benefit, detail].filter(Boolean), "", ...shareLines(data)].join("\n");
+  const banner = flashSaleBanner(data);
+  const opening = banner ? [...banner, "", offerHeadline(data)] : [offerHeadline(data)];
+  return [...opening, ...[priceNote, data.benefit, detail].filter(Boolean), "", ...shareLines(data, Boolean(banner))].join("\n");
 }
 
 export function buildSinceroCopy(data: CopyOfferData): string {
+  const banner = flashSaleBanner(data);
   const detail = [
     data.benefit,
     data.offerOptionLabel ? `Opção: ${data.offerOptionLabel}` : null,
@@ -153,11 +178,14 @@ export function buildSinceroCopy(data: CopyOfferData): string {
     data.caveat,
     comparablePriceLine(data),
   ].filter(Boolean);
-  return [offerHeadline(data), ...detail, "", ...shareLines(data)].join("\n");
+  const opening = banner ? [...banner, "", offerHeadline(data)] : [offerHeadline(data)];
+  return [...opening, ...detail, "", ...shareLines(data, Boolean(banner))].join("\n");
 }
 
 export function buildDiretoCopy(data: CopyOfferData): string {
-  return [offerHeadline(data), ...(data.offerConditions ? [data.offerConditions] : []), ...shareLines(data)].join("\n");
+  const banner = flashSaleBanner(data);
+  const opening = banner ? [...banner, "", offerHeadline(data)] : [offerHeadline(data)];
+  return [...opening, ...(data.offerConditions ? [data.offerConditions] : []), ...shareLines(data, Boolean(banner))].join("\n");
 }
 
 /**

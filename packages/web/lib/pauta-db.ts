@@ -430,12 +430,14 @@ export async function readOperationalOffer(context: AccountContext, productId: s
 function pautaOfferValidUntil(candidate: PautaCandidate, config: ChannelConfig | null) {
   const comparisonAt = candidate.assessment && hasSuperiorityClaim(candidate.assessment.publicRationale)
     ? Date.parse(candidate.assessment.comparativeBasis?.checkedAt ?? "") : NaN;
+  const promoEnds = candidate.promotionEndsAt ? Date.parse(candidate.promotionEndsAt) : NaN;
   return new Date(Math.min(
     new Date(candidate.evidenceObservedAt!).getTime() + PAUTA_CATALOG_WINDOW_MS,
     Date.parse(candidate.lastSeenAt) + 7 * 86_400_000,
     config?.valid_until ? +config.valid_until : Infinity,
     Number.isFinite(comparisonAt) ? comparisonAt + PAUTA_PRICE_WINDOW_MS : Infinity,
     candidate.factualValidUntil ? Date.parse(candidate.factualValidUntil) : Infinity,
+    Number.isFinite(promoEnds) ? promoEnds : Infinity,
   )).toISOString();
 }
 
@@ -583,7 +585,12 @@ async function pendingPautaPreparations(tx: Tx, context: AccountContext, channel
     where a.tenant_id=${context.tenantId} and a.channel=${channel}
       and a.selection->>'kind'='pauta-copied-v1' and a.selection->>'affiliateId'=${context.affiliateId}
       and not exists(select 1 from garimpa.recommendation_exposure e
-        where e.tenant_id=a.tenant_id and e.channel=a.channel and e.edition_id=a.id)
+        where e.tenant_id=a.tenant_id and e.channel=a.channel
+          and (e.edition_id=a.id or e.edition_id::text=a.selection->>'sourceId'))
+      and not exists(select 1 from garimpa.recommendation_edition_archive d
+        where d.tenant_id=a.tenant_id and d.channel=a.channel
+          and d.selection->>'kind'='pauta-discarded-v1'
+          and (d.selection->>'sourceId'=a.id::text or d.selection->>'sourceId'=a.selection->>'sourceId'))
     order by a.prepared_at desc,a.id desc`;
   return rows.flatMap(row => row.selection.products?.[0]
     ? [{ product: { ...row.selection.products[0], confirmationId: row.id }, text: row.selection.text,
@@ -638,6 +645,8 @@ export async function readLivePauta(context: AccountContext, channel: PautaChann
         ? aiBenefit : undefined;
       return {
         ...presentation, ...product,
+        ...(product.promotionType ?? presentation.promotionType ? { promotionType: product.promotionType ?? presentation.promotionType } : {}),
+        ...(product.promotionEndsAt ?? presentation.promotionEndsAt ? { promotionEndsAt: product.promotionEndsAt ?? presentation.promotionEndsAt } : {}),
         ...(product.priceType === "range" || product.priceType === "from" || product.offerConditions && !product.offerOptionKey
           ? { discountPercent: null, originalPriceCents: null, lowestVerified: false } : {}),
         benefit: presentation.benefit || (assessment?.benefit && !hasSuperiorityClaim(assessment.benefit) ? assessment.benefit : safeAiBenefit),
@@ -764,7 +773,17 @@ export async function confirmPautaExposure(context: AccountContext, channel: Pau
         select 1 from information_schema.columns
         where table_schema = 'garimpa' and table_name = 'recommendation_exposure' and column_name = 'preparation_expired'
       ) as "hasPrepExpired"`;
-    if (hasPrepExpired) {
+    const [{ hasIsSkip } = { hasIsSkip: false }] = await tx<{ hasIsSkip: boolean }[]>`
+      select exists (
+        select 1 from information_schema.columns
+        where table_schema = 'garimpa' and table_name = 'recommendation_exposure' and column_name = 'is_skip'
+      ) as "hasIsSkip"`;
+    if (hasIsSkip && hasPrepExpired) {
+      await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by,preparation_expired,is_skip)
+        values(${tenantId},${channel},${confirmationId},${productId},${offer.offerOptionKey ?? null},${offer.priceCents},${actorAppUserId},
+          ${Number.isFinite(validUntil) ? new Date(validUntil) : null}::timestamptz is null or statement_timestamp() >= ${Number.isFinite(validUntil) ? new Date(validUntil) : null}::timestamptz,false)
+        on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+    } else if (hasPrepExpired) {
       await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by,preparation_expired)
         values(${tenantId},${channel},${confirmationId},${productId},${offer.offerOptionKey ?? null},${offer.priceCents},${actorAppUserId},
           ${Number.isFinite(validUntil) ? new Date(validUntil) : null}::timestamptz is null or statement_timestamp() >= ${Number.isFinite(validUntil) ? new Date(validUntil) : null}::timestamptz)
@@ -773,6 +792,144 @@ export async function confirmPautaExposure(context: AccountContext, channel: Pau
       await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by)
         values(${tenantId},${channel},${confirmationId},${productId},${offer.offerOptionKey ?? null},${offer.priceCents},${actorAppUserId})
         on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+    }
+    return true;
+  }, sqlFactory);
+}
+
+export async function discardPautaPreparation(context: AccountContext, channel: PautaChannel, confirmationId: string,
+  productId: string, sqlFactory: typeof db = db) {
+  if (context.actor !== "human" || !context.actorAppUserId) return false;
+  const { tenantId } = context;
+  return withAccountDb(context, async tx => {
+    const id = randomUUID();
+    await tx`insert into garimpa.recommendation_edition_archive(id,tenant_id,channel,version,config_version,prepared_at,selection,inputs)
+      values(${id}::uuid,${tenantId},${channel},1,1,now(),
+        ${tx.json({ kind: "pauta-discarded-v1", affiliateId: context.affiliateId, sourceId: confirmationId, productId, discardedBy: context.actorAppUserId })},
+        ${tx.json([{ productId }])})
+      on conflict(id) do nothing`;
+    return true;
+  }, sqlFactory);
+}
+
+export async function skipPautaOffer(context: AccountContext, channel: PautaChannel, confirmationId: string,
+  productId: string, sqlFactory: typeof db = db) {
+  if (context.actor !== "human" || !context.actorAppUserId) return false;
+  const { tenantId, actorAppUserId } = context;
+  return withAccountDb(context, async tx => {
+    await tx`select pg_advisory_xact_lock(hashtextextended(${`recommendations:${tenantId}`},0))`;
+    const [archive] = await tx<{ selection: { kind?: string; affiliateId?: string; products?: Array<{
+      id: string; offerOptionKey?: string | null; priceCents: number; offerValidUntil?: string;
+    }> } }[]>`select selection from garimpa.recommendation_edition_archive
+      where tenant_id=${tenantId} and channel=${channel} and id=${confirmationId}::uuid`;
+    let offer = (archive?.selection.kind === "pauta-copied-v1" || archive?.selection.kind === "pauta-preparation-v1")
+      && archive.selection.affiliateId === context.affiliateId
+      ? archive.selection.products?.find(product => product.id === productId) : undefined;
+    let priceCents = offer?.priceCents;
+    let optionKey = offer?.offerOptionKey ?? null;
+    if (!priceCents || priceCents <= 0) {
+      const [latest] = await tx<{ price_cents: number; option_key: string | null }[]>`
+        select price_cents, option_key from garimpa.price_observation
+        where tenant_id=${tenantId} and product_id=${productId} and price_cents > 0
+        order by observed_at desc limit 1`;
+      priceCents = latest?.price_cents ?? 100;
+      optionKey = latest?.option_key ?? null;
+    }
+
+    if (!archive) {
+      await tx`insert into garimpa.recommendation_edition_archive(id,tenant_id,channel,version,config_version,prepared_at,selection,inputs)
+        values(${confirmationId}::uuid,${tenantId},${channel},1,1,now(),
+          ${tx.json({ kind: "pauta-preparation-v1", affiliateId: context.affiliateId, products: [{ id: productId, offerOptionKey: optionKey, priceCents }] })},
+          ${tx.json([{ productId }])})
+        on conflict(id) do nothing`;
+    }
+
+    const [{ hasPrepExpired } = { hasPrepExpired: false }] = await tx<{ hasPrepExpired: boolean }[]>`
+      select exists (
+        select 1 from information_schema.columns
+        where table_schema = 'garimpa' and table_name = 'recommendation_exposure' and column_name = 'preparation_expired'
+      ) as "hasPrepExpired"`;
+    const [{ hasIsSkip } = { hasIsSkip: false }] = await tx<{ hasIsSkip: boolean }[]>`
+      select exists (
+        select 1 from information_schema.columns
+        where table_schema = 'garimpa' and table_name = 'recommendation_exposure' and column_name = 'is_skip'
+      ) as "hasIsSkip"`;
+
+    if (hasIsSkip && hasPrepExpired) {
+      await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by,preparation_expired,is_skip)
+        values(${tenantId},${channel},${confirmationId},${productId},${optionKey},${priceCents},${actorAppUserId},false,true)
+        on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+    } else if (hasPrepExpired) {
+      await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by,preparation_expired)
+        values(${tenantId},${channel},${confirmationId},${productId},${optionKey},${priceCents},${actorAppUserId},false)
+        on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+    } else {
+      await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by)
+        values(${tenantId},${channel},${confirmationId},${productId},${optionKey},${priceCents},${actorAppUserId})
+        on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+    }
+
+    return true;
+  }, sqlFactory);
+}
+
+export async function skipPautaOffersBatch(context: AccountContext, channel: PautaChannel,
+  items: Array<{ confirmationId: string; productId: string }>, sqlFactory: typeof db = db) {
+  if (context.actor !== "human" || !context.actorAppUserId || !items.length) return false;
+  const { tenantId, actorAppUserId } = context;
+  return withAccountDb(context, async tx => {
+    await tx`select pg_advisory_xact_lock(hashtextextended(${`recommendations:${tenantId}`},0))`;
+    const [{ hasPrepExpired } = { hasPrepExpired: false }] = await tx<{ hasPrepExpired: boolean }[]>`
+      select exists (
+        select 1 from information_schema.columns
+        where table_schema = 'garimpa' and table_name = 'recommendation_exposure' and column_name = 'preparation_expired'
+      ) as "hasPrepExpired"`;
+    const [{ hasIsSkip } = { hasIsSkip: false }] = await tx<{ hasIsSkip: boolean }[]>`
+      select exists (
+        select 1 from information_schema.columns
+        where table_schema = 'garimpa' and table_name = 'recommendation_exposure' and column_name = 'is_skip'
+      ) as "hasIsSkip"`;
+
+    for (const item of items) {
+      const [archive] = await tx<{ selection: { kind?: string; affiliateId?: string; products?: Array<{
+        id: string; offerOptionKey?: string | null; priceCents: number;
+      }> } }[]>`select selection from garimpa.recommendation_edition_archive
+        where tenant_id=${tenantId} and channel=${channel} and id=${item.confirmationId}::uuid`;
+      let offer = (archive?.selection.kind === "pauta-copied-v1" || archive?.selection.kind === "pauta-preparation-v1")
+        && archive.selection.affiliateId === context.affiliateId
+        ? archive.selection.products?.find(product => product.id === item.productId) : undefined;
+      let priceCents = offer?.priceCents;
+      let optionKey = offer?.offerOptionKey ?? null;
+      if (!priceCents || priceCents <= 0) {
+        const [latest] = await tx<{ price_cents: number; option_key: string | null }[]>`
+          select price_cents, option_key from garimpa.price_observation
+          where tenant_id=${tenantId} and product_id=${item.productId} and price_cents > 0
+          order by observed_at desc limit 1`;
+        priceCents = latest?.price_cents ?? 100;
+        optionKey = latest?.option_key ?? null;
+      }
+
+      if (!archive) {
+        await tx`insert into garimpa.recommendation_edition_archive(id,tenant_id,channel,version,config_version,prepared_at,selection,inputs)
+          values(${item.confirmationId}::uuid,${tenantId},${channel},1,1,now(),
+            ${tx.json({ kind: "pauta-preparation-v1", affiliateId: context.affiliateId, products: [{ id: item.productId, offerOptionKey: optionKey, priceCents }] })},
+            ${tx.json([{ productId: item.productId }])})
+          on conflict(id) do nothing`;
+      }
+
+      if (hasIsSkip && hasPrepExpired) {
+        await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by,preparation_expired,is_skip)
+          values(${tenantId},${channel},${item.confirmationId},${item.productId},${optionKey},${priceCents},${actorAppUserId},false,true)
+          on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+      } else if (hasPrepExpired) {
+        await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by,preparation_expired)
+          values(${tenantId},${channel},${item.confirmationId},${item.productId},${optionKey},${priceCents},${actorAppUserId},false)
+          on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+      } else {
+        await tx`insert into garimpa.recommendation_exposure(tenant_id,channel,edition_id,product_id,option_key,price_cents,confirmed_by)
+          values(${tenantId},${channel},${item.confirmationId},${item.productId},${optionKey},${priceCents},${actorAppUserId})
+          on conflict(tenant_id,channel,edition_id,product_id) do nothing`;
+      }
     }
     return true;
   }, sqlFactory);

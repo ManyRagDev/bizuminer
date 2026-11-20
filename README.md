@@ -1,10 +1,12 @@
 # BizuMiner
 
-Site de curadoria de ofertas. Detecta promoções, **verifica se o desconto é real** usando histórico de preço próprio, e publica o que merece atenção. Hoje opera o Mercado Livre; Shopee e Amazon entram quando as credenciais de afiliado chegarem.
+O BizuMiner reúne ofertas de lojas, acompanha o histórico de preços e prepara escolhas para a pauta do criador e a vitrine dos compradores.
 
-A comissão de afiliado é da casa: o BizuMiner publica, o comprador decide, o link de saída é rastreado de ponta a ponta.
+O comprador consulta a oferta na vitrine e finaliza a compra na loja. A pauta prepara texto e link de afiliado para divulgação pelo criador.
 
-> **Comece por aqui:** [`docs/estado-do-projeto.md`](docs/estado-do-projeto.md) — a régua oficial: o que o produto é, as decisões que não se reabrem, o estado atual e os bloqueios.
+A [visão de produto](.conductor/product.md) registra a direção editorial. A [auditoria de 18/11/2026](docs/tecnico/auditoria-escolha-produtos-2026-11-18.md) mostra como a seleção funciona na aplicação publicada. O [diagnóstico geral, atualizado em 20/11/2026](docs/tecnico/diagnostico-geral-bizuminer-2026-11-19.md) acompanha a oferta da captura à pauta e à vitrine, com os resultados dos lotes recentes e a verificação dos prazos relâmpago do Mercado Livre.
+
+Quem altera o projeto segue as [instruções do repositório](AGENTS.md) e registra o trabalho no [diário de mudanças](.conductor/tracks.md#diário-de-mudanças).
 
 ---
 
@@ -12,7 +14,7 @@ A comissão de afiliado é da casa: o BizuMiner publica, o comprador decide, o l
 
 ```
 docs/
-  estado-do-projeto.md   documento mestre oficial — leia primeiro
+  estado-do-projeto.md   levantamento de agosto e decisões da época
   pendencias.md          mapa do que fazer a seguir e por quê (sessão 19–20/08)
   tecnico/               roadmap, planos de execução, modelo de dados
   estrategia/            brief antigo OfertaFlow — histórico, não usar para decidir

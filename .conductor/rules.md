@@ -32,13 +32,9 @@
 
 ## 2. 🏁 Definition of Done (DoD Obrigatório)
 
-Uma tarefa ou track **SÓ É CONSIDERADA FINALIZADA** quando todos os critérios abaixo forem atendidos:
+Confira a entrega pelo resultado que foi pedido. Em uma implementação, exercite a funcionalidade pela entrada usada no aplicativo e rode os testes pertinentes. Se houver um plano em andamento, marque apenas o que foi verificado e mantenha as pendências visíveis.
 
-1. **Código Implementado e Funcional:** O código foi escrito, integrado e resolve o problema sem regressions.
-2. **Verificação Real via Terminal/Testes:** Executar a suíte de testes relevante (`npm test --prefix packages/web`, `npm test --prefix packages/persistence`, ou os scripts `bin/verify-*.ts`).
-3. **Plano da Track Atualizado:** O arquivo `.conductor/tracks/<track-id>/plan.md` deve ter todas as tarefas correspondentes marcadas com `[x]`.
-4. **Roadmap de Tracks Atualizado:** O arquivo `.conductor/tracks.md` deve ter o status da track atualizado para `[x]` e indicar a data/resumo da entrega.
-5. **Documentação e Verdade Sincronizadas:** Se a implementação alterou alguma premissa de negócio ou técnica, proponha a atualização correspondente em `.conductor/product.md` ou `.conductor/tech-stack.md`.
+Todo agente registra as mudanças no [diário do projeto](tracks.md#diário-de-mudanças), conforme as [instruções do repositório](../AGENTS.md#registro-de-mudanças-por-todos-os-agentes). Quando mudar uma premissa duradoura, atualize também o documento de produto ou de arquitetura correspondente.
 
 ---
 

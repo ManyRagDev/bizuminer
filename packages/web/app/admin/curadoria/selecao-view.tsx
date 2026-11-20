@@ -373,6 +373,8 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
   const [validHours, setValidHours] = useState("24");
   const [search, setSearch] = useState(() => initialCandidates.find(candidate => candidate.id === initialEditingId)?.title ?? "");
   const [marketplace, setMarketplace] = useState("all");
+  const [visibleLimit, setVisibleLimit] = useState(24);
+  useEffect(() => { setVisibleLimit(24); }, [search, marketplace]);
   const [editingId, setEditingId] = useState<string | null>(() => initialCandidates.some(candidate => candidate.id === initialEditingId) ? initialEditingId! : null);
   const [feedback, setFeedback] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -389,6 +391,14 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       legacyStatus:item.classification.status,score:comparisonById.get(item.candidate.id)!.scoreVitrine}));
   },[ranked,comparisonById]);
   const filtered = useMemo(() => ranked.filter(({ candidate }) => (marketplace === "all" || candidate.marketplace === marketplace) && candidate.title.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"))), [ranked, marketplace, search]);
+  const visibleItems = useMemo(() => {
+    const slice = filtered.slice(0, visibleLimit);
+    if (editingId && !slice.some(({ candidate }) => candidate.id === editingId)) {
+      const active = filtered.find(({ candidate }) => candidate.id === editingId);
+      if (active) return [...slice, active];
+    }
+    return slice;
+  }, [filtered, visibleLimit, editingId]);
   const heroPreview = useMemo(() => {
     if(reviewOnly)return [];
     if (catalogHeroActive && !selection && !dirty) return composeHomepage(candidates).heroes;
@@ -438,7 +448,7 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       <p>Compara a ordenação individual da capa existente com a pontuação v2 para os mesmos produtos. As posições não representam uma edição publicada: composição, diversidade e validade podem alterar a escolha final.</p>
       <p>{candidates.length-shadowComparison.length} candidato(s) desta mesa sem projeção v2 atual ficaram fora da comparação.</p>
       <div style={{overflowX:"auto"}}><table><thead><tr><th>Produto</th><th>Ordem da capa</th><th>Situação na capa</th><th>Ordem v2</th><th>Score v2</th></tr></thead>
-        <tbody>{shadowComparison.map(item=><tr key={item.candidate.id}><td>{item.candidate.title}</td><td>{item.legacyPosition}</td>
+        <tbody>{shadowComparison.slice(0, 50).map(item=><tr key={item.candidate.id}><td>{item.candidate.title}</td><td>{item.legacyPosition}</td>
           <td>{item.legacyStatus==='hero' ? 'Apto à capa' : item.legacyStatus==='selection' ? 'Seleção' : 'Com impedimento'}</td>
           <td>{item.v2Position}</td><td>{item.score.toFixed(1)}</td></tr>)}</tbody></table></div>
     </details>}
@@ -506,7 +516,7 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
     </>}
     <div className="selecao-dia-header"><div><h3>Produtos para avaliação ({candidates.length})</h3><p className="selecao-dia-sub">Aprovação no catálogo não equivale a destaque editorial.</p></div><div className="selecao-dia-controls"><input aria-label="Buscar produto no catálogo aprovado" type="search" placeholder="Buscar por título…" className="selecao-search-input" value={search} onChange={(event) => setSearch(event.target.value)} /><div className="selecao-filter-pills">{["all", "mercadolivre", "shopee", "aliexpress"].map((slug) => <button type="button" key={slug} className={`filter-pill ${marketplace === slug ? "active" : ""}`} aria-pressed={marketplace === slug} onClick={() => setMarketplace(slug)}>{slug === "all" ? "Todos" : marketplaceDef(slug)?.label ?? slug}</button>)}</div></div></div>
     {!filtered.length && <div className="empty-selecao-box">Nenhum produto encontrado.</div>}
-    <div className="selecao-grid">{filtered.map(({ candidate, classification, heroRank }) => <article key={candidate.id} id={`editorial-product-${candidate.id}`} className={`selecao-card${editingId === candidate.id ? " editorial-card-editing" : ""}`}>
+    <div className="selecao-grid">{visibleItems.map(({ candidate, classification, heroRank }) => <article key={candidate.id} id={`editorial-product-${candidate.id}`} className={`selecao-card${editingId === candidate.id ? " editorial-card-editing" : ""}`}>
       <div className="selecao-card-thumb">{candidate.imageUrl ? <Image src={candidate.imageUrl} alt={candidate.title} fill sizes="(max-width: 768px) 100vw, 300px" className="selecao-img" /> : <div className="selecao-card-no-img">Sem foto</div>}<span className={`mp-badge-tag ${candidate.marketplace}`}>{marketplaceDef(candidate.marketplace)?.label ?? candidate.marketplace}</span></div>
       <div className="selecao-card-body"><h3 className="selecao-card-title"><a href={`/bizu/${candidate.slug}`} target="_blank" rel="noopener noreferrer">{candidate.title}</a></h3><div className="selecao-card-price"><strong className="current-price">{offerPriceLabel(candidate)}</strong>{offerPriceNote(candidate) && <p>{offerPriceNote(candidate)}</p>}</div><div className="selecao-card-meta">{candidate.ratingStar !== null && <span>★ {candidate.ratingStar.toFixed(1)}</span>}{candidate.salesCount !== null && <span>{candidate.salesCount} vendas</span>}{candidate.category && <span>{candidate.category}</span>}</div>
       {candidate.assessment && <p className="editorial-card-rationale">{candidate.assessment.publicRationale}</p>}
@@ -521,5 +531,12 @@ export default function SelecaoView({ initialCandidates, initialSelection, schem
       {editingId === candidate.id && <AssessmentForm key={`${candidate.id}-${candidate.assessment?.id ?? "new"}`} candidate={candidate} disabled={!schemaReady} onCancel={() => setEditingId(null)} onSaved={(updated) => { setCandidates((current) => current.map((item) => item.id === updated.id ? updated : item)); setEditingId(null); setFeedback("Avaliação salva. Confira os impedimentos antes de incluir no destaque."); if (draft.some((item) => item.productId === updated.id) && updated.assessment) changeDraft(draft.map((item) => item.productId === updated.id ? { ...item, assessmentId: updated.assessment!.id } : item)); }} />}
       </div>
     </article>)}</div>
+    {filtered.length > visibleLimit && (
+      <div style={{ marginTop: "16px", textAlign: "center" }}>
+        <button type="button" className="filter-pill" onClick={() => setVisibleLimit((prev) => prev + 48)}>
+          Mostrar mais produtos ({Math.min(visibleLimit, filtered.length)} de {filtered.length} exibidos)
+        </button>
+      </div>
+    )}
   </section>;
 }

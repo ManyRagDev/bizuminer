@@ -6,6 +6,7 @@
 
 import { extractCard, type ExtractedCard } from "./card-extractor.ts";
 import { extractAmazonCardFromElement, extractAmazonProductFromDoc } from "./amazon-extractor.ts";
+import { extractMlCountdownFromElement, findMlScriptPeriodEnd } from "./ml-countdown.ts";
 import { newRequestId } from "../lib/contracts.ts";
 
 export type CaptureResponse = {
@@ -74,6 +75,14 @@ async function handleClick(card: Element, setState: (label: string, bg: string) 
     : isMlPdp
       ? extractMlProductFromDoc(document, window.location.href)
       : (extractCard(card.outerHTML) ?? extractMlProductFromDoc(document, window.location.href));
+
+  if (extracted && !isAmazon && !extracted.promotionEndsAt) {
+    const catalogId = extracted.productUrl.match(/\/p\/(MLB\d{6,})/i)?.[1]?.toUpperCase();
+    const cd = extractMlCountdownFromElement(card) ?? findMlScriptPeriodEnd(document, extracted.externalId, Date.now(), catalogId);
+    if (cd) {
+      extracted = { ...extracted, promotionType: cd.promotionType, promotionEndsAt: cd.promotionEndsAt };
+    }
+  }
 
   if (!extracted) {
     // Card incompleto: fallback PDP (nunca capturar vazio em silêncio).
@@ -208,6 +217,8 @@ export function extractMlProductFromDoc(doc: Document, pageHref: string): Extrac
   );
   const imageUrl = img?.src?.startsWith("https://") ? img.src : img?.getAttribute("data-src") || undefined;
   const productUrl = page.origin + normalizedPath + (listingId || normalizedPath.includes("/p/") ? `?wid=${externalId}` : "");
+  const catalogId = normalizedPath.match(/\/p\/(MLB\d{6,})/i)?.[1]?.toUpperCase();
+  const cd = (doc.body ? extractMlCountdownFromElement(doc.body) : null) ?? findMlScriptPeriodEnd(doc, externalId, Date.now(), catalogId);
 
   return {
     externalId,
@@ -218,6 +229,7 @@ export function extractMlProductFromDoc(doc: Document, pageHref: string): Extrac
     currency: "BRL",
     priceType: /a\s+partir\s+de/i.test(priceLabel) ? "from" : "exact",
     ...(originalPriceCents && originalPriceCents > priceCents ? { originalPriceCents } : {}),
+    ...(cd ? { promotionType: cd.promotionType, promotionEndsAt: cd.promotionEndsAt } : {}),
     marketplace: "mercadolivre",
   };
 }

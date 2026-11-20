@@ -296,7 +296,7 @@ captureActiveBtn?.addEventListener("click", async () => {
   try {
     const result = await chrome.runtime.sendMessage({ type: "CAPTURE_ACTIVE" }) as {
       ok?: boolean; queued?: boolean; error?: string;
-      sample?: { title?: string; priceCents?: number; priceMaxCents?: number; priceType?: string };
+      sample?: { title?: string; priceCents?: number; priceMaxCents?: number; priceType?: string; promotionType?: string; promotionEndsAt?: string };
     };
     if (!result.ok) {
       if (captureActiveStatus) captureActiveStatus.textContent = explain(result.error);
@@ -305,7 +305,10 @@ captureActiveBtn?.addEventListener("click", async () => {
       const money = (cents: number) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
       const samplePrice = sample?.priceType === "range" && sample.priceMaxCents ? `${money(sample.priceCents!)} a ${money(sample.priceMaxCents)}`
         : sample?.priceCents ? `${sample.priceType === "from" ? "a partir de " : ""}${money(sample.priceCents)}` : "";
-      const summary = sample?.title ? `${sample.title.slice(0, 75)}${samplePrice ? ` — ${samplePrice}` : ""}` : "Anúncio";
+      const flashInfo = sample?.promotionType === "lightning" && sample.promotionEndsAt
+        ? ` · ⚡ Relâmpago até ${new Date(sample.promotionEndsAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+        : "";
+      const summary = sample?.title ? `${sample.title.slice(0, 75)}${samplePrice ? ` — ${samplePrice}` : ""}${flashInfo}` : "Anúncio";
       if (captureActiveStatus) {
         captureActiveStatus.textContent = result.queued
           ? `⏳ Enfileirado para envio: ${summary}`
@@ -362,10 +365,11 @@ async function prepareBatch(replace: boolean): Promise<void> {
       const d = result.diagnostics;
       const details = d ? [
         `${d.products} anúncios identificados`,
+        result.lightningCount ? `⚡ ${result.lightningCount} em Oferta Relâmpago` : null,
         d.noPrice && `${d.noPrice} sem preço detectado${d.visibleNoPrice ? ` (${d.visibleNoPrice} visíveis na tela)` : ""}`,
         d.uncertainPrice && `${d.uncertainPrice} com preço indefinido`,
         d.noTitle && `${d.noTitle} sem nome`,
-      ].filter(Boolean).join(" · ") : "";
+      ].filter(Boolean).join(" · ") : (result.lightningCount ? `⚡ ${result.lightningCount} em Oferta Relâmpago` : "");
       const sample = result.sample;
       const money = (cents: number) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
       const samplePrice = sample?.priceType === "range" && sample.priceMaxCents ? `${money(sample.priceCents)} a ${money(sample.priceMaxCents)}`

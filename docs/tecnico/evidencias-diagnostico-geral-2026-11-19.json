@@ -1,0 +1,942 @@
+{
+  "titulo": "Diagnóstico de funcionamento do BizuMiner",
+  "data": "2026-11-19",
+  "fuso": "America/Sao_Paulo",
+  "escopo": "Conta da casa e vitrine pública. Banco com o papel da aplicação, conta escopada e transações repeatable read, read only. Grupos por loja e etapa. O catálogo público e as consultas da pauta têm relógios e critérios próprios.",
+  "inventario_local": {
+    "quantidade_paginas": 30,
+    "paginas": [
+      "/",
+      "/admin",
+      "/admin/campanhas",
+      "/admin/capturas",
+      "/admin/capturas/[reference]",
+      "/admin/configuracoes",
+      "/admin/curadoria",
+      "/admin/curadoria/ofertas/[id]",
+      "/admin/direcionamento",
+      "/admin/divulgacoes",
+      "/admin/divulgacoes/[id]",
+      "/admin/divulgacoes/importar",
+      "/admin/divulgacoes/nova",
+      "/admin/experimentos",
+      "/admin/financeiro",
+      "/admin/governanca",
+      "/admin/marketing",
+      "/admin/ofertas",
+      "/admin/ofertas/[id]",
+      "/admin/ofertas/adicionar",
+      "/admin/onboarding",
+      "/admin/resultados",
+      "/bizu/[slug]",
+      "/convite",
+      "/entrar",
+      "/minha-area",
+      "/oferta/[slug]/[option]",
+      "/p/pauta/[token]",
+      "/pauta",
+      "/plataforma"
+    ],
+    "quantidade_rotas_http": 51,
+    "rotas_http": [
+      "/api/admin/affiliates",
+      "/api/admin/affiliates/config",
+      "/api/admin/analytics",
+      "/api/admin/artifacts/[id]",
+      "/api/admin/artifacts/upload",
+      "/api/admin/captura",
+      "/api/admin/capturas",
+      "/api/admin/capturas/[reference]",
+      "/api/admin/connections",
+      "/api/admin/extension/devices",
+      "/api/admin/marketing",
+      "/api/admin/monitoring/dispatch",
+      "/api/admin/monitoring/policy",
+      "/api/admin/operacao",
+      "/api/admin/rodagem",
+      "/api/admin/rodagem/[marketplace]",
+      "/api/admin/rodagem/lote",
+      "/api/admin/rodagem/navegador",
+      "/api/admin/rodagens",
+      "/api/admin/work-drafts",
+      "/api/admin/workspace",
+      "/api/capture",
+      "/api/deals",
+      "/api/deals/selected",
+      "/api/editorial-selection",
+      "/api/extension/capture-batches",
+      "/api/extension/captures",
+      "/api/extension/observations",
+      "/api/extension/pair/exchange",
+      "/api/extension/pairing-codes",
+      "/api/extension/recapture-plan",
+      "/api/extension/recapture-plan/claim",
+      "/api/extension/recapture-plan/session",
+      "/api/homepage-engagement",
+      "/api/minha/acompanhar",
+      "/api/minha/favoritos",
+      "/api/minha/perfil",
+      "/api/newsletter",
+      "/api/pauta",
+      "/api/pauta/slots",
+      "/api/pauta/warmup",
+      "/api/story/[slug]",
+      "/auth/callback",
+      "/auth/password",
+      "/auth/sair",
+      "/bio/[tenant]/[code]",
+      "/bizu/[slug]/opengraph-image",
+      "/go/[slug]",
+      "/go/pauta/[token]",
+      "/oferta/[slug]/[option]/opengraph-image",
+      "/p/[code]"
+    ],
+    "pacotes": [
+      "web",
+      "extension",
+      "capture",
+      "persistence"
+    ],
+    "commit": "10d59c4"
+  },
+  "http_anonimo": {
+    "inicio_brt": "2026-11-19T11:10:04-03:00",
+    "paginas": {
+      "vitrine": {
+        "status": 200,
+        "destino": null
+      },
+      "detalhe": {
+        "status": 200,
+        "destino": null,
+        "cta_para_loja": true,
+        "tem_preco": true,
+        "detalhes_distintos_na_home": 24
+      },
+      "entrar": {
+        "status": 200,
+        "destino": null,
+        "senha": true,
+        "google": false,
+        "sem_cadastro_ou_recuperacao": true
+      },
+      "minha_area": {
+        "status": 307,
+        "destino": "/entrar?next=%2Fminha-area"
+      },
+      "resultados": {
+        "status": 307,
+        "destino": "/entrar?next=%2Fadmin%2Fresultados"
+      },
+      "pauta": {
+        "status": 307,
+        "destino": "/entrar?next=%2Fpauta"
+      },
+      "convite": {
+        "status": 200,
+        "destino": null,
+        "entrada_exigida": true
+      },
+      "plataforma": {
+        "status": 200,
+        "destino": null,
+        "redirecionamento_no_html": "/admin"
+      }
+    },
+    "vitrine": {
+      "edicao": 24,
+      "destaques_de_capa": 0,
+      "primeira_pagina": 24,
+      "total": 427,
+      "em_comum": 9,
+      "mesma_ordem": false,
+      "lojas_edicao": {
+        "mercadolivre": 8,
+        "amazon": 8,
+        "shopee": 8
+      },
+      "lojas_primeira_pagina": {
+        "shopee": 8,
+        "mercadolivre": 8,
+        "amazon": 8
+      },
+      "primeiros_3": [
+        "1/2 Peças Suporte de Canto e Reta Porta Shampoo Prateleira Para Banheiro Organizador com Adesivo",
+        "Kit 3 Conjutos Fitness 3 Regata E 3 Shorts 2em1 Feminino",
+        "Garantia Estendida contra falhas e defeitos de 12 meses"
+      ]
+    },
+    "grade_e_medicao": {
+      "hora_da_renderizacao_utc": "2026-11-19T14:10:07.346Z",
+      "edicao_ativa": true,
+      "identificador_de_edicao_presente": true,
+      "habilitacao_de_eventos_presente": true,
+      "visitante_anonimo": true,
+      "itens_na_grade_html": 24,
+      "grade_html_confere_com_catalogo": true,
+      "produtos_da_grade_na_edicao": 9,
+      "fora_da_lista_medida": 15,
+      "em_posicao_diferente_dentre_os_que_coincidem": 8,
+      "justificativas_distintas": 1,
+      "justificativa_generica": 24
+    },
+    "rotulos_de_frescor": {
+      "oferece_14_dias": true,
+      "oferece_tudo": true
+    },
+    "catalogo_por_consulta": {
+      "padrao": {
+        "status": 200,
+        "total": 427,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 80,
+          "shopee": 9,
+          "mercadolivre": 338
+        },
+        "precos_centavos": [
+          1145,
+          14099,
+          13870
+        ]
+      },
+      "uma_semana": {
+        "status": 200,
+        "total": 427,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 80,
+          "shopee": 9,
+          "mercadolivre": 338
+        },
+        "precos_centavos": [
+          1145,
+          14099,
+          13870
+        ]
+      },
+      "duas_semanas": {
+        "status": 200,
+        "total": 427,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 80,
+          "shopee": 9,
+          "mercadolivre": 338
+        },
+        "precos_centavos": [
+          1145,
+          14099,
+          13870
+        ]
+      },
+      "tudo": {
+        "status": 200,
+        "total": 427,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 80,
+          "shopee": 9,
+          "mercadolivre": 338
+        },
+        "precos_centavos": [
+          1145,
+          14099,
+          13870
+        ]
+      },
+      "menor_preco": {
+        "status": 200,
+        "total": 427,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 80,
+          "shopee": 9,
+          "mercadolivre": 338
+        },
+        "precos_centavos": [
+          790,
+          818,
+          838
+        ]
+      }
+    },
+    "primeiros_tres_ids_iguais_para_7d_14d_e_tudo": true,
+    "pedidos_que_exigiram_login": {
+      "resultados": "/admin/resultados?conta=local",
+      "pauta": "/pauta?canal=whatsapp"
+    }
+  },
+  "producao_conta": {
+    "hora_brt": "2026-11-19 11:11:17",
+    "leitura": true,
+    "lojas": [
+      {
+        "marketplace": "aliexpress",
+        "produtos": 479,
+        "aprovados": 445,
+        "publicacoes_web_ativas": 0,
+        "vistos_12h": 0
+      },
+      {
+        "marketplace": "amazon",
+        "produtos": 593,
+        "aprovados": 585,
+        "publicacoes_web_ativas": 543,
+        "vistos_12h": 0
+      },
+      {
+        "marketplace": "mercadolivre",
+        "produtos": 700,
+        "aprovados": 696,
+        "publicacoes_web_ativas": 667,
+        "vistos_12h": 146
+      },
+      {
+        "marketplace": "shopee",
+        "produtos": 448,
+        "aprovados": 432,
+        "publicacoes_web_ativas": 441,
+        "vistos_12h": 9
+      }
+    ],
+    "lotes_7d": [
+      {
+        "loja": "aliexpress",
+        "lotes": 5,
+        "recebidos": 283,
+        "rejeitados": 0,
+        "ultimo_brt": "2026-11-18 12:11"
+      },
+      {
+        "loja": "amazon",
+        "lotes": 5,
+        "recebidos": 239,
+        "rejeitados": 0,
+        "ultimo_brt": "2026-11-18 18:48"
+      },
+      {
+        "loja": "mercadolivre",
+        "lotes": 14,
+        "recebidos": 579,
+        "rejeitados": 0,
+        "ultimo_brt": "2026-11-19 01:18"
+      },
+      {
+        "loja": null,
+        "lotes": 19,
+        "recebidos": null,
+        "rejeitados": null,
+        "ultimo_brt": "2026-11-16 16:47"
+      }
+    ],
+    "pauta_whatsapp": {
+      "ofertas": 30,
+      "titulos_distintos": 30,
+      "linhas_de_motivos": 2128,
+      "motivos": {
+        "Divulgada recentemente neste canal.": 13,
+        "A oferta precisa de uma conferência atual antes da preparação.": 2004,
+        "Confirme o preço exato em reais.": 153,
+        "Aguardando avaliação atual para a pauta.": 163,
+        "Falta um link de afiliado válido para esta oferta.": 455,
+        "Configure a tag de associado da Amazon para compartilhar esta oferta.": 42,
+        "Oferta apta. Ficou abaixo do corte deste canal.": 115,
+        "Outra oferta da mesma família teve prioridade.": 8
+      }
+    },
+    "pauta_stories": {
+      "ofertas": 16,
+      "titulos_distintos": 16,
+      "linhas_de_motivos": 2142,
+      "motivos": {
+        "A oferta precisa de uma conferência atual antes da preparação.": 2004,
+        "Confirme o preço exato em reais.": 153,
+        "Aguardando avaliação atual para a pauta.": 163,
+        "Falta um link de afiliado válido para esta oferta.": 455,
+        "Configure a tag de associado da Amazon para compartilhar esta oferta.": 42,
+        "Oferta apta. Ficou abaixo do corte deste canal.": 125,
+        "Outra oferta da mesma família teve prioridade.": 13
+      }
+    },
+    "divulgacao_7d": [
+      {
+        "channel": "whatsapp",
+        "numero_exibido": 13,
+        "confirmacoes": 6,
+        "pulos": 7,
+        "confirmacoes_com_preparo_vencido": 1
+      }
+    ],
+    "tipos_de_link_30d": [
+      {
+        "tipo": "pauta-copied-v1",
+        "destino": "site",
+        "arquivos": 11,
+        "produtos": 7
+      },
+      {
+        "tipo": "pauta-preparation-v1",
+        "destino": "site",
+        "arquivos": 1201,
+        "produtos": 142
+      }
+    ],
+    "cliques_30d": [
+      {
+        "marketplace": "amazon",
+        "cliques": 1,
+        "com_campanha": 0
+      },
+      {
+        "marketplace": "mercadolivre",
+        "cliques": 2,
+        "com_campanha": 0
+      },
+      {
+        "marketplace": "shopee",
+        "cliques": 1,
+        "com_campanha": 0
+      }
+    ],
+    "comercial": [
+      {
+        "financeiro_habilitado": false,
+        "divulgacoes_habilitadas": null
+      }
+    ],
+    "conversoes": [],
+    "recaptura": [],
+    "fila_de_atributos": [
+      {
+        "status": "completed",
+        "tarefas": 6358
+      },
+      {
+        "status": "reconciliation",
+        "tarefas": 33
+      },
+      {
+        "status": "superseded",
+        "tarefas": 8
+      }
+    ]
+  },
+  "primeira_avaliacao_do_lote_de_18": {
+    "hora_brt": "2026-11-19 11:14:04",
+    "latencia_novos_por_loja": [
+      {
+        "loja": "aliexpress",
+        "novos": 51,
+        "avaliados": 51,
+        "com_tarefa": 51,
+        "mesma_observacao": 51,
+        "mediana_total_min": 545.0,
+        "mediana_ate_criar_tarefa_min": 0.0,
+        "mediana_da_tarefa_a_avaliacao_min": 544.9,
+        "oito_horas_antes_da_tarefa": 0,
+        "oito_horas_apos_criar_tarefa": 51,
+        "oito_horas_no_total": 51,
+        "uma_tentativa": 51
+      },
+      {
+        "loja": "amazon",
+        "novos": 50,
+        "avaliados": 50,
+        "com_tarefa": 50,
+        "mesma_observacao": 50,
+        "mediana_total_min": 545.7,
+        "mediana_ate_criar_tarefa_min": 0.0,
+        "mediana_da_tarefa_a_avaliacao_min": 545.6,
+        "oito_horas_antes_da_tarefa": 0,
+        "oito_horas_apos_criar_tarefa": 50,
+        "oito_horas_no_total": 50,
+        "uma_tentativa": 50
+      },
+      {
+        "loja": "mercadolivre",
+        "novos": 96,
+        "avaliados": 96,
+        "com_tarefa": 96,
+        "mesma_observacao": 96,
+        "mediana_total_min": 541.1,
+        "mediana_ate_criar_tarefa_min": 0.0,
+        "mediana_da_tarefa_a_avaliacao_min": 540.9,
+        "oito_horas_antes_da_tarefa": 0,
+        "oito_horas_apos_criar_tarefa": 61,
+        "oito_horas_no_total": 61,
+        "uma_tentativa": 96
+      },
+      {
+        "loja": "total",
+        "novos": 197,
+        "avaliados": 197,
+        "com_tarefa": 197,
+        "mesma_observacao": 197,
+        "mediana_total_min": 544.2,
+        "mediana_ate_criar_tarefa_min": 0.0,
+        "mediana_da_tarefa_a_avaliacao_min": 544.1,
+        "oito_horas_antes_da_tarefa": 0,
+        "oito_horas_apos_criar_tarefa": 162,
+        "oito_horas_no_total": 162,
+        "uma_tentativa": 197
+      }
+    ],
+    "avaliacoes_por_hora": [
+      {
+        "hora_brt": "2026-11-18 21:00",
+        "avaliados": 197
+      }
+    ]
+  },
+  "motivos_cruzados_com_as_ofertas": {
+    "hora_brt": "2026-11-19 11:17:47",
+    "tag_da_conta_ativa": true,
+    "ofertas_com_aviso_da_amazon": [
+      {
+        "marketplace": "amazon",
+        "publicacao": "sem registro",
+        "ofertas": 42,
+        "com_slug": 0
+      }
+    ],
+    "ofertas_com_aviso_generico_de_link": [
+      {
+        "marketplace": "aliexpress",
+        "ofertas": 445
+      },
+      {
+        "marketplace": "shopee",
+        "ofertas": 10
+      }
+    ],
+    "aviso_de_divulgacao": {
+      "com_mensagem_de_divulgacao": 13,
+      "ultimo_evento_proprio_pulo": 7,
+      "ultimo_evento_proprio_confirmacao": 6
+    },
+    "orcamento_ia": [
+      {
+        "dia": "2026-11-17",
+        "reservas": 1000,
+        "limite_registrado": 1000
+      },
+      {
+        "dia": "2026-11-18",
+        "reservas": 39,
+        "limite_registrado": 1000
+      },
+      {
+        "dia": "2026-11-19",
+        "reservas": 9,
+        "limite_registrado": 1000
+      }
+    ]
+  },
+  "eventos_do_executor_no_periodo": {
+    "ultimo_inicio_do_container_utc": "2026-11-19T13:13:50.970298383Z",
+    "periodo_consultado_brt": [
+      "2026-11-18T08:00:00-03:00",
+      "2026-11-18T21:39:13-03:00"
+    ],
+    "leitura_do_log": true,
+    "eventos_de_listener_no_intervalo": [
+      {
+        "minuto_utc": "2026-11-19T00:09",
+        "evento": "capture_listener_ready",
+        "ocorrencias": 1
+      }
+    ]
+  },
+  "recibos_antigos": [
+    {
+      "formato": "object",
+      "campos": "{productIds}",
+      "recibos": 19
+    }
+  ],
+  "tarefas_incertas": [
+    {
+      "categoria": "sem categoria",
+      "tarefas": 33,
+      "primeira_criacao": "2026-11-15"
+    }
+  ],
+  "configuracoes_disponiveis_no_runtime_web": {
+    "ambiente_do_container": {
+      "marketing": false,
+      "ga4": false
+    },
+    "apos_carregar_ambiente_next": {
+      "marketing": false,
+      "ga4": false
+    }
+  },
+  "estado_dos_agendamentos_no_github": {
+    "hora_brt": "2026-11-19T11:22:33-03:00",
+    "workflows": {
+      "capture-offers.yml": "disabled_manually",
+      "discover-shopee.yml": "disabled_manually",
+      "monitor-prices.yml": "disabled_manually"
+    }
+  },
+  "extensao": {
+    "sha256_zip": "fb70fbba04991619bb86f0efc0cee13d0559d4e032835fda8e0ef3afbb546f87",
+    "concorda_com_checksum_documentado": true,
+    "variantes": {
+      "zip_documentado": {
+        "versao": "0.3.6",
+        "sha256_coletor": "1e708e29b8d2cab6c8db94d3c473aa2b913c9eae861d036bd0d10fb0132c58a3",
+        "sha256_worker": "82a2218d1273ed1881c10d44039c01adb971d5ea6191a190bc2b9a9f64658c11",
+        "extracao_contador_ml": false
+      },
+      "pasta_release": {
+        "versao": "0.3.6",
+        "sha256_coletor": "62c2d08717c826e024ae4950d010f168c2b8bd4b35204371f6bcc1681f835545",
+        "sha256_worker": "0fd3ff341ae47a6e9926dc1717c56aebe5a0028991b6c5941669f27b9e238545",
+        "extracao_contador_ml": false
+      },
+      "pasta_dist": {
+        "versao": "0.3.6",
+        "sha256_coletor": "62c2d08717c826e024ae4950d010f168c2b8bd4b35204371f6bcc1681f835545",
+        "sha256_worker": "430a9eebadb7ef983c77e9b4b2d64dfbe243e58fe91514a52607a2037365e651",
+        "extracao_contador_ml": true
+      },
+      "recompilacao_das_fontes": {
+        "versao": "0.3.6",
+        "sha256_coletor": "5ea71ca1373953599abd8b0c9e91c1e30c4b0e988d8c97218c0e8eaf3f20252c",
+        "sha256_worker": "92f3dff9b6dc507c9ce515c5f7420aab383c63f3d588636ec119c42230bd57fe",
+        "extracao_contador_ml": true
+      }
+    },
+    "arquivos_diferentes_entre_zip_e_recompilacao": [
+      "content/activate-catalog.js",
+      "content/marketplace-page.js",
+      "manifest.json",
+      "popup/index.html",
+      "popup/popup.js",
+      "service-worker.js"
+    ]
+  },
+  "comparacao_das_fontes": {
+    "algoritmo": "SHA-256",
+    "quantidade": 32,
+    "iguais_a_copia_de_trabalho": 32,
+    "iguais_ao_commit": 23,
+    "amostra": [
+      {
+        "arquivo": "packages/web/middleware.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/vitrine.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/bizu/[slug]/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/entrar/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/minha-area/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/admin/curadoria/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/pauta/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/admin/resultados/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/admin/financeiro/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/admin/marketing/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/plataforma/page.tsx",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/api/newsletter/route.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/api/extension/capture-batches/route.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/api/admin/marketing/route.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/app/go/pauta/[token]/route.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/deal-query.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/account-scope.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/page-account.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/pauta-link-db.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/pauta-policy.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/pauta-db.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/pauta-response.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": false,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/curation-operations-metrics.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/public-go.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/marketing-storage-core.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/commercial-rollout.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/extension-contract.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/curation-publications.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/web/lib/flash-sale.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": false,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/capture/src/types.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": false,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      },
+      {
+        "arquivo": "packages/persistence/src/product-family.ts",
+        "publicado_igual_a_copia": true,
+        "publicado_igual_ao_commit": true,
+        "presente_no_commit": true,
+        "fonte_no_container": true
+      }
+    ]
+  },
+  "verificacoes_locais": {
+    "node": "22.23.4",
+    "casos_aprovados_apos_reteste": 1043,
+    "arquivos_de_teste": 159,
+    "tipagem_aprovada": [
+      "web",
+      "extension",
+      "capture",
+      "persistence"
+    ],
+    "pacotes": {
+      "web": {
+        "arquivos": 121,
+        "casos": 759,
+        "falhas_na_primeira_passagem": 7,
+        "arquivos_reexecutados": [
+          "capture-process.test.mjs",
+          "qr-service.test.mjs"
+        ]
+      },
+      "extension": {
+        "arquivos": 11,
+        "casos": 71,
+        "falhas_na_primeira_passagem": 0,
+        "arquivos_reexecutados": []
+      },
+      "capture": {
+        "arquivos": 11,
+        "casos": 144,
+        "falhas_na_primeira_passagem": 0,
+        "arquivos_reexecutados": []
+      },
+      "persistence": {
+        "arquivos": 16,
+        "casos": 69,
+        "falhas_na_primeira_passagem": 4,
+        "arquivos_reexecutados": [
+          "ml-manual-only-entrypoints.test.ts",
+          "shared-link-archive-import.test.ts"
+        ]
+      }
+    },
+    "metodo": "Um processo por arquivo, com node --experimental-strip-types --experimental-test-isolation=none --test. Quatro arquivos que precisavam de subprocessos ou leitura das interfaces de rede foram repetidos fora do sandbox com ambiente limpo. Os 18 casos web e os 10 de persistência passaram na repetição. Tipagem pelo tsc de cada pacote com --noEmit --incremental false."
+  },
+  "leitura_dos_resultados": [
+    "Os motivos de exclusão podem coexistir para o mesmo produto e canal.",
+    "Declarações do operador são eventos internos. A entrega de mensagens a terceiros não foi observada.",
+    "A amostra de hashes é das fontes presentes no contêiner web. A versão instalada em um navegador pessoal não foi identificada.",
+    "Os dados individuais do comprador, endereços de afiliado, tokens e identificadores de sessão ficam fora da evidência."
+  ],
+  "reproducao_visual_local": {
+    "folhas_de_estilo": 2,
+    "amostras": [
+      {
+        "largura": 1440,
+        "altura": 900,
+        "largura_do_documento": 1440,
+        "cartoes_com_layout": 24,
+        "primeiro_cartao_y": 640,
+        "cartoes_que_comecam_na_primeira_tela": 4
+      },
+      {
+        "largura": 390,
+        "altura": 844,
+        "largura_do_documento": 390,
+        "cartoes_com_layout": 24,
+        "primeiro_cartao_y": 500,
+        "cartoes_que_comecam_na_primeira_tela": 2
+      }
+    ]
+  },
+  "experimento_de_ordenacao_local": {
+    "tipo": "Controlado, local, com a função de seleção v2",
+    "vagas": 1,
+    "preco_atual_centavos": 30000,
+    "notas_de_base": {
+      "A": 89,
+      "B": 80
+    },
+    "historico_de_minimo_anterior": false,
+    "sem_preco_de_referencia_no_anuncio": {
+      "vencedor": "A",
+      "economia_nominal_b_centavos": 0
+    },
+    "com_preco_de_referencia_de_50000_centavos_no_anuncio_b": {
+      "vencedor": "B",
+      "economia_nominal_b_centavos": 20000
+    }
+  }
+}

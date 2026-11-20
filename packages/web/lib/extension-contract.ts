@@ -67,6 +67,8 @@ export interface ExtensionCaptureProduct {
   variantLabel?: string;
   /** Source-provided option ID, accepted only for the matching product page. */
   variantKey?: string;
+  promotionType?: "lightning";
+  promotionEndsAt?: string;
 }
 
 export interface ExtensionCapturePayload {
@@ -196,6 +198,14 @@ export function validateExtensionCapturePayload(raw: unknown, batch = false): Ex
       bad("product.variantKey inválida");
     variantKey=prod.variantKey;
   }
+  const promotionType = prod.promotionType === "lightning" ? "lightning" : undefined;
+  let promotionEndsAt: string | undefined;
+  if (typeof prod.promotionEndsAt === "string") {
+    const endsMs = Date.parse(prod.promotionEndsAt);
+    if (Number.isFinite(endsMs) && endsMs > capturedMs && endsMs <= capturedMs + 14 * 24 * 3600 * 1000) {
+      promotionEndsAt = new Date(endsMs).toISOString();
+    }
+  }
   return {
     version: 1,
     requestId,
@@ -215,13 +225,15 @@ export function validateExtensionCapturePayload(raw: unknown, batch = false): Ex
       ...(condition ? { condition } : {}),
       ...(variantLabel ? { variantLabel } : {}),
       ...(variantKey ? { variantKey } : {}),
+      ...(promotionType ? { promotionType } : {}),
+      ...(promotionEndsAt ? { promotionEndsAt } : {}),
     },
   };
 }
 
 /** Only facts explicitly transported by the reader; legacy payloads remain unknown. */
 export function browserOfferEvidence(
-  product: Pick<ExtensionCaptureProduct, 'currency' | 'priceType' | 'originalPriceCents' | 'priceMaxCents' | 'condition' | 'variantLabel' | 'variantKey'> & { priceCents?: number },
+  product: Pick<ExtensionCaptureProduct, 'currency' | 'priceType' | 'originalPriceCents' | 'priceMaxCents' | 'condition' | 'variantLabel' | 'variantKey' | 'promotionType' | 'promotionEndsAt'> & { priceCents?: number },
   url: string,
   capturedAt: string,
   marketplace: SupportedExtensionMarketplace = 'mercadolivre',
@@ -233,6 +245,8 @@ export function browserOfferEvidence(
     source: { marketplace, method: 'browser', url, capturedAt },
     currency: product.currency,
     priceType: product.priceType ?? 'unknown',
+    ...(product.promotionType === 'lightning' ? { promotionType: 'lightning' as const } : {}),
+    ...(product.promotionEndsAt ? { promotionEndsAt: product.promotionEndsAt } : {}),
     variantIdentity: product.variantKey && observationMethod==='product_page'
       ? { state:'source_verified',key:product.variantKey,methodVersion:'browser-option-v1' } : { state:'unknown' },
     ...(product.variantKey && observationMethod==='product_page' ? { variantKey:product.variantKey } : {}),

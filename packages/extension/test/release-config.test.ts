@@ -33,7 +33,7 @@ test("release validation rejects host substring spoofing, additional capabilitie
 });
 
 test("source manifest, package metadata and lockfile carry the same new version", () => {
-  assert.equal(pkg.version, "0.3.6");
+  assert.equal(pkg.version, "0.3.7");
   assert.equal(source.version, pkg.version);
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);

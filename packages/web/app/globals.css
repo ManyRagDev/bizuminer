@@ -1676,7 +1676,13 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
    Tela de copy/paste para postagem no WhatsApp Status.
    Âncora: "Sei exatamente onde parei, mesmo tendo saído do app cinco vezes."
    Base 4px, toque mínimo 48px. Ritmo acelera conforme desce. */
-.pauta-page { width: 100%; min-width: 0; max-width: 480px; margin: 0 auto; padding: 0 16px 120px; }
+.pauta-page { width: 100%; min-width: 0; max-width: 520px; margin: 0 auto; padding: 0 16px 120px; box-sizing: border-box; }
+@media (min-width: 768px) {
+  .pauta-page {
+    max-width: 1280px;
+    padding: 0 24px 120px;
+  }
+}
 .pauta-header { position: sticky; top: 0; z-index: 10; padding: 16px 0 12px; background: var(--paper); }
 .pauta-header-top { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: baseline; }
 .pauta-header h1 { margin: 0; font: 900 18px/1 Arial, sans-serif; letter-spacing: .15em; }
@@ -1847,8 +1853,34 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 .pauta-done-code { font: 700 11px/1 monospace; color: var(--ink-tertiary); }
 
 /* Cards pendentes */
-.pauta-pending-section { display: flex; flex-direction: column; gap: 12px; }
-.pauta-card { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; transition: border-left 0.2s ease; }
+.pauta-pending-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .pauta-pending-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 18px;
+    align-items: stretch;
+  }
+}
+
+.pauta-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+  transition: border-left 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.pauta-card-copied {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
 .pauta-card-next { border-color: var(--ink); box-shadow: 0 2px 0 var(--ink); }
 .pauta-card-freshness-fresh { border-left: 5px solid #10b981; }
 .pauta-card-freshness-warm { border-left: 5px solid #f59e0b; }
@@ -1899,7 +1931,7 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
 }
 
-.pauta-card-body { padding: 12px; display: flex; gap: 12px; }
+.pauta-card-body { padding: 12px; display: flex; gap: 12px; flex: 1 0 auto; }
 .pauta-card-image { flex: 0 0 80px; height: 80px; border-radius: 6px; overflow: hidden; background: var(--photo-bg); }
 .pauta-card-image img { width: 100%; height: 100%; object-fit: contain; }
 .pauta-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -1910,6 +1942,94 @@ footer > small { grid-column: 1 / -1; padding-top: 24px; border-top: 1px solid v
 .pauta-card-meta span { font: 700 9px/1 Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-tertiary); padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; }
 .pauta-copy-btn { width: 100%; min-height: 48px; border: 0; background: var(--ink-block); color: var(--on-accent); cursor: pointer; font: 900 12px/1 Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; transition: background .15s; }
 .pauta-copy-btn:hover { background: var(--ink); }
+
+/* Pauta Card Confirmação Contextual */
+.pauta-card-confirmation-box {
+  padding: 12px;
+  background: #f0fdf4;
+  border-top: 1px solid #bbf7d0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pauta-card-confirm-btn {
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  border-radius: 6px;
+  background: #16a34a;
+  color: #ffffff;
+  font: 800 13px/1 Arial, sans-serif;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease;
+}
+.pauta-card-confirm-btn:hover {
+  background: #15803d;
+}
+.pauta-card-discard-btn {
+  flex: 1;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #4b5563;
+  font: 700 11px/1 Arial, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pauta-card-discard-btn:hover {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+/* Renovar Pauta Botão */
+.pauta-renew-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 700 11px/1 Arial, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pauta-renew-btn:hover:not(:disabled) {
+  background: var(--paper-deep);
+  border-color: var(--ink);
+}
+.pauta-renew-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Pular Oferta Botão */
+.pauta-skip-btn {
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink-muted, #71717a) !important;
+  font: 700 11px/1 Arial, sans-serif !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.pauta-skip-btn:hover:not(:disabled) {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
 .pauta-card-preview { margin: 0; padding: 6px 12px; font: 700 11px/1 monospace; color: var(--ink-tertiary); text-align: center; background: var(--paper-deep); }
 
 /* Pauta WhatsApp Tone Bar & Message Previews */
@@ -6744,3 +6864,115 @@ kbd { min-width: 21px; padding: 2px 5px; display: inline-block; border: 1px soli
   overflow-wrap: anywhere;
 }
 .pauta-capture-list p { margin: 4px 0; color: var(--ink-muted); font-size: 13px; }
+
+/* Track 024 — Badges de Oferta Relâmpago (PDP, Vitrine e Pauta) */
+.flash-sale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  font: 700 13px/1.3 Arial, sans-serif;
+  letter-spacing: .02em;
+}
+.flash-sale-badge strong {
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+[data-theme="dark"] .flash-sale-badge {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.flash-sale-badge-small {
+  padding: 4px 6px;
+  border: 1px solid #f59e0b;
+  background: #fffbeb;
+  color: #b45309;
+  font: 700 9px/1 Arial, sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+[data-theme="dark"] .flash-sale-badge-small {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.pauta-lightning-badge {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.pauta-lightning-expired-badge {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+[data-theme="dark"] .pauta-lightning-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+[data-theme="dark"] .pauta-lightning-expired-badge {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.pauta-card.pauta-card-lightning {
+  border-color: #f59e0b;
+  border-left: 5px solid #f59e0b;
+  background: linear-gradient(180deg, #fffbeb 0%, var(--surface) 42%);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.14);
+}
+[data-theme="dark"] .pauta-card.pauta-card-lightning {
+  border-color: rgba(245, 158, 11, 0.55);
+  border-left: 5px solid #fbbf24;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.10) 0%, var(--surface) 45%);
+}
+.pauta-card.pauta-card-lightning-expired {
+  border-left: 5px solid #ef4444;
+}
+.pauta-tone-pill-lightning {
+  border-color: #f59e0b;
+  color: #92400e;
+  background: #fffbeb;
+}
+.pauta-tone-pill-lightning.active {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+}
+[data-theme="dark"] .pauta-tone-pill-lightning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+[data-theme="dark"] .pauta-tone-pill-lightning.active {
+  background: #d97706;
+  color: #fff;
+}

@@ -368,13 +368,20 @@ function browserConditionLabel(evidence: Record<string, unknown>): string | unde
 
 export function toCandidate(row: CandidateRow, assessment: EditorialAssessment | null, now = new Date()): EditorialCandidate {
   const evidence = row.offer_evidence && typeof row.offer_evidence === "object" ? row.offer_evidence as Record<string, unknown> : {};
+  const promotionType = evidence.promotionType === "lightning" ? "lightning" as const : undefined;
+  const promotionEndsAt = typeof evidence.promotionEndsAt === "string" ? evidence.promotionEndsAt : undefined;
+  const standardValidUntil = new Date(row.observed_at).getTime() + 48 * 3_600_000;
+  const endsMs = promotionEndsAt ? Date.parse(promotionEndsAt) : NaN;
+  const offerValidUntilMs = Number.isFinite(endsMs) ? Math.min(standardValidUntil, endsMs) : standardValidUntil;
   const material = { title: row.title, imageUrl: row.image_url, category: row.category, productUrl: row.product_url,
     ratingStar: row.rating_star, offerEvidence: row.offer_evidence };
   const candidate: EditorialCandidate = {
     tenantId:(row as any).tenant_id,offerMaterialInvalid:(row as any).option_material_invalid===true,
     latestObservationId: (row as any).latest_observation_id, evidenceObservationId:(row as any).observation_id,
     offerOptionKey: (row as any).option_key, offerOptionLabel: typeof evidence.variantLabel === "string" ? evidence.variantLabel : undefined,
-    offerConditions: (row as any).conditions_label ?? browserConditionLabel(evidence), offerValidUntil: new Date(new Date(row.observed_at).getTime()+48*3_600_000).toISOString(),
+    offerConditions: (row as any).conditions_label ?? browserConditionLabel(evidence), offerValidUntil: new Date(offerValidUntilMs).toISOString(),
+    ...(promotionType ? { promotionType } : {}),
+    ...(promotionEndsAt ? { promotionEndsAt } : {}),
     id: row.id, slug: productSlug(row.marketplace, row.external_id), title: row.title,
     marketplace: row.marketplace, imageUrl: row.image_url, category: row.category,
     priceCents: row.price_cents, originalPriceCents: row.original_price_cents,
@@ -446,7 +453,13 @@ function highlightDeadline(candidates: EditorialCandidate[], editionValidUntil?:
   ]))).toISOString();
 }
 
-export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sqlFactory: typeof db = db, reviewProductId?:string,includePending=false): Promise<{
+export async function getEditorialSelectionDesk(
+  tenantId = scopedTenantId(),
+  sqlFactory: typeof db = db,
+  reviewProductId?: string,
+  includePending = false,
+  options?: { focusedOnly?: boolean }
+): Promise<{
   schemaReady: boolean; selection: EditorialSelection | null; candidates: EditorialCandidate[]; catalogHeroActive: boolean; publishedProductIds: string[];
 }> {
   if (sqlFactory === db && !process.env.DATABASE_URL) return { schemaReady: false, selection: null, candidates: [], catalogHeroActive: false, publishedProductIds: [] };
@@ -458,7 +471,10 @@ export async function getEditorialSelectionDesk(tenantId = scopedTenantId(), sql
       await tx`select set_config('garimpa.tenant_id', ${tenantId}, true)`;
       const selection = await readSelection(tx, tenantId);
       const assessments = await latestAssessments(tx, tenantId);
-      const rows = await candidateRows(tx, tenantId,undefined,includePending);
+      const targetIds = options?.focusedOnly && reviewProductId
+        ? Array.from(new Set([reviewProductId, ...(selection?.items.map(i => i.productId) ?? [])]))
+        : undefined;
+      const rows = await candidateRows(tx, tenantId, targetIds, includePending);
       if(reviewProductId && /^[a-zA-Z0-9_-]{1,120}$/.test(reviewProductId) && !rows.some(r=>r.id===reviewProductId)){
         const extra=await candidateRows(tx,tenantId,[reviewProductId]);
         rows.push(...extra.filter(row=>(includePending?['approved','held','pending']:['approved','held']).includes(row.status)));

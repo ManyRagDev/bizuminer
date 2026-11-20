@@ -27,6 +27,8 @@ export interface ProductPresentation {
   priceMaxCents?: number;
   currency?: string;
   originalPriceKind?: "source_claimed" | "derived_from_claim" | "unknown";
+  promotionType?: "lightning";
+  promotionEndsAt?: string;
 }
 
 export function sourceProductPresentation(sourceTitle: string): ProductPresentation {
@@ -36,7 +38,7 @@ export function sourceProductPresentation(sourceTitle: string): ProductPresentat
 /** Remove any cached editorial fields before applying the current server revision. */
 export function applyProductPresentation<T extends { title: string }>(product: T, presentation?: ProductPresentation): T & ProductPresentation {
   const clean = { ...product } as T & Partial<ProductPresentation>;
-  for (const key of ["displayTitle", "sourceTitle", "titleOrigin", "editorialRevisionId", "editorialReviewedAt", "benefit", "audience", "caveat", "purchaseContents", "coverHeadline", "coverImageApproved", "priceType", "priceMinCents", "priceMaxCents", "currency", "originalPriceKind"] as const) delete clean[key];
+  for (const key of ["displayTitle", "sourceTitle", "titleOrigin", "editorialRevisionId", "editorialReviewedAt", "benefit", "audience", "caveat", "purchaseContents", "coverHeadline", "coverImageApproved", "priceType", "priceMinCents", "priceMaxCents", "currency", "originalPriceKind", "promotionType", "promotionEndsAt"] as const) delete clean[key];
   return { ...clean, ...(presentation ?? sourceProductPresentation(product.title)) } as T & ProductPresentation;
 }
 

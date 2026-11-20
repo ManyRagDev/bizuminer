@@ -8,6 +8,105 @@ export function collectBrowserOffers() {
       ? Number(m[1]!.replace(/\./g, "")) * 100 + Number(m[2] || 0)
       : undefined;
   }
+  function countdownInfo(cardOrDoc?: Element | Document | null, extId?: string, catalogId?: string): { promotionType: "lightning"; promotionEndsAt: string } | null {
+    const root = cardOrDoc && typeof cardOrDoc.querySelector === "function" ? cardOrDoc : typeof document !== "undefined" && typeof document.querySelector === "function" ? document : null;
+    if (root) {
+      const cd = root.querySelector(".poly-component__countdown")
+        || (typeof root.querySelectorAll === "function"
+          ? Array.from(root.querySelectorAll("[class*='countdown']")).find((el) => el.querySelectorAll(".poly-countdown__block").length >= 2)
+          : null);
+      const cdRoot = cd || root;
+      if (typeof cdRoot.querySelectorAll === "function") {
+        const blocks = Array.from(cdRoot.querySelectorAll(".poly-countdown__block")).slice(0, 3);
+        if (blocks.length === 2 || blocks.length === 3) {
+          const nums: number[] = [];
+          for (const b of blocks) {
+            const rollers = Array.from(b.querySelectorAll(".poly-countdown__roller-container"));
+            let digits = "";
+            if (rollers.length > 0) {
+              for (const r of rollers) {
+                const st = r.querySelector(".poly-countdown__digit--static") || r.querySelector(".poly-countdown__digit");
+                const t = (st?.textContent || "").trim();
+                if (/^\d{1,2}$/.test(t)) digits += t;
+              }
+            } else {
+              digits = Array.from(b.querySelectorAll(".poly-countdown__digit--static, .poly-countdown__digit"))
+                .map((d) => (d.textContent || "").trim())
+                .filter((t) => /^\d{1,2}$/.test(t))
+                .slice(0, 2)
+                .join("");
+            }
+            if (digits) {
+              const val = parseInt(digits, 10);
+              if (Number.isFinite(val)) nums.push(val);
+            }
+          }
+          let sec = 0;
+          if (nums.length === 3) {
+            sec = (nums[0] || 0) * 3600 + (nums[1] || 0) * 60 + (nums[2] || 0);
+          } else if (nums.length === 2) {
+            sec = (nums[0] || 0) * 60 + (nums[1] || 0);
+          }
+          if (sec > 0) {
+            return {
+              promotionType: "lightning",
+              promotionEndsAt: new Date(Date.now() + sec * 1000).toISOString(),
+            };
+          }
+        }
+      }
+    }
+    const candidateIds = [extId, catalogId].filter((id): id is string => Boolean(id));
+    if (candidateIds.length > 0 && typeof document !== "undefined" && typeof document.querySelectorAll === "function") {
+      for (const s of Array.from(document.querySelectorAll("script"))) {
+        const text = s.textContent || "";
+        if (!text.includes("period_end") && !text.includes("finish_date")) continue;
+        for (const id of candidateIds) {
+          if (!text.includes(id)) continue;
+          const idToken = `"id":"${id}"`;
+          let idIdx = text.indexOf(idToken);
+          if (idIdx === -1) idIdx = text.indexOf(id);
+          if (idIdx !== -1) {
+            const nextCardIdx = text.indexOf('"metadata":{"id":', idIdx + 20);
+            const endBound = nextCardIdx !== -1
+              ? Math.min(text.length, nextCardIdx, idIdx + 10000)
+              : Math.min(text.length, idIdx + 8000);
+            const windowSlice = text.slice(idIdx, endBound);
+            const m = /"(?:period_end|finish_date)"\s*:\s*"([^"]+)"/.exec(windowSlice);
+            if (m && m[1]) {
+              const endsMs = Date.parse(m[1]);
+              if (Number.isFinite(endsMs) && endsMs > Date.now()) {
+                return {
+                  promotionType: "lightning",
+                  promotionEndsAt: new Date(endsMs).toISOString(),
+                };
+              }
+            }
+          }
+          const kvsToken = `"${id}":{`;
+          const kvsIdx = text.indexOf(kvsToken);
+          if (kvsIdx !== -1) {
+            const nextKvsIdx = text.indexOf('},"MLB', kvsIdx + kvsToken.length);
+            const kvsBound = nextKvsIdx !== -1
+              ? Math.min(text.length, nextKvsIdx + 2, kvsIdx + 2000)
+              : Math.min(text.length, kvsIdx + 1500);
+            const kvsSlice = text.slice(kvsIdx, kvsBound);
+            const m2 = /"(?:finish_date|period_end)"\s*:\s*"([^"]+)"/.exec(kvsSlice);
+            if (m2 && m2[1]) {
+              const endsMs = Date.parse(m2[1]);
+              if (Number.isFinite(endsMs) && endsMs > Date.now()) {
+                return {
+                  promotionType: "lightning",
+                  promotionEndsAt: new Date(endsMs).toISOString(),
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
   const page = new URL(location.href);
   const normalizedPath = page.pathname.replace(/\/+$/, "");
   const blockedPaths = [
@@ -40,6 +139,8 @@ export function collectBrowserOffers() {
     ratingStar?: number;
     salesLabel?: string;
     salesCount?: number;
+    promotionType?: "lightning";
+    promotionEndsAt?: string;
   }> = [];
   const seen = new Set<string>();
   const pdpTitleEl = typeof document.querySelector === "function"
@@ -136,6 +237,12 @@ export function collectBrowserOffers() {
           Number(pdpSales[1]!.replace(",", ".")) *
             (pdpSales[2] ? (pdpSales[2] === "mil" ? 1000 : 1000000) : 1),
         );
+      }
+      const pdpCatalogId = normalizedPath.match(/\/p\/(MLB\d{6,})/i)?.[1]?.toUpperCase();
+      const pdpCd = countdownInfo(document.body, pdpExternalId, pdpCatalogId);
+      if (pdpCd) {
+        pdpProduct.promotionType = pdpCd.promotionType;
+        pdpProduct.promotionEndsAt = pdpCd.promotionEndsAt;
       }
       const pdpSource = new URL(page.origin + (normalizedPath || "/"));
       if (pdpListingId || normalizedPath.includes("/p/")) {
@@ -251,6 +358,12 @@ export function collectBrowserOffers() {
         Number(sales[1]!.replace(",", ".")) *
           (sales[2] ? (sales[2] === "mil" ? 1000 : 1000000) : 1),
       );
+    }
+    const catalogId = url.pathname.match(/\/p\/(MLB\d{6,})/i)?.[1]?.toUpperCase();
+    const cd = countdownInfo(card, externalId, catalogId);
+    if (cd) {
+      product.promotionType = cd.promotionType;
+      product.promotionEndsAt = cd.promotionEndsAt;
     }
     seen.add(externalId);
     products.push(product);

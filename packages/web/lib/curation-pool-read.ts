@@ -21,14 +21,18 @@ export async function readCurationPool(account:AccountContext):Promise<CurationP
       const scoreVersion=scoreWeightsRevision(policy.config.scoreWeights ?? DEFAULT_SCORE_WEIGHTS);
       const rows=await tx<Array<{id:string;title:string;marketplace:string;classification:PoolClass;score:string|number|null;
         in_edition:boolean;next_slot:boolean;promotion:boolean;watch_priority:boolean;editorially_blocked:boolean;class_total:number}>>`
-        with edition as materialized (
-          select item->>'productId' as product_id from garimpa.recommendation_edition e
+        with latest_home_edition as materialized (
+          select e.tenant_id, e.inputs
+          from garimpa.recommendation_edition e
           join garimpa.recommendation_channel channel on channel.tenant_id=e.tenant_id and channel.channel=e.channel
-          cross join lateral jsonb_array_elements(e.inputs) item
-          join garimpa.price_observation o on o.tenant_id=e.tenant_id and o.product_id=item->>'productId' and o.id=item->>'observationId'
           where e.tenant_id=${account.tenantId} and e.channel='home' and channel.enabled
             and e.config_version=channel.version and (channel.valid_until is null or channel.valid_until>now())
-            and item->>'curationPolicyVersion'=${String(policy.version)}
+          order by e.created_at desc, e.id desc limit 1
+        ), edition as materialized (
+          select item->>'productId' as product_id from latest_home_edition e
+          cross join lateral jsonb_array_elements(e.inputs) item
+          join garimpa.price_observation o on o.tenant_id=e.tenant_id and o.product_id=item->>'productId' and o.id=item->>'observationId'
+          where item->>'curationPolicyVersion'=${String(policy.version)}
             and (item->>'validUntil')::timestamptz>now()
             and now()<garimpa.current_offer_valid_until(o.tenant_id,o.product_id,o.id)
             and garimpa.has_current_curation_assessment(o.tenant_id,o.product_id,o.id)
@@ -66,9 +70,9 @@ export async function readCurationPool(account:AccountContext):Promise<CurationP
               and observation.observed_at<=now() and coalesce(c.status,'pending')<>'rejected' as current_candidate
           from garimpa.product p
           left join garimpa.product_curation c on c.tenant_id=p.tenant_id and c.product_id=p.id
+          left join garimpa.editorial_offer_choice choice on choice.tenant_id=p.tenant_id and choice.product_id=p.id
           left join lateral (select o.id,o.observed_at from garimpa.price_observation o where o.tenant_id=p.tenant_id and o.product_id=p.id
-            and (not exists(select 1 from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id)
-              or o.option_key=(select choice.option_key from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id))
+            and (choice.option_key is null or o.option_key=choice.option_key)
             order by o.observed_at desc,o.id desc limit 1) observation on true
           left join garimpa.curation_score_projection score on score.tenant_id=p.tenant_id and score.product_id=p.id
             and score.observation_id=observation.id and score.policy_version=${scoreVersion}

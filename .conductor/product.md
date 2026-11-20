@@ -13,6 +13,12 @@ O **BizuMiner** é uma plataforma inteligente de curadoria de ofertas, validaç�
 2. **Proteger a confiança do consumidor**: sustentar afirmações de menor preço com base em histórico real, verificável e append-only (até 90 dias de observação contínua).
 3. **Monetização transparente de afiliados**: redirecionamento seguro com tags de rastreamento (`matt_*`, subId) gerando receita para a operação, respeitando rigorosamente a LGPD e a privacidade de quem compra.
 
+### Direção editorial definida pelo dono em 18/11/2026
+
+O criador captura um lote. O BizuMiner compara as oportunidades, leva as melhores candidatas à pauta e dá visibilidade às escolhas de maior valor para quem visita a vitrine. O criador também deve poder indicar uma oferta da vitrine para preparar na pauta da própria conta, com o link e a opção corretos. A divulgação exige uma decisão posterior do criador.
+
+A IA pode julgar a utilidade da oferta, para quem ela faz sentido e por que vale atenção naquele preço. A aplicação responde pelos fatos da oferta, pela atribuição do link e pelo histórico das decisões. Os exemplos escolhidos pelo criador servem para avaliar esse julgamento. O estado observado dessa jornada está na [auditoria de 18/11](../docs/tecnico/auditoria-escolha-produtos-2026-11-18.md).
+
 ---
 
 ## 2. Personas do Sistema
@@ -45,12 +51,12 @@ O **BizuMiner** é uma plataforma inteligente de curadoria de ofertas, validaç�
 
 ```mermaid
 flowchart LR
-    A[Marketplaces: ML / Shopee / Ali] -->|Captura / API Oficial| B(Ingestão & Histórico)
+    A[Mercado Livre / Shopee / AliExpress / Amazon] -->|Captura| B(Ingestão & Histórico)
     B -->|Preço Real Validado| C{Triagem Editorial + IA}
-    C -->|Aprovado| D[Vitrine Pública /bizu]
-    C -->|Destaque| E[Pauta / Composer WhatsApp]
+    C -->|Publicação e seleção de destaques| D[Vitrine pública e fichas de oferta]
+    C -->|Seleção por canal| E[Pauta de WhatsApp e Stories]
     D -->|Clique /go/slug| F[Redirect Afiliado + Hash LGPD]
-    E -->|Envio Manual| G[Comunidades WhatsApp/Telegram]
+    E -->|Divulgação manual| G[Canais do criador]
     G -->|Tráfego Qualificado| D
 ```
 
@@ -62,7 +68,7 @@ flowchart LR
 ### 2. Triagem e Curadoria Inteligente
 - Ofertas capturadas passam por filtros de piso, completude e conformidade de catálogo.
 - Motor de triagem com LLM (Gemini) analisa título, categoria real de uso (ex: brinquedo vs jardinagem), desconto plausível e apelo de compra, atribuindo pontuações objetivas.
-- Ofertas com selo editorial aprovado são disponibilizadas para a vitrine e para a pauta.
+- A aprovação registra a situação no catálogo. A pauta verifica as condições de divulgação e seleciona por canal. A vitrine lê a publicação da oferta e uma edição própria de destaques.
 
 ### 3. Vitrine Pública (`/` e `/bizu/[slug]`)
 - Renderização dinâmica e veloz com paginação honesta, filtros por categorias e busca textual.
@@ -77,10 +83,10 @@ flowchart LR
 ### 5. Pauta Diária e Hub de Ofertas (Dupla Régua Editorial)
 - Ferramentas complementares de curadoria e disparo: **`/pauta`** (Copiloto Diário guiado por prateleiras e controle de repetição) e **`/admin/ofertas`** (Catálogo amplo de garimpo livre e criação para Instagram/PostSpark).
 - **Dupla Régua de Valor:** Produtos não competem sob uma única régua matemática cega. O sistema separa:
-  - **🏆 Alto Impacto & Desejo (`>= R$ 200` ou economia real `>= R$ 80`):** Bens duráveis, eletrônicos e marcas fortes avaliados pela economia nominal em Reais (R$) e piso histórico, sem bloqueio de teto de impulso.
+  - **Alto impacto.** A composição atual considera preço a partir de R$ 200 ou economia nominal a partir de R$ 80. A referência para o bônus pode ser um preço observado anteriormente ou o preço original informado pela loja. Uma afirmação de menor preço depende de histórico comparável.
   - **🛒 Giro Diário & Utilidade (`< R$ 200`):** Compras cotidianas avaliadas por percentual de desconto, utilidade imediata e prova social.
   - **🎯 Demanda da Comunidade (`watchersCount`):** Produtos priorizados pelo interesse real dos visitantes da vitrine (favoritos e alertas "de olho no preço").
-- **Frescor e Validação *Just-in-Time*:** Ofertas de até 7 dias permanecem visíveis na Pauta para não esconder grandes oportunidades, mas itens com observação `> 48h` exigem conferência rápida na loja (com atualização automática via extensão) antes de liberar a cópia.
+- **Validade da oferta.** A busca de candidatas para a pauta considera registros de até sete dias. A preparação também depende de conferência atual. Uma captura do navegador pode vencer para o canal muito antes desse prazo, como ocorreu com os roteadores da auditoria de 18/11.
 - Gera templates de copy com formatação pensada para mobile e WhatsApp (emojis funcionais, preço anterior riscado, preço novo destacado, link seguro e aviso claro de promoção relâmpago).
 
 ---

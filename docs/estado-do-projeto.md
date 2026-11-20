@@ -1,6 +1,6 @@
-# BizuMiner — Estado do Projeto (documento mestre oficial)
+# BizuMiner — Levantamento do projeto em agosto de 2026
 
-**Redigido em 20/08/2026, a partir do levantamento do código, do banco e das decisões do dono.** Este documento descreve **o que o produto é**, não o que se pretendeu que fosse. Quando houver divergência entre este documento e qualquer outro, vale este — e a divergência deve ser corrigida no outro.
+Este documento preserva o levantamento de 20/08/2026 e as decisões datadas que se seguiram. As descrições de lojas, credenciais e contas abaixo retratam aquele período. Consulte a [visão de produto](../.conductor/product.md), a [auditoria editorial de novembro](tecnico/auditoria-escolha-produtos-2026-11-18.md) e o [diário de mudanças](../.conductor/tracks.md#diário-de-mudanças) para acompanhar a evolução posterior.
 
 Convenção de honestidade: **fato** (lido no código ou no banco), **inferência** (conclusão a partir de fatos) e **pendente** (decisão que ninguém tomou ainda). Nada é registrado como pronto sem verificação.
 

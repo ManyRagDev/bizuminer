@@ -106,21 +106,29 @@ async function CurationPage({
   </nav>;
   let content;
   if (aba === "selecao") {
+    const loadReviewDesk = Boolean(params.revisar) || params.bancada === "1";
+    const loadFullReviewCatalog = params.bancada === "1";
+    const loadDiagnostics = Boolean(params.configurar) || params.diagnostico === "1";
+
     const [desk, published, eligible, engagement, recommendations, discovery, equivalence, operations, policy, pool, handoff] = await Promise.all([
-      getEditorialSelectionDesk(scopedTenantId(),undefined,params.revisar),
+      (loadReviewDesk || loadDiagnostics)
+        ? getEditorialSelectionDesk(scopedTenantId(), undefined, params.revisar, false, { focusedOnly: !loadFullReviewCatalog && Boolean(params.revisar) })
+        : Promise.resolve({ schemaReady: true, selection: null, candidates: [], catalogHeroActive: false, publishedProductIds: [] }),
       getPublishedEditorialSelection("all"),
       automatedTriageAvailability(),
-      homepageEngagementReport(scopedTenantId()),
-      recommendationDesk(),
-      discoveryPolicies(),
-      account ? readEquivalenceDesk(account) : Promise.resolve({options:[],groups:[],suggestions:[],available:false}),
-      account ? readCurationOperationsMetrics(account) : Promise.resolve(null),
-      account ? readCurationPolicy(account) : Promise.resolve(null),
-      account ? readCurationPool(account) : Promise.resolve(null),
+      loadDiagnostics ? homepageEngagementReport(scopedTenantId()) : Promise.resolve([]),
+      loadDiagnostics ? recommendationDesk() : Promise.resolve({ ready: false, channels: [], coverage: [], confirmationQueue: [] }),
+      loadDiagnostics ? discoveryPolicies() : Promise.resolve([]),
+      (loadDiagnostics && account) ? readEquivalenceDesk(account) : Promise.resolve({ options: [], groups: [], suggestions: [], available: false }),
+      (loadDiagnostics && account) ? readCurationOperationsMetrics(account) : Promise.resolve(null),
+      (loadDiagnostics && account) ? readCurationPolicy(account) : Promise.resolve(null),
+      (loadDiagnostics && account) ? readCurationPool(account) : Promise.resolve(null),
       account ? readCurationHandoff(account) : Promise.resolve(null),
     ]);
     const nextStep = curationNextStep({ triageEligible: eligible, ...summary, ...handoff });
-    const scoreComparison = await readScoreComparison(scopedTenantId(), desk.candidates.map(candidate => candidate.id));
+    const scoreComparison = (loadReviewDesk && desk.candidates.length > 0)
+      ? await readScoreComparison(scopedTenantId(), desk.candidates.map(candidate => candidate.id))
+      : [];
     content = (
       <>
         {automation ? <AutomationStatus automation={automation} tenantId={account!.tenantId}
@@ -157,32 +165,59 @@ async function CurationPage({
           <summary>Destaques da página inicial · {published.products.length} produtos</summary>
           <PublishedSelection selection={published} />
         </details>}
-        <details className="curation-manual-edition" open={Boolean(params.revisar)}>
+        <details className="curation-manual-edition" open={loadReviewDesk}>
           <summary>Revisão editorial de um produto · opcional</summary>
           <p style={{ color: "var(--ink-muted, #71717a)", margin: "8px 0 16px" }}>
             Use esta área se desejar conferir um produto na loja externa, fixar a variante exata (cor, voltagem, kit) ou escrever uma ressalva sincera para turbinar o destaque na pauta.
           </p>
-          <SelecaoView reviewOnly
-            key={params.revisar ?? "editorial-desk"}
-            initialCandidates={desk.candidates}
-            initialSelection={desk.selection}
-            schemaReady={desk.schemaReady}
-            catalogHeroActive={desk.catalogHeroActive}
-            initialEditingId={params.revisar}
-            scoreComparison={scoreComparison}
-          />
+          {loadReviewDesk ? (
+            <>
+              {params.revisar && !loadFullReviewCatalog && (
+                <p style={{ margin: "0 0 12px" }}>
+                  <a href={`${href("selecao")}&bancada=1&revisar=${encodeURIComponent(params.revisar)}`}>
+                    Ver todos os produtos aprovados na bancada →
+                  </a>
+                </p>
+              )}
+              <SelecaoView reviewOnly
+                key={params.revisar ?? "editorial-desk"}
+                initialCandidates={desk.candidates}
+                initialSelection={desk.selection}
+                schemaReady={desk.schemaReady}
+                catalogHeroActive={desk.catalogHeroActive}
+                initialEditingId={params.revisar}
+                scoreComparison={scoreComparison}
+              />
+            </>
+          ) : (
+            <p style={{ marginTop: "8px" }}>
+              <a className="curation-primary-action" href={`${href("selecao")}&bancada=1`}>
+                Abrir bancada de revisão editorial →
+              </a>
+            </p>
+          )}
         </details>
-        <details className="curation-advanced" id="curation-settings" open={params.configurar === "canais"}>
+        <details className="curation-advanced" id="curation-settings" open={loadDiagnostics}>
           <summary>Configurações e diagnóstico</summary>
           <p>Ajuste critérios e canais quando precisar. Não é necessário alterar estas configurações para revisar produtos ou consultar a pauta.</p>
           {supportLinks}
-          {policy && <PolicyControl key={`policy:${account?.tenantId}`} initial={policy} canManage={account?.membershipRole === "owner"} />}
-          <RecommendationControl candidates={desk.candidates.map(c=>({id:c.id,title:c.title,displayTitle:c.displayTitle,offerOptionLabel:c.offerOptionLabel}))} tenantId={account?.tenantId ?? ""} desk={recommendations} canManage={account?.membershipRole === "owner"}/>
-          {equivalence.available && <EquivalenceControl key={`equivalence:${account?.tenantId}`} options={equivalence.options} groups={equivalence.groups} suggestions={equivalence.suggestions} canManage={account?.membershipRole === "owner"} />}
-          {recommendations.ready && <DiscoveryControl tenantId={account?.tenantId ?? ""} policies={discovery} canManage={account?.membershipRole === "owner"}/>}
-          <HomepageMetrics rows={engagement} />
-          <OperationsMetrics metrics={operations} />
-          {account && <PoolStatus pool={pool} tenantId={account.tenantId} />}
+          {loadDiagnostics ? (
+            <>
+              {policy && <PolicyControl key={`policy:${account?.tenantId}`} initial={policy} canManage={account?.membershipRole === "owner"} />}
+              <RecommendationControl candidates={desk.candidates.map(c=>({id:c.id,title:c.title,displayTitle:c.displayTitle,offerOptionLabel:c.offerOptionLabel}))} tenantId={account?.tenantId ?? ""} desk={recommendations} canManage={account?.membershipRole === "owner"}/>
+              {equivalence.available && <EquivalenceControl key={`equivalence:${account?.tenantId}`} options={equivalence.options} groups={equivalence.groups} suggestions={equivalence.suggestions} canManage={account?.membershipRole === "owner"} />}
+              {recommendations.ready && <DiscoveryControl tenantId={account?.tenantId ?? ""} policies={discovery} canManage={account?.membershipRole === "owner"}/>}
+              <HomepageMetrics rows={engagement} />
+              <OperationsMetrics metrics={operations} />
+              {account && <PoolStatus pool={pool} tenantId={account.tenantId} />}
+            </>
+          ) : (
+            <p style={{ marginTop: "12px" }}>
+              <a className="curation-primary-action" href={`${href("selecao")}&diagnostico=1#curation-settings`}>
+                Carregar configurações e diagnóstico da curadoria →
+              </a>
+            </p>
+          )}
         </details>
       </>
     );

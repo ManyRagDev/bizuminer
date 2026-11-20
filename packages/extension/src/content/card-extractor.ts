@@ -9,6 +9,7 @@
  */
 
 import { MAX_SOURCE_TITLE_LENGTH, normalizeSourceTitle } from "../../../capture/src/title.ts";
+import { extractMlCountdownFromHtml } from "./ml-countdown.ts";
 
 export interface ExtractedCard {
   externalId: string;
@@ -20,6 +21,8 @@ export interface ExtractedCard {
   currency: "BRL";
   priceType: "exact" | "from";
   marketplace?: "mercadolivre" | "amazon";
+  promotionType?: "lightning";
+  promotionEndsAt?: string;
 }
 
 
@@ -71,6 +74,7 @@ export function extractCard(html: string): ExtractedCard | null {
     previous && previous.reais > 0 ? previous.reais * 100 + previous.centavos : undefined;
 
   const imageUrl = /<img[^>]+src="(https:\/\/http2\.mlstatic\.com\/[^"]+)"/.exec(html)?.[1];
+  const countdown = extractMlCountdownFromHtml(html);
 
   return {
     externalId,
@@ -82,5 +86,6 @@ export function extractCard(html: string): ExtractedCard | null {
     priceType: /a\s+partir\s+de/i.test(currentLabel ?? "") ? "from" : "exact",
     originalPriceCents: originalPriceCents && originalPriceCents > priceCents ? originalPriceCents : undefined,
     marketplace: "mercadolivre",
+    ...(countdown ? { promotionType: countdown.promotionType, promotionEndsAt: countdown.promotionEndsAt } : {}),
   };
 }

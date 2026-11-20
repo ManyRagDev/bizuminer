@@ -26,15 +26,22 @@ export async function readProcessingProgress(account:AccountContext,ids?:string[
     const [facts]=await tx<Array<{recorded:number;compatible:number;reused:number;eligible:number}>>`
       with current as materialized(select p.id,c.status,o.id as observation_id from garimpa.product p
         left join garimpa.product_curation c on c.tenant_id=p.tenant_id and c.product_id=p.id
+        left join garimpa.editorial_offer_choice choice on choice.tenant_id=p.tenant_id and choice.product_id=p.id
         left join lateral(select id from garimpa.price_observation o where o.tenant_id=p.tenant_id and o.product_id=p.id
-          and (not exists(select 1 from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id)
-            or o.option_key=(select choice.option_key from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id))
+          and (choice.option_key is null or o.option_key=choice.option_key)
           order by o.observed_at desc,o.id desc limit 1) o on true
         where p.tenant_id=${account.tenantId} and (${ids??null}::text[] is null or p.id=any(${ids??[]}::text[]))),
-      assessed as (select c.*,a.observation_id as assessed_observation,
-        c.observation_id is not null and garimpa.has_current_curation_assessment(${account.tenantId},c.id,c.observation_id) as compatible,
-        exists(select 1 from garimpa.curation_attribute_assessment a where a.tenant_id=${account.tenantId} and a.product_id=c.id) as recorded
-        from current c left join garimpa.curation_score_projection s on s.tenant_id=${account.tenantId} and s.product_id=c.id and s.observation_id=c.observation_id
+      assessed as (select c.id,c.status,c.observation_id,a.observation_id as assessed_observation,
+        case when c.observation_id is not null and s.product_id is not null
+          then garimpa.has_current_curation_assessment(${account.tenantId},c.id,c.observation_id)
+          else false end as compatible,
+        exists(select 1 from garimpa.curation_attribute_assessment a2 where a2.tenant_id=${account.tenantId} and a2.product_id=c.id) as recorded
+        from current c left join lateral (
+          select s.tenant_id,s.product_id,s.observation_id,s.assessment_id
+          from garimpa.curation_score_projection s
+          where s.tenant_id=${account.tenantId} and s.product_id=c.id and s.observation_id=c.observation_id
+          order by s.calculated_at desc limit 1
+        ) s on true
         left join garimpa.curation_attribute_assessment a on a.tenant_id=s.tenant_id and a.product_id=s.product_id and a.id=s.assessment_id)
       select count(distinct id) filter(where recorded)::int recorded,count(distinct id) filter(where compatible)::int compatible,
         count(distinct id) filter(where compatible and observation_id<>assessed_observation)::int reused,
@@ -61,9 +68,9 @@ export async function readProcessingProgress(account:AccountContext,ids?:string[
       from garimpa.curation_attribute_job j join garimpa.product p on p.tenant_id=j.tenant_id and p.id=j.product_id
       join garimpa.price_observation original on original.tenant_id=j.tenant_id and original.product_id=j.product_id and original.id=j.observation_id
       left join garimpa.product_curation c on c.tenant_id=j.tenant_id and c.product_id=j.product_id
+      left join garimpa.editorial_offer_choice choice on choice.tenant_id=p.tenant_id and choice.product_id=p.id
       left join lateral(select * from garimpa.price_observation o where o.tenant_id=p.tenant_id and o.product_id=p.id
-        and (not exists(select 1 from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id)
-          or o.option_key=(select choice.option_key from garimpa.editorial_offer_choice choice where choice.tenant_id=p.tenant_id and choice.product_id=p.id))
+        and (choice.option_key is null or o.option_key=choice.option_key)
         order by o.observed_at desc,o.id desc limit 1) latest on true
       where j.tenant_id=${account.tenantId} and (${ids??null}::text[] is null or j.product_id=any(${ids??[]}::text[]))
         and (j.status in ('queued','running','reconciliation') or j.status='failed' and j.observation_id=latest.id)

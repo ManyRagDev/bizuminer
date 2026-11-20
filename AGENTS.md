@@ -8,6 +8,10 @@ Na implementação autorizada, siga até integrar e verificar a capacidade, sem 
 
 Ao entregar, explique o que o aplicativo agora permite fazer, como conferiu e quais condições ou limitações permanecem. Atualize documentação permanente apenas quando houver conhecimento duradouro relevante, aproveitando o documento existente.
 
+## Registro de mudanças por todos os agentes
+
+Antes de mexer no projeto, consulte o [diário de mudanças](.conductor/tracks.md#diário-de-mudanças). Todo agente que alterar código, configuração, documentação ou o ambiente registra a entrega nesse mesmo diário. Informe data e autoria, o que mudou, como foi feito, onde e como foi conferido e o que ficou pendente. Diferencie o que existe no repositório do que foi verificado em produção. Uma entrada pode cobrir a mudança inteira e apontar para o diff, diagnóstico ou plano existente.
+
 ## Agendamentos suspensos por decisão do dono — 15/11/2026
 
 Os crons deste projeto devem permanecer desativados até que o dono solicite explicitamente a reativação. Isso inclui descoberta Shopee, acompanhamento de preços e qualquer outro cron. Não reativar workflows no GitHub, restaurar gatilhos `schedule` nem habilitar agendamentos equivalentes em outro executor como parte de correções, migrações ou deploys. Os três workflows do repositório `ManyRagDev/bizuminer` foram conferidos no GitHub como `disabled_manually`, sem execuções pendentes ou em andamento.

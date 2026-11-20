@@ -116,9 +116,36 @@ export async function enqueueAttributeDeltasBatch(sql: Sql, tenantId: string, mo
         input: { productId: row.product_id, title: row.title, marketplace: row.marketplace, priceCents: row.price_cents,
           category: row.category, ratingStar:row.rating_star !== null && row.rating_star>=1 && row.rating_star<=5 ? row.rating_star : null,
           salesCount:typeof row.sales_count==='number' && Number.isSafeInteger(row.sales_count) && row.sales_count>=0 ? row.sales_count : null, evidence } };
+      const inputFingerprint = hash({basis,latestEventId:row.latest_event_id,materialSnapshotVersion:1});
+      const [existingMatch] = await tx<{id:string;attributes:Record<string,unknown>;input_snapshot:Record<string,unknown>}[]>`
+        select a.id,a.attributes,a.input_snapshot
+        from garimpa.curation_attribute_assessment a
+        where a.tenant_id=${tenantId} and a.product_id=${row.product_id}
+          and a.policy_version=${ATTRIBUTE_POLICY_VERSION} and a.prompt_version=${ATTRIBUTE_PROMPT_VERSION} and a.model=${model}
+          and a.material_fingerprint=${basis.materialFingerprint}
+          and a.last_curation_event_id is not distinct from ${row.latest_event_id}
+          and jsonb_typeof(a.input_snapshot->'materialSnapshot')='object'
+          and (a.input_fingerprint=${inputFingerprint} or (a.price_cents>0 and abs(${row.price_cents}-a.price_cents)::numeric/a.price_cents<0.1))
+        order by a.created_at desc,a.id desc limit 1`;
+      if (existingMatch) {
+        const [latestAny] = await tx<{id:string}[]>`select id from garimpa.curation_attribute_assessment
+          where tenant_id=${tenantId} and product_id=${row.product_id} order by created_at desc,id desc limit 1`;
+        if (latestAny && latestAny.id !== existingMatch.id) {
+          const promotedFingerprint = hash({basis,latestEventId:row.latest_event_id,materialSnapshotVersion:1,observationId:row.observation_id,promotedFrom:existingMatch.id});
+          await tx`insert into garimpa.curation_attribute_assessment
+            (tenant_id,product_id,observation_id,input_fingerprint,material_fingerprint,price_cents,policy_version,prompt_version,model,
+             input_snapshot,attributes,last_curation_event_id,previous_assessment_id)
+            values(${tenantId},${row.product_id},${row.observation_id},${promotedFingerprint},${basis.materialFingerprint},${row.price_cents},
+             ${ATTRIBUTE_POLICY_VERSION},${ATTRIBUTE_PROMPT_VERSION},${model},${tx.json({...snapshot.input,materialSnapshot:snapshot.materialSnapshot,promptContext:existingMatch.input_snapshot?.promptContext ?? null} as any)},${tx.json(existingMatch.attributes as any)},${row.latest_event_id},${latestAny.id}::uuid)
+            on conflict(tenant_id,product_id,input_fingerprint,policy_version,prompt_version,model) do nothing`;
+        }
+        await tx`update garimpa.curation_fact_delta set processed_at=now() where tenant_id=${tenantId} and observation_id=${row.id}`;
+        processed++;
+        continue;
+      }
       const [job] = await tx<{id:string}[]>`insert into garimpa.curation_attribute_job
         (tenant_id,product_id,observation_id,input_fingerprint,input_snapshot)
-        values(${tenantId},${row.product_id},${row.observation_id},${hash({basis,latestEventId:row.latest_event_id,materialSnapshotVersion:1})},${tx.json(snapshot as any)})
+        values(${tenantId},${row.product_id},${row.observation_id},${inputFingerprint},${tx.json(snapshot as any)})
         on conflict(tenant_id,product_id) where status in ('queued','running','reconciliation') do update
         set observation_id=excluded.observation_id,input_fingerprint=excluded.input_fingerprint,input_snapshot=excluded.input_snapshot,updated_at=now()
         where garimpa.curation_attribute_job.status='queued' returning id`;
@@ -243,12 +270,21 @@ export async function finishAttributeJob(sql: Sql, tenantId: string, job: Claime
     const basis = job.snapshot.basis;
     const [prior] = await tx<{id:string}[]>`select id from garimpa.curation_attribute_assessment where tenant_id=${tenantId}
       and product_id=${attributes.productId} order by created_at desc,id desc limit 1`;
-    const [saved] = await tx<{id:string}[]>`insert into garimpa.curation_attribute_assessment
+    let [saved] = await tx<{id:string}[]>`insert into garimpa.curation_attribute_assessment
       (tenant_id,product_id,observation_id,input_fingerprint,material_fingerprint,price_cents,policy_version,prompt_version,model,
        input_snapshot,attributes,last_curation_event_id,previous_assessment_id)
       values(${tenantId},${attributes.productId},${job.observationId},${job.fingerprint},${basis.materialFingerprint},${basis.priceCents},
        ${basis.policyVersion},${basis.promptVersion},${basis.model},${tx.json({...job.snapshot.input,materialSnapshot:job.snapshot.materialSnapshot,promptContext:job.snapshot.promptContext ?? null} as any)},${tx.json(attributes as any)},${current.latest_event_id},${prior?.id ?? null}::uuid)
       on conflict(tenant_id,product_id,input_fingerprint,policy_version,prompt_version,model) do nothing returning id`;
+    if (!saved && prior?.id) {
+      const obsFingerprint = hash({fingerprint:job.fingerprint,observationId:job.observationId,priorId:prior.id});
+      [saved] = await tx<{id:string}[]>`insert into garimpa.curation_attribute_assessment
+        (tenant_id,product_id,observation_id,input_fingerprint,material_fingerprint,price_cents,policy_version,prompt_version,model,
+         input_snapshot,attributes,last_curation_event_id,previous_assessment_id)
+        values(${tenantId},${attributes.productId},${job.observationId},${obsFingerprint},${basis.materialFingerprint},${basis.priceCents},
+         ${basis.policyVersion},${basis.promptVersion},${basis.model},${tx.json({...job.snapshot.input,materialSnapshot:job.snapshot.materialSnapshot,promptContext:job.snapshot.promptContext ?? null} as any)},${tx.json(attributes as any)},${current.latest_event_id},${prior.id}::uuid)
+        on conflict(tenant_id,product_id,input_fingerprint,policy_version,prompt_version,model) do nothing returning id`;
+    }
     const assessmentId = saved?.id ?? (await tx<{id:string}[]>`select id from garimpa.curation_attribute_assessment
       where tenant_id=${tenantId} and product_id=${attributes.productId} and input_fingerprint=${job.fingerprint}
         and policy_version=${basis.policyVersion} and prompt_version=${basis.promptVersion} and model=${basis.model}`)[0]?.id;

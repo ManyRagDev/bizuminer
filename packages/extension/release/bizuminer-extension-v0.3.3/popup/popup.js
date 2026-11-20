@@ -488,7 +488,8 @@
         const sample = result.sample;
         const money = (cents) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         const samplePrice = sample?.priceType === "range" && sample.priceMaxCents ? `${money(sample.priceCents)} a ${money(sample.priceMaxCents)}` : sample?.priceCents ? `${sample.priceType === "from" ? "a partir de " : ""}${money(sample.priceCents)}` : "";
-        const summary = sample?.title ? `${sample.title.slice(0, 75)}${samplePrice ? ` \u2014 ${samplePrice}` : ""}` : "An\xFAncio";
+        const flashInfo = sample?.promotionType === "lightning" && sample.promotionEndsAt ? ` \xB7 \u26A1 Rel\xE2mpago at\xE9 ${new Date(sample.promotionEndsAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "";
+        const summary = sample?.title ? `${sample.title.slice(0, 75)}${samplePrice ? ` \u2014 ${samplePrice}` : ""}${flashInfo}` : "An\xFAncio";
         if (captureActiveStatus) {
           captureActiveStatus.textContent = result.queued ? `\u23F3 Enfileirado para envio: ${summary}` : `\u2713 An\xFAncio atualizado: ${summary}`;
         }
@@ -563,10 +564,11 @@
         const d = result.diagnostics;
         const details = d ? [
           `${d.products} an\xFAncios identificados`,
+          result.lightningCount ? `\u26A1 ${result.lightningCount} em Oferta Rel\xE2mpago` : null,
           d.noPrice && `${d.noPrice} sem pre\xE7o detectado${d.visibleNoPrice ? ` (${d.visibleNoPrice} vis\xEDveis na tela)` : ""}`,
           d.uncertainPrice && `${d.uncertainPrice} com pre\xE7o indefinido`,
           d.noTitle && `${d.noTitle} sem nome`
-        ].filter(Boolean).join(" \xB7 ") : "";
+        ].filter(Boolean).join(" \xB7 ") : result.lightningCount ? `\u26A1 ${result.lightningCount} em Oferta Rel\xE2mpago` : "";
         const sample = result.sample;
         const money = (cents) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         const samplePrice = sample?.priceType === "range" && sample.priceMaxCents ? `${money(sample.priceCents)} a ${money(sample.priceMaxCents)}` : sample ? `${sample.priceType === "from" ? "a partir de " : ""}${money(sample.priceCents)}` : "";

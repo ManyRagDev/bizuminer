@@ -1,0 +1,516 @@
+{
+  "data_local": "2026-11-18 21:39:13",
+  "fuso": "America/Sao_Paulo",
+  "escopo": "Conta da operação publicada. Lotes manuais recebidos em 18/11 até o instante da consulta. Valores monetários em centavos de real.",
+  "hora_da_conferencia_dos_casos_brt": "2026-11-18 21:46:19",
+  "data_renderizacao_vitrine_utc": "2026-11-19T00:46:59.976Z",
+  "conferencia_links_aliexpress": {
+    "data_local": "2026-11-19 10:22:20",
+    "origem": "Recibos manuais do AliExpress incluídos no corte de 18/11, com as respectivas observações e publicações da conta.",
+    "lotes": 3,
+    "observacoes_recebidas_e_conciliadas": 138,
+    "observacoes_com_url_do_anuncio_correspondente_ao_id": 138,
+    "observacoes_com_preco_exato_em_brl": 138,
+    "observacoes_com_id_de_execucao_de_lote": 0,
+    "produtos_distintos": 78,
+    "produtos_aprovados_em_18_e_19": 77,
+    "produtos_recusados_em_18_e_19": 1,
+    "aprovados_com_registro_de_publicacao_web": 0,
+    "aprovados_com_url_afiliada_gravada": 0,
+    "conexao_da_conta_no_painel": {
+      "data_local": "2026-11-19 10:28",
+      "estado": "missing",
+      "ultima_verificacao_gravada": null
+    }
+  },
+  "captura_manual": {
+    "recebimentos": 12,
+    "soma_dos_recibos": {
+      "valid": 512,
+      "received": 512,
+      "productsCreated": 197,
+      "productsUpdated": 315,
+      "observationsSaved": 512
+    },
+    "lojas": {
+      "amazon": {
+        "lotes": 3,
+        "observacoes": 109,
+        "produtos_distintos": 80
+      },
+      "mercadolivre": {
+        "lotes": 6,
+        "observacoes": 265,
+        "produtos_distintos": 194
+      },
+      "aliexpress": {
+        "lotes": 3,
+        "observacoes": 138,
+        "produtos_distintos": 78
+      }
+    },
+    "reconciliacao": {
+      "pares": 512,
+      "pares_confirmados": 512,
+      "observacoes_distintas": 512
+    }
+  },
+  "catalogo_do_lote": {
+    "produtos_distintos": 352,
+    "situacao": {
+      "approved": 351,
+      "rejected": 1
+    },
+    "com_avaliacao": 351,
+    "com_nota_da_ultima_observacao": 351
+  },
+  "primeira_avaliacao_dos_novos": {
+    "novos": 197,
+    "com_ia": 197,
+    "mediana_horas": "9.07",
+    "p90_horas": "9.14",
+    "pelo_menos_seis_horas": 162,
+    "pelo_menos_oito_horas": 162
+  },
+  "pauta_recalculada": {
+    "whatsapp": {
+      "considerados_na_conta": 2015,
+      "selecao_na_conta": 30,
+      "titulos_repetidos_na_selecao": {
+        "Tramontina Panela de Pressão Vancouver Effect em Alumínio com Revestimento Interno e Externo em Antiaderente Starflon Max Preto 20 cm 4,5 L": [
+          2,
+          10
+        ],
+        "Headset Gamer HyperX Cloud III – Compatível com PC, PS5, Xbox Series X|S, Drivers Angulados de 53mm, Áudio DTS, Microfone de 10 mm, USB-C, USB-A, Fio de 3,5 mm, Preto (727A8AA)": [
+          5,
+          13
+        ]
+      },
+      "destino_dos_produtos_do_dia": {
+        "Oferta apta. Ficou abaixo do corte deste canal.": 214,
+        "Falta um link de afiliado válido para esta oferta.": 77,
+        "Outra oferta da mesma família teve prioridade.": 32,
+        "selecionada": 23,
+        "Divulgada recentemente neste canal.": 5,
+        "fora da lista de candidatas": 1
+      }
+    },
+    "stories": {
+      "considerados_na_conta": 2015,
+      "selecao_na_conta": 16,
+      "titulos_repetidos_na_selecao": {},
+      "destino_dos_produtos_do_dia": {
+        "Oferta apta. Ficou abaixo do corte deste canal.": 217,
+        "Falta um link de afiliado válido para esta oferta.": 77,
+        "Outra oferta da mesma família teve prioridade.": 46,
+        "selecionada": 11,
+        "fora da lista de candidatas": 1
+      }
+    }
+  },
+  "sobreposicao_2139": {
+    "distintos_na_pauta_entre_canais": 34,
+    "do_lote_em_algum_canal": 26,
+    "da_conta_na_edicao_home": 24,
+    "do_lote_na_edicao_home": 16,
+    "da_edicao_home_fora_de_ambos_os_canais": 9
+  },
+  "historico_apos_primeira_captura_do_produto_no_dia": [
+    {
+      "channel": "ambos combinados",
+      "tipo": "copiada",
+      "produtos": 6
+    },
+    {
+      "channel": "ambos combinados",
+      "tipo": "divulgada conforme confirmação",
+      "produtos": 5
+    },
+    {
+      "channel": "ambos combinados",
+      "tipo": "preparada",
+      "produtos": 32
+    },
+    {
+      "channel": "whatsapp",
+      "tipo": "copiada",
+      "produtos": 6
+    },
+    {
+      "channel": "whatsapp",
+      "tipo": "divulgada conforme confirmação",
+      "produtos": 5
+    },
+    {
+      "channel": "whatsapp",
+      "tipo": "preparada",
+      "produtos": 32
+    }
+  ],
+  "limites_salvos_e_efetivos": {
+    "stories": {
+      "quantidade_salva": 8,
+      "familia_salva": 1,
+      "selecao_observada": 16
+    },
+    "whatsapp": {
+      "quantidade_salva": 12,
+      "familia_salva": 1,
+      "selecao_observada": 30
+    }
+  },
+  "casos_indicados_e_anuncios_comparados": [
+    {
+      "titulo": "Conj de Panelas 8 Peças Ceramic Life Smart Plus Vanilla - Brinox",
+      "loja": "mercadolivre",
+      "id_na_loja": "MLB3797364569",
+      "ultima_captura_extensao_brt": "2026-11-18 12:14",
+      "preco_centavos_na_captura_mais_recente": 47990,
+      "dias_com_observacao": 3,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "motivo_stories_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 1,
+      "canais_com_preparacao": "whatsapp",
+      "horarios_de_preparacao_brt": [
+        "2026-11-17 20:51"
+      ]
+    },
+    {
+      "titulo": "Jogo De Panelas Cerâmica Antiaderente 19 Peças Gas Indução Baunilha",
+      "loja": "mercadolivre",
+      "id_na_loja": "MLB6497706934",
+      "ultima_captura_extensao_brt": "2026-11-18 12:14",
+      "preco_centavos_na_captura_mais_recente": 54999,
+      "dias_com_observacao": 3,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "motivo_stories_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "Jogo De Panelas Induçao Antiaderente Cerâmica 10 Peças Ppg Pfoa Free Baunilha",
+      "loja": "mercadolivre",
+      "id_na_loja": "MLB5946286600",
+      "ultima_captura_extensao_brt": "2026-11-18 12:14",
+      "preco_centavos_na_captura_mais_recente": 32005,
+      "dias_com_observacao": 3,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "motivo_stories_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "Roteador Wi-Fi 7 Mesh TP-Link Deco Be22 Be3600 Gigabit Dual Band 3.6gbps com 3 Unidades para lares de até 600 m²",
+      "loja": "mercadolivre",
+      "id_na_loja": "MLB7059216298",
+      "ultima_captura_extensao_brt": "2026-11-16 16:47",
+      "preco_centavos_na_captura_mais_recente": 120400,
+      "dias_com_observacao": 1,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "motivo_stories_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "TP-Link Deco X10(3-pack) Roteador Mesh Wifi6 AX1500 Cobre até 520m²",
+      "loja": "mercadolivre",
+      "id_na_loja": "MLB5619120580",
+      "ultima_captura_extensao_brt": "2026-11-17 20:46",
+      "preco_centavos_na_captura_mais_recente": 65231,
+      "dias_com_observacao": 2,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "motivo_stories_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "TP-Link Deco X50(2-pack) Roteador Mesh Wifi6 AX3000 Cobre até 420m²",
+      "loja": "mercadolivre",
+      "id_na_loja": "MLB3874819953",
+      "ultima_captura_extensao_brt": "2026-11-17 20:47",
+      "preco_centavos_na_captura_mais_recente": 64005,
+      "dias_com_observacao": 2,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "motivo_stories_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "TP-Link Deco X50(3-pack) Roteador Mesh Wifi6 AX3000 Cobre até 600m²",
+      "loja": "mercadolivre",
+      "id_na_loja": "MLB5742883634",
+      "ultima_captura_extensao_brt": "2026-11-17 20:46",
+      "preco_centavos_na_captura_mais_recente": 92480,
+      "dias_com_observacao": 1,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "motivo_stories_2146": [
+        "A oferta precisa de uma conferência atual antes da preparação."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "Tramontina Panela de Pressão Vancouver Effect em Alumínio com Revestimento Interno e Externo em Antiaderente Starflon Max Preto 20 cm 4,5 L",
+      "loja": "amazon",
+      "id_na_loja": "B0DDMD6JBB",
+      "ultima_captura_extensao_brt": "2026-11-18 12:11",
+      "preco_centavos_na_captura_mais_recente": 16190,
+      "dias_com_observacao": 1,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "selecionada"
+      ],
+      "motivo_stories_2146": [
+        "selecionada"
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "Tramontina Panela de Pressão Vancouver Effect em Alumínio com Revestimento Interno e Externo em Antiaderente Starflon Max Preto 20 cm 4,5 L",
+      "loja": "amazon",
+      "id_na_loja": "B0CD4SFMD7",
+      "ultima_captura_extensao_brt": "2026-11-18 12:11",
+      "preco_centavos_na_captura_mais_recente": 16190,
+      "dias_com_observacao": 1,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "selecionada"
+      ],
+      "motivo_stories_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    },
+    {
+      "titulo": "Tramontina Panela de Pressão Vancouver Effect em Alumínio com Revestimento Interno e Externo em Antiaderente Starflon Max Preto 20 cm 4,5 L",
+      "loja": "amazon",
+      "id_na_loja": "B0CD4SCM33",
+      "ultima_captura_extensao_brt": "2026-11-18 12:11",
+      "preco_centavos_na_captura_mais_recente": 16190,
+      "dias_com_observacao": 1,
+      "catalogo": "approved",
+      "avaliacao_registrada": true,
+      "motivo_whatsapp_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "motivo_stories_2146": [
+        "Outra oferta da mesma família teve prioridade."
+      ],
+      "preparacoes_arquivadas_com_validade_ate_2139": 0,
+      "canais_com_preparacao": null,
+      "horarios_de_preparacao_brt": []
+    }
+  ],
+  "vitrine_publica_mesma_resposta": {
+    "total_catalogo": 282,
+    "tamanho_edicao": 24,
+    "destaques_de_capa": 0,
+    "quantas_justificativas_publicas_por_texto": {
+      "Produto aprovado para exploração.": 24
+    },
+    "quantos_da_edicao_na_primeira_pagina": 9,
+    "grade": [
+      {
+        "posicao": 1,
+        "titulo": "Percarbonato de Sódio 100% Puro Tira Manchas Roupas Brancas Limpeza Pesada 500g 1kg 2kg",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 2,
+        "titulo": "Câmera Veicular 70mai T800E-1 4K de 3 Canais com GPS, Wi-Fi 6 e Visão Noturna",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 3,
+        "titulo": "Garantia Estendida contra falhas e defeitos de 12 meses",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 4,
+        "titulo": "Jogo de Lençol 400 Fios Extra Macio c/ Fronhas Ponto Palito Berço Solteiro Casal Queen King 02 e 03 Peças",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 5,
+        "titulo": "Cabo Flexível 4mm Rolo 100 Metros 750v Unipolar",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 6,
+        "titulo": "Tasty Whey Chocomaltine 900g",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 7,
+        "titulo": "Guarda Chuva Automático Abre e Fecha Grande Reforçado Contra Vento Com Proteção Solar Blackout Haste Dupla Cabe na Bolsa",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 8,
+        "titulo": "Cafeteira Nescafé Dolce Gusto Mini Me 2.0 Cinza-escuro",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 9,
+        "titulo": "Philips OneBlade Barbeador e Aparador Elétrico: Raspa, Apara e Contorna | Barbeia e apara sem irritar a pele | Uso a Seco ou Molhado | Lâmina Dupla Face | 3 Pentes | QP2724/10",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 10,
+        "titulo": "Lixador de Pé Elétrico - Esfoliador Tira Calos Pedicure Portátil",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 11,
+        "titulo": "Seringa De 0,5ml Com Agulha Fixa 0,30mmx8mm Blister 100 Unid 0.5 Ml",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 12,
+        "titulo": "MONDIAL Secador Multifuncional 6 em 1 BLDC Coanda, Bivolt, 1600W, Ceramic Pink Plus, Rosa Claro - SMB-02-BLDC-CP",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 13,
+        "titulo": "Tampas De Plástico Descartável100/200/300 Para Alimento Toucas Descartáveis Cozinha Multiuso",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 14,
+        "titulo": "Mangueira 20metros Duraflex Silconada Reforçada Profissional Laranja",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 15,
+        "titulo": "Algodão Em Disco Duo Face York 50 Unidades York",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 16,
+        "titulo": "Jogo de Lençol 400 fios Toque Suave e Acetinado Berço Solteiro Casal Queen King 02 e 03 Peças",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 17,
+        "titulo": "Climatizador Portátil 16 Litros 130w Ventisol Clin16 Cor Cinza",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 18,
+        "titulo": "Dyson Supersonic™ Secador de Cabelo 127v",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 19,
+        "titulo": "Elástico Extensor de Exercícios Pull Reducer Multi Função Academia Em Casa Uso Profissional",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 20,
+        "titulo": "Jogo Toalhas Banho Grossas Macias Algodão 4pç Absorventes",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 21,
+        "titulo": "Samsung Geladeira Duplex Evolution SmartThings RT53 524L Bivolt Inox",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 22,
+        "titulo": "KIT 100/200/300 Tampas De Plástico Descartável Para Alimento Toucas Descartáveis Cozinha Multiuso",
+        "pertence_a_edicao_editorial": true
+      },
+      {
+        "posicao": 23,
+        "titulo": "Camiseta Nike Sportswear Tee Icon Futura Masculina",
+        "pertence_a_edicao_editorial": false
+      },
+      {
+        "posicao": 24,
+        "titulo": "MONDIAL Ventilador de Parede 40cm Super Turbo 8 Pás, Preto/Prata, 140W, 110V - VTX-40P-8P",
+        "pertence_a_edicao_editorial": false
+      }
+    ],
+    "consulta_publica_no_banco": {
+      "usa_lista_editorial_anterior": true,
+      "intercala_lojas": true,
+      "consulta_edicao_v2": false
+    }
+  },
+  "caso_garantia": {
+    "id_na_loja": "B08FXYKYLW",
+    "titulo": "Garantia Estendida contra falhas e defeitos de 12 meses",
+    "alertas_na_avaliacao": [],
+    "posicao_no_whatsapp": 22
+  },
+  "fontes_aplicacao_comparadas_por_sha256": {
+    "lib/pauta-db.ts": "64e945a41791f7ca96e2eaf49e16d5b849b5a4b174f9989f0a2c3da8d63648b9",
+    "lib/pauta-policy.ts": "d9ff29ecc176d4c695dbd3f87aa1a6bb10fbfa473581b87af9953ea0d2b93e0a",
+    "lib/editorial-selection-db.ts": "63ceabbdc55bc7a6c049910275820fc54a2002516a22a11e76824ef819fc8784",
+    "app/vitrine.tsx": "2956f56c905f9ce43e8ff41b04cdea5d0747914f07de41e5b90df3fb6ee29c92",
+    "lib/extension-db.ts": "1b372ab476c2658aa2f14d6e95c91616ab0b36338ea0075af379bf33a6aedb9a",
+    "lib/curation-attributes-db.ts": "4c0e27edef2f751f7b329ebe77a8618434892cac660bd22ff1d92eabbe9ca801",
+    "lib/curation-score-v2.ts": "562d809d29af7c2427c0584c67c31b05fbcf3dc73c2fefbd895eb26940a750c9",
+    "lib/curation-selection-v2.ts": "26553a2e58dcff80100093ad0f182ca2f0e4714880bc949d7ef96da3c8127f31",
+    "lib/curation-promotion-db.ts": "eeb52f29df44c07dc62a4a7f5350d42c86d2e8769849ad3bcef229aa09fec16e",
+    "lib/homepage-policy.ts": "581b512a5fbb8db4907584b8347d142f6f5569dbf7645b57a051f034880e7ee4",
+    "lib/pauta-response.ts": "ef03aa9af07ca70b66d36165d23643f2cb5c827a1385c30069edb56c1cc57893",
+    "app/admin/curadoria/recommendation-control.tsx": "7a267162942f62e4d4b2a79e150cfb37b0e01f81636347dade802f877fd1d3e2",
+    "app/api/pauta/route.ts": "655a55b98a164c8e6e2e3e36dd87fcd8576cecfb2ac5282a86c0b5b6f4cf7292",
+    "app/page.tsx": "b8781cf4c7dd2143553c1f1241ea05117ed97504e9d1569639720663bcd2c7f7",
+    "app/bizu/[slug]/page.tsx": "1c71194e5e958b74624e7e7c2f21fe7c033effb2113473fc65ac674625c62ceb",
+    "lib/account-scope.ts": "3a3f26d4f50fe022af506ca71516a4eb624fea2b90624638e2766b42316d5ad2"
+  }
+}

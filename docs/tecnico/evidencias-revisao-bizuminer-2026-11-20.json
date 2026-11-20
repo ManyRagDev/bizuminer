@@ -1,0 +1,1366 @@
+{
+  "titulo": "Revisão do funcionamento do BizuMiner em 20 de novembro de 2026",
+  "fuso": "America/Sao_Paulo",
+  "intervalo_dos_lotes_brt": {
+    "apos": "2026-11-19T11:11:17-03:00",
+    "ate": "2026-11-20T11:31:14-03:00"
+  },
+  "escopo": "Conta da casa em produção, visitante anônimo no domínio público, fontes do contêiner e reprodução local. Contagens são fotografias nas horas registradas.",
+  "como_conferir": {
+    "recebimento": "Na conta da casa, expandir items dos recibos da extensão após o último corte. Conciliar cada productId e observationId com price_observation da mesma conta, produto e dispositivo. Produtos novos são os marcados como criados pelo recibo.",
+    "avaliacao": "Para cada productId novo, usar o primeiro recibo que informa criação e a primeira curation_attribute_assessment do produto. Ligar a tarefa à avaliação pelo assessment_id, produto e conta. Calcular a distribuição de duração no conjunto completo, sem tirar a média das lojas.",
+    "pauta": "Transação repetível de leitura, conta e afiliado da casa, papel da aplicação. Executar previewLivePauta e cruzar os IDs com os produtos distintos recebidos. Motivos da mesma oferta podem se sobrepor. Para preparações históricas, exigir prepared_at igual ou posterior ao primeiro recebimento de cada produto no período. Em nenhum desses passos é necessário criar uma edição, gerar um link ou confirmar uma divulgação.",
+    "promocao": "Comparar offer_evidence das observações da extensão com current_offer_valid_until, o prazo da edição arquivada e o documento público. Última observação, validade factual e fim da promoção são medidos separadamente. Datas conferidas no fuso de Brasília.",
+    "vitrine": "Abrir a home anônima e comparar, na mesma resposta, os 24 cartões HTML, initialProducts, editorialProducts e editorialHeroIds. Ler /api/deals paginada por marketplace, abrir amostras de /bizu/[slug] e comparar o texto visível com promotionEndsAt. Só foram consultadas páginas do BizuMiner.",
+    "teste_do_coletor": "Reproduzir a página arquivada de 17/08 num perfil local descartável. Relógio fixado na hora do arquivo, scripts de origem e rede da página bloqueados. Comparar os IDs de cartão com contador e o period_end do próprio item nos dados estruturados com collectBrowserOffers da versão anterior e atual. Repetir sem o contador visual.",
+    "ensaios_controlados": "Na lista com dois anúncios, somente o segundo tem lightning_deal_configuration.finish_date. Validar o retorno dos dois pela ingestão normal. Na ficha, colocar o único contador fora do anúncio principal, na área de recomendados. Executar o extrator de lote e o individual. Provar o calendário com uma sexta e um domingo em datas fixas.",
+    "versao_e_testes": "Comparar os arquivos packages/ nos pacotes de publicação anterior e posterior. Comparar a amostra do contêiner por SHA-256 com a cópia de trabalho e o commit. Compilar a extensão numa cópia limpa, com as configurações TypeScript e o mesmo código compartilhado. Rodar as suítes de cada pacote e tsc --noEmit. Quatro arquivos de teste exigiram reexecução com processos locais e sem credenciais."
+  },
+  "producao_banco": {
+    "hora_brt": "2026-11-20 11:31:14",
+    "lojas": [
+      {
+        "marketplace": "aliexpress",
+        "produtos": 479,
+        "aprovados": 445,
+        "publicacoes_web_ativas": 0,
+        "vistos_12h": 0
+      },
+      {
+        "marketplace": "amazon",
+        "produtos": 709,
+        "aprovados": 701,
+        "publicacoes_web_ativas": 660,
+        "vistos_12h": 0
+      },
+      {
+        "marketplace": "mercadolivre",
+        "produtos": 969,
+        "aprovados": 965,
+        "publicacoes_web_ativas": 938,
+        "vistos_12h": 297
+      },
+      {
+        "marketplace": "shopee",
+        "produtos": 448,
+        "aprovados": 432,
+        "publicacoes_web_ativas": 441,
+        "vistos_12h": 8
+      }
+    ],
+    "capturas_desde_auditoria": [
+      {
+        "loja": "amazon",
+        "lotes": 2,
+        "recebidos": 195,
+        "rejeitados": 0,
+        "linhas": 195,
+        "observacoes_conciliadas": 195,
+        "produtos_distintos": 162,
+        "novos": 116,
+        "observacoes_relampago": 0
+      },
+      {
+        "loja": "mercadolivre",
+        "lotes": 8,
+        "recebidos": 402,
+        "rejeitados": 0,
+        "linhas": 402,
+        "observacoes_conciliadas": 402,
+        "produtos_distintos": 297,
+        "novos": 269,
+        "observacoes_relampago": 148
+      }
+    ],
+    "primeiras_avaliacoes": [
+      {
+        "loja": "amazon",
+        "novos": 116,
+        "avaliados": 116,
+        "com_tarefa_identificada": 116,
+        "ainda_sem_primeira_avaliacao": 0,
+        "mediana_ate_avaliacao_min": "2.64",
+        "p90_ate_avaliacao_min": "4.03",
+        "pelo_menos_oito_horas": 0,
+        "aguardando_ha_oito_horas": 0
+      },
+      {
+        "loja": "mercadolivre",
+        "novos": 269,
+        "avaliados": 269,
+        "com_tarefa_identificada": 269,
+        "ainda_sem_primeira_avaliacao": 0,
+        "mediana_ate_avaliacao_min": "2.15",
+        "p90_ate_avaliacao_min": "4.47",
+        "pelo_menos_oito_horas": 0,
+        "aguardando_ha_oito_horas": 0
+      },
+      {
+        "loja": "total",
+        "novos": 385,
+        "avaliados": 385,
+        "com_tarefa_identificada": 385,
+        "ainda_sem_primeira_avaliacao": 0,
+        "mediana_ate_avaliacao_min": "2.25",
+        "p90_ate_avaliacao_min": "4.12",
+        "pelo_menos_oito_horas": 0,
+        "aguardando_ha_oito_horas": 0
+      }
+    ],
+    "relampago_por_dia": [
+      {
+        "dia": "2026-11-18",
+        "observacoes_ml_extensao": 265,
+        "com_tipo": 0,
+        "com_tipo_e_prazo": 0,
+        "produtos_com_tipo_e_prazo": 0
+      },
+      {
+        "dia": "2026-11-19",
+        "observacoes_ml_extensao": 205,
+        "com_tipo": 0,
+        "com_tipo_e_prazo": 0,
+        "produtos_com_tipo_e_prazo": 0
+      },
+      {
+        "dia": "2026-11-20",
+        "observacoes_ml_extensao": 352,
+        "com_tipo": 148,
+        "com_tipo_e_prazo": 148,
+        "produtos_com_tipo_e_prazo": 145
+      }
+    ],
+    "relampago_validade": [
+      {
+        "marcadas": 148,
+        "produtos": 145,
+        "data_alem_de_amanha_na_captura": 10,
+        "ultimas_marcadas": 145,
+        "promocao_ainda_vigente": 144,
+        "com_validade_factual_atual": 144,
+        "validade_factual_apos_fim": 0,
+        "fim_promocional_limitou_validade": 135
+      }
+    ],
+    "relampago_nas_preparacoes": [
+      {
+        "channel": "whatsapp",
+        "kind": "pauta-preparation-v1",
+        "arquivos": 25,
+        "produtos": 8,
+        "validade_apos_fim": 0,
+        "preparado_apos_fim": 0
+      }
+    ],
+    "funcoes_de_prazo": [
+      {
+        "nome": "apresentacao_publica",
+        "instalada": true,
+        "considera_prazo": true
+      },
+      {
+        "nome": "validade_factual",
+        "instalada": true,
+        "considera_prazo": true
+      },
+      {
+        "nome": "validade_publica",
+        "instalada": true,
+        "considera_prazo": true
+      }
+    ],
+    "canal_salvo": [
+      {
+        "channel": "stories",
+        "limite_salvo": 8
+      },
+      {
+        "channel": "whatsapp",
+        "limite_salvo": 12
+      }
+    ],
+    "pauta_whatsapp": {
+      "ofertas": 30,
+      "titulos_distintos": 30,
+      "linhas_de_motivos": 2360,
+      "motivos": {
+        "Divulgada recentemente neste canal.": 18,
+        "A oferta precisa de uma conferência atual antes da preparação.": 2086,
+        "Confirme o preço exato em reais.": 153,
+        "Aguardando avaliação atual para a pauta.": 7,
+        "Falta um link de afiliado válido para esta oferta.": 370,
+        "Oferta apta. Ficou abaixo do corte deste canal.": 230,
+        "Outra oferta da mesma família teve prioridade.": 38
+      }
+    },
+    "pauta_stories": {
+      "ofertas": 16,
+      "titulos_distintos": 16,
+      "linhas_de_motivos": 2374,
+      "motivos": {
+        "A oferta precisa de uma conferência atual antes da preparação.": 2086,
+        "Confirme o preço exato em reais.": 153,
+        "Aguardando avaliação atual para a pauta.": 7,
+        "Falta um link de afiliado válido para esta oferta.": 370,
+        "Oferta apta. Ficou abaixo do corte deste canal.": 245,
+        "Outra oferta da mesma família teve prioridade.": 43
+      }
+    },
+    "divulgacao_7d": [
+      {
+        "channel": "whatsapp",
+        "numero_exibido": 18,
+        "confirmacoes": 11,
+        "pulos": 7,
+        "confirmacoes_com_preparo_vencido": 1
+      }
+    ],
+    "conexao_amazon_e_ali": [
+      {
+        "tag_amazon_ativa": true,
+        "amazon_aprovados_sem_publicacao": 41,
+        "status_gravado_ali": null
+      }
+    ],
+    "fila_de_atributos": [
+      {
+        "status": "completed",
+        "tarefas": 6757
+      },
+      {
+        "status": "reconciliation",
+        "tarefas": 33
+      },
+      {
+        "status": "superseded",
+        "tarefas": 11
+      }
+    ],
+    "comercial": [
+      {
+        "financeiro_habilitado": false,
+        "divulgacoes_habilitadas": null
+      }
+    ],
+    "configuracoes": {
+      "marketing": false,
+      "ga4": false
+    },
+    "tipos_de_link_30d": [
+      {
+        "tipo": "pauta-copied-v1",
+        "destino": "site",
+        "arquivos": 19,
+        "produtos": 15
+      },
+      {
+        "tipo": "pauta-preparation-v1",
+        "destino": "pauta",
+        "arquivos": 3,
+        "produtos": 2
+      },
+      {
+        "tipo": "pauta-preparation-v1",
+        "destino": "site",
+        "arquivos": 1715,
+        "produtos": 186
+      }
+    ],
+    "cliques_30d": [
+      {
+        "marketplace": "amazon",
+        "cliques": 1,
+        "com_campanha": 0
+      },
+      {
+        "marketplace": "mercadolivre",
+        "cliques": 4,
+        "com_campanha": 0
+      },
+      {
+        "marketplace": "shopee",
+        "cliques": 4,
+        "com_campanha": 0
+      }
+    ]
+  },
+  "selecao_conciliada": {
+    "hora_brt": "2026-11-20 11:41:07",
+    "whatsapp": {
+      "ofertas": 30,
+      "identificadas": 30,
+      "lojas": {
+        "shopee": {
+          "selecionados": 3,
+          "do_recorte": 0,
+          "relampagos_ativas": 0
+        },
+        "mercadolivre": {
+          "selecionados": 27,
+          "do_recorte": 27,
+          "relampagos_ativas": 8
+        }
+      },
+      "motivos_do_recorte_por_loja": {
+        "mercadolivre": {
+          "A oferta precisa de uma conferência atual antes da preparação.": 1,
+          "Divulgada recentemente neste canal.": 1,
+          "Oferta apta. Ficou abaixo do corte deste canal.": 230,
+          "Outra oferta da mesma família teve prioridade.": 38
+        },
+        "amazon": {
+          "A oferta precisa de uma conferência atual antes da preparação.": 162,
+          "Divulgada recentemente neste canal.": 2
+        }
+      },
+      "com_aviso_generico_de_link": [
+        {
+          "loja": "aliexpress",
+          "ofertas": 360
+        },
+        {
+          "loja": "shopee",
+          "ofertas": 10
+        }
+      ],
+      "motivos_dos_itens_do_recorte": {
+        "A oferta precisa de uma conferência atual antes da preparação.": 163,
+        "Divulgada recentemente neste canal.": 3,
+        "Oferta apta. Ficou abaixo do corte deste canal.": 230,
+        "Outra oferta da mesma família teve prioridade.": 38
+      }
+    },
+    "stories": {
+      "ofertas": 16,
+      "identificadas": 16,
+      "lojas": {
+        "shopee": {
+          "selecionados": 7,
+          "do_recorte": 0,
+          "relampagos_ativas": 0
+        },
+        "mercadolivre": {
+          "selecionados": 9,
+          "do_recorte": 9,
+          "relampagos_ativas": 3
+        }
+      },
+      "motivos_do_recorte_por_loja": {
+        "mercadolivre": {
+          "A oferta precisa de uma conferência atual antes da preparação.": 1,
+          "Oferta apta. Ficou abaixo do corte deste canal.": 245,
+          "Outra oferta da mesma família teve prioridade.": 42
+        },
+        "amazon": {
+          "A oferta precisa de uma conferência atual antes da preparação.": 162
+        }
+      },
+      "com_aviso_generico_de_link": [
+        {
+          "loja": "aliexpress",
+          "ofertas": 360
+        },
+        {
+          "loja": "shopee",
+          "ofertas": 10
+        }
+      ],
+      "motivos_dos_itens_do_recorte": {
+        "A oferta precisa de uma conferência atual antes da preparação.": 163,
+        "Oferta apta. Ficou abaixo do corte deste canal.": 245,
+        "Outra oferta da mesma família teve prioridade.": 42
+      }
+    },
+    "recorte_produtos_distintos": 459,
+    "do_recorte_em_um_ou_mais_canais": 27,
+    "relampagos_distintas_em_um_ou_mais_canais": 8,
+    "historico_apos_recebimento": {
+      "hora_brt": "2026-11-20 11:42:41",
+      "leitura": true,
+      "apos_o_primeiro_recebimento_de_cada_produto": [
+        {
+          "loja": "amazon",
+          "canal": "home",
+          "tipo": null,
+          "produtos_distintos": 23
+        },
+        {
+          "loja": "amazon",
+          "canal": "whatsapp",
+          "tipo": "pauta-preparation-v1",
+          "produtos_distintos": 14
+        },
+        {
+          "loja": "mercadolivre",
+          "canal": "home",
+          "tipo": null,
+          "produtos_distintos": 13
+        },
+        {
+          "loja": "mercadolivre",
+          "canal": "whatsapp",
+          "tipo": "pauta-copied-v1",
+          "produtos_distintos": 1
+        },
+        {
+          "loja": "mercadolivre",
+          "canal": "whatsapp",
+          "tipo": "pauta-preparation-v1",
+          "produtos_distintos": 39
+        }
+      ]
+    }
+  },
+  "comprador": {
+    "hora_home_brt": "2026-11-20T11:28:25-03:00",
+    "vitrine": {
+      "edicao": 24,
+      "destaques_de_capa": 0,
+      "primeira_pagina": 24,
+      "total": 466,
+      "em_comum": 9,
+      "mesma_ordem": false,
+      "lojas_edicao": {
+        "mercadolivre": 8,
+        "amazon": 8,
+        "shopee": 8
+      },
+      "lojas_primeira_pagina": {
+        "shopee": 8,
+        "mercadolivre": 8,
+        "amazon": 8
+      }
+    },
+    "comparacao_grade_edicao": {
+      "hora_da_renderizacao_utc": "2026-11-20T14:28:27.172Z",
+      "edicao_ativa": true,
+      "identificador_de_edicao_presente": true,
+      "habilitacao_de_eventos_presente": true,
+      "visitante_anonimo": true,
+      "itens_na_grade_html": 24,
+      "grade_html_confere_com_catalogo": true,
+      "produtos_da_grade_na_edicao": 9,
+      "fora_da_lista_medida": 15,
+      "em_posicao_diferente_dentre_os_que_coincidem": 9,
+      "justificativas_distintas": 1,
+      "justificativa_generica": 24
+    },
+    "selos_relampago_na_grade_inicial": 8,
+    "produtos_com_tipo_relampago_na_grade_inicial": 8,
+    "filtros_da_api": {
+      "padrao": {
+        "status": 200,
+        "total": 466,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 162,
+          "shopee": 8,
+          "mercadolivre": 296
+        }
+      },
+      "uma_semana": {
+        "status": 200,
+        "total": 466,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 162,
+          "shopee": 8,
+          "mercadolivre": 296
+        }
+      },
+      "duas_semanas": {
+        "status": 200,
+        "total": 466,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 162,
+          "shopee": 8,
+          "mercadolivre": 296
+        }
+      },
+      "tudo": {
+        "status": 200,
+        "total": 466,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 162,
+          "shopee": 8,
+          "mercadolivre": 296
+        }
+      },
+      "menor_preco": {
+        "status": 200,
+        "total": 466,
+        "retornados": 3,
+        "lojas": {
+          "amazon": 162,
+          "shopee": 8,
+          "mercadolivre": 296
+        }
+      }
+    },
+    "paginas": {
+      "vitrine": {
+        "status": 200,
+        "destino": null
+      },
+      "detalhe": {
+        "status": 200,
+        "destino": null,
+        "cta_para_loja": true,
+        "tem_preco": true,
+        "detalhes_distintos_na_home": 24
+      },
+      "entrar": {
+        "status": 200,
+        "destino": null,
+        "senha": true,
+        "google": false,
+        "sem_cadastro_ou_recuperacao": true
+      },
+      "minha_area": {
+        "status": 307,
+        "destino": "/entrar?next=%2Fminha-area"
+      },
+      "resultados": {
+        "status": 307,
+        "destino": "/entrar?next=%2Fadmin%2Fresultados"
+      },
+      "pauta": {
+        "status": 307,
+        "destino": "/entrar?next=%2Fpauta"
+      },
+      "convite": {
+        "status": 200,
+        "destino": null
+      },
+      "plataforma": {
+        "status": 200,
+        "destino": null
+      }
+    },
+    "catalogo_relampago": {
+      "hora_brt": "2026-11-20T11:41:05-03:00",
+      "paginas": 13,
+      "totais_anunciados": [
+        296
+      ],
+      "ofertas_distintas_lidas": 296,
+      "relampagos_ativas": 144,
+      "apos_amanha_ativas": 10,
+      "com_validade_factual_apos_a_promocao": 0,
+      "com_validade_factual_informada": 144,
+      "ativas_com_ficha_de_opcao": 0,
+      "amostra_da_ficha_de_opcao": null,
+      "amostra_fichas": [
+        {
+          "rota": "/bizu/[slug]",
+          "status": 200,
+          "destino_interno": null,
+          "fim_brt": "2026-11-20T11:59:59-03:00",
+          "selo": true,
+          "texto_do_selo": "Oferta Relâmpago · válido hoje até às 11:59",
+          "tem_acesso_a_loja": true
+        },
+        {
+          "rota": "/bizu/[slug]",
+          "status": 200,
+          "destino_interno": null,
+          "fim_brt": "2026-11-24T04:30:00-03:00",
+          "selo": true,
+          "texto_do_selo": "Oferta Relâmpago · válido até amanhã às 04:30",
+          "tem_acesso_a_loja": true
+        }
+      ]
+    },
+    "ficha_apos_encerramento": {
+      "amostras": 1,
+      "hora_consulta_brt": "2026-11-20 11:43:48",
+      "rota": "/bizu/[slug]",
+      "status": 200,
+      "promocao_encerrada_em": "2026-11-20T06:00:00.467Z",
+      "validade_calculada": "2026-11-20T06:00:00.467Z",
+      "hora_http_brt": "2026-11-20T11:44:05-03:00",
+      "selo_de_relampago": false,
+      "link_de_compra_na_ficha": false,
+      "aviso_de_preco_pendente": true,
+      "historico": true
+    }
+  },
+  "investigacao_local_ml": {
+    "arquivo_relativo": "packages/capture/tmp-ofertas.html",
+    "data_do_arquivo_brt": "2026-08-17T10:31:59-03:00",
+    "arquivo": {
+      "sha256": "fb4fd9a7805f714812dfd1e40adaa508f6a42e33ca642a3b40e3be441147f07e",
+      "bytes": 620289,
+      "prazos_estruturados": 4,
+      "contadores_coincidentes_com_ids_estruturados": 4,
+      "cards": 44,
+      "contadores": 4,
+      "ids_de_contador": 4,
+      "coletor_de_19": {
+        "ofertas": 44,
+        "marcadas": 4,
+        "produto_e_horario_exatos": 0,
+        "com_contador": 0,
+        "sem_contador": 4,
+        "contadores_perdidos": 4,
+        "horarios": [
+          "2026-08-17T14:59:59.000Z",
+          "2026-08-17T15:00:00.000Z"
+        ]
+      },
+      "coletor_atual": {
+        "ofertas": 44,
+        "marcadas": 4,
+        "produto_e_horario_exatos": 4,
+        "com_contador": 4,
+        "sem_contador": 0,
+        "contadores_perdidos": 0,
+        "horarios": [
+          "2026-08-17T14:59:59.000Z",
+          "2026-08-17T15:00:00.000Z"
+        ]
+      },
+      "atual_apenas_script": {
+        "ofertas": 44,
+        "marcadas": 4,
+        "produto_e_horario_exatos": 4,
+        "com_contador": 4,
+        "sem_contador": 0,
+        "contadores_perdidos": 0,
+        "horarios": [
+          "2026-08-17T14:59:59.000Z",
+          "2026-08-17T15:00:00.000Z"
+        ]
+      }
+    },
+    "ensaios": {
+      "vizinhos": {
+        "itens": 2,
+        "com_prazo_na_fonte": 1,
+        "marcados": 2,
+        "primeiro_herdou": true,
+        "aceitos_com_prazo": 2
+      },
+      "recomendacao": {
+        "anuncio_principal_com_prazo_na_fonte": false,
+        "duracao_no_recomendado": "02:15:48",
+        "lote_atribuiu_ao_principal": "2026-11-20T16:45:48.000Z",
+        "individual_atribuiu_ao_principal": "2026-11-20T16:45:48.000Z"
+      },
+      "calendario": {
+        "agora": "2026-11-20T14:30:00.000Z",
+        "encerramento": "2026-11-22T23:00:00.000Z",
+        "texto": "válido até amanhã às 20:00"
+      }
+    }
+  },
+  "ensaio_local_de_ordenacao": {
+    "tipo": "Controlado, local, com a função de seleção v2",
+    "vagas": 1,
+    "preco_atual_centavos": 30000,
+    "notas_de_base": {
+      "A": 89,
+      "B": 80
+    },
+    "historico_de_minimo_anterior": false,
+    "sem_preco_de_referencia_no_anuncio": {
+      "vencedor": "A",
+      "economia_nominal_b_centavos": 0
+    },
+    "com_preco_de_referencia_de_50000_centavos_no_anuncio_b": {
+      "vencedor": "B",
+      "economia_nominal_b_centavos": 20000
+    }
+  },
+  "controle_de_versoes": {
+    "commit": "10d59c441e68de842819a669c42ae2908cd68c1e",
+    "corte_anterior": "release-track024-20261119T000451Z",
+    "corte_atual": "release-track024-20261120T035739Z",
+    "pacotes_comparados": {
+      "release-track024-20261118T224918Z": {
+        "arquivos": 1004
+      },
+      "release-track024-20261119T000451Z": {
+        "arquivos": 1004
+      },
+      "release-track024-20261119T225751Z": {
+        "arquivos": 1004,
+        "diferencas_do_anterior": [
+          "packages/extension/src/content/bizu-button.ts",
+          "packages/extension/src/content/ml-countdown.ts",
+          "packages/extension/src/content/ml-product-extractor.ts",
+          "packages/extension/src/content/page-extractor.ts",
+          "packages/extension/test/card-extractor.test.ts",
+          "packages/web/lib/editorial-selection-db.ts",
+          "packages/web/lib/pauta-db.ts"
+        ]
+      },
+      "release-track024-20261120T035739Z": {
+        "arquivos": 1004,
+        "diferencas_do_anterior": [
+          "packages/extension/manifest.json",
+          "packages/extension/package-lock.json",
+          "packages/extension/package.json",
+          "packages/extension/release/bizuminer-extension-v0.3.3/content/activate-catalog.js",
+          "packages/extension/release/bizuminer-extension-v0.3.3/manifest.json",
+          "packages/extension/release/bizuminer-extension-v0.3.3/popup/popup.js",
+          "packages/extension/release/bizuminer-extension-v0.3.3/service-worker.js",
+          "packages/extension/src/background/service-worker.ts",
+          "packages/extension/src/content/ml-countdown.ts",
+          "packages/extension/src/content/ml-product-extractor.ts",
+          "packages/extension/src/content/page-extractor.ts",
+          "packages/extension/src/popup/popup.ts",
+          "packages/extension/test/release-config.test.ts",
+          "packages/web/app/globals.css",
+          "packages/web/app/pauta/pauta-client.tsx",
+          "packages/web/lib/copy-styles.ts",
+          "packages/web/test/flash-sale.test.mjs"
+        ]
+      }
+    },
+    "arquivos_do_ultimo_pacote_divergentes_do_workspace": [],
+    "arquivos_do_pacote_comparados": 1004,
+    "comparacao_com_producao": {
+      "zip_037_encontrado": false,
+      "sha256_zip_036_correto": true,
+      "arquivos_amostrados": 59,
+      "amostra_igual_ao_local": 59,
+      "amostra_igual_ao_commit": 27,
+      "amostra_ausente_do_commit": 5,
+      "mudancas_desde_o_corte": 21,
+      "mudancas_amostradas_iguais_em_producao": 21
+    },
+    "variantes_da_extensao": {
+      "zip_documentado": {
+        "manifesto_chrome": "0.3.6",
+        "metadados_release": "0.3.6",
+        "arquivos_divergentes_dos_metadados": [],
+        "diferenças_para_build_limpo": [
+          "content/activate-catalog.js",
+          "content/marketplace-page.js",
+          "manifest.json",
+          "popup/index.html",
+          "popup/popup.js",
+          "service-worker.js"
+        ],
+        "calcula_prazo_em_lote": false,
+        "indica_relampago_no_popup": false
+      },
+      "pasta_estavel": {
+        "manifesto_chrome": "0.3.7",
+        "metadados_release": "0.3.6",
+        "arquivos_divergentes_dos_metadados": [
+          "content/activate-catalog.js",
+          "content/marketplace-page.js",
+          "manifest.json",
+          "popup/index.html",
+          "popup/popup.js",
+          "service-worker.js"
+        ],
+        "diferenças_para_build_limpo": [],
+        "calcula_prazo_em_lote": true,
+        "indica_relampago_no_popup": true
+      },
+      "dist": {
+        "manifesto_chrome": "0.3.7",
+        "metadados_release": null,
+        "arquivos_divergentes_dos_metadados": [],
+        "diferenças_para_build_limpo": [],
+        "calcula_prazo_em_lote": true,
+        "indica_relampago_no_popup": true
+      },
+      "build_limpo": {
+        "manifesto_chrome": "0.3.7",
+        "metadados_release": null,
+        "arquivos_divergentes_dos_metadados": [],
+        "diferenças_para_build_limpo": [],
+        "calcula_prazo_em_lote": true,
+        "indica_relampago_no_popup": true
+      }
+    },
+    "arquivos_de_execucao_verificados_em_cada_build": 7,
+    "amostra_com_hash": {
+      "packages/web/middleware.ts": {
+        "sha256_no_container_e_na_copia_local": "4760057ad1f73fffe547d3a0592efc0de5a972d13bfc0dcc8ffaba8c8adb5cb9",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "b8781cf4c7dd2143553c1f1241ea05117ed97504e9d1569639720663bcd2c7f7",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/vitrine.tsx": {
+        "sha256_no_container_e_na_copia_local": "2956f56c905f9ce43e8ff41b04cdea5d0747914f07de41e5b90df3fb6ee29c92",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/bizu/[slug]/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "1c71194e5e958b74624e7e7c2f21fe7c033effb2113473fc65ac674625c62ceb",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/entrar/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "b5bb12c5c5917e5c8d2c8027941893dbc061c9106e6df6f950aa08f4078dffd5",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/minha-area/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "21ecfb76eca7a35dfb48ab5b57b5b8430a7ee03798b9d84dccbc1b6094d59a51",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/admin/curadoria/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "d6dc47c8a5e845e114d42d94834291db0166d25a7d6e487db6ac1327abecd688",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/pauta/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "4b167a238257e71851b87ecdf9b8439aad5cd4028f79362617c5b7b7a974ab1f",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/admin/resultados/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "21f2e254d7566dabac0c9f84404ac6dd7df8d61acf0f86787aace9ae6172ffe7",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/admin/financeiro/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "b9b362b2fe409a5a68e670cea727366fd22805fb905fc3bbf66c457b91a69ae4",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/admin/marketing/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "a14c9b384d3c65c5e5d80ea1750563567069521deb658e13b354748cf26b7b3a",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/plataforma/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "da5f49fd84eec7d21295d3fde5cba8fe845daf4b643defc3c1d3d4bd067599fd",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/api/newsletter/route.ts": {
+        "sha256_no_container_e_na_copia_local": "61c7a1fa5737388ab9d6c0843dfd4843e60e3c1e64360238d9714010466316f1",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/api/extension/capture-batches/route.ts": {
+        "sha256_no_container_e_na_copia_local": "1a6c6eecc9e7092d80e4732c8a316ba4acb215c31d6cf4a9e3ce84b35907eb6e",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/api/admin/marketing/route.ts": {
+        "sha256_no_container_e_na_copia_local": "ff3638a19f70e72dd36e2b49ed5cc175854e77a5f1b0de6eaf5f6ee1e466b56e",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/go/pauta/[token]/route.ts": {
+        "sha256_no_container_e_na_copia_local": "bb5880be9c8ae1def565c56781fa108d7d1b5681ffc772dc8c8463a301baa8a8",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/deal-query.ts": {
+        "sha256_no_container_e_na_copia_local": "56be86cefff88539bef1fcf7cb47fd97680265f732c2482159c0effaac772a92",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/account-scope.ts": {
+        "sha256_no_container_e_na_copia_local": "3a3f26d4f50fe022af506ca71516a4eb624fea2b90624638e2766b42316d5ad2",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/page-account.ts": {
+        "sha256_no_container_e_na_copia_local": "16620c3415a0247771559212b1e4fe1c8aa548fbaf03cc642f17c610aaa07257",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/pauta-link-db.ts": {
+        "sha256_no_container_e_na_copia_local": "b6fcb8bb5a572d721ee1a4d254c8cbcd846259879a99cd5577daf4a970b293d1",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/pauta-policy.ts": {
+        "sha256_no_container_e_na_copia_local": "d9ff29ecc176d4c695dbd3f87aa1a6bb10fbfa473581b87af9953ea0d2b93e0a",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/pauta-db.ts": {
+        "sha256_no_container_e_na_copia_local": "12bf05047bd4eccb01f2348d85bc810e7aa7fe3ed4ca263272bdcdd7761c4f8c",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/web/lib/pauta-response.ts": {
+        "sha256_no_container_e_na_copia_local": "ef03aa9af07ca70b66d36165d23643f2cb5c827a1385c30069edb56c1cc57893",
+        "igual_ao_commit": false,
+        "presente_no_commit": false,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/curation-operations-metrics.ts": {
+        "sha256_no_container_e_na_copia_local": "564c6fe720f653366548f645bc4c45d6d801830ce355430c3807bcc63288b8fb",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/public-go.ts": {
+        "sha256_no_container_e_na_copia_local": "5edfccce03380aa5436dab3136cebfceb6e2b261ee7170ac91eb188dcfc2247b",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/marketing-storage-core.ts": {
+        "sha256_no_container_e_na_copia_local": "0440a3f8364a5fc92a478f26c33c2308508ec6c3d2d00005675e0c3da1c0a672",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/commercial-rollout.ts": {
+        "sha256_no_container_e_na_copia_local": "b4ae2d2b73d44f54613c4edc9d48042ddd552f923a0886d46d3ab946c7526732",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/extension-contract.ts": {
+        "sha256_no_container_e_na_copia_local": "53afcdada86c09a1cf6b7d0e9454b408e4bb4873c408fd7bd96fda530d050844",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/curation-publications.ts": {
+        "sha256_no_container_e_na_copia_local": "f9de09a647284e9af8a169b4eca1b184b33dbdbbde65712f570360af22b29431",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/flash-sale.ts": {
+        "sha256_no_container_e_na_copia_local": "80dd36e36c737c9eed226b8e2c6e0a4aedad78895f22b49f2d949ae5cd6cbaf1",
+        "igual_ao_commit": false,
+        "presente_no_commit": false,
+        "mudou_desde_o_corte": false
+      },
+      "packages/capture/src/types.ts": {
+        "sha256_no_container_e_na_copia_local": "deddf7ea76b9e57ccbd13e70c838f587d82761d159909eb7e18bec85bb3ff4de",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/persistence/src/product-family.ts": {
+        "sha256_no_container_e_na_copia_local": "837279023aa383bc07d92486410c76e401b2d167926dd17adec5c600edd877a9",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/extension/manifest.json": {
+        "sha256_no_container_e_na_copia_local": "924c02e4b007c79ec1372cc459090a329d97cd8947253a6b1e9392f764662b01",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/package-lock.json": {
+        "sha256_no_container_e_na_copia_local": "c90360c1df1ec79c4c5f535eebea7116bb80c7b77d3e0cd5037f207af4867429",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/package.json": {
+        "sha256_no_container_e_na_copia_local": "e9c3dfb1073743ba35ec2d58b5c35e4865e39a2d3b7737d48c34f332fe8b5cc4",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/release/bizuminer-extension-v0.3.3/content/activate-catalog.js": {
+        "sha256_no_container_e_na_copia_local": "27eb5b4feb562998f1747501d7fb2534aeb528f80ffaa637aab24562538f02c6",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/release/bizuminer-extension-v0.3.3/manifest.json": {
+        "sha256_no_container_e_na_copia_local": "924c02e4b007c79ec1372cc459090a329d97cd8947253a6b1e9392f764662b01",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/release/bizuminer-extension-v0.3.3/popup/popup.js": {
+        "sha256_no_container_e_na_copia_local": "e94df903c14535d708e4ffafd9cefa6082668432007cc96e05a6634f03ad0719",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/release/bizuminer-extension-v0.3.3/service-worker.js": {
+        "sha256_no_container_e_na_copia_local": "8d1c0f61d0d438641438e0944a7b2df23b96565e9e898f02101ff0743e85b769",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/src/background/service-worker.ts": {
+        "sha256_no_container_e_na_copia_local": "11151204bb987262845bcea9d92aa3ed6d2fc025651f739290ef5f5aab16881c",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/src/content/bizu-button.ts": {
+        "sha256_no_container_e_na_copia_local": "c9e72f9e779d8c1862a91c4334792dfa93cb32ce646edc601079fb0e8e7e578f",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/src/content/card-extractor.ts": {
+        "sha256_no_container_e_na_copia_local": "63e5d7c5ecc287150899603397c680808ce061095dae73007b5905e1d442af7d",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/extension/src/content/ml-countdown.ts": {
+        "sha256_no_container_e_na_copia_local": "2ef73d16ebde43857dec447ca9aa04b1cc236a6b6a1b71e9d944fdb2a811e304",
+        "igual_ao_commit": false,
+        "presente_no_commit": false,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/src/content/ml-product-extractor.ts": {
+        "sha256_no_container_e_na_copia_local": "d850a85bdcbce91fdf00df8c260b34b449e0f3fb8ac7f6d8b7bc11b5650d7c0d",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/src/content/page-extractor.ts": {
+        "sha256_no_container_e_na_copia_local": "af04b7f3a451658b77607027f5c760070efdc5f556663140c21176c5e25c7b07",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/src/popup/popup.ts": {
+        "sha256_no_container_e_na_copia_local": "999f07872edd991a213af816b2429df96789011b9333c93c382ee1dd396cb432",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/test/card-extractor.test.ts": {
+        "sha256_no_container_e_na_copia_local": "d27876386cb2f796ccb03c8625d563d82bd659fe21ee7af301718374b753a4a4",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/extension/test/release-config.test.ts": {
+        "sha256_no_container_e_na_copia_local": "cdd21a09f1b35a3753bd87842949baaa17350c7e8140cc7f26748fa2608531a5",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/persistence/supabase/migrations/20261118224500_oferta_relampago_countdown.sql": {
+        "sha256_no_container_e_na_copia_local": "485fd8cd7c8b1326a335e90dd4e9471ef6d2e096c2043360d2f248ed172f3dba",
+        "igual_ao_commit": false,
+        "presente_no_commit": false,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/_components/use-homepage-engagement.ts": {
+        "sha256_no_container_e_na_copia_local": "30ba280e12a51558c519590d50c4285528e128f3305651f6d8416d0ee8fc3578",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/globals.css": {
+        "sha256_no_container_e_na_copia_local": "b9c1752c52cce4c31cfb72181699679cf0234f5337ef716eb339fc3425cb29e6",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/web/app/oferta/[slug]/[option]/page.tsx": {
+        "sha256_no_container_e_na_copia_local": "8c1812f0eeda412d989a24384ee8f8c182fd5432a1e3d4be86f62616347f6eb7",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/app/pauta/pauta-client.tsx": {
+        "sha256_no_container_e_na_copia_local": "724ebb3ed1334e20c1247708f3236f2cf6ff95a70ca2959e88799115fdc240cd",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/web/lib/browser-capture-contract.ts": {
+        "sha256_no_container_e_na_copia_local": "8781ee82181cf6e8fe97af537fbe351c9b499866551ec7e8985f58901a9bd03e",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/copy-styles.ts": {
+        "sha256_no_container_e_na_copia_local": "3f919824183bb59a13543f92384463a239e40e5d17d7fb44619b170eca975dbf",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/web/lib/editorial-selection-db.ts": {
+        "sha256_no_container_e_na_copia_local": "2ceb861bb76574c55db7ca518b471e61a41cb9846cb8be764f191644b1e6513b",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": true
+      },
+      "packages/web/lib/product-presentation.ts": {
+        "sha256_no_container_e_na_copia_local": "a498c3fb896f63f9cf6266a5c70db72b99750b30579c38a14666579699a991e3",
+        "igual_ao_commit": false,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/lib/public-offer-db.ts": {
+        "sha256_no_container_e_na_copia_local": "c81c3618462defbe6902572e54045c1f1f734cc4c7d21c1d52aecfe3f2bf5434",
+        "igual_ao_commit": true,
+        "presente_no_commit": true,
+        "mudou_desde_o_corte": false
+      },
+      "packages/web/test/flash-sale.test.mjs": {
+        "sha256_no_container_e_na_copia_local": "c53c05ae561d774383639c4582f811c029afaa470acf8cc75b2a0306d845a09c",
+        "igual_ao_commit": false,
+        "presente_no_commit": false,
+        "mudou_desde_o_corte": true
+      }
+    }
+  },
+  "checagens_do_repositorio": {
+    "arquivos_de_teste": 159,
+    "total_de_testes_distintos": 1044,
+    "por_pacote": {
+      "web": {
+        "arquivos_de_teste": 121,
+        "testes_distintos": 759,
+        "falhas_no_primeiro_ensaio_com_sandbox": 7,
+        "arquivos_reexecutados_com_processos_locais": [
+          "capture-process.test.mjs",
+          "qr-service.test.mjs"
+        ],
+        "falhas_apos_reteste": 0,
+        "tsc_sem_emitir": "passou"
+      },
+      "extension": {
+        "arquivos_de_teste": 11,
+        "testes_distintos": 72,
+        "falhas_no_primeiro_ensaio_com_sandbox": 0,
+        "arquivos_reexecutados_com_processos_locais": [],
+        "falhas_apos_reteste": 0,
+        "tsc_sem_emitir": "2 erros TS2339"
+      },
+      "capture": {
+        "arquivos_de_teste": 11,
+        "testes_distintos": 144,
+        "falhas_no_primeiro_ensaio_com_sandbox": 0,
+        "arquivos_reexecutados_com_processos_locais": [],
+        "falhas_apos_reteste": 0,
+        "tsc_sem_emitir": "passou"
+      },
+      "persistence": {
+        "arquivos_de_teste": 16,
+        "testes_distintos": 69,
+        "falhas_no_primeiro_ensaio_com_sandbox": 4,
+        "arquivos_reexecutados_com_processos_locais": [
+          "ml-manual-only-entrypoints.test.ts",
+          "shared-link-archive-import.test.ts"
+        ],
+        "falhas_apos_reteste": 0,
+        "tsc_sem_emitir": "passou"
+      }
+    },
+    "erros_de_tipos": [
+      {
+        "arquivo": "packages/extension/src/background/service-worker.ts",
+        "linha": 217,
+        "codigo": "TS2339",
+        "campo": "promotionType",
+        "tipo_sem_o_campo": "Offer"
+      },
+      {
+        "arquivo": "packages/extension/src/background/service-worker.ts",
+        "linha": 264,
+        "codigo": "TS2339",
+        "campo": "promotionType",
+        "tipo_sem_o_campo": "Offer"
+      }
+    ]
+  },
+  "agendamentos": {
+    "hora_brt": "2026-11-20T11:37:18-03:00",
+    "workflows": {
+      "capture-offers.yml": "disabled_manually",
+      "discover-shopee.yml": "disabled_manually",
+      "monitor-prices.yml": "disabled_manually"
+    }
+  },
+  "limites": [
+    "As capturas recentes pertencem a uma conta e a duas origens. O HTML de origem dos 148 registros reais não foi preservado para reatribuir individualmente seus prazos.",
+    "A redação da ficha pública foi observada. A mensagem entregue ao destinatário, a instalação no navegador específico do criador e o comportamento de uma segunda conta real ficaram fora da verificação.",
+    "Nenhuma das 144 relâmpagos públicas na amostra tinha chave de opção confirmada para exercitar uma ficha /oferta/[slug]/[option].",
+    "A seleção no horário da leitura difere do histórico de preparo. As lojas, as edições e os motivos são conjuntos com sobreposição.",
+    "A melhora da fila neste período não demonstra a causa da demora antiga nem prevê os próximos lotes."
+  ],
+  "alerta_33_na_pauta": {
+    "data": "2026-11-20",
+    "intervalo_de_navegacao_brt": [
+      "12:24",
+      "12:31"
+    ],
+    "ambiente": "Pauta e Curadoria publicadas, sessão autenticada da conta da casa. Cliques de leitura em aba separada.",
+    "pauta_aberta": {
+      "canal": "whatsapp",
+      "edicao_preparada_brt": "2026-11-20 11:23",
+      "menu_excecoes_editoriais": 15,
+      "menu_avaliacoes_incertas": 33,
+      "bloco_de_pendencias_recentes": 16,
+      "destino_do_numero_e_do_atalho_de_andamento": "/admin/curadoria?aba=andamento&conta=local"
+    },
+    "passos_observados": [
+      {
+        "acionado": "Curadoria · 33 incertas",
+        "destino": "Andamento",
+        "selecao_de_produto_ou_categoria": false,
+        "resumo": {
+          "incertos": 33,
+          "execucoes_sem_confirmacao": 0,
+          "falhas": 0
+        }
+      },
+      {
+        "acionado": "Conferir avaliações incertas · 33",
+        "destino": "/admin/curadoria?aba=problemas&conta=local#avaliacoes-incertas",
+        "filtro_visivel": "Todos os tipos",
+        "itens_na_primeira_pagina": 30,
+        "incertos_com_mensagem_de_causa_ausente": 30
+      },
+      {
+        "acionado": "Falhas de avaliação e Filtrar problemas",
+        "filtro": "failed",
+        "ocorrencias": 0,
+        "mensagem": "Nenhuma pendência encontrada neste filtro."
+      },
+      {
+        "acionado": "Resultados incertos e Filtrar problemas",
+        "filtro": "uncertain",
+        "itens_por_pagina": [
+          30,
+          3
+        ],
+        "produtos_distintos_entre_as_duas_paginas": 33,
+        "itens_com_mensagem_de_causa_ausente": 33,
+        "resumo_de_conferencia_na_primeira_pagina": 30,
+        "proxima_pagina_apos_a_segunda": false
+      },
+      {
+        "acionado": "Abrir o item e seu contexto nas páginas 1 e 2",
+        "fichas_abertas": 2,
+        "resultado": "Cada ficha indicou uma avaliação com resultado incerto. O retorno pelo link Voltar às avaliações incertas preservou o filtro. A URL de retorno do produto da segunda página incluía também a página de origem."
+      },
+      {
+        "acionado": "Conferir avaliações incertas dentro da ficha de um produto da segunda página",
+        "destino": "/admin/curadoria?aba=problemas&conta=local#avaliacoes-incertas",
+        "filtro_visivel": "Todos os tipos",
+        "itens_na_pagina_de_volta": 30,
+        "produto_da_segunda_pagina_visivel_ao_voltar": false
+      }
+    ],
+    "atalho_direto_validado_para_a_conta": "https://www.bizuminer.com.br/admin/curadoria?aba=problemas&conta=local&categoria=uncertain#avaliacoes-incertas",
+    "contagem_da_conta_em_producao": {
+      "hora_brt": "2026-11-20 12:26:47",
+      "tarefas": 33,
+      "produtos_distintos": 33,
+      "sem_diagnostico_de_causa": 33,
+      "com_resultado_na_propria_tarefa": 0,
+      "tentativas_por_tarefa": {
+        "1": 33
+      },
+      "lojas": {
+        "shopee": 13,
+        "aliexpress": 20
+      },
+      "estados_no_catalogo": {
+        "pending": 26,
+        "approved": 7
+      },
+      "criacao_utc": [
+        "2026-11-15T16:09:26.493Z",
+        "2026-11-16T19:46:06.440Z"
+      ],
+      "ultima_atualizacao_utc": [
+        "2026-11-15T16:13:26.710Z",
+        "2026-11-17T03:07:02.937Z"
+      ],
+      "produtos_com_alguma_avaliacao": 3,
+      "produtos_com_avaliacao_posterior_a_tarefa": 0,
+      "tarefas_com_avaliacao_posterior_na_mesma_observacao": 0,
+      "tarefas_ainda_na_observacao_atual": 20,
+      "produtos_com_avaliacao_compativel_com_observacao_atual": 0,
+      "produtos_localizados_pela_consulta_da_ficha": 33,
+      "tarefas_com_estado_failed": 0,
+      "previa_atual_por_canal": {
+        "whatsapp": {
+          "total": 29,
+          "desses_produtos": 0
+        },
+        "stories": {
+          "total": 16,
+          "desses_produtos": 0
+        }
+      }
+    },
+    "outra_contagem_de_capturas_recentes": {
+      "hora_brt": "2026-11-20 12:30:32",
+      "janela_horas": 48,
+      "grupos": [
+        {
+          "stage": "pending",
+          "produtos": 1,
+          "com_avaliacao_incerta": 0
+        }
+      ]
+    },
+    "metodo": "Na conta da casa e em transação somente leitura, reunir as tarefas de curation_attribute_job em reconciliation e contar seus product_id distintos. Cruzar com curation_attribute_assessment por produto e observação, comparar com a data de atualização da tarefa e com a observação atual da opção em uso. Conferir o resultado em candidateRows com os parâmetros da ficha operacional e na prévia dos dois canais. A consulta do corpo da Pauta usa recentCaptures, classificação por produto e janela de 48 horas.",
+    "fontes_publicadas_iguais_a_copia_local_sha256": {
+      "packages/web/app/_components/admin-shell.tsx": "45ff53e59ce22f005f6850ff35cdf19a0a53bb4ec8fad8b3f8dee54a18b461ca",
+      "packages/web/app/_components/account-admin-shell.tsx": "db8b4d613994c380a2f661b66e9238d1b3405a765a7a52e81bc8546f598da788",
+      "packages/web/app/pauta/pauta-client.tsx": "724ebb3ed1334e20c1247708f3236f2cf6ff95a70ca2959e88799115fdc240cd",
+      "packages/web/app/admin/curadoria/page.tsx": "d6dc47c8a5e845e114d42d94834291db0166d25a7d6e487db6ac1327abecd688",
+      "packages/web/app/admin/curadoria/automation-status.tsx": "13537b7c4e096738e3897a2ef8f52cfd08e94eaf8522f535cd72d013635d7e2e",
+      "packages/web/app/admin/curadoria/operation-panels.tsx": "ca7756a78e79fd3078bcae33b7c870aab9433f2e7d31c0ccdd9ace1f2cbc3dae",
+      "packages/web/app/admin/curadoria/operation-problems-live.tsx": "c4b4664937c5748d76efd855a10a7f8c74dc59f19f697725c25669c041974c0e",
+      "packages/web/app/admin/curadoria/attribute-reconcile.tsx": "3cd638b169315edea8949025eb0cc84e3eb83a6d3335c4e2c770cb6634f27527",
+      "packages/web/app/admin/curadoria/ofertas/[id]/page.tsx": "279c1376287c0103f887d27efdeb5b072cfe39f343a954c1a598cc88ef4f27ef",
+      "packages/web/lib/curation-navigation.ts": "15f483035aaa604f63e863f017abf0725b14e5e4199a9a67b3978ebb975a379d",
+      "packages/web/lib/operation-progress-db.ts": "0174a67cd6413f48561a5efb1357053bde36f678bd00198ca02cbaaaebfd3d55",
+      "packages/web/lib/operation-processing-db.ts": "f8a567a39731ef4b2f2e05ff5f3274e2406b11cefac00305f1bd25139ddc4d72",
+      "packages/web/lib/admin-query-aliases.ts": "88484235c63205756950fd7e13afd4e92a57d7fac7a8ffbb6fd7bb0048c5c775"
+    },
+    "testes_locais": {
+      "casos": 19,
+      "aprovados": 19,
+      "arquivos": [
+        "packages/web/test/operational-curation.test.mjs",
+        "packages/web/test/admin-query-aliases.test.mjs",
+        "packages/web/test/operation-progress-ui.test.mjs"
+      ]
+    },
+    "limites": [
+      "A leitura cobre o caminho disponível nessa sessão e conta, sem reconstruir a sequência anterior de cliques do usuário.",
+      "A causa técnica e o consumo do provedor não podem ser determinados pelo registro das 33 tarefas.",
+      "A fila de resultados incertos e a contagem móvel de capturas recentes medem conjuntos diferentes. A leitura posterior das capturas recentes mudou de momento e não reconstitui o histórico de cada uma."
+    ]
+  }
+}

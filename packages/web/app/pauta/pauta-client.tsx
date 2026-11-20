@@ -17,8 +17,13 @@ import {
   generateOfferCopy,
   type CopyTone,
 } from "../../lib/copy-styles";
+import {
+  isFlashSaleActive,
+  formatFlashSaleTime,
+  formatFlashSaleRemaining,
+} from "../../lib/flash-sale.ts";
 
-interface PautaProduct extends VitrineProduct {
+export interface PautaProduct extends VitrineProduct {
   shareUrl: string;
   detailUrl: string;
   shopUrl: string;
@@ -33,6 +38,17 @@ interface PautaProduct extends VitrineProduct {
   shelf?: "impact" | "daily" | "demand";
   nominalSavingsCents?: number;
 }
+
+export type InitialPautaResponse = {
+  products: any[];
+  recent: PautaCapture[];
+  recentTotal: number;
+  captureActions: PautaCaptureActions;
+  active: boolean;
+  updatedAt: string;
+  revision: string;
+  preparations?: Array<{ product: any; text: string; sourceConfirmationId?: string }>;
+};
 
 const captureLabels: Record<PautaCapture["status"], string> = {
   ready: "Na pauta",
@@ -64,9 +80,11 @@ function readPreparations(scope: string): CopiedPreparation[] {
   try {
     const value: unknown = JSON.parse(localStorage.getItem(`${PREPARATIONS_KEY}:${scope}`) ?? "[]");
     if (!Array.isArray(value)) return [];
+    const now = Date.now();
     return value.filter((item): item is CopiedPreparation => !!item && typeof item === "object"
       && typeof item.text === "string" && typeof item.product?.id === "string"
-      && typeof item.product?.confirmationId === "string");
+      && typeof item.product?.confirmationId === "string"
+      && (!item.product.offerValidUntil || Date.parse(item.product.offerValidUntil) > (now - 24 * 3600 * 1000)));
   } catch { return []; }
 }
 
@@ -109,6 +127,7 @@ export default function PautaClient({
   automaticCuration = false,
   mobileUrl = "",
   qrDataUrl = "",
+  initialPauta = null,
 }: {
   qrBundle?: PautaQrBundle;
   accountKey?:string;userKey?:string;
@@ -116,16 +135,17 @@ export default function PautaClient({
   automaticCuration?: boolean;
   mobileUrl?: string;
   qrDataUrl?: string;
+  initialPauta?: InitialPautaResponse | null;
 }) {
   const [channel,setChannel]=useState(initialChannel);
   const curationReviewUrl = `/admin/curadoria?${new URLSearchParams({aba:"excecoes",sub:"singulars",conta:accountKey})}`;
   const curationTriageUrl = `/admin/curadoria?${new URLSearchParams({aba:automaticCuration?"andamento":"selecao",conta:accountKey})}`;
   const scope=`${userKey}:${accountKey}:${channel}`;
   const [exposureMessage,setExposureMessage]=useState("");
-  const [products, setProducts] = useState<PautaProduct[]>([]);
-  const [recent, setRecent] = useState<PautaCapture[]>([]);
-  const [recentTotal, setRecentTotal] = useState(0);
-  const [captureActions, setCaptureActions] = useState(emptyCaptureActions);
+  const [products, setProducts] = useState<PautaProduct[]>(() => initialPauta?.products ?? []);
+  const [recent, setRecent] = useState<PautaCapture[]>(() => initialPauta?.recent ?? []);
+  const [recentTotal, setRecentTotal] = useState(() => initialPauta?.recentTotal ?? 0);
+  const [captureActions, setCaptureActions] = useState<PautaCaptureActions>(() => initialPauta?.captureActions ?? emptyCaptureActions);
   const [marketplace, setMarketplace] = useState("");
   const [captureLimit, setCaptureLimit] = useState(12);
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
@@ -143,10 +163,11 @@ export default function PautaClient({
   const [slotImprove,setSlotImprove]=useState(false);
   const [slotImprovePercent,setSlotImprovePercent]=useState(5);
   const [slotDomHours,setSlotDomHours]=useState(12);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialPauta);
   const [loadError, setLoadError] = useState("");
-  const [active, setActive] = useState(false);
-  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [active, setActive] = useState(() => initialPauta?.active ?? false);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(() => initialPauta?.updatedAt ?? null);
+  const initialMounted = useRef(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(true);
   const [activeTab, setActiveTab] = useState<"local" | "production">(
@@ -155,7 +176,10 @@ export default function PautaClient({
   const [copiedMobileUrl, setCopiedMobileUrl] = useState(false);
   const [tone, setTone] = useState<CopyTone>("relampago");
   const [openPreviews, setOpenPreviews] = useState<Set<string>>(new Set());
-  const [shelfFilter, setShelfFilter] = useState<"all" | "impact" | "daily" | "demand" | "fresh">("all");
+  const [shelfFilter, setShelfFilter] = useState<"all" | "lightning" | "impact" | "daily" | "demand" | "fresh">("all");
+  const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [skippingId, setSkippingId] = useState<string | null>(null);
+  const [renewing, setRenewing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [unlockedRefreshIds, setUnlockedRefreshIds] = useState<Set<string>>(() => new Set());
 
@@ -222,21 +246,40 @@ export default function PautaClient({
   }, []);
 
   useEffect(() => {
-    setProducts([]);
-    setRecent([]);
-    setRecentTotal(0);
-    setCaptureActions(emptyCaptureActions);
-    setUpdatedAt(null);
-    setLoadError("");
-    setLoading(true);
+    const isFirstRun = !initialMounted.current;
+    initialMounted.current = true;
+    const canUseInitial = isFirstRun && initialPauta && channel === initialChannel && marketplace === "";
+
     setDoneIds(readDoneIds(scope));
-    setPreparations(readPreparations(scope));
     const controller = new AbortController();
     const warmer = createPreviewWarmer();
     previewWarmer.current = warmer;
     let checking = 0;
     let loadId = 0;
-    let revision: string | null = null;
+    let revision: string | null = canUseInitial ? initialPauta.revision : null;
+
+    if (canUseInitial) {
+      setLoading(false);
+      const serverPreparations = initialPauta.preparations ?? [];
+      const legacy = readPreparations(scope).filter(item => !item.sourceConfirmationId);
+      const combined = [...serverPreparations, ...legacy];
+      const now = Date.now();
+      const freshCombined = combined.filter(item => !item.product.offerValidUntil || Date.parse(item.product.offerValidUntil) > (now - 24 * 3600 * 1000));
+      setPreparations(freshCombined);
+      savePreparations(scope, freshCombined);
+      for (const product of initialPauta.products.slice(0, 10)) {
+        if (product.previewUrl) void warmer.warm(product.previewUrl);
+      }
+    } else {
+      setProducts([]);
+      setRecent([]);
+      setRecentTotal(0);
+      setCaptureActions(emptyCaptureActions);
+      setUpdatedAt(null);
+      setLoadError("");
+      setLoading(true);
+      setPreparations(readPreparations(scope));
+    }
     const load = async (force = false) => {
       if (document.visibilityState === "hidden" || (checking && !force)) return;
       checking++;
@@ -261,8 +304,10 @@ export default function PautaClient({
         // introduced; current preparations are recovered from the account.
         const legacy = readPreparations(scope).filter(item => !item.sourceConfirmationId);
         const combined = [...serverPreparations, ...legacy];
-        setPreparations(combined);
-        savePreparations(scope, combined);
+        const now = Date.now();
+        const freshCombined = combined.filter(item => !item.product.offerValidUntil || Date.parse(item.product.offerValidUntil) > (now - 24 * 3600 * 1000));
+        setPreparations(freshCombined);
+        savePreparations(scope, freshCombined);
         if (data.unchanged) { setLoadError(""); return; }
         revision = data.revision;
         setProducts(data.products);
@@ -287,7 +332,9 @@ export default function PautaClient({
       }
     };
     reloadPauta.current = () => load(true);
-    void load();
+    if (!canUseInitial) {
+      void load();
+    }
     // Navigation and explicit operations refresh the edition. An idle screen
     // must not repeatedly ask the database whether anything changed.
     let refreshTimer: number | undefined;
@@ -331,23 +378,26 @@ export default function PautaClient({
     return () => window.clearTimeout(timer);
   }, [products]);
 
-  async function confirmExposure(product: PautaProduct) {
+  async function confirmExposure(product: PautaProduct, prep?: CopiedPreparation) {
     setConfirmingId(product.id);
+    const confId = prep?.product.confirmationId ?? product.confirmationId;
     try {
       const response = await fetch("/api/pauta", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-bm-account": accountKey },
-        body: JSON.stringify({ channel, confirmationId: product.confirmationId, productId: product.id }),
+        body: JSON.stringify({ channel, confirmationId: confId, productId: product.id }),
       });
       if (response.status === 409) {
         setExposureMessage("Esta oferta mudou de posição ou de condição. A pauta foi atualizada.");
       } else if (response.ok) {
         const expired = !(Date.parse(product.offerValidUntil ?? "") > Date.now());
         setExposureMessage(expired
-          ? "Divulgação registrada com as condições da preparação; o prazo dela já venceu."
-          : "Divulgação registrada com as condições da preparação.");
+          ? `Divulgação de "${product.displayTitle ?? product.title}" registrada com as condições da preparação; o prazo dela já venceu.`
+          : `Divulgação de "${product.displayTitle ?? product.title}" registrada com sucesso!`);
+        writeDoneId(product.copyKey ?? product.id, scope);
+        setDoneIds((prev) => new Set([...prev, product.copyKey ?? product.id]));
         setPreparations(current => {
-          const remaining = current.filter(item => item.product.confirmationId !== product.confirmationId);
+          const remaining = current.filter(item => item.product.id !== product.id && item.product.confirmationId !== confId);
           savePreparations(scope, remaining);
           return remaining;
         });
@@ -359,6 +409,74 @@ export default function PautaClient({
     } catch {
       setExposureMessage("Não foi possível registrar a divulgação. Tente de novo.");
     } finally { setConfirmingId(null); }
+  }
+
+  async function discardPreparation(product: PautaProduct, prep?: CopiedPreparation) {
+    const confId = prep?.product.confirmationId ?? product.confirmationId;
+    try {
+      void fetch("/api/pauta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-bm-account": accountKey },
+        body: JSON.stringify({ action: "discard", channel, confirmationId: confId, productId: product.id }),
+      });
+    } catch {}
+    setPreparations(current => {
+      const remaining = current.filter(item => item.product.id !== product.id && item.product.confirmationId !== confId);
+      savePreparations(scope, remaining);
+      return remaining;
+    });
+    setExposureMessage(`Preparação de "${product.displayTitle ?? product.title}" descartada.`);
+  }
+
+  async function handleSkipOffer(product: PautaProduct) {
+    setSkippingId(product.id);
+    try {
+      const response = await fetch("/api/pauta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-bm-account": accountKey },
+        body: JSON.stringify({ action: "skip", channel, confirmationId: product.confirmationId, productId: product.id }),
+      });
+      if (response.ok) {
+        setExposureMessage(`Oferta "${product.displayTitle ?? product.title}" pulada. Nova opção carregada da reserva.`);
+        setPreparations(current => {
+          const remaining = current.filter(item => item.product.id !== product.id);
+          savePreparations(scope, remaining);
+          return remaining;
+        });
+        mutationEpoch.current++;
+        await reloadPauta.current?.();
+      } else {
+        setExposureMessage("Não foi possível pular a oferta. Tente novamente.");
+      }
+    } catch {
+      setExposureMessage("Erro ao pular a oferta.");
+    } finally { setSkippingId(null); }
+  }
+
+  async function handleRenewUnsent() {
+    if (rawPending.length === 0) return;
+    const ok = window.confirm(`Deseja renovar as ${rawPending.length} ofertas não enviadas? Novas opções da reserva serão carregadas na pauta.`);
+    if (!ok) return;
+    setRenewing(true);
+    try {
+      const items = rawPending.map(p => ({ confirmationId: p.confirmationId, productId: p.id }));
+      const response = await fetch("/api/pauta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-bm-account": accountKey },
+        body: JSON.stringify({ action: "skip_batch", channel, items }),
+      });
+      if (response.ok) {
+        setExposureMessage("Pauta renovada com sucesso! Novas ofertas carregadas da reserva.");
+        setPreparations([]);
+        savePreparations(scope, []);
+        mutationEpoch.current++;
+        await reloadPauta.current?.();
+      } else {
+        setExposureMessage("Não foi possível renovar a pauta. Tente atualizar.");
+      }
+    } catch {
+      setExposureMessage("Erro ao renovar a pauta.");
+    } finally { setRenewing(false); }
   }
 
   async function copyLink(product: PautaProduct, forceOnlyLink = false) {
@@ -396,7 +514,8 @@ export default function PautaClient({
     const preparedProduct = { ...product, confirmationId: preparedId };
     mutationEpoch.current++;
     setPreparations(current => {
-      const next = [...current, { product: preparedProduct, text, sourceConfirmationId: product.confirmationId }];
+      const filtered = current.filter(item => item.product.id !== product.id);
+      const next = [...filtered, { product: preparedProduct, text, sourceConfirmationId: product.confirmationId }];
       savePreparations(scope, next);
       return next;
     });
@@ -405,10 +524,8 @@ export default function PautaClient({
       window.prompt("Copie o conteúdo abaixo:", text);
     }
     if (ok) {
-      writeDoneId(product.copyKey ?? product.id, scope);
-      setDoneIds((prev) => new Set([...prev, product.copyKey ?? product.id]));
       setCopiedId(forceOnlyLink ? `${product.id}:link` : product.id);
-      setTimeout(() => setCopiedId(null), 2000);
+      setTimeout(() => setCopiedId(null), 2500);
     }
   }
 
@@ -434,6 +551,8 @@ export default function PautaClient({
 
   const rawPending = products.filter((p) => !doneIds.has(p.copyKey ?? p.id));
   const pending = rawPending.filter((p) => {
+    if (storeFilter !== "all" && p.marketplace !== storeFilter) return false;
+    if (shelfFilter === "lightning" && !isFlashSaleActive(p.promotionType, p.promotionEndsAt)) return false;
     if (shelfFilter === "impact" && p.shelf !== "impact") return false;
     if (shelfFilter === "daily" && p.shelf !== "daily") return false;
     if (shelfFilter === "demand" && !(p.watchersCount && p.watchersCount > 0)) return false;
@@ -450,6 +569,9 @@ export default function PautaClient({
     return true;
   });
   const done = products.filter((p) => doneIds.has(p.copyKey ?? p.id));
+  const orphanedPreps = preparations.filter(prep =>
+    !products.some(p => p.id === prep.product.id || p.confirmationId === (prep.sourceConfirmationId ?? prep.product.confirmationId))
+  );
   const progress = products.length > 0 ? done.length / products.length : 0;
   const actionCount = captureActions.review + captureActions.triage + captureActions.retry;
   const emptyAction = !active
@@ -571,23 +693,7 @@ export default function PautaClient({
           </button>
         </div>
       )}
-      {exposureMessage && <p role="status">{exposureMessage}</p>}
-      {preparations.length > 0 && <section aria-label="Preparações salvas">
-        <h2>Preparações salvas</h2>
-        <p>O texto fica salvo na conta. Confirme somente o que você enviou; preparar ou copiar não registra divulgação.</p>
-        {preparations.map(({ product, text, sourceConfirmationId }) => {
-          const current = products.find(item => item.confirmationId === (sourceConfirmationId ?? product.confirmationId));
-          const expired = !(Date.parse(product.offerValidUntil ?? "") > Date.now());
-          return <article key={product.confirmationId}>
-            <h3>{product.title}</h3>
-            {(expired || !current) && <p>Esta preparação venceu ou suas condições mudaram. O texto salvo continua disponível para registrar um envio já realizado.</p>}
-            <details><summary>Ver texto salvo</summary><pre style={{ whiteSpace: "pre-wrap" }}>{text}</pre></details>
-            <button type="button" disabled={confirmingId !== null} onClick={() => void confirmExposure(product)}>
-              {confirmingId === product.id ? "Registrando…" : "Confirmar que enviei"}
-            </button>
-          </article>;
-        })}
-      </section>}
+      {exposureMessage && <p role="status" style={{ padding: "8px 12px", background: "var(--paper-deep)", borderRadius: "6px", margin: "10px 0", fontSize: "13px" }}>{exposureMessage}</p>}
       {bundle && (
         <section className="pauta-qr-banner" aria-label="Acesso no celular">
           <div className="pauta-qr-toggle-bar">
@@ -683,14 +789,42 @@ export default function PautaClient({
       {products.length > 0 && <h2>Prontas para divulgar</h2>}
 
       {rawPending.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "16px 0 20px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", margin: "16px 0 20px" }}>
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filtrar na pauta por produto, marca ou categoria (ex: fone, tv, airfryer)…"
-            style={{ width: "100%", padding: "10px 14px", fontSize: "14px", borderRadius: "8px", border: "1px solid var(--line, #e4e4e7)", background: "var(--paper, #fff)" }}
+            style={{ width: "100%", padding: "10px 14px", fontSize: "14px", borderRadius: "8px", border: "1px solid var(--line, #e4e4e7)", background: "var(--paper, #fff)", boxSizing: "border-box" }}
           />
+
+          {/* Filtro por Loja / Marketplace */}
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink-muted, #71717a)" }}>Lojas:</span>
+            <button
+              type="button"
+              className={`pauta-tone-pill ${storeFilter === "all" ? "active" : ""}`}
+              onClick={() => setStoreFilter("all")}
+            >
+              Todas ({rawPending.length})
+            </button>
+            {MARKETPLACES.map(store => {
+              const count = rawPending.filter(p => p.marketplace === store.slug).length;
+              if (count === 0) return null;
+              return (
+                <button
+                  key={store.slug}
+                  type="button"
+                  className={`pauta-tone-pill ${storeFilter === store.slug ? "active" : ""}`}
+                  onClick={() => setStoreFilter(store.slug)}
+                >
+                  {store.label} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Filtro por Prateleiras Editoriais */}
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
             <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink-muted, #71717a)" }}>Prateleiras:</span>
             <button
@@ -699,6 +833,14 @@ export default function PautaClient({
               onClick={() => setShelfFilter("all")}
             >
               Todas ({rawPending.length})
+            </button>
+            <button
+              type="button"
+              className={`pauta-tone-pill pauta-tone-pill-lightning ${shelfFilter === "lightning" ? "active" : ""}`}
+              onClick={() => setShelfFilter("lightning")}
+              title="Filtrar somente ofertas relâmpago com prazo ativo"
+            >
+              ⚡ Relâmpago ({rawPending.filter(p => isFlashSaleActive(p.promotionType, p.promotionEndsAt)).length})
             </button>
             <button
               type="button"
@@ -733,11 +875,36 @@ export default function PautaClient({
               🟢 Só Frescas &lt;48h ({rawPending.filter(p => !p.needsPriceRefresh).length})
             </button>
           </div>
-          {(searchQuery || shelfFilter !== "all") && (
-            <p style={{ fontSize: "12px", color: "var(--ink-muted, #71717a)", margin: 0 }}>
-              Mostrando {pending.length} de {rawPending.length} ofertas
-            </p>
-          )}
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginTop: "2px" }}>
+            {(searchQuery || shelfFilter !== "all" || storeFilter !== "all") ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <p style={{ fontSize: "12px", color: "var(--ink-muted, #71717a)", margin: 0 }}>
+                  Mostrando <b>{pending.length}</b> de {rawPending.length} ofertas
+                </p>
+                <button
+                  type="button"
+                  style={{ background: "none", border: "none", color: "var(--blue-text, #2563eb)", fontSize: "12px", cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                  onClick={() => { setShelfFilter("all"); setStoreFilter("all"); setSearchQuery(""); }}
+                >
+                  Limpar filtros
+                </button>
+              </div>
+            ) : (
+              <span style={{ fontSize: "12px", color: "var(--ink-muted, #71717a)" }}>
+                {rawPending.length} ofertas prontas na seleção
+              </span>
+            )}
+            <button
+              type="button"
+              className="pauta-renew-btn"
+              disabled={renewing || rawPending.length === 0}
+              onClick={handleRenewUnsent}
+              title="Pula todas as ofertas não enviadas e busca novas opções aprovadas da reserva"
+            >
+              {renewing ? "🔄 Buscando novas opções..." : "🔄 Renovar ofertas não enviadas"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -785,10 +952,16 @@ export default function PautaClient({
             const mp = marketplaceDef(product.marketplace);
             const isNext = index === 0;
             const freshness = evaluateFreshnessStatus(product.evidenceObservedAt);
+            const isLightning = product.promotionType === "lightning" && !!product.promotionEndsAt;
+            const isLightningActive = isLightning && isFlashSaleActive(product.promotionType, product.promotionEndsAt);
+            const isLightningExpired = isLightning && !isLightningActive;
+            const activePrep = preparations.find(prep => prep.product.id === product.id
+              || (prep.sourceConfirmationId && prep.sourceConfirmationId === product.confirmationId));
+            const isCopied = activePrep !== undefined;
             return (
               <article
                 key={product.id}
-                className={`pauta-card pauta-card-freshness-${freshness.level}${isNext ? " pauta-card-next" : ""}`}
+                className={`pauta-card pauta-card-freshness-${freshness.level}${isNext ? " pauta-card-next" : ""}${isCopied ? " pauta-card-copied" : ""}${isLightningActive ? " pauta-card-lightning" : ""}${isLightningExpired ? " pauta-card-lightning-expired" : ""}`}
               >
                 <div className="pauta-card-body">
                   {product.imageUrl && (
@@ -808,6 +981,22 @@ export default function PautaClient({
                         {isNext ? (
                           <span className="pauta-card-signal">PRÓXIMO</span>
                         ) : null}
+                        {isLightningActive && (
+                          <span
+                            className="pauta-lightning-badge"
+                            title={`Oferta Relâmpago até ${formatFlashSaleTime(product.promotionEndsAt!)}`}
+                          >
+                            ⚡ Relâmpago · até {formatFlashSaleTime(product.promotionEndsAt!)} {formatFlashSaleRemaining(product.promotionEndsAt!) ? `(${formatFlashSaleRemaining(product.promotionEndsAt!)})` : ""}
+                          </span>
+                        )}
+                        {isLightningExpired && (
+                          <span
+                            className="pauta-lightning-expired-badge"
+                            title={`Oferta Relâmpago encerrou às ${formatFlashSaleTime(product.promotionEndsAt!)}`}
+                          >
+                            ⚡ Relâmpago encerrou às {formatFlashSaleTime(product.promotionEndsAt!)}
+                          </span>
+                        )}
                         {product.shelf === "impact" && (
                           <span style={{ background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700 }}>
                             🏆 Alto Impacto {product.nominalSavingsCents && product.nominalSavingsCents >= 5000 ? `· Economia de ${priceBRL.format(product.nominalSavingsCents / 100)}` : ""}
@@ -861,6 +1050,13 @@ export default function PautaClient({
                     </div>
                   </div>
                 </div>
+                {isLightningExpired && !product.needsPriceRefresh && (
+                  <div style={{ margin: "8px 0" }}>
+                    <p style={{ margin: "0 0 6px 0", fontSize: "12px", color: "#991b1b", background: "#fee2e2", padding: "6px 10px", borderRadius: "6px", lineHeight: 1.4 }}>
+                      ⚡ <strong>Atenção:</strong> A Oferta Relâmpago encerrou às {formatFlashSaleTime(product.promotionEndsAt!)}. O preço na loja pode ter sido reajustado. Confira antes de divulgar.
+                    </p>
+                  </div>
+                )}
                 {product.needsPriceRefresh && !unlockedRefreshIds.has(product.id) ? (
                   <div style={{ margin: "8px 0" }}>
                     <p style={{ margin: "0 0 6px 0", fontSize: "12px", color: "#b45309", background: "#fef3c7", padding: "6px 10px", borderRadius: "6px", lineHeight: 1.4 }}>
@@ -878,6 +1074,48 @@ export default function PautaClient({
                     >
                       🔄 CONFERIR PREÇO NA LOJA (LIBERAR CÓPIA)
                     </a>
+                  </div>
+                ) : isCopied ? (
+                  <div className="pauta-card-confirmation-box">
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#166534", display: "flex", alignItems: "center", gap: "5px" }}>
+                        <span>✓</span> {channel === "whatsapp" ? "Mensagem copiada para o WhatsApp" : "Link copiado para o Story"}
+                      </span>
+                      {activePrep?.text && channel === "whatsapp" && (
+                        <details style={{ fontSize: "11px" }}>
+                          <summary style={{ cursor: "pointer", color: "var(--ink-muted, #71717a)" }}>Ver texto salvo</summary>
+                          <pre style={{ whiteSpace: "pre-wrap", margin: "4px 0 0", padding: "6px", background: "rgba(0,0,0,0.04)", borderRadius: "4px", fontSize: "10px" }}>{activePrep.text}</pre>
+                        </details>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="pauta-card-confirm-btn"
+                      disabled={confirmingId !== null}
+                      onClick={() => void confirmExposure(product, activePrep)}
+                    >
+                      {confirmingId === product.id ? "Registrando envio…" : "✅ Confirmar que enviei"}
+                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        type="button"
+                        className="pauta-card-discard-btn"
+                        disabled={confirmingId !== null}
+                        onClick={() => void discardPreparation(product, activePrep)}
+                        title="Cancela esta cópia sem registrar divulgação"
+                      >
+                        ✕ Não enviei / Desfazer
+                      </button>
+                      <button
+                        type="button"
+                        className="pauta-card-discard-btn"
+                        style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                        onClick={() => copyLink(product)}
+                        title="Copiar novamente o texto para a área de transferência"
+                      >
+                        {copiedId === product.id ? "✓ Copiado de novo!" : "📋 Copiar de novo"}
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <button
@@ -903,6 +1141,15 @@ export default function PautaClient({
                   )}
                   <a href={product.detailUrl ?? `/bizu/${product.slug}`}>Conferir indicação</a>
                   <a href={product.shopUrl ?? `/go/${product.slug}`} target="_blank" rel="noreferrer sponsored">Conferir na loja ↗</a>
+                  <button
+                    type="button"
+                    className="pauta-skip-btn"
+                    disabled={skippingId === product.id}
+                    onClick={() => void handleSkipOffer(product)}
+                    title="Pula este produto e traz a próxima opção da reserva para a pauta"
+                  >
+                    {skippingId === product.id ? "Pulando…" : "⏭️ Pular oferta"}
+                  </button>
                   {channel === "stories" && product.storyUrl && <a href={product.storyUrl} target="_blank" rel="noreferrer">Abrir arte do Story</a>}
                 </div>
                 {channel === "whatsapp" ? (
@@ -936,6 +1183,42 @@ export default function PautaClient({
             );
           })}
         </section>
+      )}
+
+      {orphanedPreps.length > 0 && (
+        <details className="pauta-orphaned-preparations" style={{ margin: "24px 0", padding: "14px", background: "var(--paper-deep)", borderRadius: "8px", border: "1px solid var(--line)" }}>
+          <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "13px" }}>
+            Rascunhos anteriores pendentes de confirmação ({orphanedPreps.length})
+          </summary>
+          <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            {orphanedPreps.map(({ product, text, sourceConfirmationId }) => (
+              <div key={product.confirmationId} style={{ padding: "12px", background: "var(--surface)", borderRadius: "6px", border: "1px solid var(--line)" }}>
+                <strong style={{ fontSize: "13px", display: "block", marginBottom: "4px" }}>{product.title}</strong>
+                <p style={{ margin: "0 0 10px", fontSize: "12px", color: "var(--ink-muted)" }}>Esta preparação venceu ou o produto foi substituído na seleção ativa.</p>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="pauta-card-confirm-btn"
+                    style={{ width: "auto", minHeight: "36px", padding: "0 14px", fontSize: "12px" }}
+                    disabled={confirmingId !== null}
+                    onClick={() => void confirmExposure(product, { product, text, sourceConfirmationId })}
+                  >
+                    {confirmingId === product.id ? "Registrando…" : "✅ Confirmar que enviei"}
+                  </button>
+                  <button
+                    type="button"
+                    className="pauta-card-discard-btn"
+                    style={{ flex: "none", minHeight: "36px", padding: "0 14px", fontSize: "12px" }}
+                    disabled={confirmingId !== null}
+                    onClick={() => void discardPreparation(product, { product, text, sourceConfirmationId })}
+                  >
+                    ✕ Descartar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
       )}
       {actionCount > 0 && !loadError && <section id="pendencias-curadoria" className="pauta-captures pauta-capture-attention" aria-labelledby="pauta-capture-attention-heading">
         <h2 id="pauta-capture-attention-heading">Pendências de curadoria</h2>

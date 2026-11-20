@@ -27,6 +27,7 @@ import PriceHistory from "./price-history";
 import TrackProductView from "../../_components/track-product-view";
 import AffiliateLink from "../../_components/affiliate-link";
 import { offerPriceLabel, offerPriceNote, formatOfferMoney } from "../../../lib/offer-price";
+import { isFlashSaleActive, formatFlashSaleDeadline } from "../../../lib/flash-sale.ts";
 import RedirectBanner from "./redirect-banner";
 import { campaignExitPath } from "../../../lib/campaign-exit";
 import { productPreview, PRODUCT_PREVIEW_SIZE } from "../../../lib/product-preview";
@@ -141,6 +142,11 @@ export default async function DealPage({ params, searchParams }: PageProps) {
         {product.titleOrigin === "editorial" && <details><summary>Nome do produto na loja</summary><p>{product.sourceTitle}</p></details>}
         {(deal.rating_star !== null || deal.sales_label) && <p className="deal-evidence">{deal.rating_star !== null && <span>★ {deal.rating_star.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}/5</span>}{deal.rating_star !== null && deal.sales_label && <i>·</i>}{deal.sales_label && <span>{deal.sales_label}</span>}<small>{mpEvidence}</small></p>}
         <OfferExpiryBoundary validUntil={product.offerValidUntil}>
+          {isFlashSaleActive(product.promotionType, product.promotionEndsAt) && (
+            <div className="flash-sale-badge" role="status">
+              ⚡ <strong>Oferta Relâmpago</strong> · {formatFlashSaleDeadline(product.promotionEndsAt!)}
+            </div>
+          )}
           {fresh === "current" ? <div className="deal-price"><small>{deal.originalPriceKind === "source_claimed" && product.priceType === "exact" && product.currency && deal.original_price_cents && deal.original_price_cents > deal.price_cents ? formatOfferMoney(deal.original_price_cents, product.currency) : ""}</small><strong>{offerPriceLabel(product)}</strong>{freshnessLabel(deal.evidence_observed_at) && <em>{freshnessLabel(deal.evidence_observed_at)}</em>}</div> : <div className="deal-price deal-price-stale"><strong>preço atual não confirmado</strong><em>última captura: {offerPriceLabel(product)} · {seenAgo(deal.evidence_observed_at)}</em></div>}
           {offerPriceNote(product) && <p className="deal-evidence">{offerPriceNote(product)}</p>}
           {fresh !== "current" && (

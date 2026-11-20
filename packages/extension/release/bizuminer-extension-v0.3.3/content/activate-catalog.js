@@ -11,6 +11,155 @@
     }).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").replace(/\s+/gu, " ").trim();
   }
 
+  // src/content/ml-countdown.ts
+  function extractMlCountdownFromElement(container, capturedAtMs = Date.now()) {
+    const cd = container.querySelector(".poly-component__countdown") ?? Array.from(container.querySelectorAll("[class*='countdown']")).find(
+      (el) => el.querySelectorAll(".poly-countdown__block").length >= 2
+    );
+    const root = cd ?? container;
+    const blocks = Array.from(root.querySelectorAll(".poly-countdown__block")).slice(0, 3);
+    if (blocks.length !== 2 && blocks.length !== 3) {
+      return null;
+    }
+    const numbers = [];
+    for (const block of blocks) {
+      const rollers = Array.from(block.querySelectorAll(".poly-countdown__roller-container"));
+      let digits = "";
+      if (rollers.length > 0) {
+        for (const roller of rollers) {
+          const staticDigit = roller.querySelector(".poly-countdown__digit--static");
+          const anyDigit = staticDigit ?? roller.querySelector(".poly-countdown__digit");
+          const text = (anyDigit?.textContent || "").trim();
+          if (/^\d{1,2}$/.test(text)) {
+            digits += text;
+          }
+        }
+      } else {
+        digits = Array.from(
+          block.querySelectorAll(".poly-countdown__digit--static, .poly-countdown__digit")
+        ).map((d) => (d.textContent || "").trim()).filter((t) => /^\d{1,2}$/.test(t)).slice(0, 2).join("");
+      }
+      if (digits) {
+        const val = parseInt(digits, 10);
+        if (Number.isFinite(val)) {
+          numbers.push(val);
+        }
+      }
+    }
+    let sec = 0;
+    if (numbers.length === 3) {
+      const [h, m, s] = numbers;
+      sec = (h ?? 0) * 3600 + (m ?? 0) * 60 + (s ?? 0);
+    } else if (numbers.length === 2) {
+      const [m, s] = numbers;
+      sec = (m ?? 0) * 60 + (s ?? 0);
+    }
+    if (sec <= 0) return null;
+    return {
+      promotionType: "lightning",
+      remainingSeconds: sec,
+      promotionEndsAt: new Date(capturedAtMs + sec * 1e3).toISOString()
+    };
+  }
+  function extractMlCountdownFromHtml(html, capturedAtMs = Date.now()) {
+    const cdIdx = html.indexOf("poly-component__countdown");
+    const blockIdx = html.indexOf("poly-countdown__block");
+    if (cdIdx === -1 && blockIdx === -1) return null;
+    const startIdx = cdIdx !== -1 ? cdIdx : blockIdx;
+    const slice = html.slice(startIdx, startIdx + 3e3);
+    const blockMatches = [
+      ...slice.matchAll(
+        /class="[^"]*poly-countdown__block[^"]*"[\s\S]*?(?=(?:class="[^"]*poly-countdown__block"|<span class="poly-countdown__separator"|<\/div>\s*<\/div>\s*<\/div>|$))/g
+      )
+    ];
+    if (blockMatches.length !== 2 && blockMatches.length !== 3) return null;
+    const rollerSplitRegex = /class="[^"]*poly-countdown__roller-container[^"]*"/g;
+    const digitRegex = /class="[^"]*poly-countdown__digit[^"]*"[^>]*>\s*(\d)\s*<\/span>/;
+    const digitAllRegex = /class="[^"]*poly-countdown__digit[^"]*"[^>]*>\s*(\d)\s*<\/span>/g;
+    const numbers = [];
+    for (const b of blockMatches) {
+      const blockHtml = b[0];
+      const rollerParts = blockHtml.split(rollerSplitRegex).slice(1);
+      let digits = "";
+      if (rollerParts.length > 0) {
+        for (const part of rollerParts) {
+          const m = digitRegex.exec(part);
+          if (m?.[1]) digits += m[1];
+        }
+      } else {
+        digits = [...blockHtml.matchAll(digitAllRegex)].map((m) => m[1]).slice(0, 2).join("");
+      }
+      if (digits) {
+        const val = parseInt(digits, 10);
+        if (Number.isFinite(val)) numbers.push(val);
+      }
+    }
+    let sec = 0;
+    if (numbers.length === 3) {
+      const [h, m, s] = numbers;
+      sec = (h ?? 0) * 3600 + (m ?? 0) * 60 + (s ?? 0);
+    } else if (numbers.length === 2) {
+      const [m, s] = numbers;
+      sec = (m ?? 0) * 60 + (s ?? 0);
+    }
+    if (sec <= 0) return null;
+    return {
+      promotionType: "lightning",
+      remainingSeconds: sec,
+      promotionEndsAt: new Date(capturedAtMs + sec * 1e3).toISOString()
+    };
+  }
+  function findMlScriptPeriodEnd(doc, externalId, capturedAtMs = Date.now(), catalogProductId) {
+    if (!externalId && !catalogProductId || typeof doc.querySelectorAll !== "function") return null;
+    const candidateIds = [externalId, catalogProductId].filter((id) => Boolean(id));
+    const scripts = Array.from(doc.querySelectorAll("script"));
+    for (const s of scripts) {
+      const text = s.textContent || "";
+      if (!text.includes("period_end") && !text.includes("finish_date")) continue;
+      for (const id of candidateIds) {
+        if (!text.includes(id)) continue;
+        const idToken = `"id":"${id}"`;
+        let idIdx = text.indexOf(idToken);
+        if (idIdx === -1) idIdx = text.indexOf(id);
+        if (idIdx !== -1) {
+          const nextCardIdx = text.indexOf('"metadata":{"id":', idIdx + 20);
+          const endBound = nextCardIdx !== -1 ? Math.min(text.length, nextCardIdx, idIdx + 1e4) : Math.min(text.length, idIdx + 8e3);
+          const cardSlice = text.slice(idIdx, endBound);
+          const m = /"(?:period_end|finish_date)"\s*:\s*"([^"]+)"/.exec(cardSlice);
+          if (m?.[1]) {
+            const endsMs = Date.parse(m[1]);
+            if (Number.isFinite(endsMs) && endsMs > capturedAtMs) {
+              return {
+                promotionType: "lightning",
+                remainingSeconds: Math.round((endsMs - capturedAtMs) / 1e3),
+                promotionEndsAt: new Date(endsMs).toISOString()
+              };
+            }
+          }
+        }
+        const kvsToken = `"${id}":{`;
+        const kvsIdx = text.indexOf(kvsToken);
+        if (kvsIdx !== -1) {
+          const nextKvsIdx = text.indexOf('},"MLB', kvsIdx + kvsToken.length);
+          const kvsBound = nextKvsIdx !== -1 ? Math.min(text.length, nextKvsIdx + 2, kvsIdx + 2e3) : Math.min(text.length, kvsIdx + 1500);
+          const kvsSlice = text.slice(kvsIdx, kvsBound);
+          const m2 = /"(?:finish_date|period_end)"\s*:\s*"([^"]+)"/.exec(kvsSlice);
+          if (m2?.[1]) {
+            const endsMs = Date.parse(m2[1]);
+            if (Number.isFinite(endsMs) && endsMs > capturedAtMs) {
+              return {
+                promotionType: "lightning",
+                remainingSeconds: Math.round((endsMs - capturedAtMs) / 1e3),
+                promotionEndsAt: new Date(endsMs).toISOString()
+              };
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   // src/content/card-extractor.ts
   function parseMoneyAria(label) {
     const m = /(\d[\d.]*)\s*reais(?:\s+com\s+(\d{1,2})\s*centavos)?/.exec(label);
@@ -48,6 +197,7 @@
     const previous = previousLabel ? parseMoneyAria(previousLabel) : null;
     const originalPriceCents = previous && previous.reais > 0 ? previous.reais * 100 + previous.centavos : void 0;
     const imageUrl = /<img[^>]+src="(https:\/\/http2\.mlstatic\.com\/[^"]+)"/.exec(html)?.[1];
+    const countdown = extractMlCountdownFromHtml(html);
     return {
       externalId,
       title,
@@ -57,7 +207,8 @@
       currency: "BRL",
       priceType: /a\s+partir\s+de/i.test(currentLabel ?? "") ? "from" : "exact",
       originalPriceCents: originalPriceCents && originalPriceCents > priceCents ? originalPriceCents : void 0,
-      marketplace: "mercadolivre"
+      marketplace: "mercadolivre",
+      ...countdown ? { promotionType: countdown.promotionType, promotionEndsAt: countdown.promotionEndsAt } : {}
     };
   }
 
@@ -216,6 +367,13 @@
     const isAmazon = /(^|\.)amazon\.com\.br$/.test(window.location.hostname);
     const isMlPdp = !isAmazon && !card.classList.contains("poly-card") && Boolean(document.querySelector("h1.ui-pdp-title"));
     let extracted = isAmazon ? card.hasAttribute("data-asin") ? extractAmazonCardFromElement(card) : extractAmazonProductFromDoc(document, window.location.href) : isMlPdp ? extractMlProductFromDoc(document, window.location.href) : extractCard(card.outerHTML) ?? extractMlProductFromDoc(document, window.location.href);
+    if (extracted && !isAmazon && !extracted.promotionEndsAt) {
+      const catalogId = extracted.productUrl.match(/\/p\/(MLB\d{6,})/i)?.[1]?.toUpperCase();
+      const cd = extractMlCountdownFromElement(card) ?? findMlScriptPeriodEnd(document, extracted.externalId, Date.now(), catalogId);
+      if (cd) {
+        extracted = { ...extracted, promotionType: cd.promotionType, promotionEndsAt: cd.promotionEndsAt };
+      }
+    }
     if (!extracted) {
       setState("Abrir produto para completar", COLORS.error);
       if (!isAmazon && !isMlPdp) {
@@ -320,6 +478,8 @@
     );
     const imageUrl = img?.src?.startsWith("https://") ? img.src : img?.getAttribute("data-src") || void 0;
     const productUrl = page.origin + normalizedPath + (listingId || normalizedPath.includes("/p/") ? `?wid=${externalId}` : "");
+    const catalogId = normalizedPath.match(/\/p\/(MLB\d{6,})/i)?.[1]?.toUpperCase();
+    const cd = (doc.body ? extractMlCountdownFromElement(doc.body) : null) ?? findMlScriptPeriodEnd(doc, externalId, Date.now(), catalogId);
     return {
       externalId,
       title,
@@ -329,6 +489,7 @@
       currency: "BRL",
       priceType: /a\s+partir\s+de/i.test(priceLabel) ? "from" : "exact",
       ...originalPriceCents && originalPriceCents > priceCents ? { originalPriceCents } : {},
+      ...cd ? { promotionType: cd.promotionType, promotionEndsAt: cd.promotionEndsAt } : {},
       marketplace: "mercadolivre"
     };
   }

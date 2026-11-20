@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BizuMiner — captura de ofertas",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Importa produtos da página aberta do Mercado Livre, Amazon Brasil ou AliExpress para revisão na sua conta BizuMiner, após sua confirmação.",
   "permissions": [
     "activeTab",

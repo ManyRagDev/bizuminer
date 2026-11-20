@@ -7,6 +7,9 @@ import AccountAdminShell from "../_components/account-admin-shell.tsx";
 import DenyAccess from "../_components/deny-access";
 import PautaClient from "./pauta-client";
 import { readCurationPolicy } from "../../lib/curation-policy-db.ts";
+import { inAccountScope } from "../../lib/account-scope.ts";
+import { readLivePauta } from "../../lib/pauta-db.ts";
+import { enrichPautaResponse } from "../../lib/pauta-response.ts";
 
 export const dynamic = "force-dynamic";
 
@@ -38,13 +41,18 @@ export default async function PautaPage({ searchParams }: { searchParams: Promis
   const initialChannel = canal === "stories" ? "stories" : "whatsapp";
   const headerList = await headers();
   const host = headerList.get("host");
-  const qrBundle = await getPautaQrBundle(host);
-  const policy = await readCurationPolicy(account);
+
+  const [qrBundle, policy, rawPauta] = await Promise.all([
+    getPautaQrBundle(host),
+    readCurationPolicy(account),
+    inAccountScope(account, () => readLivePauta(account, initialChannel)).catch(() => null),
+  ]);
+  const initialPauta = rawPauta ? enrichPautaResponse(rawPauta, account.tenantId) : null;
 
   return (
     <AccountAdminShell account={account} userId={user.id}>
       <PautaClient key={`${account.tenantId}:${initialChannel}`} qrBundle={qrBundle}
-        automaticCuration={policy.enabled}
+        automaticCuration={policy.enabled} initialPauta={initialPauta}
         accountKey={account.tenantId} userKey={user.id} initialChannel={initialChannel} />
     </AccountAdminShell>
   );

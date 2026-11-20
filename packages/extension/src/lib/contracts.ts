@@ -12,6 +12,8 @@ export interface CaptureProduct {
   originalPriceCents?: number;
   currency?: "BRL";
   priceType?: "exact" | "from" | "unknown";
+  promotionType?: "lightning";
+  promotionEndsAt?: string;
 }
 
 export interface CapturePage {

@@ -53,6 +53,78 @@ describe("extractCard", () => {
     assert.equal(extractCard(html)?.priceType, "from");
     assert.equal(extractCard(html)?.currency, "BRL");
   });
+
+  it("identifica oferta relâmpago e extrai countdown com promotionEndsAt", () => {
+    const lightningCard = `
+<div class="poly-card poly-card--grid-card">
+  <div class="poly-component__highlight-countdown">
+    <div class="poly-component__countdown" aria-hidden="true">
+      <div class="poly-countdown__block"><span class="poly-countdown__digit poly-countdown__digit--static">0</span><span class="poly-countdown__digit poly-countdown__digit--static">5</span></div>
+      <span class="poly-countdown__separator">:</span>
+      <div class="poly-countdown__block"><span class="poly-countdown__digit poly-countdown__digit--static">2</span><span class="poly-countdown__digit poly-countdown__digit--static">8</span></div>
+      <span class="poly-countdown__separator">:</span>
+      <div class="poly-countdown__block"><span class="poly-countdown__digit poly-countdown__digit--static">1</span><span class="poly-countdown__digit poly-countdown__digit--static">4</span></div>
+    </div>
+  </div>
+  <a href="https://www.mercadolivre.com.br/p/MLB123456789?wid=MLB123456789#deal_print_id=xyz"
+     class="poly-component__title">Parafusadeira de Impacto 21V</a>
+  <div class="poly-price__current">
+    <span class="andes-money-amount" aria-label="149 reais">R$ 149</span>
+  </div>
+</div>
+    `;
+    const card = extractCard(lightningCard);
+    assert.ok(card);
+    assert.equal(card.promotionType, "lightning");
+    assert.ok(card.promotionEndsAt);
+    const endsMs = Date.parse(card.promotionEndsAt);
+    assert.ok(Number.isFinite(endsMs));
+    // 5h 28m 14s = 19694s
+    const diffSec = Math.round((endsMs - Date.now()) / 1000);
+    assert.ok(diffSec >= 19690 && diffSec <= 19696);
+  });
+
+  it("extrai apenas 1 dígito por roller-container quando o segundo está em animação", () => {
+    const animatedLightningCard = `
+<div class="poly-card poly-card--grid-card">
+  <div class="poly-component__highlight-countdown">
+    <div class="poly-component__countdown" aria-hidden="true">
+      <div class="poly-countdown__block">
+        <div class="poly-countdown__roller-container"><span class="poly-countdown__digit poly-countdown__digit--static">0</span></div>
+        <div class="poly-countdown__roller-container"><span class="poly-countdown__digit poly-countdown__digit--static">2</span></div>
+      </div>
+      <span class="poly-countdown__separator">:</span>
+      <div class="poly-countdown__block">
+        <div class="poly-countdown__roller-container"><span class="poly-countdown__digit poly-countdown__digit--static">1</span></div>
+        <div class="poly-countdown__roller-container"><span class="poly-countdown__digit poly-countdown__digit--static">5</span></div>
+      </div>
+      <span class="poly-countdown__separator">:</span>
+      <div class="poly-countdown__block">
+        <div class="poly-countdown__roller-container"><span class="poly-countdown__digit poly-countdown__digit--static">4</span></div>
+        <div class="poly-countdown__roller-container">
+          <div class="poly-countdown__roller">
+            <span class="poly-countdown__digit">8</span>
+            <span class="poly-countdown__digit">7</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <a href="https://www.mercadolivre.com.br/p/MLB123456789?wid=MLB123456789"
+     class="poly-component__title">Furadeira 21V</a>
+  <div class="poly-price__current">
+    <span class="andes-money-amount" aria-label="149 reais">R$ 149</span>
+  </div>
+</div>
+    `;
+    const card = extractCard(animatedLightningCard);
+    assert.ok(card);
+    assert.equal(card.promotionType, "lightning");
+    assert.ok(card.promotionEndsAt);
+    // 2h 15m 48s = 8148s
+    const diffSec = Math.round((Date.parse(card.promotionEndsAt) - Date.now()) / 1000);
+    assert.ok(diffSec >= 8144 && diffSec <= 8152);
+  });
 });
 
 it("não corta título longo e recusa excesso em vez de truncar", () => {
